@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"gitlab.suse.de/guohouzuo/saptune/app"
 	"gitlab.suse.de/guohouzuo/saptune/sap/note"
@@ -43,27 +42,34 @@ func errorExit(template string, stuff ...interface{}) {
 
 var tuneApp = app.InitialiseApp("", "", note.AllNotes, solution.AllSolutions)
 
+// Return the i-th command line parameter, or empty string if it is not specified.
+func cliArg(i int) string {
+	if len(os.Args) >= i+1 {
+		return os.Args[i]
+	}
+	return ""
+}
+
 func main() {
 	defer func() {
 		if err := recover(); err != nil {
 			errorExit("Critical error: %v", err)
 		}
 	}()
-	flag.Parse()
-	if flag.Arg(0) == "help" {
+	if arg1 := cliArg(1); arg1 == "" || arg1 == "help" || arg1 == "--help" {
 		PrintHelpAndExit(0)
 	}
 	// All other actions require super user privilege
 	if os.Geteuid() != 0 {
 		errorExit("Please run saptune with root privilege.")
 	}
-	switch flag.Arg(0) {
+	switch cliArg(1) {
 	case "daemon":
-		DaemonAction(flag.Arg(1))
+		DaemonAction(cliArg(2))
 	case "note":
-		NoteAction(flag.Arg(1), flag.Arg(2))
+		NoteAction(cliArg(2), cliArg(3))
 	case "solution":
-		SolutionAction(flag.Arg(1), flag.Arg(2))
+		SolutionAction(cliArg(2), cliArg(3))
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -73,9 +79,7 @@ func DaemonAction(actionName string) {
 	switch actionName {
 	case "start":
 		fmt.Println("Starting daemon (tuned.service), this may take several seconds...")
-		if err := system.SystemctlDisableStop(SAPCONF_SERVICE); err != nil {
-			errorExit("Failed to disable conflicting service %s - %v", SAPCONF_SERVICE, err)
-		}
+		system.SystemctlDisableStop(SAPCONF_SERVICE) // do not error exit on failure
 		if err := system.SystemctlEnableStart(TUNED_SERVICE); err != nil {
 			errorExit("%v", err)
 		}
