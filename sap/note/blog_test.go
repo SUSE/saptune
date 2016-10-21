@@ -59,7 +59,7 @@ func TestSUSENetCPUOptimisation(t *testing.T) {
 		o.NetIpv4TcpRmem < 9437184 || o.NetIpv4TcpWmem < 9437184 ||
 		o.NetIpv4TcpTimestamps != 0 || o.NetIpv4TcpSack != 0 || o.NetIpv4TcpDsack != 0 || o.NetIpv4TcpFack != 0 ||
 		o.NetIpv4IpfragHighThres < 544288 || o.NetIpv4IpfragLowThres < 393216 ||
-		o.NetIpv4TcpMaxSynBacklog < 8192 || o.NetIpv4TcpSynackRetries < 3 || o.NetIpv4TcpRetries2 < 6 ||
+		o.NetIpv4TcpMaxSynBacklog < 8192 || o.NetIpv4TcpSynackRetries > 3 || o.NetIpv4TcpRetries2 > 6 ||
 		o.NetTcpKeepaliveTime > 1000 || o.NetTcpKeepaliveProbes > 4 || o.NetTcpKeepaliveIntvl > 20 ||
 		o.NetTcpTwRecycle != 1 || o.NetTcpTwReuse != 1 ||
 		o.NetTcpFinTimeout > 30 || o.NetTcpMtuProbing != 1 ||
