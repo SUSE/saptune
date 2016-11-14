@@ -4,6 +4,7 @@ import (
 	"gitlab.suse.de/guohouzuo/saptune/sap/param"
 	"gitlab.suse.de/guohouzuo/saptune/system"
 	"path"
+	"runtime"
 )
 
 /*
@@ -28,7 +29,9 @@ func (st SUSESysOptimisation) Name() string {
 }
 func (st SUSESysOptimisation) Initialise() (Note, error) {
 	newST := st
-	newST.VMNumberHugePages = system.GetSysctlUint64(system.SYSCTL_NR_HUGEPAGES, 0)
+	if runtime.GOARCH == ARCH_X86 {
+		newST.VMNumberHugePages = system.GetSysctlUint64(system.SYSCTL_NR_HUGEPAGES, 0)
+	}
 	newST.VMSwappiness = system.GetSysctlUint64(system.SYSCTL_SWAPPINESS, 0)
 	newST.VMVfsCachePressure = system.GetSysctlUint64(system.SYSCTL_VFS_CACHE_PRESSURE, 0)
 
@@ -50,7 +53,7 @@ func (st SUSESysOptimisation) Optimise() (Note, error) {
 	if err != nil {
 		return nil, err
 	}
-	if conf.GetBool("TUNE_NUMBER_HUGEPAGES", false) {
+	if runtime.GOARCH == ARCH_X86 && conf.GetBool("TUNE_NUMBER_HUGEPAGES", false) {
 		newST.VMNumberHugePages = param.Max(newST.VMNumberHugePages, 128)
 	}
 	if conf.GetBool("TUNE_SWAPPINESS", false) {
@@ -75,7 +78,9 @@ func (st SUSESysOptimisation) Optimise() (Note, error) {
 	return newST, nil
 }
 func (st SUSESysOptimisation) Apply() error {
-	system.SetSysctlUint64(system.SYSCTL_NR_HUGEPAGES, st.VMNumberHugePages)
+	if runtime.GOARCH == ARCH_X86 {
+		system.SetSysctlUint64(system.SYSCTL_NR_HUGEPAGES, st.VMNumberHugePages)
+	}
 	system.SetSysctlUint64(system.SYSCTL_SWAPPINESS, st.VMSwappiness)
 	system.SetSysctlUint64(system.SYSCTL_VFS_CACHE_PRESSURE, st.VMVfsCachePressure)
 

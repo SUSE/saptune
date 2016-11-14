@@ -7,6 +7,7 @@ import (
 	"gitlab.suse.de/guohouzuo/saptune/sap/solution"
 	"gitlab.suse.de/guohouzuo/saptune/system"
 	"os"
+	"runtime"
 	"sort"
 	"syscall"
 )
@@ -40,8 +41,6 @@ func errorExit(template string, stuff ...interface{}) {
 	os.Exit(1)
 }
 
-var tuneApp = app.InitialiseApp("", "", note.AllNotes, solution.AllSolutions)
-
 // Return the i-th command line parameter, or empty string if it is not specified.
 func cliArg(i int) string {
 	if len(os.Args) >= i+1 {
@@ -49,6 +48,8 @@ func cliArg(i int) string {
 	}
 	return ""
 }
+
+var tuneApp *app.App
 
 func main() {
 	defer func() {
@@ -62,7 +63,14 @@ func main() {
 	// All other actions require super user privilege
 	if os.Geteuid() != 0 {
 		errorExit("Please run saptune with root privilege.")
+		return
 	}
+	archSolutions, exist := solution.AllSolutions[runtime.GOARCH]
+	if !exist {
+		errorExit("The system architecture (%s) is not supported.", runtime.GOARCH)
+		return
+	}
+	tuneApp = app.InitialiseApp("", "", note.AllNotes, archSolutions)
 	switch cliArg(1) {
 	case "daemon":
 		DaemonAction(cliArg(2))
@@ -277,7 +285,7 @@ func SolutionAction(actionName, solName string) {
 		}
 	case "list":
 		fmt.Println("All solutions (* denotes enabled solution):")
-		for _, solName := range solution.GetSortedSolutionNames() {
+		for _, solName := range solution.GetSortedSolutionNames(runtime.GOARCH) {
 			format := "\t%s\n"
 			if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
 				format = "*" + format

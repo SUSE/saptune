@@ -8,6 +8,11 @@ import (
 	"path"
 )
 
+const (
+	ARCH_X86 = "amd64"   // GOARCH for 64-bit X86
+	ARCH_PPC = "ppc64le" // GOARCH for 64-bit PowerPC little endian
+)
+
 // 1275776 - Linux: Preparing SLES for SAP environments
 type PrepareForSAPEnvironments struct {
 	SysconfigPrefix                                         string

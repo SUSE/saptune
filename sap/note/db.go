@@ -3,6 +3,7 @@ package note
 import (
 	"gitlab.suse.de/guohouzuo/saptune/system"
 	"path"
+	"runtime"
 )
 
 /*
@@ -19,21 +20,28 @@ func (hana HANARecommendedOSSettings) Name() string {
 	return "SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12"
 }
 func (hana HANARecommendedOSSettings) Initialise() (Note, error) {
-	return HANARecommendedOSSettings{
-		KernelMMTransparentHugepage: system.GetSysChoice(system.SYS_THP),
-		KernelMMKsm:                 system.GetSysInt(system.SYS_KSM) == 1,
-		KernelNumaBalancing:         system.GetSysctlInt(system.SYSCTL_NUMA_BALANCING, 0) == 1,
-	}, nil
+	ret := HANARecommendedOSSettings{}
+	if runtime.GOARCH == ARCH_X86 {
+		ret.KernelMMTransparentHugepage = system.GetSysChoice(system.SYS_THP)
+	}
+	ret.KernelMMKsm = system.GetSysInt(system.SYS_KSM) == 1
+	ret.KernelNumaBalancing = system.GetSysctlInt(system.SYSCTL_NUMA_BALANCING, 0) == 1
+	return ret, nil
 }
 func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
-	return HANARecommendedOSSettings{
-		KernelMMTransparentHugepage: "never",
-		KernelMMKsm:                 false,
-		KernelNumaBalancing:         false,
-	}, nil
+	ret := HANARecommendedOSSettings{
+		KernelMMKsm:         false,
+		KernelNumaBalancing: false,
+	}
+	if runtime.GOARCH == ARCH_X86 {
+		ret.KernelMMTransparentHugepage = "never"
+	}
+	return ret, nil
 }
 func (hana HANARecommendedOSSettings) Apply() error {
-	system.SetSysString(system.SYS_THP, hana.KernelMMTransparentHugepage)
+	if runtime.GOARCH == ARCH_X86 {
+		system.SetSysString(system.SYS_THP, hana.KernelMMTransparentHugepage)
+	}
 	if hana.KernelMMKsm {
 		system.SetSysInt(system.SYS_KSM, 1)
 	} else {
