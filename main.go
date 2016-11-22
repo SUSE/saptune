@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"gitlab.suse.de/guohouzuo/saptune/app"
-	"gitlab.suse.de/guohouzuo/saptune/sap/note"
-	"gitlab.suse.de/guohouzuo/saptune/sap/solution"
-	"gitlab.suse.de/guohouzuo/saptune/system"
+	"github.com/HouzuoGuo/saptune/app"
+	"github.com/HouzuoGuo/saptune/sap/note"
+	"github.com/HouzuoGuo/saptune/sap/solution"
+	"github.com/HouzuoGuo/saptune/system"
 	"os"
 	"runtime"
 	"sort"

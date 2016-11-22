@@ -1,7 +1,7 @@
 package app
 
 import (
-	"gitlab.suse.de/guohouzuo/saptune/sap/note"
+	"github.com/HouzuoGuo/saptune/sap/note"
 	"os"
 	"path"
 	"testing"

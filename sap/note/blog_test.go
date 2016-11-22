@@ -1,7 +1,7 @@
 package note
 
 import (
-	"gitlab.suse.de/guohouzuo/saptune/system"
+	"github.com/HouzuoGuo/saptune/system"
 	"os"
 	"testing"
 )

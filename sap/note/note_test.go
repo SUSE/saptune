@@ -2,13 +2,13 @@ package note
 
 import (
 	"encoding/json"
-	"gitlab.suse.de/guohouzuo/saptune/sap/param"
+	"github.com/HouzuoGuo/saptune/sap/param"
 	"os"
 	"path"
 	"testing"
 )
 
-var SYSCONFIG_SRC_DIR = path.Join(os.Getenv("GOPATH"), "/src/gitlab.suse.de/guohouzuo/saptune/ospackage/")
+var SYSCONFIG_SRC_DIR = path.Join(os.Getenv("GOPATH"), "/src/github.com/HouzuoGuo/saptune/ospackage/")
 
 func jsonMarshalAndBack(original interface{}, receiver interface{}, t *testing.T) {
 	serialised, err := json.Marshal(original)

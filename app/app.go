@@ -2,9 +2,9 @@ package app
 
 import (
 	"fmt"
-	"gitlab.suse.de/guohouzuo/saptune/sap/note"
-	"gitlab.suse.de/guohouzuo/saptune/sap/solution"
-	"gitlab.suse.de/guohouzuo/saptune/system"
+	"github.com/HouzuoGuo/saptune/sap/note"
+	"github.com/HouzuoGuo/saptune/sap/solution"
+	"github.com/HouzuoGuo/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"

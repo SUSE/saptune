@@ -2,9 +2,9 @@ package app
 
 import (
 	"fmt"
-	"gitlab.suse.de/guohouzuo/saptune/sap/note"
-	"gitlab.suse.de/guohouzuo/saptune/sap/param"
-	"gitlab.suse.de/guohouzuo/saptune/sap/solution"
+	"github.com/HouzuoGuo/saptune/sap/note"
+	"github.com/HouzuoGuo/saptune/sap/param"
+	"github.com/HouzuoGuo/saptune/sap/solution"
 	"io/ioutil"
 	"os"
 	"path"
@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-var SYSCONFIG_SRC_DIR = path.Join(os.Getenv("GOPATH"), "/src/gitlab.suse.de/guohouzuo/saptune/ospackage/")
+var SYSCONFIG_SRC_DIR = path.Join(os.Getenv("GOPATH"), "/src/github.com/HouzuoGuo/saptune/ospackage/")
 var TEST_DATA_DIR = "/tmp/saptunetest"
 var SAMPLE_PARAM_FILE = path.Join(TEST_DATA_DIR, "saptune-sample-param")
 

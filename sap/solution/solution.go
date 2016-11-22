@@ -6,7 +6,7 @@ A system can be tuned for more than one solutions at a time.
 package solution
 
 import (
-	"gitlab.suse.de/guohouzuo/saptune/sap/note"
+	"github.com/HouzuoGuo/saptune/sap/note"
 	"sort"
 )
 

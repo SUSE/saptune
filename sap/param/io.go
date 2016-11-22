@@ -1,7 +1,7 @@
 package param
 
 import (
-	"gitlab.suse.de/guohouzuo/saptune/system"
+	"github.com/HouzuoGuo/saptune/system"
 	"io/ioutil"
 	"path"
 )
