@@ -1,3 +1,6 @@
+
+[![Build Status](https://travis-ci.org/HouzuoGuo/saptune.svg?branch=master)](https://travis-ci.org/HouzuoGuo/saptune)
+
 # saptune
 The utility adjusts system parameters such as kernel parameters and resource limits
 to allow running various SAP solutions at satisfactory performance.
