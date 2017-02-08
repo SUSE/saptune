@@ -54,21 +54,21 @@ func (st SUSESysOptimisation) Optimise() (Note, error) {
 		return nil, err
 	}
 	if runtime.GOARCH == ARCH_X86 && conf.GetBool("TUNE_NUMBER_HUGEPAGES", false) {
-		newST.VMNumberHugePages = param.Max(newST.VMNumberHugePages, 128)
+		newST.VMNumberHugePages = param.MaxU64(newST.VMNumberHugePages, 128)
 	}
 	if conf.GetBool("TUNE_SWAPPINESS", false) {
-		newST.VMSwappiness = param.Min(newST.VMSwappiness, 25)
+		newST.VMSwappiness = param.MinU64(newST.VMSwappiness, 25)
 	}
 	if conf.GetBool("TUNE_VFS_CACHE_PRESSURE", false) {
-		newST.VMVfsCachePressure = param.Min(newST.VMVfsCachePressure, 50)
+		newST.VMVfsCachePressure = param.MinU64(newST.VMVfsCachePressure, 50)
 	}
 	if conf.GetBool("TUNE_OVERCOMMIT", false) {
 		newST.VMOvercommitMemory = 1
-		newST.VMOvercommitRatio = param.Max(newST.VMOvercommitRatio, 70)
+		newST.VMOvercommitRatio = param.MaxU64(newST.VMOvercommitRatio, 70)
 	}
 	if conf.GetBool("TUNE_DIRTY_RATIO", false) {
-		newST.VMDirtyRatio = param.Min(newST.VMDirtyRatio, 10)
-		newST.VMDirtyBackgroundRatio = param.Min(newST.VMDirtyRatio, 5)
+		newST.VMDirtyRatio = param.MinU64(newST.VMDirtyRatio, 10)
+		newST.VMDirtyBackgroundRatio = param.MinU64(newST.VMDirtyRatio, 5)
 	}
 	if conf.GetBool("TUNE_IO_SCHEDULER", false) {
 		for blk := range newST.BlockDeviceSchedulers.SchedulerChoice {
@@ -174,16 +174,16 @@ func (st SUSENetCPUOptimisation) Optimise() (Note, error) {
 	}
 	// Section "SLES11/12 Network Tuning & Optimization"
 	if conf.GetBool("TUNE_NET_RESERVED_SOCKETS", false) {
-		newST.NetCoreWmemMax = param.Max(newST.NetCoreWmemMax, 12582912)
-		newST.NetCoreRmemMax = param.Max(newST.NetCoreRmemMax, 12582912)
+		newST.NetCoreWmemMax = param.MaxU64(newST.NetCoreWmemMax, 12582912)
+		newST.NetCoreRmemMax = param.MaxU64(newST.NetCoreRmemMax, 12582912)
 	}
 	if conf.GetBool("TUNE_NET_QUEUE_SIZE", false) {
-		newST.NetCoreNetdevMaxBacklog = param.Max(newST.NetCoreNetdevMaxBacklog, 9000)
-		newST.NetCoreSoMaxConn = param.Max(newST.NetCoreSoMaxConn, 512)
+		newST.NetCoreNetdevMaxBacklog = param.MaxU64(newST.NetCoreNetdevMaxBacklog, 9000)
+		newST.NetCoreSoMaxConn = param.MaxU64(newST.NetCoreSoMaxConn, 512)
 	}
 	if conf.GetBool("TUNE_TCP_BUFFER_SIZE", false) {
-		newST.NetIpv4TcpRmem = param.Max(newST.NetIpv4TcpRmem, 9437184)
-		newST.NetIpv4TcpWmem = param.Max(newST.NetIpv4TcpWmem, 9437184)
+		newST.NetIpv4TcpRmem = param.MaxU64(newST.NetIpv4TcpRmem, 9437184)
+		newST.NetIpv4TcpWmem = param.MaxU64(newST.NetIpv4TcpWmem, 9437184)
 	}
 	if conf.GetBool("TUNE_TCP_TIMESTAMPS", false) {
 		newST.NetIpv4TcpTimestamps = 0
@@ -194,27 +194,27 @@ func (st SUSENetCPUOptimisation) Optimise() (Note, error) {
 		newST.NetIpv4TcpFack = 0
 	}
 	if conf.GetBool("TUNE_IP_FRAGMENTATION", false) {
-		newST.NetIpv4IpfragHighThres = param.Max(newST.NetIpv4IpfragHighThres, 544288)
-		newST.NetIpv4IpfragLowThres = param.Max(newST.NetIpv4IpfragLowThres, 393216)
+		newST.NetIpv4IpfragHighThres = param.MaxU64(newST.NetIpv4IpfragHighThres, 544288)
+		newST.NetIpv4IpfragLowThres = param.MaxU64(newST.NetIpv4IpfragLowThres, 393216)
 	}
 	if conf.GetBool("TUNE_TCP_SYN_QUEUE", false) {
-		newST.NetIpv4TcpMaxSynBacklog = param.Max(newST.NetIpv4TcpMaxSynBacklog, 8192)
+		newST.NetIpv4TcpMaxSynBacklog = param.MaxU64(newST.NetIpv4TcpMaxSynBacklog, 8192)
 	}
 	if conf.GetBool("TUNE_TCP_RETRY_BEHAVIOUR", false) {
-		newST.NetIpv4TcpSynackRetries = param.Min(newST.NetIpv4TcpSynackRetries, 3)
-		newST.NetIpv4TcpRetries2 = param.Min(newST.NetIpv4TcpRetries2, 6)
+		newST.NetIpv4TcpSynackRetries = param.MinU64(newST.NetIpv4TcpSynackRetries, 3)
+		newST.NetIpv4TcpRetries2 = param.MinU64(newST.NetIpv4TcpRetries2, 6)
 	}
 	if conf.GetBool("TUNE_TCP_KEEPALIVE_BEHAVIOUR", false) {
-		newST.NetTcpKeepaliveTime = param.Min(newST.NetTcpKeepaliveTime, 1000)
-		newST.NetTcpKeepaliveProbes = param.Min(newST.NetTcpKeepaliveProbes, 4)
-		newST.NetTcpKeepaliveIntvl = param.Min(newST.NetTcpKeepaliveIntvl, 20)
+		newST.NetTcpKeepaliveTime = param.MinU64(newST.NetTcpKeepaliveTime, 1000)
+		newST.NetTcpKeepaliveProbes = param.MinU64(newST.NetTcpKeepaliveProbes, 4)
+		newST.NetTcpKeepaliveIntvl = param.MinU64(newST.NetTcpKeepaliveIntvl, 20)
 	}
 	if conf.GetBool("TUNE_TCP_TIME_WAIT_BEHAVIOUR", false) {
 		newST.NetTcpTwRecycle = 1
 		newST.NetTcpTwReuse = 1
 	}
 	if conf.GetBool("TUNE_TCP_FIN_TIMEOUT", false) {
-		newST.NetTcpFinTimeout = param.Min(newST.NetTcpFinTimeout, 30)
+		newST.NetTcpFinTimeout = param.MinU64(newST.NetTcpFinTimeout, 30)
 	}
 	if conf.GetBool("TUNE_JUMBO_FRAME_MTU_PROBING", false) {
 		newST.NetTcpMtuProbing = 1

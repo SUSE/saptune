@@ -25,7 +25,18 @@ type Parameter interface {
 }
 
 // Return the maximum among the input values. If there isn't any input value, return 0.
-func Max(values ...uint64) uint64 {
+func MaxI64(values ...int64) int64 {
+	var ret int64
+	for _, value := range values {
+		if ret < value {
+			ret = value
+		}
+	}
+	return ret
+}
+
+// Return the maximum among the input values. If there isn't any input value, return 0.
+func MaxU64(values ...uint64) uint64 {
 	var ret uint64
 	for _, value := range values {
 		if ret < value {
@@ -36,7 +47,7 @@ func Max(values ...uint64) uint64 {
 }
 
 // Return the minimum among the input values. If there isn't any input value, return 0.
-func Min(values ...uint64) uint64 {
+func MinU64(values ...uint64) uint64 {
 	if len(values) == 0 {
 		return 0
 	}

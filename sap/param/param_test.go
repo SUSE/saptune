@@ -25,19 +25,26 @@ func TestParamSerialisation(t *testing.T) {
 }
 
 func TestMax(t *testing.T) {
-	if val := Max(); val != 0 {
+	if val := MaxU64(); val != 0 {
 		t.Fatal(val)
 	}
-	if val := Max(4, 3, 5, 2, 6); val != 6 {
+	if val := MaxU64(4, 3, 5, 2, 6); val != 6 {
+		t.Fatal(val)
+	}
+
+	if val := MaxI64(); val != 0 {
+		t.Fatal(val)
+	}
+	if val := MaxI64(4, 3, -5, -2, 6); val != 6 {
 		t.Fatal(val)
 	}
 }
 
 func TestMin(t *testing.T) {
-	if val := Min(0); val != 0 {
+	if val := MinU64(0); val != 0 {
 		t.Fatal(val)
 	}
-	if val := Min(4, 3, 5, 2, 6); val != 2 {
+	if val := MinU64(4, 3, 5, 2, 6); val != 2 {
 		t.Fatal(val)
 	}
 }

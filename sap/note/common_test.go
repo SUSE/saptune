@@ -20,7 +20,7 @@ func TestPrepareForSAPEnvironments(t *testing.T) {
 	}
 	// Check attributes from each optimised parameter
 	o := optimised.(PrepareForSAPEnvironments)
-	if o.ShmFileSystemSizeMB < system.GetTotalMemSizeMB()*75/100 {
+	if o.ShmFileSystemSizeMB < int64(system.GetTotalMemSizeMB())*75/100 && o.ShmFileSystemSizeMB != -1 {
 		t.Fatalf("%+v", o)
 	}
 	if o.LimitNofileSapsysSoft < 32000 || o.LimitNofileSapsysHard < 32000 || o.LimitNofileSdbaSoft < 32000 || o.LimitNofileSdbaHard < 32000 ||

@@ -1,10 +1,10 @@
 package note
 
 import (
-	"errors"
 	"fmt"
 	"github.com/HouzuoGuo/saptune/sap/param"
 	"github.com/HouzuoGuo/saptune/system"
+	"log"
 	"path"
 )
 
@@ -16,7 +16,7 @@ const (
 // 1275776 - Linux: Preparing SLES for SAP environments
 type PrepareForSAPEnvironments struct {
 	SysconfigPrefix                                         string
-	ShmFileSystemSizeMB                                     uint64
+	ShmFileSystemSizeMB                                     int64
 	LimitNofileSapsysSoft, LimitNofileSapsysHard            int
 	LimitNofileSdbaSoft, LimitNofileSdbaHard                int
 	LimitNofileDbaSoft, LimitNofileDbaHard                  int
@@ -31,10 +31,13 @@ func (prepare PrepareForSAPEnvironments) Initialise() (Note, error) {
 	newPrepare := prepare
 	// Find out size of SHM
 	mount, found := system.ParseProcMounts().GetByMountPoint("/dev/shm")
-	if !found {
-		return nil, errors.New("Cannot find /dev/shm in /proc/mounts")
+	if found {
+		newPrepare.ShmFileSystemSizeMB = int64(mount.GetFileSystemSizeMB())
+	} else {
+		log.Print("PrepareForSAPEnvironments.Initialise: failed to find /dev/shm mount point")
+		newPrepare.ShmFileSystemSizeMB = -1
 	}
-	newPrepare.ShmFileSystemSizeMB = mount.GetFileSystemSizeMB()
+
 	// Find out current file descriptor limits
 	secLimits, err := system.ParseSecLimitsFile()
 	if err != nil {
@@ -59,7 +62,11 @@ func (prepare PrepareForSAPEnvironments) Optimise() (Note, error) {
 	newPrepare := prepare
 
 	// Calculate optimal SHM size
-	newPrepare.ShmFileSystemSizeMB = param.Max(newPrepare.ShmFileSystemSizeMB, system.GetTotalMemSizeMB()*75/100)
+	if newPrepare.ShmFileSystemSizeMB > 0 {
+		newPrepare.ShmFileSystemSizeMB = param.MaxI64(newPrepare.ShmFileSystemSizeMB, int64(system.GetTotalMemSizeMB())*75/100)
+	} else {
+		log.Print("PrepareForSAPEnvironments.Optimise: /dev/shm is not a valid mount point, will not calculate its optimal size.")
+	}
 	// Raise maximum file descriptors to at least 32800
 	for _, val := range []*int{&newPrepare.LimitNofileSapsysSoft, &newPrepare.LimitNofileSapsysHard, &newPrepare.LimitNofileSdbaSoft, &newPrepare.LimitNofileSdbaHard, &newPrepare.LimitNofileDbaSoft, &newPrepare.LimitNofileDbaHard} {
 		if *val < 32800 {
@@ -86,10 +93,10 @@ func (prepare PrepareForSAPEnvironments) Optimise() (Note, error) {
 		return nil, err
 	}
 	shmCountReferenceValue := conf.GetUint64("SHM_COUNT_REF_VALUE", 0)
-	newPrepare.KernelShmMax = param.Max(newPrepare.KernelShmMax, system.GetTotalMemSizeMB()*1049586 /* MB to Bytes */, 20*1024*1024*1024)
-	newPrepare.KernelShmAll = param.Max(newPrepare.KernelShmAll, system.GetTotalMemSizePages())
-	newPrepare.KernelShmMni = param.Max(newPrepare.KernelShmMni, shmCountReferenceValue, 2048)
-	newPrepare.VMMaxMapCount = param.Max(newPrepare.VMMaxMapCount, 2000000)
+	newPrepare.KernelShmMax = param.MaxU64(newPrepare.KernelShmMax, system.GetTotalMemSizeMB()*1049586 /* MB to Bytes */, 20*1024*1024*1024)
+	newPrepare.KernelShmAll = param.MaxU64(newPrepare.KernelShmAll, system.GetTotalMemSizePages())
+	newPrepare.KernelShmMni = param.MaxU64(newPrepare.KernelShmMni, shmCountReferenceValue, 2048)
+	newPrepare.VMMaxMapCount = param.MaxU64(newPrepare.VMMaxMapCount, 2000000)
 
 	/*
 		Semaphore limits are set according to 1275776 - Linux: Preparing SLES for SAP environments:
@@ -98,16 +105,20 @@ func (prepare PrepareForSAPEnvironments) Optimise() (Note, error) {
 		OPM: 100
 		MNI: 8192
 	*/
-	newPrepare.KernelSemMsl = param.Max(newPrepare.KernelSemMsl, 1250)
-	newPrepare.KernelSemMns = param.Max(newPrepare.KernelSemMns, 256000)
-	newPrepare.KernelSemOpm = param.Max(newPrepare.KernelSemOpm, 100)
-	newPrepare.KernelSemMni = param.Max(newPrepare.KernelSemMni, 8192)
+	newPrepare.KernelSemMsl = param.MaxU64(newPrepare.KernelSemMsl, 1250)
+	newPrepare.KernelSemMns = param.MaxU64(newPrepare.KernelSemMns, 256000)
+	newPrepare.KernelSemOpm = param.MaxU64(newPrepare.KernelSemOpm, 100)
+	newPrepare.KernelSemMni = param.MaxU64(newPrepare.KernelSemMni, 8192)
 	return newPrepare, nil
 }
 func (prepare PrepareForSAPEnvironments) Apply() error {
 	// Apply new SHM size
-	if err := system.RemountSHM(prepare.ShmFileSystemSizeMB); err != nil {
-		return err
+	if prepare.ShmFileSystemSizeMB > 0 {
+		if err := system.RemountSHM(uint64(prepare.ShmFileSystemSizeMB)); err != nil {
+			return err
+		}
+	} else {
+		log.Print("PrepareForSAPEnvironments.Apply: /dev/shm is not a valid mount point, will not adjust its size.")
 	}
 	// Apply new file descriptor limits
 	secLimits, err := system.ParseSecLimitsFile()
