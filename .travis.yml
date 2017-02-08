@@ -1,1 +1,10 @@
 language: go
+go_import_path: github.com/HouzuoGuo/saptune
+go:
+  - 1.7.x
+os:
+  - linux
+sudo: required
+script:
+  - sudo -E env "PATH=$PATH" go test -v -cover ./...
+  - go build
