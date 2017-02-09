@@ -19,6 +19,8 @@ const (
 	EXIT_TUNED_STOPPED       = 1
 	EXIT_TUNED_WRONG_PROFILE = 2
 	EXIT_NOT_TUNED           = 3
+	VENDOR_DIR               = "/etc/saptune/extra/"
+	VENDOR_FILE              = "HPE-Recommended_OS_settings.conf"
 )
 
 func PrintHelpAndExit(exitStatus int) {
@@ -165,6 +167,9 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 	}
 	if !hasDiff {
 		fmt.Printf("\t(no change)\n")
+	}
+	if _, err := os.Stat(VENDOR_DIR + VENDOR_FILE); err == nil {
+		fmt.Println("Attention: HPE vendor specific optimization")
 	}
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/HouzuoGuo/saptune/sap/note"
 	"github.com/HouzuoGuo/saptune/sap/solution"
+	"github.com/HouzuoGuo/saptune/sap/vendor"
 	"github.com/HouzuoGuo/saptune/system"
 	"io/ioutil"
 	"os"
@@ -15,6 +16,9 @@ import (
 const SYSCONFIG_SAPTUNE = "/etc/sysconfig/saptune"
 const SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS = "TUNE_FOR_SOLUTIONS"
 const SYSCONFIG_KEY_TUNE_FOR_NOTES = "TUNE_FOR_NOTES"
+const VENDOR_DIR  = "/etc/saptune/extra/"
+const VENDOR_FILE = "HPE-Recommended_OS_settings.conf"
+
 
 // Application configuration and serialised state information.
 type App struct {
@@ -137,6 +141,14 @@ func (app *App) TuneNote(noteID string) error {
 	if err := optimised.Apply(); err != nil {
 		return fmt.Errorf("Failed to apply note %s - %v", noteID, err)
 	}
+
+	// add vendor specific tunables if vendor file exists in
+	// /etc/saptune/extra
+	if _, err := os.Stat(VENDOR_DIR + VENDOR_FILE); err == nil {
+		vendor.VendorSettings.SetVendorTunes(vendor.VendorSettings{})
+		fmt.Println("HPE vendor specific optimization done too")
+	}
+
 	return nil
 }
 
