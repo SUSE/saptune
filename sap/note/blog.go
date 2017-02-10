@@ -3,6 +3,7 @@ package note
 import (
 	"github.com/HouzuoGuo/saptune/sap/param"
 	"github.com/HouzuoGuo/saptune/system"
+	"github.com/HouzuoGuo/saptune/txtparser"
 	"path"
 	"runtime"
 )
@@ -49,7 +50,7 @@ func (st SUSESysOptimisation) Initialise() (Note, error) {
 func (st SUSESysOptimisation) Optimise() (Note, error) {
 	newST := st
 	// Parse the switches
-	conf, err := system.ParseSysconfigFile(path.Join(newST.SysconfigPrefix, "/etc/sysconfig/saptune-note-SUSE-GUIDE-01"), false)
+	conf, err := txtparser.ParseSysconfigFile(path.Join(newST.SysconfigPrefix, "/etc/sysconfig/saptune-note-SUSE-GUIDE-01"), false)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +169,7 @@ func (st SUSENetCPUOptimisation) Initialise() (Note, error) {
 }
 func (st SUSENetCPUOptimisation) Optimise() (Note, error) {
 	newST := st
-	conf, err := system.ParseSysconfigFile(path.Join(newST.SysconfigPrefix, "/etc/sysconfig/saptune-note-SUSE-GUIDE-02"), false)
+	conf, err := txtparser.ParseSysconfigFile(path.Join(newST.SysconfigPrefix, "/etc/sysconfig/saptune-note-SUSE-GUIDE-02"), false)
 	if err != nil {
 		return nil, err
 	}

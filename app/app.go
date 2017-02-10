@@ -5,7 +5,7 @@ import (
 	"github.com/HouzuoGuo/saptune/sap/note"
 	"github.com/HouzuoGuo/saptune/sap/solution"
 	"github.com/HouzuoGuo/saptune/sap/vendor"
-	"github.com/HouzuoGuo/saptune/system"
+	"github.com/HouzuoGuo/saptune/txtparser"
 	"io/ioutil"
 	"os"
 	"path"
@@ -16,9 +16,8 @@ import (
 const SYSCONFIG_SAPTUNE = "/etc/sysconfig/saptune"
 const SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS = "TUNE_FOR_SOLUTIONS"
 const SYSCONFIG_KEY_TUNE_FOR_NOTES = "TUNE_FOR_NOTES"
-const VENDOR_DIR  = "/etc/saptune/extra/"
+const VENDOR_DIR = "/etc/saptune/extra/"
 const VENDOR_FILE = "HPE-Recommended_OS_settings.conf"
-
 
 // Application configuration and serialised state information.
 type App struct {
@@ -38,7 +37,7 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 		AllNotes:        allNotes,
 		AllSolutions:    allSolutions,
 	}
-	sysconf, err := system.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SYSCONFIG_SAPTUNE), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SYSCONFIG_SAPTUNE), true)
 	if err == nil {
 		app.TuneForSolutions = sysconf.GetStringArray(SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS, []string{})
 		app.TuneForNotes = sysconf.GetStringArray(SYSCONFIG_KEY_TUNE_FOR_NOTES, []string{})
@@ -53,7 +52,7 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 
 // Save /etc/sysconfig/saptune.
 func (app *App) SaveConfig() error {
-	sysconf, err := system.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SYSCONFIG_SAPTUNE), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SYSCONFIG_SAPTUNE), true)
 	if err != nil {
 		return err
 	}

@@ -2,6 +2,7 @@ package note
 
 import (
 	"github.com/HouzuoGuo/saptune/system"
+	"github.com/HouzuoGuo/saptune/txtparser"
 	"path"
 	"runtime"
 )
@@ -76,7 +77,7 @@ func (paging LinuxPagingImprovements) Initialise() (Note, error) {
 }
 func (paging LinuxPagingImprovements) Optimise() (Note, error) {
 	newPaging := paging
-	conf, err := system.ParseSysconfigFile(path.Join(newPaging.SysconfigPrefix, "/etc/sysconfig/saptune-note-1557506"), false)
+	conf, err := txtparser.ParseSysconfigFile(path.Join(newPaging.SysconfigPrefix, "/etc/sysconfig/saptune-note-1557506"), false)
 	if err != nil {
 		return nil, err
 	}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/HouzuoGuo/saptune/sap/param"
 	"github.com/HouzuoGuo/saptune/system"
+	"github.com/HouzuoGuo/saptune/txtparser"
 	"log"
 	"path"
 )
@@ -88,7 +89,7 @@ func (prepare PrepareForSAPEnvironments) Optimise() (Note, error) {
 			Limits the maximum number of shared memory segments per process"
 		- "shmseg * 2 (but min. 1024) Defines the number of shared memory identifiers that are available in the system."
 	*/
-	conf, err := system.ParseSysconfigFile(path.Join(newPrepare.SysconfigPrefix, "/etc/sysconfig/saptune-note-1275776"), false)
+	conf, err := txtparser.ParseSysconfigFile(path.Join(newPrepare.SysconfigPrefix, "/etc/sysconfig/saptune-note-1275776"), false)
 	if err != nil {
 		return nil, err
 	}

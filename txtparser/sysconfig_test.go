@@ -1,4 +1,4 @@
-package system
+package txtparser
 
 import (
 	"fmt"

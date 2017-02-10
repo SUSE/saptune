@@ -1,5 +1,5 @@
 // Implement a universal parser for /etc/sysconfig files.
-package system
+package txtparser
 
 import (
 	"bytes"
@@ -7,9 +7,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"strings"
 )
+
+var consecutiveSpaces = regexp.MustCompile("[[:space:]]+")
 
 // A single key-value pair in sysconfig file.
 type SysconfigEntry struct {
