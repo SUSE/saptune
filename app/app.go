@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/HouzuoGuo/saptune/sap/note"
 	"github.com/HouzuoGuo/saptune/sap/solution"
-	"github.com/HouzuoGuo/saptune/sap/vendor"
 	"github.com/HouzuoGuo/saptune/txtparser"
 	"io/ioutil"
 	"os"
@@ -16,8 +15,6 @@ import (
 const SYSCONFIG_SAPTUNE = "/etc/sysconfig/saptune"
 const SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS = "TUNE_FOR_SOLUTIONS"
 const SYSCONFIG_KEY_TUNE_FOR_NOTES = "TUNE_FOR_NOTES"
-const VENDOR_DIR = "/etc/saptune/extra/"
-const VENDOR_FILE = "HPE-Recommended_OS_settings.conf"
 
 // Application configuration and serialised state information.
 type App struct {
@@ -101,7 +98,7 @@ If the note is not yet covered by one of the enabled solutions, the note number 
 added into the list of additional notes.
 */
 func (app *App) TuneNote(noteID string) error {
-	note, err := app.GetNoteByID(noteID)
+	aNote, err := app.GetNoteByID(noteID)
 	if err != nil {
 		return err
 	}
@@ -127,7 +124,7 @@ func (app *App) TuneNote(noteID string) error {
 		return nil
 	}
 	// Save current state before applying optimisation
-	currentState, err := note.Initialise()
+	currentState, err := aNote.Initialise()
 	if err != nil {
 		return fmt.Errorf("Failed to examine system for the current status of note %s - %v", noteID, err)
 	} else if err = app.State.Store(noteID, currentState, false); err != nil {
@@ -139,13 +136,6 @@ func (app *App) TuneNote(noteID string) error {
 	}
 	if err := optimised.Apply(); err != nil {
 		return fmt.Errorf("Failed to apply note %s - %v", noteID, err)
-	}
-
-	// add vendor specific tunables if vendor file exists in
-	// /etc/saptune/extra
-	if _, err := os.Stat(VENDOR_DIR + VENDOR_FILE); err == nil {
-		vendor.VendorSettings.SetVendorTunes(vendor.VendorSettings{})
-		fmt.Println("HPE vendor specific optimization done too")
 	}
 
 	return nil

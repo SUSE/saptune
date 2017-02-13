@@ -116,3 +116,21 @@ func RemountSHM(newSizeMB uint64) error {
 	}
 	return nil
 }
+
+// List directory content.
+func ListDir(dirPath string) (dirNames, fileNames []string, err error) {
+	entries, err := ioutil.ReadDir(dirPath)
+	if err != nil {
+		return
+	}
+	dirNames = make([]string, 0, 0)
+	fileNames = make([]string, 0, 0)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			dirNames = append(dirNames, entry.Name())
+		} else {
+			fileNames = append(fileNames, entry.Name())
+		}
+	}
+	return
+}

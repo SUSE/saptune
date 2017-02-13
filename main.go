@@ -189,6 +189,21 @@ func VerifyAllParameters() {
 	}
 }
 
+// Apply all vendor customisations from /etc/saptune/extra
+func ApplyVendorSettings() {
+	if _, files, err := system.ListDir(note.VENDOR_DIR); err != nil || len(files) == 0 {
+		// Nothing under vendor dir
+		return
+	}
+	if _, err := os.Stat(note.VENDOR_DIR); err == nil {
+		fmt.Println("Applying additional vendor customisations...")
+		vendorSettings := note.VendorSettings{}
+		if err := vendorSettings.Apply(); err != nil {
+			fmt.Println("Error: ", err.Error())
+		}
+	}
+}
+
 func NoteAction(actionName, noteID string) {
 	switch actionName {
 	case "apply":
@@ -199,6 +214,7 @@ func NoteAction(actionName, noteID string) {
 			errorExit("Failed to tune for note %s: %v", noteID, err)
 		}
 		fmt.Println("The note has been applied successfully.")
+		ApplyVendorSettings()
 	case "list":
 		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
@@ -266,6 +282,7 @@ func NoteAction(actionName, noteID string) {
 		}
 		fmt.Println("Parameters tuned by the note have been successfully reverted.")
 		fmt.Println("Plese note: the reverted note may still show up in list of enabled notes, if an enabled solution refers to it.")
+		fmt.Println("Plese note: vendor customisations (if any) cannot be reverted automatically.")
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -288,6 +305,7 @@ func SolutionAction(actionName, solName string) {
 				fmt.Printf("\t%s\t%s\n", noteNumber, note.AllNotes[noteNumber].Name())
 			}
 		}
+		ApplyVendorSettings()
 	case "list":
 		fmt.Println("All solutions (* denotes enabled solution):")
 		for _, solName := range solution.GetSortedSolutionNames(runtime.GOARCH) {
@@ -336,6 +354,7 @@ func SolutionAction(actionName, solName string) {
 			errorExit("Failed to revert tuning for solution %s: %v", solName, err)
 		}
 		fmt.Println("Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
+		fmt.Println("Plese note: vendor customisations (if any) cannot be reverted automatically.")
 	default:
 		PrintHelpAndExit(1)
 	}
