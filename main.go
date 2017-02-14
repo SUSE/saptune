@@ -106,6 +106,7 @@ func DaemonAction(actionName string) {
 		if err := tuneApp.TuneAll(); err != nil {
 			panic(err)
 		}
+		ApplyVendorSettings()
 	case "status":
 		// Check daemon
 		if system.SystemctlIsRunning(TUNED_SERVICE) {
