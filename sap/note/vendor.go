@@ -1,13 +1,10 @@
 package note
 
 import (
-	"fmt"
 	"github.com/HouzuoGuo/saptune/system"
-	"io/ioutil"
+	"github.com/HouzuoGuo/saptune/txtparser"
 	"log"
-	"path"
 	"regexp"
-	"strings"
 )
 
 const VENDOR_DIR = "/etc/saptune/extra/"
@@ -43,40 +40,19 @@ func (vend VendorSettings) Apply() error {
 		return err
 	}
 	for _, iniFile := range files {
-		contentBytes, err := ioutil.ReadFile(path.Join(VENDOR_DIR, iniFile))
-		log.Printf("VendorSettings.Apply: applying from file %s", iniFile)
-		if err != nil {
-			return fmt.Errorf("failed to read vendor file: %v", err)
+		skv, inierr := txtparser.ParseIniFile(iniFile)
+		if inierr != nil {
+			return err
 		}
-
-		var tunable, value string
-		var fstart = 0
-
-		for _, line := range strings.Split(string(contentBytes), "\n") {
-			fields := consecSpaces.Split(strings.TrimSpace(line), -1)
-			if len(fields) == 0 || len(fields[0]) == 0 || fields[0][0] == '#' {
-				continue // skip comments and empty lines
+		for _, entry := range skv.KeyValue {
+			section := entry.Section
+			tunable := entry.Key
+			value   := entry.Value
+			if section == "[sysctl]" {
+				system.SetSysctlString(tunable, value)
+				log.Printf("VendorSettings.Apply: set %s=%s", tunable, value)
 			}
-			if len(fields) < 3 { // handle tuning lines without spaces
-				fields = strings.Split(strings.TrimSpace(line), "=")
-				if len(fields) == 1 {
-					continue
-				}
-				fstart = 1
-			} else {
-				if fields[1] != "=" {
-					continue
-				}
-				fstart = 2
-			}
-			value = fields[fstart]
-			for i := fstart + 1; i < len(fields); i++ { // handle tunables with more than one value
-				value = value + " " + fields[i]
-			}
-			tunable = fields[0]
-
-			system.SetSysctlString(tunable, value)
-			log.Printf("VendorSettings.Apply: set %s=%s", tunable, value)
+			// else for future use
 		}
 	}
 	return nil

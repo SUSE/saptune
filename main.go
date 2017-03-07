@@ -170,7 +170,7 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 		fmt.Printf("\t(no change)\n")
 	}
 	if _, err := os.Stat(VENDOR_DIR + VENDOR_FILE); err == nil {
-		fmt.Println("Attention: HPE vendor specific optimization")
+		fmt.Println("Attention: vendor specific optimization may be in place")
 	}
 }
 
@@ -282,8 +282,8 @@ func NoteAction(actionName, noteID string) {
 			errorExit("Failed to revert note %s: %v", noteID, err)
 		}
 		fmt.Println("Parameters tuned by the note have been successfully reverted.")
-		fmt.Println("Plese note: the reverted note may still show up in list of enabled notes, if an enabled solution refers to it.")
-		fmt.Println("Plese note: vendor customisations (if any) cannot be reverted automatically.")
+		fmt.Println("Please note: the reverted note may still show up in list of enabled notes, if an enabled solution refers to it.")
+		fmt.Println("Please note: vendor customisations (if any) cannot be reverted automatically.")
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -355,7 +355,7 @@ func SolutionAction(actionName, solName string) {
 			errorExit("Failed to revert tuning for solution %s: %v", solName, err)
 		}
 		fmt.Println("Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
-		fmt.Println("Plese note: vendor customisations (if any) cannot be reverted automatically.")
+		fmt.Println("Please note: vendor customisations (if any) cannot be reverted automatically.")
 	default:
 		PrintHelpAndExit(1)
 	}
