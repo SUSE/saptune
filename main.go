@@ -106,7 +106,7 @@ func DaemonAction(actionName string) {
 		if err := tuneApp.TuneAll(); err != nil {
 			panic(err)
 		}
-		ApplyVendorSettings()
+		tuneApp.ApplyVendorSettings()
 	case "status":
 		// Check daemon
 		if system.SystemctlIsRunning(TUNED_SERVICE) {
@@ -121,13 +121,17 @@ func DaemonAction(actionName string) {
 			os.Exit(EXIT_TUNED_WRONG_PROFILE)
 		}
 		// Check for any enabled note/solution
-		if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 {
+		if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 || len(tuneApp.TuneForVendors) > 0 {
 			fmt.Println("The system has been tuned for the following solutions and notes:")
 			for _, sol := range tuneApp.TuneForSolutions {
 				fmt.Println("\t" + sol)
 			}
 			for _, noteID := range tuneApp.TuneForNotes {
 				fmt.Println("\t" + noteID)
+			}
+			fmt.Println("\nand the following vendor files:")
+			for _, vendFile := range tuneApp.TuneForVendors {
+				fmt.Println("\t" + vendFile)
 			}
 		} else {
 			fmt.Fprintln(os.Stderr, "Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
@@ -190,21 +194,6 @@ func VerifyAllParameters() {
 	}
 }
 
-// Apply all vendor customisations from /etc/saptune/extra
-func ApplyVendorSettings() {
-	if _, files, err := system.ListDir(note.VENDOR_DIR); err != nil || len(files) == 0 {
-		// Nothing under vendor dir
-		return
-	}
-	if _, err := os.Stat(note.VENDOR_DIR); err == nil {
-		fmt.Println("Applying additional vendor customisations...")
-		vendorSettings := note.VendorSettings{}
-		if err := vendorSettings.Apply(); err != nil {
-			fmt.Println("Error: ", err.Error())
-		}
-	}
-}
-
 func NoteAction(actionName, noteID string) {
 	switch actionName {
 	case "apply":
@@ -215,7 +204,7 @@ func NoteAction(actionName, noteID string) {
 			errorExit("Failed to tune for note %s: %v", noteID, err)
 		}
 		fmt.Println("The note has been applied successfully.")
-		ApplyVendorSettings()
+		tuneApp.ApplyVendorSettings()
 	case "list":
 		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
@@ -306,7 +295,7 @@ func SolutionAction(actionName, solName string) {
 				fmt.Printf("\t%s\t%s\n", noteNumber, note.AllNotes[noteNumber].Name())
 			}
 		}
-		ApplyVendorSettings()
+		tuneApp.ApplyVendorSettings()
 	case "list":
 		fmt.Println("All solutions (* denotes enabled solution):")
 		for _, solName := range solution.GetSortedSolutionNames(runtime.GOARCH) {

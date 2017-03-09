@@ -5,6 +5,7 @@ import (
 	"github.com/HouzuoGuo/saptune/sap/note"
 	"github.com/HouzuoGuo/saptune/sap/solution"
 	"github.com/HouzuoGuo/saptune/txtparser"
+	"github.com/HouzuoGuo/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"
@@ -15,6 +16,7 @@ import (
 const SYSCONFIG_SAPTUNE = "/etc/sysconfig/saptune"
 const SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS = "TUNE_FOR_SOLUTIONS"
 const SYSCONFIG_KEY_TUNE_FOR_NOTES = "TUNE_FOR_NOTES"
+const SYSCONFIG_KEY_TUNE_FOR_VENDORS = "TUNE_FOR_VENDORS"
 
 // Application configuration and serialised state information.
 type App struct {
@@ -23,6 +25,7 @@ type App struct {
 	AllSolutions     map[string]solution.Solution // all solutions
 	TuneForSolutions []string                     // list of solution names to tune, must always be sorted in ascending order.
 	TuneForNotes     []string                     // list of additional notes to tune, must always be sorted in ascending order.
+	TuneForVendors   []string                     // list of additional, vendor specific tunables.
 	State            *State                       // examine and manage serialised notes.
 }
 
@@ -38,9 +41,11 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 	if err == nil {
 		app.TuneForSolutions = sysconf.GetStringArray(SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS, []string{})
 		app.TuneForNotes = sysconf.GetStringArray(SYSCONFIG_KEY_TUNE_FOR_NOTES, []string{})
+		app.TuneForVendors = sysconf.GetStringArray(SYSCONFIG_KEY_TUNE_FOR_VENDORS, []string{})
 	} else {
 		app.TuneForSolutions = []string{}
 		app.TuneForNotes = []string{}
+		app.TuneForVendors = []string{}
 	}
 	sort.Strings(app.TuneForSolutions)
 	sort.Strings(app.TuneForNotes)
@@ -55,6 +60,7 @@ func (app *App) SaveConfig() error {
 	}
 	sysconf.SetStrArray(SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS, app.TuneForSolutions)
 	sysconf.SetStrArray(SYSCONFIG_KEY_TUNE_FOR_NOTES, app.TuneForNotes)
+	sysconf.SetStrArray(SYSCONFIG_KEY_TUNE_FOR_VENDORS, app.TuneForVendors)
 	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SYSCONFIG_SAPTUNE), []byte(sysconf.ToText()), 0644)
 }
 
@@ -283,6 +289,13 @@ func (app *App) RevertSolution(solName string) error {
 // Revert all tuned parameters (both solutions and additional notes), and clear stored states.
 func (app *App) RevertAll(permanent bool) error {
 	allErrs := make([]error, 0, 0)
+
+	// revert vendor setting first to avoid order problems 
+	vs := note.VendorSettings{}
+	if err := vs.RevertVendorSettings(app.TuneForVendors); err != nil {
+		allErrs = append(allErrs, err)
+	}
+
 	// Simply revert all notes from serialised states
 	otherNotes, err := app.State.List()
 	if err == nil {
@@ -297,6 +310,7 @@ func (app *App) RevertAll(permanent bool) error {
 	if permanent {
 		app.TuneForNotes = make([]string, 0, 0)
 		app.TuneForSolutions = make([]string, 0, 0)
+		app.TuneForVendors = make([]string, 0, 0)
 		if err := app.SaveConfig(); err != nil {
 			allErrs = append(allErrs, err)
 		}
@@ -382,4 +396,34 @@ func (app *App) VerifyAll() (unsatisfiedNotes []string, comparisons map[string]m
 		comparisons[noteID] = noteComparisons
 	}
 	return
+}
+
+// Apply all vendor customisations from /etc/saptune/extra
+func (app *App) ApplyVendorSettings() {
+	if _, files, err := system.ListDir(note.VENDOR_DIR); err != nil || len(files) == 0 {
+		// Nothing under vendor dir
+		return
+	}
+	if _, err := os.Stat(note.VENDOR_DIR); err == nil {
+		fmt.Println("Applying additional vendor customisations...")
+
+		vendorSettings := note.VendorSettings{}
+		savedVFiles, err := vendorSettings.Apply()
+		if err != nil {
+			fmt.Println("Error: ", err.Error())
+		}
+
+		//don't sort TuneForVendors, because the order is needed for a
+		//correct revert because of overlapping tunables in the notes
+		sortedTFV := app.TuneForVendors
+		sort.Strings(sortedTFV)
+		for _, sVFile := range savedVFiles {
+			if i := sort.SearchStrings(sortedTFV, sVFile); !(i < len(sortedTFV) && sortedTFV[i] == sVFile) {
+				app.TuneForVendors = append(app.TuneForVendors, sVFile)
+			}
+		}
+		if err := app.SaveConfig(); err != nil {
+			return
+		}
+	}
 }
