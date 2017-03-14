@@ -10,9 +10,12 @@ package note
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/HouzuoGuo/saptune/system"
+	"log"
+	"path"
 	"reflect"
 	"sort"
+	"strings"
 )
 
 /*
@@ -26,20 +29,53 @@ type Note interface {
 	Name() string              // The original note name.
 }
 
-var AllNotes = map[string]Note{
-	"2205917":       HANARecommendedOSSettings{},
-	"1557506":       LinuxPagingImprovements{},
-	"1275776":       PrepareForSAPEnvironments{},
-	"1984787":       AfterInstallation{},
-	"2161991":       VmwareGuestIOElevator{},
-	"SUSE-GUIDE-01": SUSESysOptimisation{},
-	"SUSE-GUIDE-02": SUSENetCPUOptimisation{},
-} // All tunable SAP notes and their IDs
+type TuningOptions map[string]Note // Collection of tuning options from SAP notes and 3rd party vendors.
 
-// Return all note numbers, sorted in ascending order.
-func GetSortedNoteIDs() (ret []string) {
-	ret = make([]string, 0, len(AllNotes))
-	for id := range AllNotes {
+// Return all built-in tunable SAP notes together with those defined by 3rd party vendors.
+func GetTuningOptions(thirdPartyTuningDir string) TuningOptions {
+	ret := TuningOptions{
+		"2205917":       HANARecommendedOSSettings{},
+		"1557506":       LinuxPagingImprovements{},
+		"1275776":       PrepareForSAPEnvironments{},
+		"1984787":       AfterInstallation{},
+		"2161991":       VmwareGuestIOElevator{},
+		"SUSE-GUIDE-01": SUSESysOptimisation{},
+		"SUSE-GUIDE-02": SUSENetCPUOptimisation{},
+	}
+	// Collect those defined by 3rd party
+	_, files, err := system.ListDir(thirdPartyTuningDir)
+	if err != nil {
+		// Not a fatal error
+		log.Printf("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
+	}
+	for _, fileName := range files {
+		// By convention, the portion before dash makes up the ID.
+		idName := strings.SplitN(fileName, "-", 2)
+		if len(idName) != 2 {
+			log.Printf("GetTuningOptions: skip bad file name \"%s\"", fileName)
+			continue
+		}
+		id := idName[0]
+		// Just for the cosmetics, remove suffix .conf from description
+		name := strings.TrimSuffix(idName[1], ".conf")
+		// Do not allow vendor to override built-in
+		if _, exists := ret[id]; exists {
+			log.Printf("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
+			continue
+		}
+		ret[id] = VendorSettings{
+			ConfFilePath:    path.Join(thirdPartyTuningDir, fileName),
+			ID:              id,
+			DescriptiveName: name,
+		}
+	}
+	return ret
+}
+
+// Return all tuning option IDs, sorted in ascending order.
+func (opts *TuningOptions) GetSortedIDs() (ret []string) {
+	ret = make([]string, 0, len(*opts))
+	for id := range *opts {
 		ret = append(ret, id)
 	}
 	sort.Strings(ret)
@@ -48,10 +84,27 @@ func GetSortedNoteIDs() (ret []string) {
 
 // Record the actual value versus expected value for a note field. The field name has to be the actual name in Go struct.
 type NoteFieldComparison struct {
-	ReflectFieldName               string
+	ReflectFieldName               string // Structure field name
+	ReflectMapKey                  string // If structure field is a map, this is the map key
 	ActualValue, ExpectedValue     interface{}
 	ActualValueJS, ExpectedValueJS string
 	MatchExpectation               bool
+}
+
+// Compare JSON representation of two values and see if they match.
+func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
+	v1JSBytes, err := json.Marshal(v1)
+	if err != nil {
+		log.Panicf("CompareJSValue: failed to serialise \"%+v\" - %v", v1, err)
+	}
+	v2JSBytes, err := json.Marshal(v2)
+	if err != nil {
+		log.Panicf("CompareJSValue: failed to serialise \"%+v\" - %v", v2, err)
+	}
+	v1JS = string(v1JSBytes)
+	v2JS = string(v2JSBytes)
+	match = v1JS == v2JS
+	return
 }
 
 // Compare the content of two notes and return differences in their fields in a human-readable text.
@@ -59,29 +112,44 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 	comparisons = make(map[string]NoteFieldComparison)
 	allMatch = true
 	// Compare all fields
-	refNoteActual := reflect.ValueOf(actualNote)
-	refNoteExpected := reflect.ValueOf(expectedNote)
-	for i := 0; i < refNoteActual.NumField(); i++ {
-		// Retrieve field value from actual and expected note
+	refActualNote := reflect.ValueOf(actualNote)
+	refExpectedNote := reflect.ValueOf(expectedNote)
+	for i := 0; i < refActualNote.NumField(); i++ {
+		var fieldComparison NoteFieldComparison
+		// Retrieve actualField value from actual and expected note
 		fieldName := reflect.TypeOf(actualNote).Field(i).Name
-		actualValue := refNoteActual.Field(i).Interface()
-		expectedValue := refNoteExpected.Field(i).Interface()
-		// Compare field value by their serialised JSON string
-		jsValNoteActual, err := json.Marshal(actualValue)
-		if err != nil {
-			panic(fmt.Errorf("JSON error in JSONCompare for field %s: %v", fieldName, err))
-		}
-		jsValNoteExpected, err := json.Marshal(expectedValue)
-		if err != nil {
-			panic(fmt.Errorf("JSON error in JSONCompare for field %s: %v", fieldName, err))
-		}
-		fieldComparison := NoteFieldComparison{
-			ReflectFieldName: fieldName,
-			ActualValue:      actualValue,
-			ExpectedValue:    expectedValue,
-			ActualValueJS:    string(jsValNoteActual),
-			ExpectedValueJS:  string(jsValNoteExpected),
-			MatchExpectation: string(jsValNoteActual) == string(jsValNoteExpected),
+		actualField := refActualNote.Field(i)
+		// Compare map value or actualField value
+		if actualField.Type().Kind() == reflect.Map {
+			// Compare map values
+			expectedMap := refExpectedNote.Field(i)
+			for _, key := range actualField.MapKeys() {
+				actualValue := actualField.MapIndex(key).Interface()
+				expectedValue := expectedMap.MapIndex(key).Interface()
+				actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue)
+				fieldComparison = NoteFieldComparison{
+					ReflectFieldName: fieldName,
+					ReflectMapKey:    key.String(),
+					ActualValue:      actualValue,
+					ExpectedValue:    expectedValue,
+					ActualValueJS:    actualValueJS,
+					ExpectedValueJS:  expectedValueJS,
+					MatchExpectation: match,
+				}
+			}
+		} else {
+			// Compare ordinary field value
+			actualValue := refActualNote.Field(i).Interface()
+			expectedValue := refExpectedNote.Field(i).Interface()
+			actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue)
+			fieldComparison = NoteFieldComparison{
+				ReflectFieldName: fieldName,
+				ActualValue:      actualValue,
+				ExpectedValue:    expectedValue,
+				ActualValueJS:    actualValueJS,
+				ExpectedValueJS:  expectedValueJS,
+				MatchExpectation: match,
+			}
 		}
 		comparisons[fieldName] = fieldComparison
 		if !fieldComparison.MatchExpectation {

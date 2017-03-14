@@ -116,9 +116,10 @@ func TestNoteSerialisation(t *testing.T) {
 	}
 }
 
-func TestGetSortedNoteIDs(t *testing.T) {
-	if len(GetSortedNoteIDs()) != len(AllNotes) {
-		t.Fatal(GetSortedNoteIDs())
+func TestGetTuningOptions(t *testing.T) {
+	allOpts := GetTuningOptions("")
+	if sorted := allOpts.GetSortedIDs(); len(allOpts) != len(sorted) {
+		t.Fatal(sorted, allOpts)
 	}
 }
 

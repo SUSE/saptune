@@ -1,25 +1,19 @@
 package txtparser
 
 import (
-	"strings"
 	"fmt"
 	"io/ioutil"
-	"regexp"
 	"path"
+	"regexp"
+	"strings"
 )
-
-const VENDOR_DIR = "/etc/saptune/extra/"
 
 var consecSpaces = regexp.MustCompile("[[:space:]]+")
 
-/*
-handle vendor specific sysconfig files
-see /etc/saptune/extra/HPE-Recommended_OS_settings.conf
-*/
 type IniEntry struct {
 	Section string
-	Key string
-	Value string
+	Key     string
+	Value   string
 }
 
 type Iniconf struct {
@@ -28,7 +22,7 @@ type Iniconf struct {
 }
 
 func ParseIniFile(iniFile string) (*Iniconf, error) {
-	contentBytes, err := ioutil.ReadFile(path.Join(VENDOR_DIR, iniFile))
+	contentBytes, err := ioutil.ReadFile(path.Join(iniFile))
 	if err != nil {
 		fmt.Errorf("failed to read vendor file: %v", err)
 		return nil, err
@@ -77,4 +71,3 @@ func ParseIniFile(iniFile string) (*Iniconf, error) {
 	}
 	return cont, nil
 }
-

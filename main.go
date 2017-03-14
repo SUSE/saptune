@@ -19,8 +19,7 @@ const (
 	EXIT_TUNED_STOPPED       = 1
 	EXIT_TUNED_WRONG_PROFILE = 2
 	EXIT_NOT_TUNED           = 3
-	VENDOR_DIR               = "/etc/saptune/extra/"
-	VENDOR_FILE              = "HPE-Recommended_OS_settings.conf"
+	VENDOR_TUNING_DIR        = "/etc/saptune/extra/" // The directory for external parties to place their tuning option files
 )
 
 func PrintHelpAndExit(exitStatus int) {
@@ -51,14 +50,10 @@ func cliArg(i int) string {
 	return ""
 }
 
-var tuneApp *app.App
+var tuneApp *app.App                 // application configuration and tuning states
+var tuningOptions note.TuningOptions // Collection of tuning options from SAP notes and 3rd party vendors.
 
 func main() {
-	defer func() {
-		if err := recover(); err != nil {
-			errorExit("Critical error: %v", err)
-		}
-	}()
 	if arg1 := cliArg(1); arg1 == "" || arg1 == "help" || arg1 == "--help" {
 		PrintHelpAndExit(0)
 	}
@@ -72,7 +67,9 @@ func main() {
 		errorExit("The system architecture (%s) is not supported.", runtime.GOARCH)
 		return
 	}
-	tuneApp = app.InitialiseApp("", "", note.AllNotes, archSolutions)
+	// Initialise application configuration and tuning procedures
+	tuningOptions = note.GetTuningOptions(VENDOR_TUNING_DIR)
+	tuneApp = app.InitialiseApp("", "", tuningOptions, archSolutions)
 	switch cliArg(1) {
 	case "daemon":
 		DaemonAction(cliArg(2))
@@ -106,7 +103,6 @@ func DaemonAction(actionName string) {
 		if err := tuneApp.TuneAll(); err != nil {
 			panic(err)
 		}
-		tuneApp.ApplyVendorSettings()
 	case "status":
 		// Check daemon
 		if system.SystemctlIsRunning(TUNED_SERVICE) {
@@ -121,17 +117,13 @@ func DaemonAction(actionName string) {
 			os.Exit(EXIT_TUNED_WRONG_PROFILE)
 		}
 		// Check for any enabled note/solution
-		if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 || len(tuneApp.TuneForVendors) > 0 {
+		if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 {
 			fmt.Println("The system has been tuned for the following solutions and notes:")
 			for _, sol := range tuneApp.TuneForSolutions {
 				fmt.Println("\t" + sol)
 			}
 			for _, noteID := range tuneApp.TuneForNotes {
 				fmt.Println("\t" + noteID)
-			}
-			fmt.Println("\nand the following vendor files:")
-			for _, vendFile := range tuneApp.TuneForVendors {
-				fmt.Println("\t" + vendFile)
 			}
 		} else {
 			fmt.Fprintln(os.Stderr, "Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
@@ -157,24 +149,30 @@ func DaemonAction(actionName string) {
 
 // Print mismatching fields in the note comparison result.
 func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldComparison, printComparison bool) {
-	fmt.Printf("%s - %s -\n", noteID, note.AllNotes[noteID].Name())
+	fmt.Printf("%s - %s -\n", noteID, tuningOptions[noteID].Name())
 	hasDiff := false
-	for fieldName, fieldComparison := range comparisons {
-		if !fieldComparison.MatchExpectation {
+	for name, comparison := range comparisons {
+		if !comparison.MatchExpectation {
 			hasDiff = true
 			if printComparison {
-				fmt.Printf("\t%s Expected: %s\n", fieldName, fieldComparison.ExpectedValueJS)
-				fmt.Printf("\t%s Actual  : %s\n", fieldName, fieldComparison.ActualValueJS)
+				if comparison.ReflectMapKey == "" {
+					fmt.Printf("\t%s Expected: %s\n", name, comparison.ExpectedValueJS)
+					fmt.Printf("\t%s Actual  : %s\n", name, comparison.ActualValueJS)
+				} else {
+					fmt.Printf("\t%s[%s] Expected: %s\n", name, comparison.ReflectMapKey, comparison.ExpectedValueJS)
+					fmt.Printf("\t%s[%s] Actual  : %s\n", name, comparison.ReflectMapKey, comparison.ActualValueJS)
+				}
 			} else {
-				fmt.Printf("\t%s : %s\n", fieldName, fieldComparison.ExpectedValueJS)
+				if comparison.ReflectMapKey == "" {
+					fmt.Printf("\t%s : %s\n", name, comparison.ExpectedValueJS)
+				} else {
+					fmt.Printf("\t%s[%s] : %s\n", name, comparison.ReflectMapKey, comparison.ExpectedValueJS)
+				}
 			}
 		}
 	}
 	if !hasDiff {
 		fmt.Printf("\t(no change)\n")
-	}
-	if _, err := os.Stat(VENDOR_DIR + VENDOR_FILE); err == nil {
-		fmt.Println("Attention: vendor specific optimization may be in place")
 	}
 }
 
@@ -204,12 +202,11 @@ func NoteAction(actionName, noteID string) {
 			errorExit("Failed to tune for note %s: %v", noteID, err)
 		}
 		fmt.Println("The note has been applied successfully.")
-		tuneApp.ApplyVendorSettings()
 	case "list":
 		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
-		for _, noteID := range note.GetSortedNoteIDs() {
-			noteObj := note.AllNotes[noteID]
+		for _, noteID := range tuningOptions.GetSortedIDs() {
+			noteObj := tuningOptions[noteID]
 			format := "\t%s\t%s\n"
 			if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
 				format = "*" + format
@@ -272,7 +269,6 @@ func NoteAction(actionName, noteID string) {
 		}
 		fmt.Println("Parameters tuned by the note have been successfully reverted.")
 		fmt.Println("Please note: the reverted note may still show up in list of enabled notes, if an enabled solution refers to it.")
-		fmt.Println("Please note: vendor customisations (if any) cannot be reverted automatically.")
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -292,10 +288,9 @@ func SolutionAction(actionName, solName string) {
 		if len(removedAdditionalNotes) > 0 {
 			fmt.Println("The following previously-enabled notes are now tuned by the SAP solution:")
 			for _, noteNumber := range removedAdditionalNotes {
-				fmt.Printf("\t%s\t%s\n", noteNumber, note.AllNotes[noteNumber].Name())
+				fmt.Printf("\t%s\t%s\n", noteNumber, tuningOptions[noteNumber].Name())
 			}
 		}
-		tuneApp.ApplyVendorSettings()
 	case "list":
 		fmt.Println("All solutions (* denotes enabled solution):")
 		for _, solName := range solution.GetSortedSolutionNames(runtime.GOARCH) {
@@ -344,7 +339,6 @@ func SolutionAction(actionName, solName string) {
 			errorExit("Failed to revert tuning for solution %s: %v", solName, err)
 		}
 		fmt.Println("Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
-		fmt.Println("Please note: vendor customisations (if any) cannot be reverted automatically.")
 	default:
 		PrintHelpAndExit(1)
 	}
