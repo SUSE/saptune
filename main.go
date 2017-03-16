@@ -215,6 +215,9 @@ func NoteAction(actionName, noteID string) {
 			}
 			fmt.Printf(format, noteID, noteObj.Name())
 		}
+		fmt.Println("\nBe in mind: Manually enabled notes not applied automatically after reboot,")
+		fmt.Println("            if 'tuned' isn't running.")
+		fmt.Println("See manual page of 'saptune' for further information")
 	case "verify":
 		if noteID == "" {
 			VerifyAllParameters()
@@ -300,6 +303,9 @@ func SolutionAction(actionName, solName string) {
 			}
 			fmt.Printf(format, solName)
 		}
+		fmt.Println("\nBe in mind: Manually enabled solutions not applied automatically after reboot,")
+		fmt.Println("            if 'tuned' isn't running.")
+		fmt.Println("See manual page of 'saptune' for further information")
 	case "verify":
 		if solName == "" {
 			VerifyAllParameters()
