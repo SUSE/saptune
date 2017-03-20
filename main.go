@@ -202,6 +202,11 @@ func NoteAction(actionName, noteID string) {
 			errorExit("Failed to tune for note %s: %v", noteID, err)
 		}
 		fmt.Println("The note has been applied successfully.")
+		if !system.SystemctlIsRunning(TUNED_SERVICE) || system.GetTunedProfile() != TUNED_PROFILE_NAME {
+			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
+				"you must instruct saptune to configure \"tuned\" daemon by running:" +
+				"\n    saptune daemon start")
+		}
 	case "list":
 		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
@@ -215,9 +220,6 @@ func NoteAction(actionName, noteID string) {
 			}
 			fmt.Printf(format, noteID, noteObj.Name())
 		}
-		fmt.Println("\nBe in mind: Manually enabled notes not applied automatically after reboot,")
-		fmt.Println("            if 'tuned' isn't running.")
-		fmt.Println("See manual page of 'saptune' for further information")
 	case "verify":
 		if noteID == "" {
 			VerifyAllParameters()
@@ -293,6 +295,11 @@ func SolutionAction(actionName, solName string) {
 			for _, noteNumber := range removedAdditionalNotes {
 				fmt.Printf("\t%s\t%s\n", noteNumber, tuningOptions[noteNumber].Name())
 			}
+		}
+		if !system.SystemctlIsRunning(TUNED_SERVICE) || system.GetTunedProfile() != TUNED_PROFILE_NAME {
+			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
+				"you must instruct saptune to configure \"tuned\" daemon by running:" +
+				"\n    saptune daemon start")
 		}
 	case "list":
 		fmt.Println("All solutions (* denotes enabled solution):")
