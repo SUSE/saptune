@@ -10,11 +10,13 @@ package note
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/HouzuoGuo/saptune/system"
 	"log"
 	"path"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -101,8 +103,14 @@ func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 	if err != nil {
 		log.Panicf("CompareJSValue: failed to serialise \"%+v\" - %v", v2, err)
 	}
-	v1JS = string(v1JSBytes)
-	v2JS = string(v2JSBytes)
+	v1JS, err = strconv.Unquote(string(v1JSBytes))
+	if err != nil {
+		log.Panicf("CompareJSValue: unexpected quote sequence in \"%s\"", v1JS)
+	}
+	v2JS, err = strconv.Unquote(string(v2JSBytes))
+	if err != nil {
+		log.Panicf("CompareJSValue: unexpected quote sequence in \"%s\"", v2JS)
+	}
 	match = v1JS == v2JS
 	return
 }
@@ -136,6 +144,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					ExpectedValueJS:  expectedValueJS,
 					MatchExpectation: match,
 				}
+				comparisons[fmt.Sprintf("%s[%s]", fieldName, key.String())] = fieldComparison
 			}
 		} else {
 			// Compare ordinary field value
@@ -150,8 +159,8 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 				ExpectedValueJS:  expectedValueJS,
 				MatchExpectation: match,
 			}
+			comparisons[fieldName] = fieldComparison
 		}
-		comparisons[fieldName] = fieldComparison
 		if !fieldComparison.MatchExpectation {
 			allMatch = false
 		}

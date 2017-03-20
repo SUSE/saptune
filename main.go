@@ -155,19 +155,10 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 		if !comparison.MatchExpectation {
 			hasDiff = true
 			if printComparison {
-				if comparison.ReflectMapKey == "" {
-					fmt.Printf("\t%s Expected: %s\n", name, comparison.ExpectedValueJS)
-					fmt.Printf("\t%s Actual  : %s\n", name, comparison.ActualValueJS)
-				} else {
-					fmt.Printf("\t%s[%s] Expected: %s\n", name, comparison.ReflectMapKey, comparison.ExpectedValueJS)
-					fmt.Printf("\t%s[%s] Actual  : %s\n", name, comparison.ReflectMapKey, comparison.ActualValueJS)
-				}
+				fmt.Printf("\t%s Expected: %s\n", name, comparison.ExpectedValueJS)
+				fmt.Printf("\t%s Actual  : %s\n", name, comparison.ActualValueJS)
 			} else {
-				if comparison.ReflectMapKey == "" {
-					fmt.Printf("\t%s : %s\n", name, comparison.ExpectedValueJS)
-				} else {
-					fmt.Printf("\t%s[%s] : %s\n", name, comparison.ReflectMapKey, comparison.ExpectedValueJS)
-				}
+				fmt.Printf("\t%s : %s\n", name, comparison.ExpectedValueJS)
 			}
 		}
 	}
