@@ -105,11 +105,11 @@ func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 	}
 	v1JS, err = strconv.Unquote(string(v1JSBytes))
 	if err != nil {
-		log.Panicf("CompareJSValue: unexpected quote sequence in \"%s\"", v1JS)
+		v1JS = string(v1JSBytes)
 	}
 	v2JS, err = strconv.Unquote(string(v2JSBytes))
 	if err != nil {
-		log.Panicf("CompareJSValue: unexpected quote sequence in \"%s\"", v2JS)
+		v2JS = string(v2JSBytes)
 	}
 	match = v1JS == v2JS
 	return
@@ -145,6 +145,9 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					MatchExpectation: match,
 				}
 				comparisons[fmt.Sprintf("%s[%s]", fieldName, key.String())] = fieldComparison
+				if !fieldComparison.MatchExpectation {
+					allMatch = false
+				}
 			}
 		} else {
 			// Compare ordinary field value
@@ -160,9 +163,9 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 				MatchExpectation: match,
 			}
 			comparisons[fieldName] = fieldComparison
-		}
-		if !fieldComparison.MatchExpectation {
-			allMatch = false
+			if !fieldComparison.MatchExpectation {
+				allMatch = false
+			}
 		}
 	}
 	return
