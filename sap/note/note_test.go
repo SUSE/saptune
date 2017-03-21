@@ -168,7 +168,7 @@ func TestCompareNoteFields(t *testing.T) {
 	for _, comparison := range comparisons {
 		switch comparison.ReflectFieldName {
 		case "SysconfigPrefix":
-			if comparison.ExpectedValueJS != `"abc"` || comparison.ActualValueJS != `"MISMATCH"` || comparison.MatchExpectation {
+			if comparison.ExpectedValueJS != `abc` || comparison.ActualValueJS != `MISMATCH` || comparison.MatchExpectation {
 				t.Fatalf("%+v", comparison)
 			}
 		case "VMNumberHugePages":
