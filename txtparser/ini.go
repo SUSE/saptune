@@ -58,7 +58,7 @@ func ParseIniFile(iniFile string) (*Iniconf, error) {
 		}
 		value = fields[fstart]
 		for i := fstart + 1; i < len(fields); i++ { // handle tunables with more than one value
-			value = value + " " + fields[i]
+			value = value + "\t" + fields[i]
 		}
 		tunable = fields[0]
 		skv := &IniEntry{
