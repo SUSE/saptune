@@ -36,6 +36,7 @@ type TuningOptions map[string]Note // Collection of tuning options from SAP note
 // Return all built-in tunable SAP notes together with those defined by 3rd party vendors.
 func GetTuningOptions(thirdPartyTuningDir string) TuningOptions {
 	ret := TuningOptions{
+		"1680803":       ASERecommendedOSSettings{},
 		"2205917":       HANARecommendedOSSettings{},
 		"1557506":       LinuxPagingImprovements{},
 		"1275776":       PrepareForSAPEnvironments{},

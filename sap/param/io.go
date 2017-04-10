@@ -40,3 +40,40 @@ func (ioe BlockDeviceSchedulers) Apply() error {
 	}
 	return nil
 }
+
+// Change IO nr_requests on all block devices
+type BlockDeviceNrRequests struct {
+	NrRequests      map[string]int
+}
+func (ior BlockDeviceNrRequests) Inspect() (Parameter, error) {
+	newIOR := BlockDeviceNrRequests{NrRequests: make(map[string]int)}
+	// List /sys/block and inspect the number of requests of each one
+	dirContent, err := ioutil.ReadDir("/sys/block")
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range dirContent {
+		// Remember, GetSysString does not accept the leading /sys/
+		//nrreq := system.GetSysString(path.Join("block", entry.Name(), "queue", "nr_requests"))
+		nrreq := system.GetSysInt(path.Join("block", entry.Name(), "queue", "nr_requests"))
+		if nrreq >= 0 {
+			newIOR.NrRequests[entry.Name()] = nrreq
+		}
+	}
+	return newIOR, nil
+}
+func (ior BlockDeviceNrRequests) Optimise(newNrRequestValue interface{}) (Parameter, error) {
+	newIOR := BlockDeviceNrRequests{NrRequests: make(map[string]int)}
+	for k := range ior.NrRequests {
+		//newIOR.NrRequests[k] = newNrRequestValue.(string)
+		newIOR.NrRequests[k] = newNrRequestValue.(int)
+	}
+	return newIOR, nil
+}
+func (ior BlockDeviceNrRequests) Apply() error {
+	for name, nrreq := range ior.NrRequests {
+		//system.SetSysString(path.Join("block", name, "queue", "nr_requests"), nrreq)
+		system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq)
+	}
+	return nil
+}

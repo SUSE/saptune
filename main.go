@@ -211,6 +211,11 @@ func NoteAction(actionName, noteID string) {
 			}
 			fmt.Printf(format, noteID, noteObj.Name())
 		}
+		if !system.SystemctlIsRunning(TUNED_SERVICE) || system.GetTunedProfile() != TUNED_PROFILE_NAME {
+			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
+				"you must instruct saptune to configure \"tuned\" daemon by running:" +
+				"\n    saptune daemon start")
+		}
 	case "verify":
 		if noteID == "" {
 			VerifyAllParameters()
@@ -301,9 +306,11 @@ func SolutionAction(actionName, solName string) {
 			}
 			fmt.Printf(format, solName)
 		}
-		fmt.Println("\nBe in mind: Manually enabled solutions not applied automatically after reboot,")
-		fmt.Println("            if 'tuned' isn't running.")
-		fmt.Println("See manual page of 'saptune' for further information")
+		if !system.SystemctlIsRunning(TUNED_SERVICE) || system.GetTunedProfile() != TUNED_PROFILE_NAME {
+			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
+				"you must instruct saptune to configure \"tuned\" daemon by running:" +
+				"\n    saptune daemon start")
+		}
 	case "verify":
 		if solName == "" {
 			VerifyAllParameters()
