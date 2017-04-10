@@ -1,73 +1,100 @@
 package txtparser
 
 import (
-	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strings"
 )
 
-var consecSpaces = regexp.MustCompile("[[:space:]]+")
+const (
+	OperatorLessThan = "<"
+	OperatorMoreThan = ">"
+	OperatorEqual    = "="
+)
 
-type IniEntry struct {
-	Section string
-	Key     string
-	Value   string
+type Operator string // The comparison or assignment operator used in an INI file entry
+
+var RegexKeyOperatorValue = regexp.MustCompile(`([\w._-]+)\s*([<=>])\s*(.*)`) // Break up a line into key, operator, value.
+
+// A single key-value pair in INI file.
+type INIEntry struct {
+	Section  string
+	Key      string
+	Operator Operator
+	Value    string
 }
 
-type Iniconf struct {
-	AllValues []*IniEntry
-	KeyValue  map[string]*IniEntry
+// All key-value pairs of an INI file.
+type INIFile struct {
+	AllValues []INIEntry
+	KeyValue  map[string]map[string]INIEntry
 }
 
-func ParseIniFile(iniFile string) (*Iniconf, error) {
-	contentBytes, err := ioutil.ReadFile(path.Join(iniFile))
-	if err != nil {
-		fmt.Errorf("failed to read vendor file: %v", err)
+func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
+	content, err := ioutil.ReadFile(fileName)
+	if os.IsNotExist(err) && autoCreate {
+		err = os.MkdirAll(path.Dir(fileName), 0755)
+		if err != nil {
+			return nil, err
+		}
+		err = ioutil.WriteFile(fileName, []byte{}, 0644)
+		content = []byte{}
+		if err != nil {
+			return nil, err
+		}
+	} else if err != nil {
 		return nil, err
 	}
+	return ParseINI(string(content)), nil
+}
 
-	var tunable, value string
-	var fstart = 0
-	section := "[-]"
-	cont := &Iniconf{
-		AllValues: make([]*IniEntry, 0, 0),
-		KeyValue:  make(map[string]*IniEntry),
+func ParseINI(input string) *INIFile {
+	ret := &INIFile{
+		AllValues: make([]INIEntry, 0, 64),
+		KeyValue:  make(map[string]map[string]INIEntry),
 	}
 
-	for _, line := range strings.Split(string(contentBytes), "\n") {
-		fields := consecSpaces.Split(strings.TrimSpace(line), -1)
-		if len(fields) == 0 || len(fields[0]) == 0 || fields[0][0] == '#' {
-			continue // skip comments and empty lines
+	currentSection := ""
+	currentEntriesArray := make([]INIEntry, 0, 8)
+	currentEntriesMap := make(map[string]INIEntry)
+	for _, line := range strings.Split(input, "\n") {
+		line = strings.TrimSpace(line)
+		if len(line) == 0 {
+			continue
 		}
-		if len(fields) < 3 { // handle tuning lines without spaces
-			fields = strings.Split(strings.TrimSpace(line), "=")
-			if len(fields) == 1 {
-				if strings.HasPrefix(fields[0], "[") && strings.HasSuffix(fields[0], "]") {
-					section = fields[0]
-				}
-				continue
+		if line[0] == '[' {
+			// Save previous section
+			if currentSection != "" {
+				ret.KeyValue[currentSection] = currentEntriesMap
+				ret.AllValues = append(ret.AllValues, currentEntriesArray...)
 			}
-			fstart = 1
-		} else {
-			if fields[1] != "=" {
-				continue
-			}
-			fstart = 2
+			// Start a new section
+			currentSection = line[1 : len(line)-1]
+			currentEntriesArray = make([]INIEntry, 0, 8)
+			currentEntriesMap = make(map[string]INIEntry)
+			continue
 		}
-		value = fields[fstart]
-		for i := fstart + 1; i < len(fields); i++ { // handle tunables with more than one value
-			value = value + "\t" + fields[i]
+		// Break apart a line into key, operator, value.
+		kov := RegexKeyOperatorValue.FindStringSubmatch(line)
+		if kov == nil {
+			// Skip comments, empty, and irregular lines.
+			continue
 		}
-		tunable = fields[0]
-		skv := &IniEntry{
-			Section: section,
-			Key:     tunable,
-			Value:   value,
+		entry := INIEntry{
+			Section:  currentSection,
+			Key:      kov[1],
+			Operator: Operator(kov[2]),
+			Value:    kov[3],
 		}
-		cont.AllValues = append(cont.AllValues, skv)
-		cont.KeyValue[tunable] = skv
+		currentEntriesArray = append(currentEntriesArray, entry)
+		currentEntriesMap[entry.Key] = entry
 	}
-	return cont, nil
+	// Save last section
+	if currentSection != "" {
+		ret.KeyValue[currentSection] = currentEntriesMap
+		ret.AllValues = append(ret.AllValues, currentEntriesArray...)
+	}
+	return ret
 }

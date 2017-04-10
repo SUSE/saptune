@@ -52,7 +52,7 @@ func (ase ASERecommendedOSSettings) Initialise() (Note, error) {
 }
 func (ase ASERecommendedOSSettings) Optimise() (Note, error) {
 	newASE := ase
-	config, err := txtparser.ParseSysconfigFile(path.Join(newASE.SysconfigPrefix, SYBASE_SYSCONFIG ), false)
+	config, err := txtparser.ParseSysconfigFile(path.Join(newASE.SysconfigPrefix, SYBASE_SYSCONFIG), false)
 	if err != nil {
 		return nil, err
 	}
@@ -102,4 +102,3 @@ func (ase ASERecommendedOSSettings) Apply() error {
 	err = ase.BlockDeviceNrRequests.Apply()
 	return err
 }
-

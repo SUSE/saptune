@@ -43,8 +43,9 @@ func (ioe BlockDeviceSchedulers) Apply() error {
 
 // Change IO nr_requests on all block devices
 type BlockDeviceNrRequests struct {
-	NrRequests      map[string]int
+	NrRequests map[string]int
 }
+
 func (ior BlockDeviceNrRequests) Inspect() (Parameter, error) {
 	newIOR := BlockDeviceNrRequests{NrRequests: make(map[string]int)}
 	// List /sys/block and inspect the number of requests of each one

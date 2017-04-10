@@ -66,7 +66,7 @@ func GetTuningOptions(thirdPartyTuningDir string) TuningOptions {
 			log.Printf("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
 			continue
 		}
-		ret[id] = VendorSettings{
+		ret[id] = INISettings{
 			ConfFilePath:    path.Join(thirdPartyTuningDir, fileName),
 			ID:              id,
 			DescriptiveName: name,
