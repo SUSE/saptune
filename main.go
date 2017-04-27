@@ -209,6 +209,10 @@ func NoteAction(actionName, noteID string) {
 			} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
 				format = "+" + format
 			}
+			if noteID == "Block" {
+				// workaround: internal used note for solution ASE. Do not display
+				continue
+			}
 			fmt.Printf(format, noteID, noteObj.Name())
 		}
 		if !system.SystemctlIsRunning(TUNED_SERVICE) || system.GetTunedProfile() != TUNED_PROFILE_NAME {

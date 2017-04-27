@@ -59,3 +59,18 @@ func SetSysString(parameter, value string) {
 func SetSysInt(parameter string, value int) {
 	SetSysString(parameter, strconv.Itoa(value))
 }
+
+// Test writing a string /sys/ value. 
+func TestSysString(parameter, value string) error {
+	save := GetSysString(parameter)
+	err := ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 644)
+	if err != nil {
+		fmt.Errorf("failed to set sys key '%s' to string '%s': %v", parameter, value, err)
+	} else {
+		err = ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(save), 644)
+		if err != nil {
+			panic(fmt.Errorf("failed to set sys key '%s' back to string '%s': %v", parameter, value, err))
+		}
+	}
+	return err
+}

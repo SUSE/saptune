@@ -36,6 +36,17 @@ func MaxI64(values ...int64) int64 {
 }
 
 // Return the maximum among the input values. If there isn't any input value, return 0.
+func MaxI(values ...int) int {
+	var ret int
+	for _, value := range values {
+		if ret < value {
+			ret = value
+		}
+	}
+	return ret
+}
+
+// Return the maximum among the input values. If there isn't any input value, return 0.
 func MaxU64(values ...uint64) uint64 {
 	var ret uint64
 	for _, value := range values {
