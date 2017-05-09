@@ -1,6 +1,6 @@
 .\"/*
 .\" * All rights reserved
-.\" * Copyright (c) 2016 SUSE LINUX GmbH, Nuernberg, Germany.
+.\" * Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
 .\" * Authors: Howard Guo
 .\" *
 .\" * This program is free software; you can redistribute it and/or
@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "May 2016" "" "System Optimisation For SAP"
+.TH saptune "8" "May 2017" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions
 
@@ -38,6 +38,24 @@ saptune \- Comprehensive system optimisation management for SAP solutions
 saptune is a utility program that optimises your system according to recommendations/best practice guides written by SAP and SUSE.
 
 saptune fully integrates with tuned(8), the tuned-profile name associated with this utility is "saptune".
+
+To support vendor or customer specific tuning values, saptune supports 'drop-in' files residing in /etc/saptune/extra. All files found in /etc/saptune/extra are listed when running '\fBsaptune note list\fR'. All \fBnote options\fR are available for these files except 'saptune note customise'.
+.SS
+.RS 0
+Syntax of the file names:
+<key>-<description>
+.br
+e.g. Vendor-Recommended_OS_Settings
+.br
+or   SAP4711-very_aromatic_tunings
+.RE
+.SS
+.RS 0
+Syntax of the file:
+The content of the 'drop-in' file should be written in a INI file style with sections headed by '[section_name]' keywords. At the moment only the section keyword '[sysctl]' is supported. A comment line starts with #.
+.br
+Please write the section keyword '[sysctl]' in the first line and add the desired tunables in 'sysctl.conf' syntax.
+
 
 .SH DAEMON ACTIONS
 .SS
@@ -95,6 +113,8 @@ Revert optimisation settings recommended by the SAP solution, and these settings
 .SH FILES
 .NF
 /etc/sysconfig/saptune
+.br
+/etc/saptune/extra/
 
 .SH SEE ALSO
 .NF
