@@ -90,11 +90,13 @@ func ParseINI(input string) *INIFile {
 			// Skip comments, empty, and irregular lines.
 			continue
 		}
+		// handle tunables with more than one value
+		value := strings.Replace(kov[3], " ", "\t", -1)
 		entry := INIEntry{
 			Section:  currentSection,
 			Key:      kov[1],
 			Operator: Operator(kov[2]),
-			Value:    kov[3],
+			Value:    value,
 		}
 		currentEntriesArray = append(currentEntriesArray, entry)
 		currentEntriesMap[entry.Key] = entry
