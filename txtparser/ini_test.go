@@ -9,17 +9,17 @@ import (
 var iniExample = `
 # comment
 [Section A]
-alpha.beta-charlie_delta < 1 a
-echo.foxtrot > 2 bb
+alpha.beta-charlie_delta < 1	a
+echo.foxtrot > 2	bb
 
 [Section B]
-golf-hotel = 3 ccc
-india_julia < 4 dddd
+golf-hotel = 3	ccc
+india_julia < 4	dddd
 
 [Section C]
 
 [Section D]
-lima > 5 eeeee
+lima > 5	eeeee
 `
 
 // iniExample parsed and serialised into JSON
@@ -29,27 +29,27 @@ var iniJSON = `
 		"Section": "Section A",
 		"Key": "alpha.beta-charlie_delta",
 		"Operator": "\u003c",
-		"Value": "1 a"
+		"Value": "1\ta"
 	}, {
 		"Section": "Section A",
 		"Key": "echo.foxtrot",
 		"Operator": "\u003e",
-		"Value": "2 bb"
+		"Value": "2\tbb"
 	}, {
 		"Section": "Section B",
 		"Key": "golf-hotel",
 		"Operator": "=",
-		"Value": "3 ccc"
+		"Value": "3\tccc"
 	}, {
 		"Section": "Section B",
 		"Key": "india_julia",
 		"Operator": "\u003c",
-		"Value": "4 dddd"
+		"Value": "4\tdddd"
 	}, {
 		"Section": "Section D",
 		"Key": "lima",
 		"Operator": "\u003e",
-		"Value": "5 eeeee"
+		"Value": "5\teeeee"
 	}],
 	"KeyValue": {
 		"Section A": {
@@ -57,13 +57,13 @@ var iniJSON = `
 				"Section": "Section A",
 				"Key": "alpha.beta-charlie_delta",
 				"Operator": "\u003c",
-				"Value": "1 a"
+				"Value": "1\ta"
 			},
 			"echo.foxtrot": {
 				"Section": "Section A",
 				"Key": "echo.foxtrot",
 				"Operator": "\u003e",
-				"Value": "2 bb"
+				"Value": "2\tbb"
 			}
 		},
 		"Section B": {
@@ -71,13 +71,13 @@ var iniJSON = `
 				"Section": "Section B",
 				"Key": "golf-hotel",
 				"Operator": "=",
-				"Value": "3 ccc"
+				"Value": "3\tccc"
 			},
 			"india_julia": {
 				"Section": "Section B",
 				"Key": "india_julia",
 				"Operator": "\u003c",
-				"Value": "4 dddd"
+				"Value": "4\tdddd"
 			}
 		},
 		"Section C": {},
@@ -86,7 +86,7 @@ var iniJSON = `
 				"Section": "Section D",
 				"Key": "lima",
 				"Operator": "\u003e",
-				"Value": "5 eeeee"
+				"Value": "5\teeeee"
 			}
 		}
 	}
