@@ -72,7 +72,7 @@ func GetBlockVal(key string) string {
 	newReq   := make(map[string]int)
 	ret_val := ""
 	switch key {
-	case "SYBASE_IO_SCHEDULER":
+	case "IO_SCHEDULER":
 		newIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
 		if err != nil {
 			return "0"
@@ -81,7 +81,7 @@ func GetBlockVal(key string) string {
 		for k, v := range newQueue {
 			ret_val = ret_val + fmt.Sprintf("%s@%s ", k, v)
 		}
-	case "SYBASE_NRREQ":
+	case "NRREQ":
 		newNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
 		if err != nil {
 			return "0"
@@ -99,7 +99,7 @@ func OptBlkVal(parameter, act_value, cfg_value string) string {
 	val := act_value
 	ret_val := ""
 	switch parameter {
-	case "SYBASE_IO_SCHEDULER":
+	case "IO_SCHEDULER":
 		sval = strings.ToLower(cfg_value)
 		switch sval {
 		case "noop", "cfg", "deadline":
@@ -107,7 +107,7 @@ func OptBlkVal(parameter, act_value, cfg_value string) string {
 		default:
 			sval = "noop"
 		}
-	case "SYBASE_NRREQ":
+	case "NRREQ":
 		if sval == "0" {
 			sval = "1024"
 		}
@@ -124,7 +124,7 @@ func SetBlkVal(key, value string) error {
 	var err error
 
 	switch key {
-	case "SYBASE_IO_SCHEDULER":
+	case "IO_SCHEDULER":
 		setIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
 		if err != nil {
 			return err
@@ -138,7 +138,7 @@ func SetBlkVal(key, value string) error {
 		if err != nil {
 			return err
 		}
-	case "SYBASE_NRREQ":
+	case "NRREQ":
 		setNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
 		if err != nil {
 			return err
