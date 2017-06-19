@@ -15,7 +15,7 @@ type Solution []string // Solution is identified by set of note numbers.
 var AllSolutions = map[string]map[string]Solution{
 	note.ARCH_X86: {
 		"BOBJ":             {"1275776", "1984787", "1557506", "SAP_BOBJ"},
-		"SAP-ASE":          {"1275776", "1984787", "1557506", "Block", "SAP_ASE"},
+		"SAP-ASE":          {"1275776", "1984787", "1557506", "SAP_ASE"},
 		"HANA":             {"1275776", "1984787", "1557506", "2205917"},
 		"NETWEAVER":        {"1275776", "1984787", "1557506"},
 		"MAXDB":            {"1275776", "1984787", "1557506"},

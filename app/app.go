@@ -322,7 +322,17 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 	if err != nil {
 		return false, nil, err
 	}
-	optimisedNote, err := inspectedNote.Optimise()
+
+	// to get Apply work:
+	optimisedNote, err := theNote.Initialise()
+	if err != nil {
+		return false, nil, err
+	}
+	// if used inspectedNote as before, inspectedNote and optimisedNote
+	// will have the same contents after 'Optimise()'
+	// so CompareNoteFields wont find a difference and NO Apply will done
+	//optimisedNote, err := inspectedNote.Optimise()
+	optimisedNote, err = optimisedNote.Optimise()
 	if err != nil {
 		return false, nil, err
 	}

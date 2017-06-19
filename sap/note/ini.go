@@ -20,6 +20,8 @@ const (
 	SYS_THP          = "kernel/mm/transparent_hugepage/enabled"
 )
 
+// Tuning options composed by a third party vendor.
+
 // Calculate optimum parameter value given the current value, comparison operator, and expected value. Return optimised value.
 func CalculateOptimumValue(operator txtparser.Operator, currentValue string, expectedValue string) (string, error) {
 	if operator == txtparser.OperatorEqual {
@@ -60,6 +62,107 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 // section handling
 
 // section [block]
+type BlockDeviceQueue struct {
+	BlockDeviceSchedulers     param.BlockDeviceSchedulers
+	BlockDeviceNrRequests     param.BlockDeviceNrRequests
+}
+
+func GetBlockVal(key string) string {
+	newQueue := make(map[string]string)
+	newReq   := make(map[string]int)
+	ret_val := ""
+	switch key {
+	case "SYBASE_IO_SCHEDULER":
+		newIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
+		if err != nil {
+			return "0"
+		}
+		newQueue = newIOQ.(param.BlockDeviceSchedulers).SchedulerChoice
+		for k, v := range newQueue {
+			ret_val = ret_val + fmt.Sprintf("%s@%s ", k, v)
+		}
+	case "SYBASE_NRREQ":
+		newNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
+		if err != nil {
+			return "0"
+		}
+		newReq = newNrR.(param.BlockDeviceNrRequests).NrRequests
+		for k, v := range newReq {
+			ret_val = ret_val + fmt.Sprintf("%s@%s ", k, strconv.Itoa(v))
+		}
+	}
+	return ret_val
+}
+
+func OptBlkVal(parameter, act_value, cfg_value string) string {
+	sval := cfg_value
+	val := act_value
+	ret_val := ""
+	switch parameter {
+	case "SYBASE_IO_SCHEDULER":
+		sval = strings.ToLower(cfg_value)
+		switch sval {
+		case "noop", "cfg", "deadline":
+			//nothing to do
+		default:
+			sval = "noop"
+		}
+	case "SYBASE_NRREQ":
+		if sval == "0" {
+			sval = "1024"
+		}
+	}
+	for _, entry := range strings.Fields(val) {
+		fields := strings.Split(entry, "@")
+		ret_val = ret_val + fmt.Sprintf("%s@%s ", fields[0], sval)
+	}
+
+	return ret_val
+}
+
+func SetBlkVal(key, value string) error {
+	var err error
+
+	switch key {
+	case "SYBASE_IO_SCHEDULER":
+		setIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
+		if err != nil {
+			return err
+		}
+
+		for _, entry := range strings.Fields(value) {
+			fields := strings.Split(entry, "@")
+			setIOQ.(param.BlockDeviceSchedulers).SchedulerChoice[fields[0]] = fields[1]
+		}
+		err = setIOQ.(param.BlockDeviceSchedulers).Apply()
+		if err != nil {
+			return err
+		}
+	case "SYBASE_NRREQ":
+		setNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
+		if err != nil {
+			return err
+		}
+
+		for _, entry := range strings.Fields(value) {
+			fields := strings.Split(entry, "@")
+			file := path.Join("block", fields[0], "queue", "nr_requests")
+			tst_err := system.TestSysString(file, fields[1])
+			if tst_err != nil {
+				fmt.Printf("Write error on file '%s'.\nCan't set nr_request to '%s', seems to large for the device. Leaving untouched.\n", file, fields[1])
+			} else {
+				NrR, _ := strconv.Atoi(fields[1])
+				setNrR.(param.BlockDeviceNrRequests).NrRequests[fields[0]] = NrR
+			}
+		}
+		err = setNrR.(param.BlockDeviceNrRequests).Apply()
+		if err != nil {
+			return err
+		}
+	}
+	return err
+}
+
 // section [limits]
 func GetLimitsVal(key string) string {
 	// Find out current memlock limits
@@ -89,7 +192,6 @@ func OptLimitsVal(act_value, cfg_value string) string {
 		LimitMemlock = param.MaxI(LimitMemlock, LimLockCFG)
 	}
 	return strconv.Itoa(LimitMemlock)
-
 }
 
 func SetLimitsVal(value string) error {
@@ -98,8 +200,6 @@ func SetLimitsVal(value string) error {
 	if err != nil {
 		return err
 	}
-	//ANGI TODO: set hard ans soft limit independent
-	//ANGI TODO: user should be variable, not fix 'sybase'
 	secLimits.Set("sybase", "hard", "memlock", LimitMemlock)
 	secLimits.Set("sybase", "soft", "memlock", LimitMemlock)
 	err = secLimits.Apply()
@@ -149,8 +249,6 @@ func (vend INISettings) Name() string {
 }
 
 func (vend INISettings) Initialise() (Note, error) {
-
-	//actBlk := BlockDeviceQueue{}
 	// Parse the configuration file
 	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
 	if err != nil {
@@ -170,7 +268,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = GetVmVal(param.Key)
 		case INISectionBlock:
-			//vend.SysctlParams[param.Key] = GetBlockVal(param.Key)
+			vend.SysctlParams[param.Key] = GetBlockVal(param.Key)
 		case INISectionLimits:
 			vend.SysctlParams[param.Key] = GetLimitsVal(param.Key)
 		default:
@@ -189,7 +287,6 @@ func (vend INISettings) Optimise() (Note, error) {
 		return vend, err
 	}
 
-	vend.SysctlParams = make(map[string]string)
 	for _, param := range ini.AllValues {
 		// Compare current values against INI's definition
 		switch param.Section {
@@ -202,7 +299,7 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = OptVmVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionBlock:
-			//vend.SysctlParams[param.Key] = OptBlkVal(param.Key, vend.SysctlParams[param.Key], param.Value)
+			vend.SysctlParams[param.Key] = OptBlkVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionLimits:
 			vend.SysctlParams[param.Key] = OptLimitsVal(vend.SysctlParams[param.Key], param.Value)
 		default:
@@ -231,6 +328,9 @@ func (vend INISettings) Apply() error {
 				system.SetSysString(system.SYS_THP, vend.SysctlParams[param.Key])
 			}
 		case INISectionBlock:
+			if runtime.GOARCH == ARCH_X86 {
+				SetBlkVal(param.Key, vend.SysctlParams[param.Key])
+			}
 		case INISectionLimits:
 			if runtime.GOARCH == ARCH_X86 {
 				SetLimitsVal(vend.SysctlParams[param.Key])
@@ -242,82 +342,4 @@ func (vend INISettings) Apply() error {
 		}
 	}
 	return nil
-}
-
-// as workaround till SetBlockVal and GetBlockVal is running
-// as 'shadow' note "Block"
-/*
-1680803 - SYB: SAP Adaptive Server Enterprise - Best Practice for SAP Business Suite and SAP BW
-Set BlockDeviceSchedulers
-Set BlockDeviceNrRequests
-*/
-const SYBASE_SYSCONFIG = "/etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf"
-
-type ASERecommendedOSSettings struct {
-	BlockDeviceSchedulers param.BlockDeviceSchedulers
-	BlockDeviceNrRequests param.BlockDeviceNrRequests
-}
-
-func (ase ASERecommendedOSSettings) Name() string {
-	return "SAP Adaptive Server Enterprise"
-}
-
-func (ase ASERecommendedOSSettings) Initialise() (Note, error) {
-	actASE := ase
-	newBlkSchedulers, err := actASE.BlockDeviceSchedulers.Inspect()
-	if err != nil {
-		return nil, err
-	}
-	actASE.BlockDeviceSchedulers = newBlkSchedulers.(param.BlockDeviceSchedulers)
-
-	newBlkReq, err := actASE.BlockDeviceNrRequests.Inspect()
-	if err != nil {
-		return nil, err
-	}
-	actASE.BlockDeviceNrRequests = newBlkReq.(param.BlockDeviceNrRequests)
-	return actASE, nil
-}
-func (ase ASERecommendedOSSettings) Optimise() (Note, error) {
-	newASE := ase
-	config, err := txtparser.ParseSysconfigFile(SYBASE_SYSCONFIG, false)
-	if err != nil {
-		return nil, err
-	}
-	sval := config.GetString("SYBASE_IO_SCHEDULER", "")
-	switch sval {
-	case "noop", "cfg", "deadline":
-		//nothing to do
-	default:
-		fmt.Printf("wrong selection for SYBASE_IO_SCHEDULER in %s. Now set to 'noop'\n", SYBASE_SYSCONFIG)
-		sval = "noop"
-	}
-
-	for blk := range newASE.BlockDeviceSchedulers.SchedulerChoice {
-		newASE.BlockDeviceSchedulers.SchedulerChoice[blk] = sval
-	}
-
-	ival := config.GetInt("SYBASE_NRREQ", 0)
-	if ival == 0 {
-		fmt.Printf("nr_request set to '%s'\n", ival)
-		ival = 1024
-	}
-
-	for blk := range newASE.BlockDeviceNrRequests.NrRequests {
-		file := path.Join("block", blk, "queue", "nr_requests")
-		tst_err := system.TestSysString(file, strconv.Itoa(ival))
-		if tst_err != nil {
-			fmt.Printf("Write error on file '%s'.\n Can't set nr_request to '%d', seems to large for the device. Leaving untouched.\n", file, ival)
-		} else {
-			newASE.BlockDeviceNrRequests.NrRequests[blk] = ival
-		}
-	}
-	return newASE, nil
-}
-func (ase ASERecommendedOSSettings) Apply() error {
-	err := ase.BlockDeviceSchedulers.Apply()
-	if err != nil {
-		return err
-	}
-	err = ase.BlockDeviceNrRequests.Apply()
-	return err
 }
