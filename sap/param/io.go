@@ -19,7 +19,12 @@ func (ioe BlockDeviceSchedulers) Inspect() (Parameter, error) {
 		return nil, err
 	}
 	for _, entry := range dirContent {
-		// Remember, GetSysChoice does not accept the leading /sys/
+		/*
+			Remember: GetSysChoice does not accept the leading /sys/.
+			The file "scheduler" may look like "[noop] deadline cfq", in which case the choice will be read successfully.
+			If the file simply says "none", which means IO scheduling is not relevant to the block device, then
+			the device name will not appear in return value, and there is no point in tuning it anyways.
+		*/
 		elev := system.GetSysChoice(path.Join("block", entry.Name(), "queue", "scheduler"))
 		if elev != "" {
 			newIOE.SchedulerChoice[entry.Name()] = elev

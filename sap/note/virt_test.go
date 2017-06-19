@@ -17,7 +17,7 @@ func TestVmwareGuestIOElevator(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(ioel.(VmwareGuestIOElevator).BlockDeviceSchedulers.SchedulerChoice) == 0 {
-		t.Fatal(ioel)
+		t.Skip("the test case will not continue because inspection result turns out empty")
 	}
 	for name, elevator := range ioel.(VmwareGuestIOElevator).BlockDeviceSchedulers.SchedulerChoice {
 		if name == "" || elevator == "" {
