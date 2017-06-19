@@ -55,7 +55,7 @@ func GetTunedProfile() string {
 	return strings.TrimSpace(string(content))
 }
 
-// Return true only if the current user is "abuild" - the OBS build user.
-func IsUserOBS() bool {
-	return os.Getenv("USER") == "abuild"
+// Return true only if the current user is root.
+func IsUserRoot() bool {
+	return os.Getuid() == 0
 }

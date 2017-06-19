@@ -2,13 +2,12 @@ package note
 
 import (
 	"github.com/HouzuoGuo/saptune/system"
-	"os"
 	"testing"
 )
 
 func TestSUSESysOptimisation(t *testing.T) {
-	if system.IsUserOBS() {
-		t.Skip("IO elevator settings cannot be read on build service")
+	if !system.IsUserRoot() {
+		t.Skip("the test requires root access")
 	}
 	sysop := SUSESysOptimisation{SysconfigPrefix: SYSCONFIG_SRC_DIR}
 	if sysop.Name() == "" {
@@ -37,8 +36,8 @@ func TestSUSESysOptimisation(t *testing.T) {
 }
 
 func TestSUSENetCPUOptimisation(t *testing.T) {
-	if os.Getuid() != 0 {
-		t.Skip("Some of the kernel parameters cannot be inspected without root privilege")
+	if !system.IsUserRoot() {
+		t.Skip("the test requires root access")
 	}
 	netop := SUSENetCPUOptimisation{SysconfigPrefix: SYSCONFIG_SRC_DIR}
 	if netop.Name() == "" {

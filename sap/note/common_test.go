@@ -36,8 +36,8 @@ func TestPrepareForSAPEnvironments(t *testing.T) {
 }
 
 func TestAfterInstallation(t *testing.T) {
-	if system.IsUserOBS() {
-		t.Skip("uuid status cannot be inspected on build service")
+	if !system.IsUserRoot() {
+		t.Skip("the test requires root access")
 	}
 	inst := AfterInstallation{}
 	if inst.Name() == "" {

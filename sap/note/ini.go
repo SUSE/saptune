@@ -5,11 +5,11 @@ import (
 	"github.com/HouzuoGuo/saptune/sap/param"
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
+	"log"
+	"path"
+	"runtime"
 	"strconv"
 	"strings"
-	"runtime"
-	"path"
-	"log"
 )
 
 const (
@@ -17,7 +17,7 @@ const (
 	INISectionVM     = "vm"
 	INISectionBlock  = "block"
 	INISectionLimits = "limits"
-	SYS_THP = "kernel/mm/transparent_hugepage/enabled"
+	SYS_THP          = "kernel/mm/transparent_hugepage/enabled"
 )
 
 // Calculate optimum parameter value given the current value, comparison operator, and expected value. Return optimised value.
@@ -78,11 +78,11 @@ func GetLimitsVal(key string) string {
 	return strconv.Itoa(LimitMemlock)
 }
 
-func OptLimitsVal(act_value, cfg_value  string) string {
+func OptLimitsVal(act_value, cfg_value string) string {
 	LimitMemlock, _ := strconv.Atoi(act_value)
 	if cfg_value == "0" {
 		//RAM in KB - 10%
-		memlock := system.GetMainMemSizeMB() * 1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
+		memlock := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
 		LimitMemlock = param.MaxI(LimitMemlock, int(memlock))
 	} else {
 		LimLockCFG, _ := strconv.Atoi(cfg_value)
@@ -117,7 +117,7 @@ func GetVmVal(parameter string) string {
 	return val
 }
 
-func OptVmVal(parameter, act_value, cfg_value  string) string {
+func OptVmVal(parameter, act_value, cfg_value string) string {
 	val := act_value
 	switch parameter {
 	case "INI_THP":
@@ -135,7 +135,6 @@ func OptVmVal(parameter, act_value, cfg_value  string) string {
 	}
 	return val
 }
-
 
 // Tuning options composed by a third party vendor.
 type INISettings struct {
@@ -245,7 +244,6 @@ func (vend INISettings) Apply() error {
 	return nil
 }
 
-
 // as workaround till SetBlockVal and GetBlockVal is running
 // as 'shadow' note "Block"
 /*
@@ -256,8 +254,8 @@ Set BlockDeviceNrRequests
 const SYBASE_SYSCONFIG = "/etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf"
 
 type ASERecommendedOSSettings struct {
-	BlockDeviceSchedulers     param.BlockDeviceSchedulers
-	BlockDeviceNrRequests     param.BlockDeviceNrRequests
+	BlockDeviceSchedulers param.BlockDeviceSchedulers
+	BlockDeviceNrRequests param.BlockDeviceNrRequests
 }
 
 func (ase ASERecommendedOSSettings) Name() string {

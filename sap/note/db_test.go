@@ -6,8 +6,8 @@ import (
 )
 
 func TestHANARecommendedOSSettings(t *testing.T) {
-	if system.IsUserOBS() {
-		t.Skip("Transparent huge page settings cannot be read on build service")
+	if !system.IsUserRoot() {
+		t.Skip("the test requires root access")
 	}
 	prepare := HANARecommendedOSSettings{}
 	if prepare.Name() == "" {

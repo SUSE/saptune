@@ -60,7 +60,7 @@ func SetSysInt(parameter string, value int) {
 	SetSysString(parameter, strconv.Itoa(value))
 }
 
-// Test writing a string /sys/ value. 
+// Test writing a string /sys/ value.
 func TestSysString(parameter, value string) error {
 	save := GetSysString(parameter)
 	err := ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 644)

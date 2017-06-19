@@ -65,7 +65,7 @@ func ParseINI(input string) *INIFile {
 			continue
 		}
 		if strings.HasPrefix(line, "#") {
-			// Skip comments. Need to be done before 
+			// Skip comments. Need to be done before
 			// 'break apart the line into key, operator, value'
 			// to support comments like # something (default = 60)
 			// without side effects

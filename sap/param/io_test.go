@@ -6,8 +6,8 @@ import (
 )
 
 func TestIOElevators(t *testing.T) {
-	if system.IsUserOBS() {
-		t.Skip() // IO elevators cannot be read on build service
+	if !system.IsUserRoot() {
+		t.Skip("the test requires root access")
 	}
 	inspected, err := BlockDeviceSchedulers{}.Inspect()
 	if err != nil {

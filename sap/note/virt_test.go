@@ -6,8 +6,8 @@ import (
 )
 
 func TestVmwareGuestIOElevator(t *testing.T) {
-	if system.IsUserOBS() {
-		t.Skip("IO elevator settings cannot be read on build service")
+	if !system.IsUserRoot() {
+		t.Skip("the test requires root access")
 	}
 	ioel, err := VmwareGuestIOElevator{}.Initialise()
 	if ioel.Name() == "" {
