@@ -51,4 +51,7 @@ func TestAfterInstallation(t *testing.T) {
 	if !optimised.(AfterInstallation).UuiddSocket {
 		t.Fatal(optimised)
 	}
+	if !optimised.(AfterInstallation).UserTasksMax {
+		t.Fatal(optimised)
+	}
 }

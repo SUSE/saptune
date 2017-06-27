@@ -6,6 +6,8 @@ import (
 	"github.com/HouzuoGuo/saptune/sap/note"
 	"github.com/HouzuoGuo/saptune/sap/solution"
 	"github.com/HouzuoGuo/saptune/system"
+	"io"
+	"log"
 	"os"
 	"runtime"
 	"sort"
@@ -62,6 +64,13 @@ func main() {
 		errorExit("Please run saptune with root privilege.")
 		return
 	}
+	var saptune_log io.Writer
+	saptune_log, err := os.OpenFile("/var/log/tuned/tuned.log", os.O_CREATE | os.O_APPEND | os.O_RDWR, 0644)
+	if err != nil {
+		panic(err.Error())
+	}
+	saptune_writer := io.MultiWriter(os.Stdout, saptune_log)
+	log.SetOutput(saptune_writer)
 	archSolutions, exist := solution.AllSolutions[runtime.GOARCH]
 	if !exist {
 		errorExit("The system architecture (%s) is not supported.", runtime.GOARCH)

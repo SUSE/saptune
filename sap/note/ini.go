@@ -67,7 +67,7 @@ type BlockDeviceQueue struct {
 	BlockDeviceNrRequests     param.BlockDeviceNrRequests
 }
 
-func GetBlockVal(key string) string {
+func GetBlockVal(key string) (string, error) {
 	newQueue := make(map[string]string)
 	newReq   := make(map[string]int)
 	ret_val := ""
@@ -75,7 +75,7 @@ func GetBlockVal(key string) string {
 	case "IO_SCHEDULER":
 		newIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
 		if err != nil {
-			return "0"
+			return "", err
 		}
 		newQueue = newIOQ.(param.BlockDeviceSchedulers).SchedulerChoice
 		for k, v := range newQueue {
@@ -84,14 +84,14 @@ func GetBlockVal(key string) string {
 	case "NRREQ":
 		newNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
 		if err != nil {
-			return "0"
+			return "", err
 		}
 		newReq = newNrR.(param.BlockDeviceNrRequests).NrRequests
 		for k, v := range newReq {
 			ret_val = ret_val + fmt.Sprintf("%s@%s ", k, strconv.Itoa(v))
 		}
 	}
-	return ret_val
+	return ret_val, nil
 }
 
 func OptBlkVal(parameter, act_value, cfg_value string) string {
@@ -164,12 +164,12 @@ func SetBlkVal(key, value string) error {
 }
 
 // section [limits]
-func GetLimitsVal(key string) string {
+func GetLimitsVal(key string) (string, error) {
 	// Find out current memlock limits
 	LimitMemlock := 0
 	secLimits, err := system.ParseSecLimitsFile()
 	if err != nil {
-		return "0"
+		return "", err
 	}
 	switch key {
 	case "MEMLOCK_HARD":
@@ -178,7 +178,7 @@ func GetLimitsVal(key string) string {
 		LimitMemlock, _ = secLimits.Get("sybase", "soft", "memlock")
 
 	}
-	return strconv.Itoa(LimitMemlock)
+	return strconv.Itoa(LimitMemlock), nil
 }
 
 func OptLimitsVal(act_value, cfg_value string) string {
@@ -268,9 +268,9 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = GetVmVal(param.Key)
 		case INISectionBlock:
-			vend.SysctlParams[param.Key] = GetBlockVal(param.Key)
+			vend.SysctlParams[param.Key], _ = GetBlockVal(param.Key)
 		case INISectionLimits:
-			vend.SysctlParams[param.Key] = GetLimitsVal(param.Key)
+			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Key)
 		default:
 			// saptune does not yet understand settings outside of [sysctl] section
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)

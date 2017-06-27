@@ -5,13 +5,20 @@ import (
 	"github.com/HouzuoGuo/saptune/sap/param"
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
+	"io/ioutil"
 	"log"
+	"os"
+	"os/exec"
 	"path"
+	"regexp"
+	"strings"
 )
 
 const (
-	ARCH_X86 = "amd64"   // GOARCH for 64-bit X86
-	ARCH_PPC = "ppc64le" // GOARCH for 64-bit PowerPC little endian
+	ARCH_X86       = "amd64"   // GOARCH for 64-bit X86
+	ARCH_PPC       = "ppc64le" // GOARCH for 64-bit PowerPC little endian
+	LOGIND_DIR     = "/etc/systemd/logind.conf.d"
+	SAP_LOGIN_FILE = "sap.conf"
 )
 
 // 1275776 - Linux: Preparing SLES for SAP environments
@@ -148,22 +155,99 @@ func (prepare PrepareForSAPEnvironments) Apply() error {
 // 1984787 - SUSE LINUX Enterprise Server 12: Installation notes
 type AfterInstallation struct {
 	UuiddSocket bool
+	UserTasksMax bool
 }
 
 func (inst AfterInstallation) Name() string {
 	return "SUSE LINUX Enterprise Server 12: Installation notes"
 }
 func (inst AfterInstallation) Initialise() (Note, error) {
-	return AfterInstallation{UuiddSocket: system.SystemctlIsRunning("uuidd.socket")}, nil
+	return AfterInstallation{UuiddSocket: system.SystemctlIsRunning("uuidd.socket"), UserTasksMax: CheckSapLogindFile()}, nil
 }
 func (inst AfterInstallation) Optimise() (Note, error) {
-	// Unconditionally enable uuid socket
-	return AfterInstallation{UuiddSocket: true}, nil
+	if CheckSapLogindFile() {
+		// print message fork bomb
+		log.Print("ATTENTION    UserTasksMax set to infinity. With this setting your system is vulnerable to fork bomb attacks.")
+	}
+	return AfterInstallation{UuiddSocket: true, UserTasksMax: true}, nil
 }
 func (inst AfterInstallation) Apply() error {
-	if inst.UuiddSocket {
-		return system.SystemctlEnableStart("uuidd.socket")
+	var err error
+	if CheckSapLogindFile() {
+		// print message fork bomb
+		log.Print("ATTENTION    UserTasksMax set to infinity. With this setting your system is vulnerable to fork bomb attacks.")
 	} else {
-		return system.SystemctlDisableStop("uuidd.socket")
+		// create directory /etc/systemd/logind.conf.d, if it does not exists
+		if err = os.MkdirAll(LOGIND_DIR, 0755); err != nil {
+			fmt.Printf("Error: Can't create directory '%s'\n", LOGIND_DIR)
+			return err
+		}
+		// create file /etc/systemd/logind.conf.d/sap.conf
+		err = ioutil.WriteFile(path.Join(LOGIND_DIR, SAP_LOGIN_FILE),[]byte("[Login]\nUserTasksMax=infinity\n"), 0644)
+		if err != nil {
+			fmt.Printf("Error: Can't create file '%s'\n", path.Join(LOGIND_DIR, SAP_LOGIN_FILE))
+			return err
+		}
+		// print reboot
+		log.Print("ATTENTION    UserTasksMax is now set to infinity. Please reboot the system for the changes to take effect.")
 	}
+	if IsVM() {
+		//skip uuidd, does not work in VMs
+		return err
+	}
+	if inst.UuiddSocket {
+		err = system.SystemctlEnableStart("uuidd.socket")
+	} else {
+		err = system.SystemctlDisableStop("uuidd.socket")
+	}
+	return err
+}
+func CheckSapLogindFile() bool {
+	_ , err := os.Stat(path.Join(LOGIND_DIR, SAP_LOGIN_FILE))
+	if os.IsNotExist(err) {
+		// file does not exists, create it later
+		return false
+	}
+	if err == nil {
+		// file does exists, check value of UserTasksMax
+		content, err := ioutil.ReadFile(path.Join(LOGIND_DIR, SAP_LOGIN_FILE))
+		if err != nil {
+			fmt.Printf("Error: Can't read file '%s'. Continue anyway.\n", path.Join(LOGIND_DIR, SAP_LOGIN_FILE))
+			return false
+		}
+		for _, line := range strings.Split(string(content), "\n") {
+			matched, _ := regexp.MatchString("^[[:blank:]]*UserTasksMax[[:blank:]]*=[[:blank:]]*infinity", line)
+			if matched {
+				return true
+			}
+		}
+		// value of UserTasksMax does not match our needs
+		err = os.Rename(path.Join(LOGIND_DIR, SAP_LOGIN_FILE), path.Join(LOGIND_DIR, SAP_LOGIN_FILE + ".sav"))
+		if err != nil {
+			fmt.Printf("Error: Can't move file '%s' to '%s'. Continue anyway.\n", path.Join(LOGIND_DIR, SAP_LOGIN_FILE), path.Join(LOGIND_DIR, SAP_LOGIN_FILE + ".sav"))
+		}
+		return false
+	}
+	// another error concerning the file occured
+	return false
+}
+func IsVM() bool {
+// true - system is vm, false - system is phys.
+	_ , err := os.Stat("/usr/bin/systemd-detect-virt")
+	if err == nil {
+		//systemd-detect-virt err=0 is VM, err=1 is phys.
+		cmd := exec.Command("/usr/bin/systemd-detect-virt")
+		_, err := cmd.Output()
+		if err == nil {
+			return true
+		} else {
+			return false
+		}
+	}
+	out, err := exec.Command("/usr/sbin/dmidecode", "-s", "system-manufacturer").Output()
+	switch strings.TrimSpace(string(out)) {
+	case "QEMU", "Xen", "VirtualBox", "VMware, Inc.":
+		return true
+	}
+	return false
 }
