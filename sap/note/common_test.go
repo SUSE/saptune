@@ -48,10 +48,10 @@ func TestAfterInstallation(t *testing.T) {
 		t.Fatal(err)
 	}
 	optimised, err := initInst.(AfterInstallation).Optimise()
-	if !optimised.(AfterInstallation).UuiddSocket {
+	if !optimised.(AfterInstallation).UuiddSocketStatus {
 		t.Fatal(optimised)
 	}
-	if !optimised.(AfterInstallation).UserTasksMax {
+	if !optimised.(AfterInstallation).LogindConfigured {
 		t.Fatal(optimised)
 	}
 }

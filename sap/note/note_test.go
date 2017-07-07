@@ -55,7 +55,7 @@ func TestNoteSerialisation(t *testing.T) {
 		t.Fatal(diff)
 	}
 
-	afterInst := AfterInstallation{UuiddSocket: true}
+	afterInst := AfterInstallation{UuiddSocketStatus: true}
 	newAfterInst := AfterInstallation{}
 	jsonMarshalAndBack(afterInst, &newAfterInst, t)
 	if eq, diff := CompareNoteFields(afterInst, newAfterInst); !eq {
