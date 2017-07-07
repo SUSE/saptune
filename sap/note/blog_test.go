@@ -9,7 +9,7 @@ func TestSUSESysOptimisation(t *testing.T) {
 	if !system.IsUserRoot() {
 		t.Skip("the test requires root access")
 	}
-	sysop := SUSESysOptimisation{SysconfigPrefix: SYSCONFIG_SRC_DIR}
+	sysop := SUSESysOptimisation{SysconfigPrefix: OSPackageInGOPATH}
 	if sysop.Name() == "" {
 		t.Fatal(sysop.Name())
 	}
@@ -39,7 +39,7 @@ func TestSUSENetCPUOptimisation(t *testing.T) {
 	if !system.IsUserRoot() {
 		t.Skip("the test requires root access")
 	}
-	netop := SUSENetCPUOptimisation{SysconfigPrefix: SYSCONFIG_SRC_DIR}
+	netop := SUSENetCPUOptimisation{SysconfigPrefix: OSPackageInGOPATH}
 	if netop.Name() == "" {
 		t.Fatal(netop.Name())
 	}

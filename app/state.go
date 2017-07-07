@@ -8,7 +8,7 @@ import (
 	"path"
 )
 
-const STATE_DIR = "/var/lib/saptune/saved_state"
+const SaptuneStateDir = "/var/lib/saptune/saved_state"
 
 // Store and manage serialised note states.
 type State struct {
@@ -17,7 +17,7 @@ type State struct {
 
 // Return path to the serialised note state file.
 func (state *State) GetPathToNote(noteID string) string {
-	return path.Join(state.StateDirPrefix, STATE_DIR, noteID)
+	return path.Join(state.StateDirPrefix, SaptuneStateDir, noteID)
 }
 
 // Create a file under state directory with the object serialised into JSON. Overwrite existing file if there is any.
@@ -26,7 +26,7 @@ func (state *State) Store(noteID string, obj note.Note, overwriteExisting bool) 
 	if err != nil {
 		return err
 	}
-	if err = os.MkdirAll(path.Join(state.StateDirPrefix, STATE_DIR), 0755); err != nil {
+	if err = os.MkdirAll(path.Join(state.StateDirPrefix, SaptuneStateDir), 0755); err != nil {
 		return err
 	}
 	if _, err := os.Stat(state.GetPathToNote(noteID)); os.IsNotExist(err) || overwriteExisting {
@@ -37,11 +37,11 @@ func (state *State) Store(noteID string, obj note.Note, overwriteExisting bool) 
 
 // List all stored note states. Return note numbers.
 func (state *State) List() (ret []string, err error) {
-	if err = os.MkdirAll(path.Join(state.StateDirPrefix, STATE_DIR), 0755); err != nil {
+	if err = os.MkdirAll(path.Join(state.StateDirPrefix, SaptuneStateDir), 0755); err != nil {
 		return
 	}
-	// List STATE_DIR and collect number from file names
-	dirContent, err := ioutil.ReadDir(path.Join(state.StateDirPrefix, STATE_DIR))
+	// List SaptuneStateDir and collect number from file names
+	dirContent, err := ioutil.ReadDir(path.Join(state.StateDirPrefix, SaptuneStateDir))
 	if os.IsNotExist(err) {
 		return []string{}, nil
 	} else if err != nil {

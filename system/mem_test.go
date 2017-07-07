@@ -7,11 +7,11 @@ import (
 
 func TestParseMeminfo(t *testing.T) {
 	infoMap := ParseMeminfo()
-	if size, exists := infoMap[MEMINFO_MAIN_TOTAL_KEY]; !exists || size <= 0 {
-		t.Fatal(size, MEMINFO_MAIN_TOTAL_KEY)
+	if size, exists := infoMap[MemMainTotalKey]; !exists || size <= 0 {
+		t.Fatal(size, MemMainTotalKey)
 	}
-	if _, exists := infoMap[MEMINFO_SWAP_TOTAL_KEY]; !exists {
-		t.Fatal(MEMINFO_SWAP_TOTAL_KEY)
+	if _, exists := infoMap[MemSwapTotalKey]; !exists {
+		t.Fatal(MemSwapTotalKey)
 	}
 }
 

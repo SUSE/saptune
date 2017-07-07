@@ -9,11 +9,6 @@ import (
 	"strings"
 )
 
-const (
-	SYS_THP = "kernel/mm/transparent_hugepage/enabled"
-	SYS_KSM = "kernel/mm/ksm/run"
-)
-
 // Read a /sys/ key and return the string value. Panic on error.
 func GetSysString(parameter string) string {
 	val, err := ioutil.ReadFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)))

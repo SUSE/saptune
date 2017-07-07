@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	ARCH_X86       = "amd64"   // GOARCH for 64-bit X86
-	ARCH_PPC       = "ppc64le" // GOARCH for 64-bit PowerPC little endian
-	LOGIND_DIR     = "/etc/systemd/logind.conf.d"
-	SAP_LOGIN_FILE = "sap.conf"
+	// LoginConfDir is the path to systemd's logind configuration directory under /etc.
+	LogindConfDir = "/etc/systemd/logind.conf.d"
+	// LogindSAPConfFile is a configuration file full of SAP-specific settings for logind.
+	LogindSAPConfFile = "sap.conf"
 )
 
 // 1275776 - Linux: Preparing SLES for SAP environments
@@ -58,10 +58,10 @@ func (prepare PrepareForSAPEnvironments) Initialise() (Note, error) {
 	newPrepare.LimitNofileDbaSoft, _ = secLimits.Get("@dba", "soft", "nofile")
 	newPrepare.LimitNofileDbaHard, _ = secLimits.Get("@dba", "hard", "nofile")
 	// Find out shared memory limits
-	newPrepare.KernelShmMax = system.GetSysctlUint64(system.SYSCTL_SHMMAX, 0)
-	newPrepare.KernelShmAll = system.GetSysctlUint64(system.SYSCTL_SHMALL, 0)
-	newPrepare.KernelShmMni = system.GetSysctlUint64(system.SYSCTL_SHMMNI, 0)
-	newPrepare.VMMaxMapCount = system.GetSysctlUint64(system.SYSCTL_MAX_MAP_COUNT, 0)
+	newPrepare.KernelShmMax = system.GetSysctlUint64(system.SysctlShmax, 0)
+	newPrepare.KernelShmAll = system.GetSysctlUint64(system.SysctlShmall, 0)
+	newPrepare.KernelShmMni = system.GetSysctlUint64(system.SysctlShmni, 0)
+	newPrepare.VMMaxMapCount = system.GetSysctlUint64(system.SysctlMaxMapCount, 0)
 	// Find out semaphore limits
 	newPrepare.KernelSemMsl, newPrepare.KernelSemMns, newPrepare.KernelSemOpm, newPrepare.KernelSemMni = system.GetSemaphoreLimits()
 	return newPrepare, err
@@ -143,18 +143,18 @@ func (prepare PrepareForSAPEnvironments) Apply() error {
 		return err
 	}
 	// Apply shared memory limits
-	system.SetSysctlUint64(system.SYSCTL_SHMMAX, prepare.KernelShmMax)
-	system.SetSysctlUint64(system.SYSCTL_SHMALL, prepare.KernelShmAll)
-	system.SetSysctlUint64(system.SYSCTL_SHMMNI, prepare.KernelShmMni)
-	system.SetSysctlUint64(system.SYSCTL_MAX_MAP_COUNT, prepare.VMMaxMapCount)
+	system.SetSysctlUint64(system.SysctlShmax, prepare.KernelShmMax)
+	system.SetSysctlUint64(system.SysctlShmall, prepare.KernelShmAll)
+	system.SetSysctlUint64(system.SysctlShmni, prepare.KernelShmMni)
+	system.SetSysctlUint64(system.SysctlMaxMapCount, prepare.VMMaxMapCount)
 	// Apply semaphore limits
-	system.SetSysctlString(system.SYSCTL_SEM, fmt.Sprintf("%d %d %d %d", prepare.KernelSemMsl, prepare.KernelSemMns, prepare.KernelSemOpm, prepare.KernelSemMni))
+	system.SetSysctlString(system.SysctlSem, fmt.Sprintf("%d %d %d %d", prepare.KernelSemMsl, prepare.KernelSemMns, prepare.KernelSemOpm, prepare.KernelSemMni))
 	return nil
 }
 
 // 1984787 - SUSE LINUX Enterprise Server 12: Installation notes
 type AfterInstallation struct {
-	UuiddSocket bool
+	UuiddSocket  bool
 	UserTasksMax bool
 }
 
@@ -178,14 +178,14 @@ func (inst AfterInstallation) Apply() error {
 		log.Print("ATTENTION    UserTasksMax set to infinity. With this setting your system is vulnerable to fork bomb attacks.")
 	} else {
 		// create directory /etc/systemd/logind.conf.d, if it does not exists
-		if err = os.MkdirAll(LOGIND_DIR, 0755); err != nil {
-			fmt.Printf("Error: Can't create directory '%s'\n", LOGIND_DIR)
+		if err = os.MkdirAll(LogindConfDir, 0755); err != nil {
+			fmt.Printf("Error: Can't create directory '%s'\n", LogindConfDir)
 			return err
 		}
 		// create file /etc/systemd/logind.conf.d/sap.conf
-		err = ioutil.WriteFile(path.Join(LOGIND_DIR, SAP_LOGIN_FILE),[]byte("[Login]\nUserTasksMax=infinity\n"), 0644)
+		err = ioutil.WriteFile(path.Join(LogindConfDir, LogindSAPConfFile), []byte("[Login]\nUserTasksMax=infinity\n"), 0644)
 		if err != nil {
-			fmt.Printf("Error: Can't create file '%s'\n", path.Join(LOGIND_DIR, SAP_LOGIN_FILE))
+			fmt.Printf("Error: Can't create file '%s'\n", path.Join(LogindConfDir, LogindSAPConfFile))
 			return err
 		}
 		// print reboot
@@ -203,16 +203,16 @@ func (inst AfterInstallation) Apply() error {
 	return err
 }
 func CheckSapLogindFile() bool {
-	_ , err := os.Stat(path.Join(LOGIND_DIR, SAP_LOGIN_FILE))
+	_, err := os.Stat(path.Join(LogindConfDir, LogindSAPConfFile))
 	if os.IsNotExist(err) {
 		// file does not exists, create it later
 		return false
 	}
 	if err == nil {
 		// file does exists, check value of UserTasksMax
-		content, err := ioutil.ReadFile(path.Join(LOGIND_DIR, SAP_LOGIN_FILE))
+		content, err := ioutil.ReadFile(path.Join(LogindConfDir, LogindSAPConfFile))
 		if err != nil {
-			fmt.Printf("Error: Can't read file '%s'. Continue anyway.\n", path.Join(LOGIND_DIR, SAP_LOGIN_FILE))
+			fmt.Printf("Error: Can't read file '%s'. Continue anyway.\n", path.Join(LogindConfDir, LogindSAPConfFile))
 			return false
 		}
 		for _, line := range strings.Split(string(content), "\n") {
@@ -222,9 +222,9 @@ func CheckSapLogindFile() bool {
 			}
 		}
 		// value of UserTasksMax does not match our needs
-		err = os.Rename(path.Join(LOGIND_DIR, SAP_LOGIN_FILE), path.Join(LOGIND_DIR, SAP_LOGIN_FILE + ".sav"))
+		err = os.Rename(path.Join(LogindConfDir, LogindSAPConfFile), path.Join(LogindConfDir, LogindSAPConfFile+".sav"))
 		if err != nil {
-			fmt.Printf("Error: Can't move file '%s' to '%s'. Continue anyway.\n", path.Join(LOGIND_DIR, SAP_LOGIN_FILE), path.Join(LOGIND_DIR, SAP_LOGIN_FILE + ".sav"))
+			fmt.Printf("Error: Can't move file '%s' to '%s'. Continue anyway.\n", path.Join(LogindConfDir, LogindSAPConfFile), path.Join(LogindConfDir, LogindSAPConfFile+".sav"))
 		}
 		return false
 	}
@@ -232,8 +232,8 @@ func CheckSapLogindFile() bool {
 	return false
 }
 func IsVM() bool {
-// true - system is vm, false - system is phys.
-	_ , err := os.Stat("/usr/bin/systemd-detect-virt")
+	// true - system is vm, false - system is phys.
+	_, err := os.Stat("/usr/bin/systemd-detect-virt")
 	if err == nil {
 		//systemd-detect-virt err=0 is VM, err=1 is phys.
 		cmd := exec.Command("/usr/bin/systemd-detect-virt")

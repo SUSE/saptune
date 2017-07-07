@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-var SYSCONFIG_SRC_DIR = path.Join(os.Getenv("GOPATH"), "/src/github.com/HouzuoGuo/saptune/ospackage/")
+var OSPackageInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/HouzuoGuo/saptune/ospackage/")
 
 func jsonMarshalAndBack(original interface{}, receiver interface{}, t *testing.T) {
 	serialised, err := json.Marshal(original)

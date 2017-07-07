@@ -4,7 +4,6 @@ import (
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
 	"path"
-	"runtime"
 )
 
 /*
@@ -22,11 +21,9 @@ func (hana HANARecommendedOSSettings) Name() string {
 }
 func (hana HANARecommendedOSSettings) Initialise() (Note, error) {
 	ret := HANARecommendedOSSettings{}
-	if runtime.GOARCH == ARCH_X86 {
-		ret.KernelMMTransparentHugepage = system.GetSysChoice(system.SYS_THP)
-	}
-	ret.KernelMMKsm = system.GetSysInt(system.SYS_KSM) == 1
-	ret.KernelNumaBalancing = system.GetSysctlInt(system.SYSCTL_NUMA_BALANCING, 0) == 1
+	ret.KernelMMTransparentHugepage = system.GetSysChoice(SysKernelTHPEnabled)
+	ret.KernelMMKsm = system.GetSysInt(SysKSMRun) == 1
+	ret.KernelNumaBalancing = system.GetSysctlInt(system.SysctlNumaBalancing, 0) == 1
 	return ret, nil
 }
 func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
@@ -34,24 +31,20 @@ func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
 		KernelMMKsm:         false,
 		KernelNumaBalancing: false,
 	}
-	if runtime.GOARCH == ARCH_X86 {
-		ret.KernelMMTransparentHugepage = "never"
-	}
+	ret.KernelMMTransparentHugepage = "never"
 	return ret, nil
 }
 func (hana HANARecommendedOSSettings) Apply() error {
-	if runtime.GOARCH == ARCH_X86 {
-		system.SetSysString(system.SYS_THP, hana.KernelMMTransparentHugepage)
-	}
+	system.SetSysString(SysKernelTHPEnabled, hana.KernelMMTransparentHugepage)
 	if hana.KernelMMKsm {
-		system.SetSysInt(system.SYS_KSM, 1)
+		system.SetSysInt(SysKSMRun, 1)
 	} else {
-		system.SetSysInt(system.SYS_KSM, 0)
+		system.SetSysInt(SysKSMRun, 0)
 	}
 	if hana.KernelNumaBalancing {
-		system.SetSysctlInt(system.SYSCTL_NUMA_BALANCING, 1)
+		system.SetSysctlInt(system.SysctlNumaBalancing, 1)
 	} else {
-		system.SetSysctlInt(system.SYSCTL_NUMA_BALANCING, 0)
+		system.SetSysctlInt(system.SysctlNumaBalancing, 0)
 	}
 	return nil
 }
@@ -71,8 +64,8 @@ func (paging LinuxPagingImprovements) Name() string {
 func (paging LinuxPagingImprovements) Initialise() (Note, error) {
 	return LinuxPagingImprovements{
 		SysconfigPrefix:             paging.SysconfigPrefix,
-		VMPagecacheLimitMB:          system.GetSysctlUint64(system.SYSCTL_PAGECACHE_LIMIT, 0),
-		VMPagecacheLimitIgnoreDirty: system.GetSysctlInt(system.SYSCTL_PAGECACHE_IGNORE_DIRTY, 0),
+		VMPagecacheLimitMB:          system.GetSysctlUint64(system.SysctlPagecacheLimitMB, 0),
+		VMPagecacheLimitIgnoreDirty: system.GetSysctlInt(system.SysctlPagecacheLimitIgnoreDirty, 0),
 	}, nil
 }
 func (paging LinuxPagingImprovements) Optimise() (Note, error) {
@@ -107,7 +100,7 @@ func (paging LinuxPagingImprovements) Optimise() (Note, error) {
 	return newPaging, err
 }
 func (paging LinuxPagingImprovements) Apply() error {
-	system.SetSysctlUint64(system.SYSCTL_PAGECACHE_LIMIT, paging.VMPagecacheLimitMB)
-	system.SetSysctlInt(system.SYSCTL_PAGECACHE_IGNORE_DIRTY, paging.VMPagecacheLimitIgnoreDirty)
+	system.SetSysctlUint64(system.SysctlPagecacheLimitMB, paging.VMPagecacheLimitMB)
+	system.SetSysctlInt(system.SysctlPagecacheLimitIgnoreDirty, paging.VMPagecacheLimitIgnoreDirty)
 	return nil
 }

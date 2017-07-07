@@ -12,8 +12,6 @@ import (
 	"math"
 )
 
-const ()
-
 /*
 A tunable parameter, usually calculated based on user input and/or automatically.
 Parameter is immutable. Internal state changes can only be made to copies.

@@ -15,13 +15,14 @@ import (
 )
 
 const (
-	SAPCONF_SERVICE          = "sapconf.service"
-	TUNED_SERVICE            = "tuned.service"
-	TUNED_PROFILE_NAME       = "saptune"
-	EXIT_TUNED_STOPPED       = 1
-	EXIT_TUNED_WRONG_PROFILE = 2
-	EXIT_NOT_TUNED           = 3
-	VENDOR_TUNING_DIR        = "/etc/saptune/extra/" // The directory for external parties to place their tuning option files
+	SapconfService        = "sapconf.service"
+	TunedService          = "tuned.service"
+	TunedProfileName      = "saptune"
+	ExitTunedStopped      = 1
+	ExitTunedWrongProfile = 2
+	ExitNotTuned          = 3
+	// ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
+	ExtraTuningSheets = "/etc/saptune/extra/"
 )
 
 func PrintHelpAndExit(exitStatus int) {
@@ -65,7 +66,7 @@ func main() {
 		return
 	}
 	var saptune_log io.Writer
-	saptune_log, err := os.OpenFile("/var/log/tuned/tuned.log", os.O_CREATE | os.O_APPEND | os.O_RDWR, 0644)
+	saptune_log, err := os.OpenFile("/var/log/tuned/tuned.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -77,7 +78,7 @@ func main() {
 		return
 	}
 	// Initialise application configuration and tuning procedures
-	tuningOptions = note.GetTuningOptions(VENDOR_TUNING_DIR)
+	tuningOptions = note.GetTuningOptions(ExtraTuningSheets)
 	tuneApp = app.InitialiseApp("", "", tuningOptions, archSolutions)
 	switch cliArg(1) {
 	case "daemon":
@@ -95,8 +96,8 @@ func DaemonAction(actionName string) {
 	switch actionName {
 	case "start":
 		fmt.Println("Starting daemon (tuned.service), this may take several seconds...")
-		system.SystemctlDisableStop(SAPCONF_SERVICE) // do not error exit on failure
-		if err := system.SystemctlEnableStart(TUNED_SERVICE); err != nil {
+		system.SystemctlDisableStop(SapconfService) // do not error exit on failure
+		if err := system.SystemctlEnableStart(TunedService); err != nil {
 			errorExit("%v", err)
 		}
 		if err := system.TunedAdmProfile("saptune"); err != nil {
@@ -114,16 +115,16 @@ func DaemonAction(actionName string) {
 		}
 	case "status":
 		// Check daemon
-		if system.SystemctlIsRunning(TUNED_SERVICE) {
+		if system.SystemctlIsRunning(TunedService) {
 			fmt.Println("Daemon (tuned.service) is running.")
 		} else {
 			fmt.Fprintln(os.Stderr, "Daemon (tuned.service) is stopped. If you wish to start the daemon, run `saptune daemon start`.")
-			os.Exit(EXIT_TUNED_STOPPED)
+			os.Exit(ExitTunedStopped)
 		}
 		// Check tuned profile
-		if system.GetTunedProfile() != TUNED_PROFILE_NAME {
+		if system.GetTunedProfile() != TunedProfileName {
 			fmt.Fprintln(os.Stderr, "tuned.service profile is incorrect. If you wish to correct it, run `saptune daemon start`.")
-			os.Exit(EXIT_TUNED_WRONG_PROFILE)
+			os.Exit(ExitTunedWrongProfile)
 		}
 		// Check for any enabled note/solution
 		if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 {
@@ -136,11 +137,11 @@ func DaemonAction(actionName string) {
 			}
 		} else {
 			fmt.Fprintln(os.Stderr, "Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
-			os.Exit(EXIT_NOT_TUNED)
+			os.Exit(ExitNotTuned)
 		}
 	case "stop":
 		fmt.Println("Stopping daemon (tuned.service), this may take several seconds...")
-		if err := system.SystemctlDisableStop(TUNED_SERVICE); err != nil {
+		if err := system.SystemctlDisableStop(TunedService); err != nil {
 			errorExit("%v", err)
 		}
 		// tuned then calls `sapconf daemon revert`
@@ -202,7 +203,7 @@ func NoteAction(actionName, noteID string) {
 			errorExit("Failed to tune for note %s: %v", noteID, err)
 		}
 		fmt.Println("The note has been applied successfully.")
-		if !system.SystemctlIsRunning(TUNED_SERVICE) || system.GetTunedProfile() != TUNED_PROFILE_NAME {
+		if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
 			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
 				"you must instruct saptune to configure \"tuned\" daemon by running:" +
 				"\n    saptune daemon start")
@@ -224,7 +225,7 @@ func NoteAction(actionName, noteID string) {
 			}
 			fmt.Printf(format, noteID, noteObj.Name())
 		}
-		if !system.SystemctlIsRunning(TUNED_SERVICE) || system.GetTunedProfile() != TUNED_PROFILE_NAME {
+		if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
 			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
 				"you must instruct saptune to configure \"tuned\" daemon by running:" +
 				"\n    saptune daemon start")
@@ -305,7 +306,7 @@ func SolutionAction(actionName, solName string) {
 				fmt.Printf("\t%s\t%s\n", noteNumber, tuningOptions[noteNumber].Name())
 			}
 		}
-		if !system.SystemctlIsRunning(TUNED_SERVICE) || system.GetTunedProfile() != TUNED_PROFILE_NAME {
+		if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
 			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
 				"you must instruct saptune to configure \"tuned\" daemon by running:" +
 				"\n    saptune daemon start")
@@ -319,7 +320,7 @@ func SolutionAction(actionName, solName string) {
 			}
 			fmt.Printf(format, solName)
 		}
-		if !system.SystemctlIsRunning(TUNED_SERVICE) || system.GetTunedProfile() != TUNED_PROFILE_NAME {
+		if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
 			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
 				"you must instruct saptune to configure \"tuned\" daemon by running:" +
 				"\n    saptune daemon start")

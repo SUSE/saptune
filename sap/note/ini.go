@@ -7,17 +7,17 @@ import (
 	"github.com/HouzuoGuo/saptune/txtparser"
 	"log"
 	"path"
-	"runtime"
 	"strconv"
 	"strings"
 )
 
 const (
-	INISectionSysctl = "sysctl"
-	INISectionVM     = "vm"
-	INISectionBlock  = "block"
-	INISectionLimits = "limits"
-	SYS_THP          = "kernel/mm/transparent_hugepage/enabled"
+	INISectionSysctl    = "sysctl"
+	INISectionVM        = "vm"
+	INISectionBlock     = "block"
+	INISectionLimits    = "limits"
+	SysKernelTHPEnabled = "kernel/mm/transparent_hugepage/enabled"
+	SysKSMRun           = "kernel/mm/ksm/run"
 )
 
 // Tuning options composed by a third party vendor.
@@ -63,13 +63,13 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 
 // section [block]
 type BlockDeviceQueue struct {
-	BlockDeviceSchedulers     param.BlockDeviceSchedulers
-	BlockDeviceNrRequests     param.BlockDeviceNrRequests
+	BlockDeviceSchedulers param.BlockDeviceSchedulers
+	BlockDeviceNrRequests param.BlockDeviceNrRequests
 }
 
 func GetBlockVal(key string) (string, error) {
 	newQueue := make(map[string]string)
-	newReq   := make(map[string]int)
+	newReq := make(map[string]int)
 	ret_val := ""
 	switch key {
 	case "IO_SCHEDULER":
@@ -212,7 +212,7 @@ func GetVmVal(parameter string) string {
 	var val string
 	switch parameter {
 	case "INI_THP":
-		val = system.GetSysChoice(SYS_THP)
+		val = system.GetSysChoice(SysKernelTHPEnabled)
 	}
 	return val
 }
@@ -324,17 +324,11 @@ func (vend INISettings) Apply() error {
 			// Apply sysctl parameters
 			system.SetSysctlString(param.Key, vend.SysctlParams[param.Key])
 		case INISectionVM:
-			if runtime.GOARCH == ARCH_X86 {
-				system.SetSysString(system.SYS_THP, vend.SysctlParams[param.Key])
-			}
+			system.SetSysString(SysKernelTHPEnabled, vend.SysctlParams[param.Key])
 		case INISectionBlock:
-			if runtime.GOARCH == ARCH_X86 {
-				SetBlkVal(param.Key, vend.SysctlParams[param.Key])
-			}
+			SetBlkVal(param.Key, vend.SysctlParams[param.Key])
 		case INISectionLimits:
-			if runtime.GOARCH == ARCH_X86 {
-				SetLimitsVal(vend.SysctlParams[param.Key])
-			}
+			SetLimitsVal(vend.SysctlParams[param.Key])
 		default:
 			// saptune does not yet understand settings outside of [sysctl] section
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)

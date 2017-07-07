@@ -6,14 +6,18 @@ A system can be tuned for more than one solutions at a time.
 package solution
 
 import (
-	"github.com/HouzuoGuo/saptune/sap/note"
 	"sort"
+)
+
+const (
+	ArchX86     = "amd64"   // ArchX86 is the GOARCH value for x86 platform.
+	ArchPPC64LE = "ppc64le" // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform.
 )
 
 type Solution []string // Solution is identified by set of note numbers.
 
 var AllSolutions = map[string]map[string]Solution{
-	note.ARCH_X86: {
+	ArchX86: {
 		"BOBJ":             {"1275776", "1984787", "1557506", "SAP_BOBJ"},
 		"SAP-ASE":          {"1275776", "1984787", "1557506", "SAP_ASE"},
 		"HANA":             {"1275776", "1984787", "1557506", "2205917"},
@@ -22,7 +26,7 @@ var AllSolutions = map[string]map[string]Solution{
 		"S4HANA-APPSERVER": {"1275776", "1984787", "1557506"},            // identical to Netweaver
 		"S4HANA-DBSERVER":  {"1275776", "1984787", "1557506", "2205917"}, // identical to HANA
 	},
-	note.ARCH_PPC: {
+	ArchPPC64LE: {
 		"HANA":             {"1275776", "1984787", "1557506", "2205917"},
 		"NETWEAVER":        {"1275776", "1984787", "1557506"},
 		"MAXDB":            {"1275776", "1984787", "1557506"},

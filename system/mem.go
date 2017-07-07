@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	MEMINFO_MAIN_TOTAL_KEY = "MemTotal"
-	MEMINFO_SWAP_TOTAL_KEY = "SwapTotal"
+	MemMainTotalKey = "MemTotal"
+	MemSwapTotalKey = "SwapTotal"
 )
 
 // Parse /proc/meminfo into key(string) - value(int) pairs. Panic on error.
@@ -40,17 +40,17 @@ func ParseMeminfo() (infoMap map[string]uint64) {
 
 // Return size of system main memory, excluding swap. Panic on error.
 func GetMainMemSizeMB() uint64 {
-	return ParseMeminfo()[MEMINFO_MAIN_TOTAL_KEY] / 1024
+	return ParseMeminfo()[MemMainTotalKey] / 1024
 }
 
 // Return size of system main memory plus swap. Panic on error.
 func GetTotalMemSizeMB() uint64 {
-	return (ParseMeminfo()[MEMINFO_MAIN_TOTAL_KEY] + ParseMeminfo()[MEMINFO_SWAP_TOTAL_KEY]) / 1024
+	return (ParseMeminfo()[MemMainTotalKey] + ParseMeminfo()[MemSwapTotalKey]) / 1024
 }
 
 // Return size of system main memory plus swap, in pages. Panic on error.
 func GetTotalMemSizePages() uint64 {
-	return (ParseMeminfo()[MEMINFO_MAIN_TOTAL_KEY] + ParseMeminfo()[MEMINFO_SWAP_TOTAL_KEY]) / uint64(os.Getpagesize())
+	return (ParseMeminfo()[MemMainTotalKey] + ParseMeminfo()[MemSwapTotalKey]) / uint64(os.Getpagesize())
 }
 
 // Return kernel semaphore limits. Panic on error.

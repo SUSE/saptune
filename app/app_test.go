@@ -12,9 +12,9 @@ import (
 	"testing"
 )
 
-var SYSCONFIG_SRC_DIR = path.Join(os.Getenv("GOPATH"), "/src/github.com/HouzuoGuo/saptune/ospackage/")
-var TEST_DATA_DIR = "/tmp/saptunetest"
-var SAMPLE_PARAM_FILE = path.Join(TEST_DATA_DIR, "saptune-sample-param")
+var OSPackageInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/HouzuoGuo/saptune/ospackage/")
+var SampleNoteDataDir = "/tmp/saptunetest"
+var SampleParamFile = path.Join(SampleNoteDataDir, "saptune-sample-param")
 
 // Sample note and parameter implementations
 type SampleParam struct {
@@ -25,7 +25,7 @@ func (pa SampleParam) Name() string {
 	return "Sample parameter"
 }
 func (pa SampleParam) Inspect() (param.Parameter, error) {
-	content, _ := ioutil.ReadFile(SAMPLE_PARAM_FILE)
+	content, _ := ioutil.ReadFile(SampleParamFile)
 	pa.Data = string(content)
 	return pa, nil
 }
@@ -34,7 +34,7 @@ func (pa SampleParam) Optimise(way interface{}) (param.Parameter, error) {
 	return pa, nil
 }
 func (pa SampleParam) Apply() error {
-	return ioutil.WriteFile(SAMPLE_PARAM_FILE, []byte(pa.Data), 0644)
+	return ioutil.WriteFile(SampleParamFile, []byte(pa.Data), 0644)
 }
 
 type SampleNote1 struct {
@@ -120,7 +120,7 @@ func VerifyFileContent(t *testing.T, filePath, content string) {
 
 func TestReadConfig(t *testing.T) {
 	// Read the default config should not yield anything
-	tuneApp := InitialiseApp(SYSCONFIG_SRC_DIR, "", AllTestNotes, AllTestSolutions)
+	tuneApp := InitialiseApp(OSPackageInGOPATH, "", AllTestNotes, AllTestSolutions)
 	if len(tuneApp.TuneForSolutions) != 0 || len(tuneApp.TuneForNotes) != 0 {
 		fmt.Printf("'%v'", tuneApp.TuneForSolutions[0])
 		fmt.Println(len(tuneApp.TuneForNotes))
@@ -129,7 +129,7 @@ func TestReadConfig(t *testing.T) {
 }
 
 func TestGetSortedSolutionNotes(t *testing.T) {
-	tuneApp := InitialiseApp(SYSCONFIG_SRC_DIR, "", AllTestNotes, AllTestSolutions)
+	tuneApp := InitialiseApp(OSPackageInGOPATH, "", AllTestNotes, AllTestSolutions)
 	tuneApp.TuneForSolutions = []string{"sol1"}
 	if sols := tuneApp.GetSortedSolutionEnabledNotes(); len(sols) != 1 {
 		t.Fatal(sols)
@@ -149,32 +149,32 @@ func TestGetSortedSolutionNotes(t *testing.T) {
 }
 
 func TestOptimiseNoteOnly(t *testing.T) {
-	os.RemoveAll(TEST_DATA_DIR)
-	defer os.RemoveAll(TEST_DATA_DIR)
-	tuneApp := InitialiseApp(path.Join(TEST_DATA_DIR, "conf"), path.Join(TEST_DATA_DIR, "data"), AllTestNotes, AllTestSolutions)
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 	VerifyConfig(t, tuneApp, []string{}, []string{})
 	// Optimise note1, then revert it
 	if err := tuneApp.TuneNote("1001"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1001"}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.RevertNote("1001", true); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "")
+	VerifyFileContent(t, SampleParamFile, "")
 	// Optimise note2 and revert it
 	if err := tuneApp.TuneNote("1002"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1002"}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertNote("1002", true); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "")
+	VerifyFileContent(t, SampleParamFile, "")
 
 	// Optimise note2, then note1, then note1 again, and then note2 again, and finally revert both (all)
 	if err := tuneApp.TuneNote("1002"); err != nil {
@@ -184,22 +184,22 @@ func TestOptimiseNoteOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1001", "1002"}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.TuneNote("1001"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1001", "1002"}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.TuneNote("1002"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1001", "1002"}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "")
+	VerifyFileContent(t, SampleParamFile, "")
 	// Try optimising for non-existing notes
 	if err := tuneApp.TuneNote("8932147"); err == nil {
 		t.Fatal("did not error")
@@ -208,32 +208,32 @@ func TestOptimiseNoteOnly(t *testing.T) {
 }
 
 func TestOptimiseSolutionOnly(t *testing.T) {
-	os.RemoveAll(TEST_DATA_DIR)
-	defer os.RemoveAll(TEST_DATA_DIR)
-	tuneApp := InitialiseApp(path.Join(TEST_DATA_DIR, "conf"), path.Join(TEST_DATA_DIR, "data"), AllTestNotes, AllTestSolutions)
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 	VerifyConfig(t, tuneApp, []string{}, []string{})
 	// Optimise sol1, then revert it
 	if _, err := tuneApp.TuneSolution("sol1"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.RevertSolution("sol1"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "")
+	VerifyFileContent(t, SampleParamFile, "")
 	// Optimise sol2 and revert it
 	if _, err := tuneApp.TuneSolution("sol2"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol2"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertSolution("sol2"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "")
+	VerifyFileContent(t, SampleParamFile, "")
 
 	// Optimise sol2, then sol1, then sol1 again, and then sol1 again, and finally revert both (all)
 	if _, err := tuneApp.TuneSolution("sol2"); err != nil {
@@ -243,67 +243,67 @@ func TestOptimiseSolutionOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if _, err := tuneApp.TuneSolution("sol1"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if _, err := tuneApp.TuneSolution("sol2"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "")
+	VerifyFileContent(t, SampleParamFile, "")
 
 	// Optimise sol12, then sol1, and then revert sol12, and then revert sol1
 	if _, err := tuneApp.TuneSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol12"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if _, err := tuneApp.TuneSolution("sol1"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.RevertSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.RevertSolution("sol1"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "")
+	VerifyFileContent(t, SampleParamFile, "")
 
 	// Optimise sol1, sol2, sol12, and then sol2 and sol1 again, eventually revert all
 	if _, err := tuneApp.TuneSolution("sol1"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if _, err := tuneApp.TuneSolution("sol2"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if _, err := tuneApp.TuneSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12", "sol2"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
 	}
 	// Note "1001" wants to restore the file to empty, while note "1002" wants to restore it to "optimised1"
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 
 	// Try optimising for non-existing solution
 	if _, err := tuneApp.TuneSolution("this one does not exist"); err == nil {
@@ -313,9 +313,9 @@ func TestOptimiseSolutionOnly(t *testing.T) {
 }
 
 func TestOverlappingSolutions(t *testing.T) {
-	os.RemoveAll(TEST_DATA_DIR)
-	defer os.RemoveAll(TEST_DATA_DIR)
-	tuneApp := InitialiseApp(path.Join(TEST_DATA_DIR, "conf"), path.Join(TEST_DATA_DIR, "data"), AllTestNotes, AllTestSolutions)
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 	VerifyConfig(t, tuneApp, []string{}, []string{})
 
 	// Optimise sol1, sol2, sol12, and then revert sol12
@@ -323,51 +323,51 @@ func TestOverlappingSolutions(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol2"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if _, err := tuneApp.TuneSolution("sol1"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if _, err := tuneApp.TuneSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12", "sol2"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
 	// Reverting sol12 should not affect anything
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 }
 
 func TestCombiningSolutionAndNotes(t *testing.T) {
-	os.RemoveAll(TEST_DATA_DIR)
-	defer os.RemoveAll(TEST_DATA_DIR)
-	tuneApp := InitialiseApp(path.Join(TEST_DATA_DIR, "conf"), path.Join(TEST_DATA_DIR, "data"), AllTestNotes, AllTestSolutions)
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 	VerifyConfig(t, tuneApp, []string{}, []string{})
 	// Optimise sol1, note2, revert note2, add note2, and then add sol12
 	if _, err := tuneApp.TuneSolution("sol1"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.TuneNote("1002"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1002"}, []string{"sol1"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertNote("1002", true); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.TuneNote("1002"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1002"}, []string{"sol1"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if removedNotes, err := tuneApp.TuneSolution("sol12"); err != nil {
 		t.Fatal(err)
 	} else if len(removedNotes) != 1 && removedNotes[0] != "1002" {
@@ -375,25 +375,25 @@ func TestCombiningSolutionAndNotes(t *testing.T) {
 	}
 	// note2 should be removed from list
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised2")
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	// Revert all
 	if err := tuneApp.RevertAll(false); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12"})
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
 	// Note1 memorises "", note2 memorises "optimised1"
-	VerifyFileContent(t, SAMPLE_PARAM_FILE, "optimised1")
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 }
 
 func TestVerifyNoteAndSolutions(t *testing.T) {
-	os.RemoveAll(TEST_DATA_DIR)
-	defer os.RemoveAll(TEST_DATA_DIR)
-	tuneApp := InitialiseApp(path.Join(TEST_DATA_DIR, "conf"), path.Join(TEST_DATA_DIR, "data"), AllTestNotes, AllTestSolutions)
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 	VerifyConfig(t, tuneApp, []string{}, []string{})
 
 	// Tune for sol1 and "1002", so that system will conform to "1002" but not sol1.

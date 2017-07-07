@@ -6,7 +6,7 @@ import (
 )
 
 func TestPrepareForSAPEnvironments(t *testing.T) {
-	prepare := PrepareForSAPEnvironments{SysconfigPrefix: SYSCONFIG_SRC_DIR}
+	prepare := PrepareForSAPEnvironments{SysconfigPrefix: OSPackageInGOPATH}
 	if prepare.Name() == "" {
 		t.Fatal(prepare.Name())
 	}

@@ -12,9 +12,11 @@ import (
 	"sort"
 )
 
-const SYSCONFIG_SAPTUNE = "/etc/sysconfig/saptune"
-const SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS = "TUNE_FOR_SOLUTIONS"
-const SYSCONFIG_KEY_TUNE_FOR_NOTES = "TUNE_FOR_NOTES"
+const (
+	SysconfigSaptuneDir = "/etc/sysconfig/saptune"
+	TuneForSolutionsKey = "TUNE_FOR_SOLUTIONS"
+	TuneForNotesKey     = "TUNE_FOR_NOTES"
+)
 
 // Application configuration and serialised state information.
 type App struct {
@@ -34,10 +36,10 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 		AllNotes:        allNotes,
 		AllSolutions:    allSolutions,
 	}
-	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SYSCONFIG_SAPTUNE), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneDir), true)
 	if err == nil {
-		app.TuneForSolutions = sysconf.GetStringArray(SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS, []string{})
-		app.TuneForNotes = sysconf.GetStringArray(SYSCONFIG_KEY_TUNE_FOR_NOTES, []string{})
+		app.TuneForSolutions = sysconf.GetStringArray(TuneForSolutionsKey, []string{})
+		app.TuneForNotes = sysconf.GetStringArray(TuneForNotesKey, []string{})
 	} else {
 		app.TuneForSolutions = []string{}
 		app.TuneForNotes = []string{}
@@ -49,13 +51,13 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 
 // Save /etc/sysconfig/saptune.
 func (app *App) SaveConfig() error {
-	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SYSCONFIG_SAPTUNE), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneDir), true)
 	if err != nil {
 		return err
 	}
-	sysconf.SetStrArray(SYSCONFIG_KEY_TUNE_FOR_SOLUTIONS, app.TuneForSolutions)
-	sysconf.SetStrArray(SYSCONFIG_KEY_TUNE_FOR_NOTES, app.TuneForNotes)
-	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SYSCONFIG_SAPTUNE), []byte(sysconf.ToText()), 0644)
+	sysconf.SetStrArray(TuneForSolutionsKey, app.TuneForSolutions)
+	sysconf.SetStrArray(TuneForNotesKey, app.TuneForNotes)
+	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneDir), []byte(sysconf.ToText()), 0644)
 }
 
 // Return the number of all solution-enabled SAP notes, sorted.
