@@ -1,0 +1,16 @@
+[Unit]
+Description=Optimise system for running SAP workloads (daemon)
+After=syslog.target systemd-sysctl.service network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/sbin/saptune daemon
+User=root
+Group=root
+WorkingDirectory=/
+PrivateTmp=true
+RestartSec=5
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
