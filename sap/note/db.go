@@ -3,6 +3,7 @@ package note
 import (
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
+	"fmt"
 	"path"
 )
 
@@ -21,9 +22,17 @@ func (hana HANARecommendedOSSettings) Name() string {
 }
 func (hana HANARecommendedOSSettings) Initialise() (Note, error) {
 	ret := HANARecommendedOSSettings{}
-	ret.KernelMMTransparentHugepage = system.GetSysChoice(SysKernelTHPEnabled)
-	ret.KernelMMKsm = system.GetSysInt(SysKSMRun) == 1
-	ret.KernelNumaBalancing = system.GetSysctlInt(system.SysctlNumaBalancing, 0) == 1
+	ret.KernelMMTransparentHugepage, _ = system.GetSysChoice(SysKernelTHPEnabled)
+	ksmRun, err := system.GetSysInt(SysKSMRun)
+	if err != nil {
+		return ret, fmt.Errorf("cannot find parameter \"%s\" in system", SysKSMRun)
+	}
+	ret.KernelMMKsm = ksmRun == 1
+	nuBa, err := system.GetSysctlInt(system.SysctlNumaBalancing)
+	if err != nil {
+		return ret, fmt.Errorf("cannot find parameter \"%s\" in system", system.SysctlNumaBalancing)
+	}
+	ret.KernelNumaBalancing = nuBa == 1
 	return ret, nil
 }
 func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
@@ -35,16 +44,31 @@ func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
 	return ret, nil
 }
 func (hana HANARecommendedOSSettings) Apply() error {
-	system.SetSysString(SysKernelTHPEnabled, hana.KernelMMTransparentHugepage)
+	err := system.SetSysString(SysKernelTHPEnabled, hana.KernelMMTransparentHugepage)
+	if err != nil {
+		return err
+	}
 	if hana.KernelMMKsm {
-		system.SetSysInt(SysKSMRun, 1)
+		err = system.SetSysInt(SysKSMRun, 1)
+		if err != nil {
+			return err
+		}
 	} else {
-		system.SetSysInt(SysKSMRun, 0)
+		err = system.SetSysInt(SysKSMRun, 0)
+		if err != nil {
+			return err
+		}
 	}
 	if hana.KernelNumaBalancing {
-		system.SetSysctlInt(system.SysctlNumaBalancing, 1)
+		err = system.SetSysctlInt(system.SysctlNumaBalancing, 1)
+		if err != nil {
+			return err
+		}
 	} else {
-		system.SetSysctlInt(system.SysctlNumaBalancing, 0)
+		err = system.SetSysctlInt(system.SysctlNumaBalancing, 0)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -62,10 +86,12 @@ func (paging LinuxPagingImprovements) Name() string {
 	return "Linux paging improvements"
 }
 func (paging LinuxPagingImprovements) Initialise() (Note, error) {
+	vmPagecach, _ := system.GetSysctlUint64(system.SysctlPagecacheLimitMB)
+	vmIgnoreDirty, _ := system.GetSysctlInt(system.SysctlPagecacheLimitIgnoreDirty)
 	return LinuxPagingImprovements{
 		SysconfigPrefix:             paging.SysconfigPrefix,
-		VMPagecacheLimitMB:          system.GetSysctlUint64(system.SysctlPagecacheLimitMB, 0),
-		VMPagecacheLimitIgnoreDirty: system.GetSysctlInt(system.SysctlPagecacheLimitIgnoreDirty, 0),
+		VMPagecacheLimitMB:          vmPagecach,
+		VMPagecacheLimitIgnoreDirty: vmIgnoreDirty,
 	}, nil
 }
 func (paging LinuxPagingImprovements) Optimise() (Note, error) {

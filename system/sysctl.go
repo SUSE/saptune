@@ -4,7 +4,6 @@ package system
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -62,73 +61,91 @@ const (
 	SysctlRunChildFirst             = "kernel.sched_child_runs_first"
 )
 
-// Read a sysctl key and return the string value. Panic on error.
-func GetSysctlString(parameter string, valIfNotFound string) string {
+// Read a sysctl key and return the string value.
+func GetSysctlString(parameter string) (string, error) {
 	val, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)))
-	if os.IsNotExist(err) {
-		return valIfNotFound
-	}
 	if err != nil {
-		panic(fmt.Errorf("failed to read sysctl string key '%s': %v", parameter, err))
+		return "", fmt.Errorf("failed to read sysctl key '%s'", parameter)
 	}
-	return strings.TrimSpace(string(val))
+	return strings.TrimSpace(string(val)), nil
 }
 
-// Read an integer sysctl key. Panic on error.
-func GetSysctlInt(parameter string, valIfNotFound int) int {
-	value, err := strconv.Atoi(GetSysctlString(parameter, strconv.Itoa(valIfNotFound)))
+// Read an integer sysctl key.
+func GetSysctlInt(parameter string) (int, error) {
+	value, err := GetSysctlString(parameter)
 	if err != nil {
-		panic(fmt.Errorf("failed to read sysctl int key '%s': %v", parameter, err))
+		return 0, fmt.Errorf("failed to read sysctl key '%s'", parameter)
 	}
-	return value
+	return strconv.Atoi(value)
 }
 
-// Read an uint64 sysctl key. Panic on error.
-func GetSysctlUint64(parameter string, valIfNotFound uint64) uint64 {
-	value, err := strconv.ParseUint(GetSysctlString(parameter, strconv.FormatUint(valIfNotFound, 10)), 10, 64)
+// Read an uint64 sysctl key.
+func GetSysctlUint64(parameter string) (uint64, error) {
+	value, err := GetSysctlString(parameter)
 	if err != nil {
-		panic(fmt.Errorf("failed to read sysctl uint64 key '%s': %v", parameter, err))
+		return 0, fmt.Errorf("failed to read sysctl key '%s'", parameter)
 	}
-	return value
+	return strconv.ParseUint(value, 10, 64)
 }
 
-// Extract a uint64 value from a sysctl key of many fields. Panic on error
-func GetSysctlUint64Field(param string, field int, valIfNotFound uint64) uint64 {
-	allFields := consecutiveSpaces.Split(GetSysctlString(param, ""), -1)
-	if field < len(allFields) {
-		value, err := strconv.ParseUint(allFields[field], 10, 64)
-		if err != nil {
-			panic(fmt.Errorf("failed to read sysctl uint64 key field '%s' %d: %v", param, field, err))
+// Extract a uint64 value from a sysctl key of many fields.
+func GetSysctlUint64Field(param string, field int) (uint64, error) {
+	fields, err := GetSysctlString(param)
+	if err == nil {
+		allFields := consecutiveSpaces.Split(fields, -1)
+		if field < len(allFields) {
+			value, err := strconv.ParseUint(allFields[field], 10, 64)
+			if err != nil {
+				return 0, fmt.Errorf("failed to read sysctl key field '%s' %d", param, field)
+			}
+			return value, nil
 		}
-		return value
 	}
-	return valIfNotFound
+	return 0, fmt.Errorf("failed to read sysctl key '%s'", param)
 }
 
-// Write a string sysctl value. Panic on error.
-func SetSysctlString(parameter, value string) {
-	if err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 644); err != nil {
-		panic(fmt.Errorf("failed to write sysctl string key '%s': %v", parameter, err))
+// Write a string sysctl value.
+func SetSysctlString(parameter, value string) error {
+	err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 644)
+	if err != nil {
+		return fmt.Errorf("failed to write sysctl key '%s'", parameter)
 	}
+	return nil
 }
 
-// Write an integer sysctl value. Panic on error.
-func SetSysctlInt(parameter string, value int) {
-	SetSysctlString(parameter, strconv.Itoa(value))
+// Write an integer sysctl value.
+func SetSysctlInt(parameter string, value int) error {
+	err := SetSysctlString(parameter, strconv.Itoa(value))
+	if err != nil {
+		return fmt.Errorf("failed to write sysctl key '%s'", parameter)
+	}
+	return nil
 }
 
-// Write an integer sysctl value. Panic on error.
-func SetSysctlUint64(parameter string, value uint64) {
-	SetSysctlString(parameter, strconv.FormatUint(value, 10))
+// Write an integer sysctl value.
+func SetSysctlUint64(parameter string, value uint64) error {
+	err := SetSysctlString(parameter, strconv.FormatUint(value, 10))
+	if err != nil {
+		return fmt.Errorf("failed to write sysctl key '%s'", parameter)
+	}
+	return nil
 }
 
-// Write an integer sysctl value into the specified field pf the key. Panic on error
-func SetSysctlUint64Field(param string, field int, value uint64) {
-	allFields := consecutiveSpaces.Split(GetSysctlString(param, ""), -1)
+// Write an integer sysctl value into the specified field pf the key.
+func SetSysctlUint64Field(param string, field int, value uint64) error {
+	fields, err := GetSysctlString(param)
+	if err != nil {
+		return fmt.Errorf("failed to read sysctl key '%s'", param)
+	}
+	allFields := consecutiveSpaces.Split(fields, -1)
 	if field < len(allFields) {
 		allFields[field] = strconv.FormatUint(value, 10)
-		SetSysctlString(param, strings.Join(allFields, " "))
+		err = SetSysctlString(param, strings.Join(allFields, " "))
+		if err != nil {
+			return fmt.Errorf("failed to write sysctl key '%s'", param)
+		}
 	} else {
-		panic(fmt.Errorf("failed to write sysctl uint64 field '%s' %d, format error.", param, field))
+		return fmt.Errorf("failed to write sysctl key field '%s' %d", param, field)
 	}
+	return nil
 }

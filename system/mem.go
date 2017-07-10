@@ -55,14 +55,17 @@ func GetTotalMemSizePages() uint64 {
 
 // Return kernel semaphore limits. Panic on error.
 func GetSemaphoreLimits() (msl, mns, opm, mni uint64) {
-	fields := consecutiveSpaces.Split(GetSysctlString("kernel.sem", ""), -1)
-	if len(fields) < 4 {
-		panic(fmt.Errorf("failed to read kermel.sem values: %v", fields))
+	field, err := GetSysctlString("kernel.sem")
+	if err != nil {
+		fmt.Errorf("failed to read kernel.sem values")
 	}
-	var err error
+	fields := consecutiveSpaces.Split(field, -1)
+	if len(fields) < 4 {
+		panic(fmt.Errorf("failed to read kernel.sem values: %v", fields))
+	}
 	for i, val := range []*uint64{&msl, &mns, &opm, &mni} {
 		if *val, err = strconv.ParseUint(fields[i], 10, 64); err != nil {
-			panic(fmt.Errorf("failed to parse kermel.sem values: %v", err))
+			panic(fmt.Errorf("failed to parse kernel.sem values: %v", err))
 		}
 	}
 	return

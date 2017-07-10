@@ -60,10 +60,22 @@ func (prepare PrepareForSAPEnvironments) Initialise() (Note, error) {
 	newPrepare.LimitNofileDbaSoft, _ = secLimits.Get("@dba", "soft", "nofile")
 	newPrepare.LimitNofileDbaHard, _ = secLimits.Get("@dba", "hard", "nofile")
 	// Find out shared memory limits
-	newPrepare.KernelShmMax = system.GetSysctlUint64(system.SysctlShmax, 0)
-	newPrepare.KernelShmAll = system.GetSysctlUint64(system.SysctlShmall, 0)
-	newPrepare.KernelShmMni = system.GetSysctlUint64(system.SysctlShmni, 0)
-	newPrepare.VMMaxMapCount = system.GetSysctlUint64(system.SysctlMaxMapCount, 0)
+	newPrepare.KernelShmMax, err = system.GetSysctlUint64(system.SysctlShmax)
+	if err != nil {
+		return nil, err
+	}
+	newPrepare.KernelShmAll, err = system.GetSysctlUint64(system.SysctlShmall)
+	if err != nil {
+		return nil, err
+	}
+	newPrepare.KernelShmMni, err = system.GetSysctlUint64(system.SysctlShmni)
+	if err != nil {
+		return nil, err
+	}
+	newPrepare.VMMaxMapCount, err = system.GetSysctlUint64(system.SysctlMaxMapCount)
+	if err != nil {
+		return nil, err
+	}
 	// Find out semaphore limits
 	newPrepare.KernelSemMsl, newPrepare.KernelSemMns, newPrepare.KernelSemOpm, newPrepare.KernelSemMni = system.GetSemaphoreLimits()
 	return newPrepare, err
@@ -145,12 +157,27 @@ func (prepare PrepareForSAPEnvironments) Apply() error {
 		return err
 	}
 	// Apply shared memory limits
-	system.SetSysctlUint64(system.SysctlShmax, prepare.KernelShmMax)
-	system.SetSysctlUint64(system.SysctlShmall, prepare.KernelShmAll)
-	system.SetSysctlUint64(system.SysctlShmni, prepare.KernelShmMni)
-	system.SetSysctlUint64(system.SysctlMaxMapCount, prepare.VMMaxMapCount)
+	err = system.SetSysctlUint64(system.SysctlShmax, prepare.KernelShmMax)
+	if err != nil {
+		return err
+	}
+	err = system.SetSysctlUint64(system.SysctlShmall, prepare.KernelShmAll)
+	if err != nil {
+		return err
+	}
+	err = system.SetSysctlUint64(system.SysctlShmni, prepare.KernelShmMni)
+	if err != nil {
+		return err
+	}
+	err = system.SetSysctlUint64(system.SysctlMaxMapCount, prepare.VMMaxMapCount)
+	if err != nil {
+		return err
+	}
 	// Apply semaphore limits
-	system.SetSysctlString(system.SysctlSem, fmt.Sprintf("%d %d %d %d", prepare.KernelSemMsl, prepare.KernelSemMns, prepare.KernelSemOpm, prepare.KernelSemMni))
+	err = system.SetSysctlString(system.SysctlSem, fmt.Sprintf("%d %d %d %d", prepare.KernelSemMsl, prepare.KernelSemMns, prepare.KernelSemOpm, prepare.KernelSemMni))
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -194,7 +221,9 @@ func (inst AfterInstallation) Apply() error {
 	if err := ioutil.WriteFile(path.Join(LogindConfDir, LogindSAPConfFile), []byte(LogindSAPConfContent), 0644); err != nil {
 		return err
 	}
-	log.Print("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
+	if inst.LogindConfigured {
+		log.Print("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
 		"This opens up entire system to fork-bomb style attacks. Please reboot the system for the changes to take effect.")
+	}
 	return nil
 }

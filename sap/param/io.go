@@ -25,7 +25,7 @@ func (ioe BlockDeviceSchedulers) Inspect() (Parameter, error) {
 			If the file simply says "none", which means IO scheduling is not relevant to the block device, then
 			the device name will not appear in return value, and there is no point in tuning it anyways.
 		*/
-		elev := system.GetSysChoice(path.Join("block", entry.Name(), "queue", "scheduler"))
+		elev, _ := system.GetSysChoice(path.Join("block", entry.Name(), "queue", "scheduler"))
 		if elev != "" {
 			newIOE.SchedulerChoice[entry.Name()] = elev
 		}
@@ -41,7 +41,10 @@ func (ioe BlockDeviceSchedulers) Optimise(newElevatorName interface{}) (Paramete
 }
 func (ioe BlockDeviceSchedulers) Apply() error {
 	for name, elevator := range ioe.SchedulerChoice {
-		system.SetSysString(path.Join("block", name, "queue", "scheduler"), elevator)
+		err := system.SetSysString(path.Join("block", name, "queue", "scheduler"), elevator)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -60,8 +63,8 @@ func (ior BlockDeviceNrRequests) Inspect() (Parameter, error) {
 	}
 	for _, entry := range dirContent {
 		// Remember, GetSysString does not accept the leading /sys/
-		nrreq := system.GetSysInt(path.Join("block", entry.Name(), "queue", "nr_requests"))
-		if nrreq >= 0 {
+		nrreq, err := system.GetSysInt(path.Join("block", entry.Name(), "queue", "nr_requests"))
+		if nrreq >= 0 && err == nil {
 			newIOR.NrRequests[entry.Name()] = nrreq
 		}
 	}
@@ -76,7 +79,10 @@ func (ior BlockDeviceNrRequests) Optimise(newNrRequestValue interface{}) (Parame
 }
 func (ior BlockDeviceNrRequests) Apply() error {
 	for name, nrreq := range ior.NrRequests {
-		system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq)
+		err := system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
