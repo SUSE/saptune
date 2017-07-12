@@ -260,11 +260,7 @@ func (vend INISettings) Initialise() (Note, error) {
 	for _, param := range ini.AllValues {
 		switch param.Section {
 		case INISectionSysctl:
-			currValue, err := system.GetSysctlString(param.Key)
-			if err != nil {
-				return vend, fmt.Errorf("INISettings %s: cannot find parameter \"%s\" in system", vend.ID, param)
-			}
-			vend.SysctlParams[param.Key] = currValue
+			vend.SysctlParams[param.Key], _ = system.GetSysctlString(param.Key)
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = GetVmVal(param.Key)
 		case INISectionBlock:
@@ -312,6 +308,7 @@ func (vend INISettings) Optimise() (Note, error) {
 }
 
 func (vend INISettings) Apply() error {
+	errs := make([]error, 0, 0)
 	// Parse the configuration file
 	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
 	if err != nil {
@@ -322,22 +319,19 @@ func (vend INISettings) Apply() error {
 		switch param.Section {
 		case INISectionSysctl:
 			// Apply sysctl parameters
-			err = system.SetSysctlString(param.Key, vend.SysctlParams[param.Key])
+			errs = append(errs, system.SetSysctlString(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionVM:
-			err = system.SetSysString(SysKernelTHPEnabled, vend.SysctlParams[param.Key])
+			errs = append(errs, system.SetSysString(SysKernelTHPEnabled, vend.SysctlParams[param.Key]))
 		case INISectionBlock:
-			err = SetBlkVal(param.Key, vend.SysctlParams[param.Key])
+			errs = append(errs, SetBlkVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionLimits:
-			err = SetLimitsVal(vend.SysctlParams[param.Key])
+			errs = append(errs, SetLimitsVal(vend.SysctlParams[param.Key]))
 		default:
 			// saptune does not yet understand settings outside of [sysctl] section
-			err = nil
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
-		if err != nil {
-			return  err
-		}
 	}
-	return nil
+	err = system.WriteNoteErrors(errs)
+	return err
 }

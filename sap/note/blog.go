@@ -28,43 +28,21 @@ func (st SUSESysOptimisation) Name() string {
 	return "SLES 12 OS Tuning & Optimization Guide – Part 1"
 }
 func (st SUSESysOptimisation) Initialise() (Note, error) {
-	var err error
 	newST := st
-	newST.VMNumberHugePages, err = system.GetSysctlUint64(system.SysctlNumberHugepages)
-	if err != nil {
-		return nil, err
-	}
-	newST.VMSwappiness, err = system.GetSysctlUint64(system.SysctlSwappines)
-	if err != nil {
-		return nil, err
-	}
-	newST.VMVfsCachePressure, err = system.GetSysctlUint64(system.SysctlVFSCachePressure)
-	if err != nil {
-		return nil, err
-	}
+	newST.VMNumberHugePages, _ = system.GetSysctlUint64(system.SysctlNumberHugepages)
+	newST.VMSwappiness, _ = system.GetSysctlUint64(system.SysctlSwappines)
+	newST.VMVfsCachePressure, _ = system.GetSysctlUint64(system.SysctlVFSCachePressure)
 
-	newST.VMOvercommitMemory, err = system.GetSysctlUint64(system.SysctlOvercommitMemory)
-	if err != nil {
-		return nil, err
-	}
-	newST.VMOvercommitRatio, err = system.GetSysctlUint64(system.SysctlOvercommitRatio)
-	if err != nil {
-		return nil, err
-	}
-	newST.VMDirtyRatio, err = system.GetSysctlUint64(system.SysctlDirtyRatio)
-	if err != nil {
-		return nil, err
-	}
+	newST.VMOvercommitMemory, _ = system.GetSysctlUint64(system.SysctlOvercommitMemory)
+	newST.VMOvercommitRatio, _ = system.GetSysctlUint64(system.SysctlOvercommitRatio)
+	newST.VMDirtyRatio, _ = system.GetSysctlUint64(system.SysctlDirtyRatio)
 
-	newST.VMDirtyBackgroundRatio, err = system.GetSysctlUint64(system.SysctlDirtyBackgroundRatio)
-	if err != nil {
-		return nil, err
-	}
+	newST.VMDirtyBackgroundRatio, _ = system.GetSysctlUint64(system.SysctlDirtyBackgroundRatio)
 	newBlkSchedulers, err := newST.BlockDeviceSchedulers.Inspect()
 	if err != nil {
 		newST.BlockDeviceSchedulers = newBlkSchedulers.(param.BlockDeviceSchedulers)
 	}
-	return newST, err
+	return newST, nil
 }
 func (st SUSESysOptimisation) Optimise() (Note, error) {
 	newST := st
@@ -98,37 +76,20 @@ func (st SUSESysOptimisation) Optimise() (Note, error) {
 	return newST, nil
 }
 func (st SUSESysOptimisation) Apply() error {
-	err := system.SetSysctlUint64(system.SysctlNumberHugepages, st.VMNumberHugePages)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlSwappines, st.VMSwappiness)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlVFSCachePressure, st.VMVfsCachePressure)
-	if err != nil {
-		return err
-	}
+	errs := make([]error, 0, 0)
+	errs = append(errs, system.SetSysctlUint64(system.SysctlNumberHugepages, st.VMNumberHugePages))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlSwappines, st.VMSwappiness))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlVFSCachePressure, st.VMVfsCachePressure))
 
-	err = system.SetSysctlUint64(system.SysctlOvercommitMemory, st.VMOvercommitMemory)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlOvercommitRatio, st.VMOvercommitRatio)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlDirtyRatio, st.VMDirtyRatio)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlOvercommitMemory, st.VMOvercommitMemory))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlOvercommitRatio, st.VMOvercommitRatio))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlDirtyRatio, st.VMDirtyRatio))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlDirtyBackgroundRatio, st.VMDirtyBackgroundRatio))
 
-	err = system.SetSysctlUint64(system.SysctlDirtyBackgroundRatio, st.VMDirtyBackgroundRatio)
-	if err != nil {
-		return err
-	}
-	return st.BlockDeviceSchedulers.Apply()
+	errs = append(errs, st.BlockDeviceSchedulers.Apply())
+
+	err := system.WriteNoteErrors(errs)
+	return err
 }
 
 /*
@@ -166,147 +127,44 @@ func (st SUSENetCPUOptimisation) Name() string {
 }
 func (st SUSENetCPUOptimisation) Initialise() (Note, error) {
 	newST := st
-	var err error
 	// Section "SLES11/12 Network Tuning & Optimization"
-	newST.NetCoreWmemMax, err = system.GetSysctlUint64(system.SysctlNetWriteMemMax)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetCoreRmemMax, err = system.GetSysctlUint64(system.SysctlNetReadMemMax)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetCoreNetdevMaxBacklog, err = system.GetSysctlUint64(system.SysctlNetMaxBacklog)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetCoreSoMaxConn, err = system.GetSysctlUint64(system.SysctlNetMaxconn)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4TcpRmem, err = system.GetSysctlUint64Field(system.SysctlTCPReadMem, 2)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4TcpWmem, err = system.GetSysctlUint64Field(system.SysctlTCPWriteMem, 2)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4TcpTimestamps, err = system.GetSysctlUint64(system.SysctlTCPTimestamps)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4TcpSack, err = system.GetSysctlUint64(system.SysctlTCPSack)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4TcpFack, err = system.GetSysctlUint64(system.SysctlTCPFack)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4TcpDsack, err = system.GetSysctlUint64(system.SysctlTCPDsack)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4IpfragLowThres, err = system.GetSysctlUint64(system.SysctlTCPFragLowThreshold)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4IpfragHighThres, err = system.GetSysctlUint64(system.SysctlTCPFragHighThreshold)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4TcpMaxSynBacklog, err = system.GetSysctlUint64(system.SysctlTCPMaxSynBacklog)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4TcpSynackRetries, err = system.GetSysctlUint64(system.SysctlTCPSynackRetries)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4TcpRetries2, err = system.GetSysctlUint64(system.SysctpTCPRetries2)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetTcpKeepaliveTime, err = system.GetSysctlUint64(system.SysctlTCPKeepaliveTime)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetTcpKeepaliveProbes, err = system.GetSysctlUint64(system.SysctlTCPKeepaliveProbes)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetTcpKeepaliveIntvl, err = system.GetSysctlUint64(system.SysctlTCPKeepaliveInterval)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetTcpTwRecycle, err = system.GetSysctlUint64(system.SysctlTCPTWRecycle)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetTcpTwReuse, err = system.GetSysctlUint64(system.SysctlTCPTWReuse)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetTcpFinTimeout, err = system.GetSysctlUint64(system.SysctlTCPFinTimeout)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetTcpMtuProbing, err = system.GetSysctlUint64(system.SysctlTCPMTUProbing)
-	if err != nil {
-		return nil, err
-	}
+	newST.NetCoreWmemMax, _ = system.GetSysctlUint64(system.SysctlNetWriteMemMax)
+	newST.NetCoreRmemMax, _ = system.GetSysctlUint64(system.SysctlNetReadMemMax)
+	newST.NetCoreNetdevMaxBacklog, _ = system.GetSysctlUint64(system.SysctlNetMaxBacklog)
+	newST.NetCoreSoMaxConn, _ = system.GetSysctlUint64(system.SysctlNetMaxconn)
+	newST.NetIpv4TcpRmem, _ = system.GetSysctlUint64Field(system.SysctlTCPReadMem, 2)
+	newST.NetIpv4TcpWmem, _ = system.GetSysctlUint64Field(system.SysctlTCPWriteMem, 2)
+	newST.NetIpv4TcpTimestamps, _ = system.GetSysctlUint64(system.SysctlTCPTimestamps)
+	newST.NetIpv4TcpSack, _ = system.GetSysctlUint64(system.SysctlTCPSack)
+	newST.NetIpv4TcpFack, _ = system.GetSysctlUint64(system.SysctlTCPFack)
+	newST.NetIpv4TcpDsack, _ = system.GetSysctlUint64(system.SysctlTCPDsack)
+	newST.NetIpv4IpfragLowThres, _ = system.GetSysctlUint64(system.SysctlTCPFragLowThreshold)
+	newST.NetIpv4IpfragHighThres, _ = system.GetSysctlUint64(system.SysctlTCPFragHighThreshold)
+	newST.NetIpv4TcpMaxSynBacklog, _ = system.GetSysctlUint64(system.SysctlTCPMaxSynBacklog)
+	newST.NetIpv4TcpSynackRetries, _ = system.GetSysctlUint64(system.SysctlTCPSynackRetries)
+	newST.NetIpv4TcpRetries2, _ = system.GetSysctlUint64(system.SysctpTCPRetries2)
+	newST.NetTcpKeepaliveTime, _ = system.GetSysctlUint64(system.SysctlTCPKeepaliveTime)
+	newST.NetTcpKeepaliveProbes, _ = system.GetSysctlUint64(system.SysctlTCPKeepaliveProbes)
+	newST.NetTcpKeepaliveIntvl, _ = system.GetSysctlUint64(system.SysctlTCPKeepaliveInterval)
+	newST.NetTcpTwRecycle, _ = system.GetSysctlUint64(system.SysctlTCPTWRecycle)
+	newST.NetTcpTwReuse, _ = system.GetSysctlUint64(system.SysctlTCPTWReuse)
+	newST.NetTcpFinTimeout, _ = system.GetSysctlUint64(system.SysctlTCPFinTimeout)
+	newST.NetTcpMtuProbing, _ = system.GetSysctlUint64(system.SysctlTCPMTUProbing)
 
 	// Section "Basic TCP/IP Optimization for SLES
-	newST.NetIpv4TcpSyncookies, err = system.GetSysctlUint64(system.SysctlTCPSynCookies)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4ConfAllAcceptSourceRoute, err = system.GetSysctlUint64(system.SysctlIPAcceptSourceRoute)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4ConfAllAcceptRedirects, err = system.GetSysctlUint64(system.SysctlIPAcceptRedirects)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4ConfAllRPFilter, err = system.GetSysctlUint64(system.SysctlIPRPFilter)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4IcmpEchoIgnoreBroadcasts, err = system.GetSysctlUint64(system.SysctlIPIgnoreICMPBroadcasts)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4IcmpIgnoreBogusErrorResponses, err = system.GetSysctlUint64(system.SysctlIPIgnoreICMPBogusError)
-	if err != nil {
-		return nil, err
-	}
-	newST.NetIpv4ConfAllLogMartians, err = system.GetSysctlUint64(system.SysctlIPLogMartians)
-	if err != nil {
-		return nil, err
-	}
-	newST.KernelRandomizeVASpace, err = system.GetSysctlUint64(system.SysctlRandomizeVASpace)
-	if err != nil {
-		return nil, err
-	}
-	newST.KernelKptrRestrict, err = system.GetSysctlUint64(system.SysctlKptrRestrict)
-	if err != nil {
-		return nil, err
-	}
-	newST.FSProtectedHardlinks, err = system.GetSysctlUint64(system.SysctlProtectHardlinks)
-	if err != nil {
-		return nil, err
-	}
-	newST.FSProtectedSymlinks, err = system.GetSysctlUint64(system.SysctlProtectSymlinks)
-	if err != nil {
-		return nil, err
-	}
-	newST.KernelSchedChildRunsFirst, err = system.GetSysctlUint64(system.SysctlRunChildFirst)
-	if err != nil {
-		return nil, err
-	}
-	return newST, err
+	newST.NetIpv4TcpSyncookies, _ = system.GetSysctlUint64(system.SysctlTCPSynCookies)
+	newST.NetIpv4ConfAllAcceptSourceRoute, _ = system.GetSysctlUint64(system.SysctlIPAcceptSourceRoute)
+	newST.NetIpv4ConfAllAcceptRedirects, _ = system.GetSysctlUint64(system.SysctlIPAcceptRedirects)
+	newST.NetIpv4ConfAllRPFilter, _ = system.GetSysctlUint64(system.SysctlIPRPFilter)
+	newST.NetIpv4IcmpEchoIgnoreBroadcasts, _ = system.GetSysctlUint64(system.SysctlIPIgnoreICMPBroadcasts)
+	newST.NetIpv4IcmpIgnoreBogusErrorResponses, _ = system.GetSysctlUint64(system.SysctlIPIgnoreICMPBogusError)
+	newST.NetIpv4ConfAllLogMartians, _ = system.GetSysctlUint64(system.SysctlIPLogMartians)
+	newST.KernelRandomizeVASpace, _ = system.GetSysctlUint64(system.SysctlRandomizeVASpace)
+	newST.KernelKptrRestrict, _ = system.GetSysctlUint64(system.SysctlKptrRestrict)
+	newST.FSProtectedHardlinks, _ = system.GetSysctlUint64(system.SysctlProtectHardlinks)
+	newST.FSProtectedSymlinks, _ = system.GetSysctlUint64(system.SysctlProtectSymlinks)
+	newST.KernelSchedChildRunsFirst, _ = system.GetSysctlUint64(system.SysctlRunChildFirst)
+	return newST, nil
 }
 func (st SUSENetCPUOptimisation) Optimise() (Note, error) {
 	newST := st
@@ -382,152 +240,56 @@ func (st SUSENetCPUOptimisation) Optimise() (Note, error) {
 }
 func (st SUSENetCPUOptimisation) Apply() error {
 	// Section "SLES11/12 Network Tuning & Optimization"
-	err := system.SetSysctlUint64(system.SysctlNetWriteMemMax, st.NetCoreWmemMax)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlNetReadMemMax, st.NetCoreRmemMax)
-	if err != nil {
-		return err
-	}
+	errs := make([]error, 0, 0)
+	errs = append(errs, system.SetSysctlUint64(system.SysctlNetWriteMemMax, st.NetCoreWmemMax))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlNetReadMemMax, st.NetCoreRmemMax))
 
-	err = system.SetSysctlUint64(system.SysctlNetMaxBacklog, st.NetCoreNetdevMaxBacklog)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlNetMaxconn, st.NetCoreSoMaxConn)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlNetMaxBacklog, st.NetCoreNetdevMaxBacklog))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlNetMaxconn, st.NetCoreSoMaxConn))
 
-	err = system.SetSysctlUint64Field(system.SysctlTCPReadMem, 2, st.NetIpv4TcpRmem)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64Field(system.SysctlTCPWriteMem, 2, st.NetIpv4TcpWmem)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64Field(system.SysctlTCPReadMem, 2, st.NetIpv4TcpRmem))
+	errs = append(errs, system.SetSysctlUint64Field(system.SysctlTCPWriteMem, 2, st.NetIpv4TcpWmem))
 
-	err = system.SetSysctlUint64(system.SysctlTCPTimestamps, st.NetIpv4TcpTimestamps)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPTimestamps, st.NetIpv4TcpTimestamps))
 
-	err = system.SetSysctlUint64(system.SysctlTCPSack, st.NetIpv4TcpSack)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlTCPFack, st.NetIpv4TcpFack)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlTCPDsack, st.NetIpv4TcpDsack)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPSack, st.NetIpv4TcpSack))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPFack, st.NetIpv4TcpFack))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPDsack, st.NetIpv4TcpDsack))
 
-	err = system.SetSysctlUint64(system.SysctlTCPFragLowThreshold, st.NetIpv4IpfragLowThres)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlTCPFragHighThreshold, st.NetIpv4IpfragHighThres)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPFragLowThreshold, st.NetIpv4IpfragLowThres))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPFragHighThreshold, st.NetIpv4IpfragHighThres))
 
-	err = system.SetSysctlUint64(system.SysctlTCPMaxSynBacklog, st.NetIpv4TcpMaxSynBacklog)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlTCPSynackRetries, st.NetIpv4TcpSynackRetries)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctpTCPRetries2, st.NetIpv4TcpRetries2)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPMaxSynBacklog, st.NetIpv4TcpMaxSynBacklog))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPSynackRetries, st.NetIpv4TcpSynackRetries))
+	errs = append(errs, system.SetSysctlUint64(system.SysctpTCPRetries2, st.NetIpv4TcpRetries2))
 
-	err = system.SetSysctlUint64(system.SysctlTCPKeepaliveTime, st.NetTcpKeepaliveTime)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlTCPKeepaliveProbes, st.NetTcpKeepaliveProbes)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlTCPKeepaliveInterval, st.NetTcpKeepaliveIntvl)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPKeepaliveTime, st.NetTcpKeepaliveTime))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPKeepaliveProbes, st.NetTcpKeepaliveProbes))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPKeepaliveInterval, st.NetTcpKeepaliveIntvl))
 
-	err = system.SetSysctlUint64(system.SysctlTCPTWRecycle, st.NetTcpTwRecycle)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlTCPTWReuse, st.NetTcpTwReuse)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlTCPFinTimeout, st.NetTcpFinTimeout)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPTWRecycle, st.NetTcpTwRecycle))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPTWReuse, st.NetTcpTwReuse))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPFinTimeout, st.NetTcpFinTimeout))
 
-	err = system.SetSysctlUint64(system.SysctlTCPMTUProbing, st.NetTcpMtuProbing)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPMTUProbing, st.NetTcpMtuProbing))
 
 	// Section "Basic TCP/IP Optimization for SLES
-	err = system.SetSysctlUint64(system.SysctlTCPSynCookies, st.NetIpv4TcpSyncookies)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlIPAcceptSourceRoute, st.NetIpv4ConfAllAcceptSourceRoute)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlIPAcceptRedirects, st.NetIpv4ConfAllAcceptRedirects)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlIPRPFilter, st.NetIpv4ConfAllRPFilter)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlTCPSynCookies, st.NetIpv4TcpSyncookies))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlIPAcceptSourceRoute, st.NetIpv4ConfAllAcceptSourceRoute))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlIPAcceptRedirects, st.NetIpv4ConfAllAcceptRedirects))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlIPRPFilter, st.NetIpv4ConfAllRPFilter))
 
-	err = system.SetSysctlUint64(system.SysctlIPIgnoreICMPBroadcasts, st.NetIpv4IcmpEchoIgnoreBroadcasts)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlIPIgnoreICMPBogusError, st.NetIpv4IcmpIgnoreBogusErrorResponses)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlIPLogMartians, st.NetIpv4ConfAllLogMartians)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlIPIgnoreICMPBroadcasts, st.NetIpv4IcmpEchoIgnoreBroadcasts))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlIPIgnoreICMPBogusError, st.NetIpv4IcmpIgnoreBogusErrorResponses))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlIPLogMartians, st.NetIpv4ConfAllLogMartians))
 
-	err = system.SetSysctlUint64(system.SysctlRandomizeVASpace, st.KernelRandomizeVASpace)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlKptrRestrict, st.KernelKptrRestrict)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlProtectHardlinks, st.FSProtectedHardlinks)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlProtectSymlinks, st.FSProtectedSymlinks)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlRandomizeVASpace, st.KernelRandomizeVASpace))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlKptrRestrict, st.KernelKptrRestrict))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlProtectHardlinks, st.FSProtectedHardlinks))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlProtectSymlinks, st.FSProtectedSymlinks))
 
-	err = system.SetSysctlUint64(system.SysctlRunChildFirst, st.KernelSchedChildRunsFirst)
+	errs = append(errs, system.SetSysctlUint64(system.SysctlRunChildFirst, st.KernelSchedChildRunsFirst))
+
+	err := system.WriteNoteErrors(errs)
 	return err
 }

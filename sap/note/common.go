@@ -60,22 +60,10 @@ func (prepare PrepareForSAPEnvironments) Initialise() (Note, error) {
 	newPrepare.LimitNofileDbaSoft, _ = secLimits.Get("@dba", "soft", "nofile")
 	newPrepare.LimitNofileDbaHard, _ = secLimits.Get("@dba", "hard", "nofile")
 	// Find out shared memory limits
-	newPrepare.KernelShmMax, err = system.GetSysctlUint64(system.SysctlShmax)
-	if err != nil {
-		return nil, err
-	}
-	newPrepare.KernelShmAll, err = system.GetSysctlUint64(system.SysctlShmall)
-	if err != nil {
-		return nil, err
-	}
-	newPrepare.KernelShmMni, err = system.GetSysctlUint64(system.SysctlShmni)
-	if err != nil {
-		return nil, err
-	}
-	newPrepare.VMMaxMapCount, err = system.GetSysctlUint64(system.SysctlMaxMapCount)
-	if err != nil {
-		return nil, err
-	}
+	newPrepare.KernelShmMax, _ = system.GetSysctlUint64(system.SysctlShmax)
+	newPrepare.KernelShmAll, _ = system.GetSysctlUint64(system.SysctlShmall)
+	newPrepare.KernelShmMni, _ = system.GetSysctlUint64(system.SysctlShmni)
+	newPrepare.VMMaxMapCount, _ = system.GetSysctlUint64(system.SysctlMaxMapCount)
 	// Find out semaphore limits
 	newPrepare.KernelSemMsl, newPrepare.KernelSemMns, newPrepare.KernelSemOpm, newPrepare.KernelSemMni = system.GetSemaphoreLimits()
 	return newPrepare, err
@@ -134,6 +122,7 @@ func (prepare PrepareForSAPEnvironments) Optimise() (Note, error) {
 	return newPrepare, nil
 }
 func (prepare PrepareForSAPEnvironments) Apply() error {
+	errs := make([]error, 0, 0)
 	// Apply new SHM size
 	if prepare.ShmFileSystemSizeMB > 0 {
 		if err := system.RemountSHM(uint64(prepare.ShmFileSystemSizeMB)); err != nil {
@@ -157,27 +146,14 @@ func (prepare PrepareForSAPEnvironments) Apply() error {
 		return err
 	}
 	// Apply shared memory limits
-	err = system.SetSysctlUint64(system.SysctlShmax, prepare.KernelShmMax)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlShmall, prepare.KernelShmAll)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlShmni, prepare.KernelShmMni)
-	if err != nil {
-		return err
-	}
-	err = system.SetSysctlUint64(system.SysctlMaxMapCount, prepare.VMMaxMapCount)
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlUint64(system.SysctlShmax, prepare.KernelShmMax))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlShmall, prepare.KernelShmAll))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlShmni, prepare.KernelShmMni))
+	errs = append(errs, system.SetSysctlUint64(system.SysctlMaxMapCount, prepare.VMMaxMapCount))
 	// Apply semaphore limits
-	err = system.SetSysctlString(system.SysctlSem, fmt.Sprintf("%d %d %d %d", prepare.KernelSemMsl, prepare.KernelSemMns, prepare.KernelSemOpm, prepare.KernelSemMni))
-	if err != nil {
-		return err
-	}
+	errs = append(errs, system.SetSysctlString(system.SysctlSem, fmt.Sprintf("%d %d %d %d", prepare.KernelSemMsl, prepare.KernelSemMns, prepare.KernelSemOpm, prepare.KernelSemMni)))
+
+	err = system.WriteNoteErrors(errs)
 	return nil
 }
 

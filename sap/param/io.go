@@ -40,13 +40,12 @@ func (ioe BlockDeviceSchedulers) Optimise(newElevatorName interface{}) (Paramete
 	return newIOE, nil
 }
 func (ioe BlockDeviceSchedulers) Apply() error {
+	errs := make([]error, 0, 0)
 	for name, elevator := range ioe.SchedulerChoice {
-		err := system.SetSysString(path.Join("block", name, "queue", "scheduler"), elevator)
-		if err != nil {
-			return err
-		}
+		errs = append(errs, system.SetSysString(path.Join("block", name, "queue", "scheduler"), elevator))
 	}
-	return nil
+	err := system.WriteNoteErrors(errs)
+	return err
 }
 
 // Change IO nr_requests on all block devices
@@ -78,11 +77,10 @@ func (ior BlockDeviceNrRequests) Optimise(newNrRequestValue interface{}) (Parame
 	return newIOR, nil
 }
 func (ior BlockDeviceNrRequests) Apply() error {
+	errs := make([]error, 0, 0)
 	for name, nrreq := range ior.NrRequests {
-		err := system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq)
-		if err != nil {
-			return err
-		}
+		errs = append(errs, system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq))
 	}
-	return nil
+	err := system.WriteNoteErrors(errs)
+	return err
 }

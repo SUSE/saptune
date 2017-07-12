@@ -3,7 +3,6 @@ package note
 import (
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
-	"fmt"
 	"path"
 )
 
@@ -23,15 +22,9 @@ func (hana HANARecommendedOSSettings) Name() string {
 func (hana HANARecommendedOSSettings) Initialise() (Note, error) {
 	ret := HANARecommendedOSSettings{}
 	ret.KernelMMTransparentHugepage, _ = system.GetSysChoice(SysKernelTHPEnabled)
-	ksmRun, err := system.GetSysInt(SysKSMRun)
-	if err != nil {
-		return ret, fmt.Errorf("cannot find parameter \"%s\" in system", SysKSMRun)
-	}
+	ksmRun, _ := system.GetSysInt(SysKSMRun)
 	ret.KernelMMKsm = ksmRun == 1
-	nuBa, err := system.GetSysctlInt(system.SysctlNumaBalancing)
-	if err != nil {
-		return ret, fmt.Errorf("cannot find parameter \"%s\" in system", system.SysctlNumaBalancing)
-	}
+	nuBa, _ := system.GetSysctlInt(system.SysctlNumaBalancing)
 	ret.KernelNumaBalancing = nuBa == 1
 	return ret, nil
 }
@@ -44,33 +37,20 @@ func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
 	return ret, nil
 }
 func (hana HANARecommendedOSSettings) Apply() error {
-	err := system.SetSysString(SysKernelTHPEnabled, hana.KernelMMTransparentHugepage)
-	if err != nil {
-		return err
-	}
+	errs := make([]error, 0, 0)
+	errs = append(errs, system.SetSysString(SysKernelTHPEnabled, hana.KernelMMTransparentHugepage))
 	if hana.KernelMMKsm {
-		err = system.SetSysInt(SysKSMRun, 1)
-		if err != nil {
-			return err
-		}
+		errs = append(errs, system.SetSysInt(SysKSMRun, 1))
 	} else {
-		err = system.SetSysInt(SysKSMRun, 0)
-		if err != nil {
-			return err
-		}
+		errs = append(errs, system.SetSysInt(SysKSMRun, 0))
 	}
 	if hana.KernelNumaBalancing {
-		err = system.SetSysctlInt(system.SysctlNumaBalancing, 1)
-		if err != nil {
-			return err
-		}
+		errs = append(errs, system.SetSysctlInt(system.SysctlNumaBalancing, 1))
 	} else {
-		err = system.SetSysctlInt(system.SysctlNumaBalancing, 0)
-		if err != nil {
-			return err
-		}
+		errs = append(errs, system.SetSysctlInt(system.SysctlNumaBalancing, 0))
 	}
-	return nil
+	err := system.WriteNoteErrors(errs)
+	return err
 }
 
 // 1557506 - Linux paging improvements
@@ -126,7 +106,10 @@ func (paging LinuxPagingImprovements) Optimise() (Note, error) {
 	return newPaging, err
 }
 func (paging LinuxPagingImprovements) Apply() error {
-	system.SetSysctlUint64(system.SysctlPagecacheLimitMB, paging.VMPagecacheLimitMB)
-	system.SetSysctlInt(system.SysctlPagecacheLimitIgnoreDirty, paging.VMPagecacheLimitIgnoreDirty)
-	return nil
+	errs := make([]error, 0, 0)
+	errs = append(errs, system.SetSysctlUint64(system.SysctlPagecacheLimitMB, paging.VMPagecacheLimitMB))
+	errs = append(errs, system.SetSysctlInt(system.SysctlPagecacheLimitIgnoreDirty, paging.VMPagecacheLimitIgnoreDirty))
+
+	err := system.WriteNoteErrors(errs)
+	return err
 }

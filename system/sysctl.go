@@ -65,7 +65,7 @@ const (
 func GetSysctlString(parameter string) (string, error) {
 	val, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)))
 	if err != nil {
-		return "", fmt.Errorf("failed to read sysctl key '%s'", parameter)
+		return "", fmt.Errorf("Failed to read sysctl key '%s': %v", parameter, err)
 	}
 	return strings.TrimSpace(string(val)), nil
 }
@@ -74,7 +74,7 @@ func GetSysctlString(parameter string) (string, error) {
 func GetSysctlInt(parameter string) (int, error) {
 	value, err := GetSysctlString(parameter)
 	if err != nil {
-		return 0, fmt.Errorf("failed to read sysctl key '%s'", parameter)
+		return 0, err
 	}
 	return strconv.Atoi(value)
 }
@@ -83,7 +83,7 @@ func GetSysctlInt(parameter string) (int, error) {
 func GetSysctlUint64(parameter string) (uint64, error) {
 	value, err := GetSysctlString(parameter)
 	if err != nil {
-		return 0, fmt.Errorf("failed to read sysctl key '%s'", parameter)
+		return 0, err
 	}
 	return strconv.ParseUint(value, 10, 64)
 }
@@ -96,19 +96,19 @@ func GetSysctlUint64Field(param string, field int) (uint64, error) {
 		if field < len(allFields) {
 			value, err := strconv.ParseUint(allFields[field], 10, 64)
 			if err != nil {
-				return 0, fmt.Errorf("failed to read sysctl key field '%s' %d", param, field)
+				return 0, fmt.Errorf("Failed to read sysctl key field '%s' %d: %v", param, field, err)
 			}
 			return value, nil
 		}
 	}
-	return 0, fmt.Errorf("failed to read sysctl key '%s'", param)
+	return 0, err
 }
 
 // Write a string sysctl value.
 func SetSysctlString(parameter, value string) error {
 	err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 644)
 	if err != nil {
-		return fmt.Errorf("failed to write sysctl key '%s'", parameter)
+		return fmt.Errorf("Failed to write sysctl key '%s': %v", parameter, err)
 	}
 	return nil
 }
@@ -116,36 +116,27 @@ func SetSysctlString(parameter, value string) error {
 // Write an integer sysctl value.
 func SetSysctlInt(parameter string, value int) error {
 	err := SetSysctlString(parameter, strconv.Itoa(value))
-	if err != nil {
-		return fmt.Errorf("failed to write sysctl key '%s'", parameter)
-	}
-	return nil
+	return err
 }
 
 // Write an integer sysctl value.
 func SetSysctlUint64(parameter string, value uint64) error {
 	err := SetSysctlString(parameter, strconv.FormatUint(value, 10))
-	if err != nil {
-		return fmt.Errorf("failed to write sysctl key '%s'", parameter)
-	}
-	return nil
+	return err
 }
 
 // Write an integer sysctl value into the specified field pf the key.
 func SetSysctlUint64Field(param string, field int, value uint64) error {
 	fields, err := GetSysctlString(param)
 	if err != nil {
-		return fmt.Errorf("failed to read sysctl key '%s'", param)
+		return err
 	}
 	allFields := consecutiveSpaces.Split(fields, -1)
 	if field < len(allFields) {
 		allFields[field] = strconv.FormatUint(value, 10)
 		err = SetSysctlString(param, strings.Join(allFields, " "))
-		if err != nil {
-			return fmt.Errorf("failed to write sysctl key '%s'", param)
-		}
 	} else {
-		return fmt.Errorf("failed to write sysctl key field '%s' %d", param, field)
+		err = fmt.Errorf("Failed to write sysctl key field '%s' %d: %v", param, field, err)
 	}
-	return nil
+	return err
 }
