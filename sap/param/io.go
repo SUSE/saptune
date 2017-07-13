@@ -1,6 +1,7 @@
 package param
 
 import (
+	"github.com/HouzuoGuo/saptune/sap"
 	"github.com/HouzuoGuo/saptune/system"
 	"io/ioutil"
 	"path"
@@ -44,7 +45,7 @@ func (ioe BlockDeviceSchedulers) Apply() error {
 	for name, elevator := range ioe.SchedulerChoice {
 		errs = append(errs, system.SetSysString(path.Join("block", name, "queue", "scheduler"), elevator))
 	}
-	err := system.WriteNoteErrors(errs)
+	err := sap.PrintErrors(errs)
 	return err
 }
 
@@ -81,6 +82,6 @@ func (ior BlockDeviceNrRequests) Apply() error {
 	for name, nrreq := range ior.NrRequests {
 		errs = append(errs, system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq))
 	}
-	err := system.WriteNoteErrors(errs)
+	err := sap.PrintErrors(errs)
 	return err
 }

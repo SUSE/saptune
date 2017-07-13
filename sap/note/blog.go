@@ -1,6 +1,7 @@
 package note
 
 import (
+	"github.com/HouzuoGuo/saptune/sap"
 	"github.com/HouzuoGuo/saptune/sap/param"
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
@@ -88,7 +89,7 @@ func (st SUSESysOptimisation) Apply() error {
 
 	errs = append(errs, st.BlockDeviceSchedulers.Apply())
 
-	err := system.WriteNoteErrors(errs)
+	err := sap.PrintErrors(errs)
 	return err
 }
 
@@ -290,6 +291,6 @@ func (st SUSENetCPUOptimisation) Apply() error {
 
 	errs = append(errs, system.SetSysctlUint64(system.SysctlRunChildFirst, st.KernelSchedChildRunsFirst))
 
-	err := system.WriteNoteErrors(errs)
+	err := sap.PrintErrors(errs)
 	return err
 }

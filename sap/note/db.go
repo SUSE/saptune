@@ -1,6 +1,7 @@
 package note
 
 import (
+	"github.com/HouzuoGuo/saptune/sap"
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
 	"path"
@@ -49,7 +50,7 @@ func (hana HANARecommendedOSSettings) Apply() error {
 	} else {
 		errs = append(errs, system.SetSysctlInt(system.SysctlNumaBalancing, 0))
 	}
-	err := system.WriteNoteErrors(errs)
+	err := sap.PrintErrors(errs)
 	return err
 }
 
@@ -110,6 +111,6 @@ func (paging LinuxPagingImprovements) Apply() error {
 	errs = append(errs, system.SetSysctlUint64(system.SysctlPagecacheLimitMB, paging.VMPagecacheLimitMB))
 	errs = append(errs, system.SetSysctlInt(system.SysctlPagecacheLimitIgnoreDirty, paging.VMPagecacheLimitIgnoreDirty))
 
-	err := system.WriteNoteErrors(errs)
+	err := sap.PrintErrors(errs)
 	return err
 }

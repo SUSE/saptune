@@ -2,6 +2,7 @@ package note
 
 import (
 	"fmt"
+	"github.com/HouzuoGuo/saptune/sap"
 	"github.com/HouzuoGuo/saptune/sap/param"
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
@@ -153,7 +154,7 @@ func (prepare PrepareForSAPEnvironments) Apply() error {
 	// Apply semaphore limits
 	errs = append(errs, system.SetSysctlString(system.SysctlSem, fmt.Sprintf("%d %d %d %d", prepare.KernelSemMsl, prepare.KernelSemMns, prepare.KernelSemOpm, prepare.KernelSemMni)))
 
-	err = system.WriteNoteErrors(errs)
+	err = sap.PrintErrors(errs)
 	return nil
 }
 
@@ -199,7 +200,7 @@ func (inst AfterInstallation) Apply() error {
 	}
 	if inst.LogindConfigured {
 		log.Print("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
-		"This opens up entire system to fork-bomb style attacks. Please reboot the system for the changes to take effect.")
+			"This opens up entire system to fork-bomb style attacks. Please reboot the system for the changes to take effect.")
 	}
 	return nil
 }

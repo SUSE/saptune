@@ -59,18 +59,3 @@ func GetTunedProfile() string {
 func IsUserRoot() bool {
 	return os.Getuid() == 0
 }
-
-// Print out error messages
-func WriteNoteErrors(errors []error) error {
-	var err error
-	errsum := 0
-	for _, errmsg := range errors {
-		if errmsg != nil {
-			errsum++
-			fmt.Printf("%v\n", errmsg)
-		}
-	}
-	if errsum == len(errors) {
-		err = fmt.Errorf("None of the values are successfully applied.")	}
-	return err
-}

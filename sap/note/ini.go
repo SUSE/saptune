@@ -2,6 +2,7 @@ package note
 
 import (
 	"fmt"
+	"github.com/HouzuoGuo/saptune/sap"
 	"github.com/HouzuoGuo/saptune/sap/param"
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
@@ -332,6 +333,6 @@ func (vend INISettings) Apply() error {
 			continue
 		}
 	}
-	err = system.WriteNoteErrors(errs)
+	err = sap.PrintErrors(errs)
 	return err
 }
