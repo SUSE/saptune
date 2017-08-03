@@ -11,8 +11,9 @@ func PrintErrors(errors []error) error {
 	for _, err := range errors {
 		if err == nil {
 			hasNil = true
+		} else {
+			log.Printf("%v", err)
 		}
-		log.Printf("%v", err)
 	}
 	if hasNil {
 		return nil
