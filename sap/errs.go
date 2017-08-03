@@ -7,7 +7,7 @@ import (
 
 // PrintErrors prints out non-nil errors among the array. Returns an error if the array does not have nil element.
 func PrintErrors(errors []error) error {
-	hasNil := false
+	hasNil := len(errors) == 0
 	for _, err := range errors {
 		if err == nil {
 			hasNil = true
