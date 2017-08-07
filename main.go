@@ -70,7 +70,7 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	saptune_writer := io.MultiWriter(os.Stdout, saptune_log)
+	saptune_writer := io.MultiWriter(os.Stderr, saptune_log)
 	log.SetOutput(saptune_writer)
 	archSolutions, exist := solution.AllSolutions[runtime.GOARCH]
 	if !exist {
