@@ -42,12 +42,12 @@ func TestNoteSerialisation(t *testing.T) {
 		ShmFileSystemSizeMB: 1000,
 		KernelShmMax:        1001, KernelShmAll: 1002, KernelShmMni: 1003,
 		KernelSemMsl: 1004, KernelSemMns: 1005, KernelSemOpm: 1006, KernelSemMni: 1007,
-		LimitNofileSapsysSoft: 1,
-		LimitNofileSapsysHard: 2,
-		LimitNofileSdbaSoft:   3,
-		LimitNofileSdbaHard:   4,
-		LimitNofileDbaSoft:    5,
-		LimitNofileDbaHard:    6,
+		LimitNofileSapsysSoft: "1",
+		LimitNofileSapsysHard: "2",
+		LimitNofileSdbaSoft:   "3",
+		LimitNofileSdbaHard:   "4",
+		LimitNofileDbaSoft:    "5",
+		LimitNofileDbaHard:    "6",
 	}
 	newPrepare := PrepareForSAPEnvironments{}
 	jsonMarshalAndBack(prepare, &newPrepare, t)

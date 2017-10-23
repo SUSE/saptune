@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 )
 
 const (
@@ -28,9 +29,9 @@ UserTasksMax=infinity
 type PrepareForSAPEnvironments struct {
 	SysconfigPrefix                                         string
 	ShmFileSystemSizeMB                                     int64
-	LimitNofileSapsysSoft, LimitNofileSapsysHard            int
-	LimitNofileSdbaSoft, LimitNofileSdbaHard                int
-	LimitNofileDbaSoft, LimitNofileDbaHard                  int
+	LimitNofileSapsysSoft, LimitNofileSapsysHard            string
+	LimitNofileSdbaSoft, LimitNofileSdbaHard                string
+	LimitNofileDbaSoft, LimitNofileDbaHard                  string
 	KernelShmMax, KernelShmAll, KernelShmMni, VMMaxMapCount uint64
 	KernelSemMsl, KernelSemMns, KernelSemOpm, KernelSemMni  uint64
 }
@@ -79,9 +80,15 @@ func (prepare PrepareForSAPEnvironments) Optimise() (Note, error) {
 		log.Print("PrepareForSAPEnvironments.Optimise: /dev/shm is not a valid mount point, will not calculate its optimal size.")
 	}
 	// Raise maximum file descriptors to at least 32800
-	for _, val := range []*int{&newPrepare.LimitNofileSapsysSoft, &newPrepare.LimitNofileSapsysHard, &newPrepare.LimitNofileSdbaSoft, &newPrepare.LimitNofileSdbaHard, &newPrepare.LimitNofileDbaSoft, &newPrepare.LimitNofileDbaHard} {
-		if *val < 32800 {
-			*val = 32800
+	for _, val := range []*string{&newPrepare.LimitNofileSapsysSoft, &newPrepare.LimitNofileSapsysHard, &newPrepare.LimitNofileSdbaSoft, &newPrepare.LimitNofileSdbaHard, &newPrepare.LimitNofileDbaSoft, &newPrepare.LimitNofileDbaHard} {
+		switch *val {
+		case "unlimited", "infinity", "-1":
+			// nothing to do, value remain untouched
+		default:
+			value, _ := strconv.Atoi(*val)
+			if value < 32800 {
+				*val = "32800"
+			}
 		}
 	}
 	/*

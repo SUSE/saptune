@@ -167,7 +167,7 @@ func SetBlkVal(key, value string) error {
 // section [limits]
 func GetLimitsVal(key string) (string, error) {
 	// Find out current memlock limits
-	LimitMemlock := 0
+	LimitMemlock := "0"
 	secLimits, err := system.ParseSecLimitsFile()
 	if err != nil {
 		return "", err
@@ -179,30 +179,42 @@ func GetLimitsVal(key string) (string, error) {
 		LimitMemlock, _ = secLimits.Get("sybase", "soft", "memlock")
 
 	}
-	return strconv.Itoa(LimitMemlock), nil
+	return LimitMemlock, nil
 }
 
 func OptLimitsVal(act_value, cfg_value string) string {
-	LimitMemlock, _ := strconv.Atoi(act_value)
-	if cfg_value == "0" {
-		//RAM in KB - 10%
-		memlock := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
-		LimitMemlock = param.MaxI(LimitMemlock, int(memlock))
-	} else {
-		LimLockCFG, _ := strconv.Atoi(cfg_value)
-		LimitMemlock = param.MaxI(LimitMemlock, LimLockCFG)
+	LimitMemlock := ""
+	switch act_value {
+	case "unlimited", "infinity", "-1":
+		LimitMemlock = act_value
+	default:
+		LimMemlock, _ := strconv.Atoi(act_value)
+		switch cfg_value {
+		case "unlimited", "infinity", "-1":
+			LimitMemlock = cfg_value
+		case "0":
+			//RAM in KB - 10%
+			memlock := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
+			LimitMemlock = strconv.Itoa(param.MaxI(LimMemlock, int(memlock)))
+		default:
+			LimLockCFG, _ := strconv.Atoi(cfg_value)
+			LimitMemlock = strconv.Itoa(param.MaxI(LimMemlock, LimLockCFG))
+		}
 	}
-	return strconv.Itoa(LimitMemlock)
+	return LimitMemlock
 }
 
-func SetLimitsVal(value string) error {
-	LimitMemlock, _ := strconv.Atoi(value)
+func SetLimitsVal(key, value string) error {
 	secLimits, err := system.ParseSecLimitsFile()
 	if err != nil {
 		return err
 	}
-	secLimits.Set("sybase", "hard", "memlock", LimitMemlock)
-	secLimits.Set("sybase", "soft", "memlock", LimitMemlock)
+	switch key {
+	case "MEMLOCK_HARD":
+		secLimits.Set("sybase", "hard", "memlock", value)
+	case "MEMLOCK_SOFT":
+		secLimits.Set("sybase", "soft", "memlock", value)
+	}
 	err = secLimits.Apply()
 	return err
 }
@@ -326,7 +338,7 @@ func (vend INISettings) Apply() error {
 		case INISectionBlock:
 			errs = append(errs, SetBlkVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionLimits:
-			errs = append(errs, SetLimitsVal(vend.SysctlParams[param.Key]))
+			errs = append(errs, SetLimitsVal(param.Key, vend.SysctlParams[param.Key]))
 		default:
 			// saptune does not yet understand settings outside of [sysctl] section
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)

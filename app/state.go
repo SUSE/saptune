@@ -2,10 +2,13 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/HouzuoGuo/saptune/sap/note"
 	"io/ioutil"
 	"os"
 	"path"
+	"regexp"
+	"strings"
 )
 
 const SaptuneStateDir = "/var/lib/saptune/saved_state"
@@ -60,7 +63,28 @@ func (state *State) Retrieve(noteID string, dest interface{}) (err error) {
 	if err != nil {
 		return
 	}
-	return json.Unmarshal(content, dest)
+	err = json.Unmarshal(content, dest)
+	if noteID == "1275776" && err != nil {
+		// rewrite content of stored SAP note 1275776
+		// because of changing type of limit value from int to string
+		isLimit := regexp.MustCompile(`"LimitNofile.*"`)
+		newContent := ""
+		for _, chgval := range strings.Split(string(content), ",") {
+			fields := strings.Split(chgval, ":")
+			switch {
+			case isLimit.MatchString(fields[0]):
+				newContent = newContent + fmt.Sprintf(",%s:\"%s\"", fields[0], fields[1])
+			default:
+				if len(newContent) == 0 {
+					newContent = newContent + fmt.Sprintf("%s", chgval)
+				} else {
+					newContent = newContent + fmt.Sprintf(",%s", chgval)
+				}
+			}
+		}
+		err = json.Unmarshal([]byte(newContent), dest)
+	}
+	return err
 }
 
 // Remove a serialised state file.

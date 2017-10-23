@@ -23,8 +23,7 @@ func TestPrepareForSAPEnvironments(t *testing.T) {
 	if o.ShmFileSystemSizeMB < int64(system.GetTotalMemSizeMB())*75/100 && o.ShmFileSystemSizeMB != -1 {
 		t.Fatalf("%+v", o)
 	}
-	if o.LimitNofileSapsysSoft < 32000 || o.LimitNofileSapsysHard < 32000 || o.LimitNofileSdbaSoft < 32000 || o.LimitNofileSdbaHard < 32000 ||
-		o.LimitNofileDbaSoft < 32000 || o.LimitNofileDbaHard < 32000 {
+	if o.LimitNofileSapsysSoft < "32000" || o.LimitNofileSapsysHard < "32000" || o.LimitNofileSdbaSoft < "32000" || o.LimitNofileSdbaHard < "32000" || o.LimitNofileDbaSoft < "32000" || o.LimitNofileDbaHard < "32000" {
 		t.Fatalf("%+v", o)
 	}
 	if o.KernelShmMax < 1000 || o.KernelShmAll < 1000 || o.KernelShmMni < 2048 || o.VMMaxMapCount < 2000000 {

@@ -18,6 +18,7 @@ some random soft nofile 12345
 *               soft    nofile          16000
 root            hard    nofile          64000
 root            soft    nofile          32000
+@dba            hard    memlock         unlimited
 `
 
 var limitsMatchText = `# yadi yadi yada
@@ -33,22 +34,28 @@ some random soft nofile 12345
 * soft nofile 16000
 root hard nofile 64000
 root soft nofile 32000
+@dba hard memlock unlimited
 @sapsys soft nofile 65535
+@dba soft memlock unlimited
 `
 
 func TestSecLimits(t *testing.T) {
 	// Parse the sample text
 	limits := ParseSecLimits(limitsSampleText)
 	// Read keys
-	if value, exists := limits.Get("*", "soft", "nproc"); !exists || value != 4000 {
+	if value, exists := limits.Get("*", "soft", "nproc"); !exists || value != "4000" {
+		t.Fatal(value, exists)
+	}
+	if value, exists := limits.Get("@dba", "hard", "memlock"); !exists || value != "unlimited" {
 		t.Fatal(value, exists)
 	}
 	if value, exists := limits.Get("does_not_exist", "soft", "nproc"); exists {
 		t.Fatal(value, exists)
 	}
 	// Write keys
-	limits.Set("*", "hard", "nproc", 1234)
-	limits.Set("@sapsys", "soft", "nofile", 65535)
+	limits.Set("*", "hard", "nproc", "1234")
+	limits.Set("@sapsys", "soft", "nofile", "65535")
+	limits.Set("@dba", "soft", "memlock", "unlimited")
 	// The converted back text should carry new value for nproc and new entry
 	if txt := limits.ToText(); txt != limitsMatchText {
 		fmt.Println("==============")

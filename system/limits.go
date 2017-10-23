@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
@@ -16,7 +15,7 @@ var consecutiveSpaces = regexp.MustCompile("[[:space:]]+")
 type SecLimitsEntry struct {
 	LeadingComments    []string // The comment lines leading to the key-value pair, including prefix '#', excluding end-of-line.
 	Domain, Type, Item string
-	Value              int
+	Value              string
 }
 
 // Entries of security/limits.conf file. It is able to convert back to original text in the original entry order.
@@ -44,17 +43,12 @@ func ParseSecLimits(input string) *SecLimits {
 			leadingComments = append(leadingComments, line)
 		} else if fields := consecutiveSpaces.Split(line, -1); len(fields) == 4 {
 			// Line is an entry
-			// The last field should be the integer value
-			intValue, err := strconv.Atoi(fields[3])
-			if err != nil {
-				continue // throw the line away
-			}
 			entry := &SecLimitsEntry{
 				LeadingComments: leadingComments,
 				Domain:          fields[0],
 				Type:            fields[1],
 				Item:            fields[2],
-				Value:           intValue,
+				Value:           fields[3],
 			}
 			limits.Entries = append(limits.Entries, entry)
 			// Get ready for the next entry by clearing comments
@@ -67,18 +61,18 @@ func ParseSecLimits(input string) *SecLimits {
 	return limits
 }
 
-// Return integer value that belongs to the entry.
-func (limits *SecLimits) Get(domain, typeName, item string) (int, bool) {
+// Return string value that belongs to the entry.
+func (limits *SecLimits) Get(domain, typeName, item string) (string, bool) {
 	for _, entry := range limits.Entries {
 		if entry.Domain == domain && entry.Type == typeName && entry.Item == item {
 			return entry.Value, true
 		}
 	}
-	return 0, false
+	return "0", false
 }
 
 // Set value for an entry. If the entry does not yet exist, it is created.
-func (limits *SecLimits) Set(domain, typeName, item string, value int) {
+func (limits *SecLimits) Set(domain, typeName, item, value string) {
 	for _, entry := range limits.Entries {
 		if entry.Domain == domain && entry.Type == typeName && entry.Item == item {
 			entry.Value = value
@@ -102,7 +96,7 @@ func (limits *SecLimits) ToText() string {
 			ret.WriteString(strings.Join(entry.LeadingComments, "\n"))
 			ret.WriteRune('\n')
 		}
-		ret.WriteString(fmt.Sprintf("%s %s %s %d\n", entry.Domain, entry.Type, entry.Item, entry.Value))
+		ret.WriteString(fmt.Sprintf("%s %s %s %s\n", entry.Domain, entry.Type, entry.Item, entry.Value))
 	}
 	return ret.String()
 }
