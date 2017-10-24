@@ -6,10 +6,41 @@ import (
 	"fmt"
 	"io/ioutil"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 var consecutiveSpaces = regexp.MustCompile("[[:space:]]+")
+
+type SecurityLimitInt int // SecurityLimitInt is an integer number where -1 represents unlimited value.
+
+// SecurityLimitUnlimitedValue is the constant integer value that represents unrestricted limit.
+const SecurityLimitUnlimitedValue = SecurityLimitInt(-1)
+
+// SecurityLimitUnlimitedString are the string constants that represent unrestricted limit.
+var SecurityLimitUnlimitedString = []string{"unlimited", "infinity"}
+
+func (limit SecurityLimitInt) String() string {
+	if limit == SecurityLimitUnlimitedValue {
+		return SecurityLimitUnlimitedString[0]
+	}
+	return strconv.Itoa(int(limit))
+}
+
+/*
+ToSecurityLimitInt interprets integer limit number from input string. If the input cannot be parsed successfully, it
+will return a default 0 value.
+*/
+func ToSecurityLimitInt(in string) SecurityLimitInt {
+	in = strings.TrimSpace(in)
+	for _, match := range SecurityLimitUnlimitedString {
+		if match == in {
+			return SecurityLimitUnlimitedValue
+		}
+	}
+	i, _ := strconv.Atoi(in)
+	return SecurityLimitInt(i)
+}
 
 // A single entry in security/limits.conf file.
 type SecLimitsEntry struct {
@@ -69,6 +100,15 @@ func (limits *SecLimits) Get(domain, typeName, item string) (string, bool) {
 		}
 	}
 	return "0", false
+}
+
+/*
+GetOrUnlimited retrieves an integer limit value and return. If the value is not specified or cannot be parsed correctly,
+the 0 value will be returned.
+*/
+func (limits *SecLimits) GetOr0(domain, typeName, item string) SecurityLimitInt {
+	val, _ := limits.Get(domain, typeName, item)
+	return ToSecurityLimitInt(val)
 }
 
 // Set value for an entry. If the entry does not yet exist, it is created.

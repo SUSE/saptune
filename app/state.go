@@ -2,13 +2,10 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/HouzuoGuo/saptune/sap/note"
 	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
-	"strings"
 )
 
 const SaptuneStateDir = "/var/lib/saptune/saved_state"
@@ -58,33 +55,12 @@ func (state *State) List() (ret []string, err error) {
 }
 
 // Deserialise an SAP note into the destination pointer. The destination must be a pointer.
-func (state *State) Retrieve(noteID string, dest interface{}) (err error) {
+func (state *State) Retrieve(noteID string, dest interface{}) error {
 	content, err := ioutil.ReadFile(state.GetPathToNote(noteID))
 	if err != nil {
-		return
+		return err
 	}
-	err = json.Unmarshal(content, dest)
-	if noteID == "1275776" && err != nil {
-		// rewrite content of stored SAP note 1275776
-		// because of changing type of limit value from int to string
-		isLimit := regexp.MustCompile(`"LimitNofile.*"`)
-		newContent := ""
-		for _, chgval := range strings.Split(string(content), ",") {
-			fields := strings.Split(chgval, ":")
-			switch {
-			case isLimit.MatchString(fields[0]):
-				newContent = newContent + fmt.Sprintf(",%s:\"%s\"", fields[0], fields[1])
-			default:
-				if len(newContent) == 0 {
-					newContent = newContent + fmt.Sprintf("%s", chgval)
-				} else {
-					newContent = newContent + fmt.Sprintf(",%s", chgval)
-				}
-			}
-		}
-		err = json.Unmarshal([]byte(newContent), dest)
-	}
-	return err
+	return json.Unmarshal(content, dest)
 }
 
 // Remove a serialised state file.

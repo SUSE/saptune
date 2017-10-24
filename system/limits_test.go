@@ -49,8 +49,14 @@ func TestSecLimits(t *testing.T) {
 	if value, exists := limits.Get("@dba", "hard", "memlock"); !exists || value != "unlimited" {
 		t.Fatal(value, exists)
 	}
+	if value := limits.GetOr0("@dba", "hard", "memlock"); value != SecurityLimitUnlimitedValue {
+		t.Fatal(value)
+	}
 	if value, exists := limits.Get("does_not_exist", "soft", "nproc"); exists {
 		t.Fatal(value, exists)
+	}
+	if value := limits.GetOr0("does_not_exist", "soft", "nproc"); value != 0 {
+		t.Fatal(value)
 	}
 	// Write keys
 	limits.Set("*", "hard", "nproc", "1234")

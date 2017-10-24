@@ -10,7 +10,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"strconv"
 )
 
 const (
@@ -29,9 +28,9 @@ UserTasksMax=infinity
 type PrepareForSAPEnvironments struct {
 	SysconfigPrefix                                         string
 	ShmFileSystemSizeMB                                     int64
-	LimitNofileSapsysSoft, LimitNofileSapsysHard            string
-	LimitNofileSdbaSoft, LimitNofileSdbaHard                string
-	LimitNofileDbaSoft, LimitNofileDbaHard                  string
+	LimitNofileSapsysSoft, LimitNofileSapsysHard            system.SecurityLimitInt
+	LimitNofileSdbaSoft, LimitNofileSdbaHard                system.SecurityLimitInt
+	LimitNofileDbaSoft, LimitNofileDbaHard                  system.SecurityLimitInt
 	KernelShmMax, KernelShmAll, KernelShmMni, VMMaxMapCount uint64
 	KernelSemMsl, KernelSemMns, KernelSemOpm, KernelSemMni  uint64
 }
@@ -55,12 +54,12 @@ func (prepare PrepareForSAPEnvironments) Initialise() (Note, error) {
 	if err != nil {
 		return nil, err
 	}
-	newPrepare.LimitNofileSapsysSoft, _ = secLimits.Get("@sapsys", "soft", "nofile")
-	newPrepare.LimitNofileSapsysHard, _ = secLimits.Get("@sapsys", "hard", "nofile")
-	newPrepare.LimitNofileSdbaSoft, _ = secLimits.Get("@sdba", "soft", "nofile")
-	newPrepare.LimitNofileSdbaHard, _ = secLimits.Get("@sdba", "hard", "nofile")
-	newPrepare.LimitNofileDbaSoft, _ = secLimits.Get("@dba", "soft", "nofile")
-	newPrepare.LimitNofileDbaHard, _ = secLimits.Get("@dba", "hard", "nofile")
+	newPrepare.LimitNofileSapsysSoft = secLimits.GetOr0("@sapsys", "soft", "nofile")
+	newPrepare.LimitNofileSapsysHard = secLimits.GetOr0("@sapsys", "hard", "nofile")
+	newPrepare.LimitNofileSdbaSoft = secLimits.GetOr0("@sdba", "soft", "nofile")
+	newPrepare.LimitNofileSdbaHard = secLimits.GetOr0("@sdba", "hard", "nofile")
+	newPrepare.LimitNofileDbaSoft = secLimits.GetOr0("@dba", "soft", "nofile")
+	newPrepare.LimitNofileDbaHard = secLimits.GetOr0("@dba", "hard", "nofile")
 	// Find out shared memory limits
 	newPrepare.KernelShmMax, _ = system.GetSysctlUint64(system.SysctlShmax)
 	newPrepare.KernelShmAll, _ = system.GetSysctlUint64(system.SysctlShmall)
@@ -80,14 +79,13 @@ func (prepare PrepareForSAPEnvironments) Optimise() (Note, error) {
 		log.Print("PrepareForSAPEnvironments.Optimise: /dev/shm is not a valid mount point, will not calculate its optimal size.")
 	}
 	// Raise maximum file descriptors to at least 32800
-	for _, val := range []*string{&newPrepare.LimitNofileSapsysSoft, &newPrepare.LimitNofileSapsysHard, &newPrepare.LimitNofileSdbaSoft, &newPrepare.LimitNofileSdbaHard, &newPrepare.LimitNofileDbaSoft, &newPrepare.LimitNofileDbaHard} {
+	for _, val := range []*system.SecurityLimitInt{&newPrepare.LimitNofileSapsysSoft, &newPrepare.LimitNofileSapsysHard, &newPrepare.LimitNofileSdbaSoft, &newPrepare.LimitNofileSdbaHard, &newPrepare.LimitNofileDbaSoft, &newPrepare.LimitNofileDbaHard} {
 		switch *val {
-		case "unlimited", "infinity", "-1":
+		case system.SecurityLimitUnlimitedValue:
 			// nothing to do, value remain untouched
 		default:
-			value, _ := strconv.Atoi(*val)
-			if value < 32800 {
-				*val = "32800"
+			if *val < 32800 {
+				*val = 32800
 			}
 		}
 	}
@@ -144,12 +142,12 @@ func (prepare PrepareForSAPEnvironments) Apply() error {
 	if err != nil {
 		return err
 	}
-	secLimits.Set("@sapsys", "soft", "nofile", prepare.LimitNofileSapsysSoft)
-	secLimits.Set("@sapsys", "hard", "nofile", prepare.LimitNofileSapsysSoft)
-	secLimits.Set("@sdba", "soft", "nofile", prepare.LimitNofileSdbaSoft)
-	secLimits.Set("@sdba", "hard", "nofile", prepare.LimitNofileSdbaHard)
-	secLimits.Set("@dba", "soft", "nofile", prepare.LimitNofileDbaSoft)
-	secLimits.Set("@dba", "hard", "nofile", prepare.LimitNofileDbaHard)
+	secLimits.Set("@sapsys", "soft", "nofile", prepare.LimitNofileSapsysSoft.String())
+	secLimits.Set("@sapsys", "hard", "nofile", prepare.LimitNofileSapsysSoft.String())
+	secLimits.Set("@sdba", "soft", "nofile", prepare.LimitNofileSdbaSoft.String())
+	secLimits.Set("@sdba", "hard", "nofile", prepare.LimitNofileSdbaHard.String())
+	secLimits.Set("@dba", "soft", "nofile", prepare.LimitNofileDbaSoft.String())
+	secLimits.Set("@dba", "hard", "nofile", prepare.LimitNofileDbaHard.String())
 	if err := secLimits.Apply(); err != nil {
 		return err
 	}
