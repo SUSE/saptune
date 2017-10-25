@@ -7,9 +7,9 @@ import (
 )
 
 func TestFunc(t *testing.T) {
-	if os.Getuid() != 0 {
-		t.Fatal("this test case requires root privilege to run")
-	}
+	if !system.IsUserRoot() {
+                t.Skip("the test requires root access")
+        }
 	// Start RPC server
 	server := new(Server)
 	if err := server.Listen(); err != nil {
