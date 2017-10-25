@@ -1,7 +1,7 @@
 package daemon
 
 import (
-	"os"
+	"github.com/HouzuoGuo/saptune/system"
 	"testing"
 	"time"
 )
