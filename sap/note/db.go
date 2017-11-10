@@ -1,6 +1,7 @@
 package note
 
 import (
+	"fmt"
 	"github.com/HouzuoGuo/saptune/sap"
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
@@ -15,6 +16,8 @@ type HANARecommendedOSSettings struct {
 	KernelMMTransparentHugepage string
 	KernelMMKsm                 bool
 	KernelNumaBalancing         bool
+	Governor                    string
+	PerfBias                    string
 }
 
 func (hana HANARecommendedOSSettings) Name() string {
@@ -27,6 +30,13 @@ func (hana HANARecommendedOSSettings) Initialise() (Note, error) {
 	ret.KernelMMKsm = ksmRun == 1
 	nuBa, _ := system.GetSysctlInt(system.SysctlNumaBalancing)
 	ret.KernelNumaBalancing = nuBa == 1
+	val := ""
+	newGov := system.GetGovernor()
+	for k, v := range newGov {
+		val = val + fmt.Sprintf("%s:%s ", k, v)
+	}
+	ret.Governor = val
+	ret.PerfBias = system.GetPerfBias()
 	return ret, nil
 }
 func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
@@ -35,6 +45,8 @@ func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
 		KernelNumaBalancing: false,
 	}
 	ret.KernelMMTransparentHugepage = "never"
+	ret.Governor = "all:performance"
+	ret.PerfBias = "all:0"
 	return ret, nil
 }
 func (hana HANARecommendedOSSettings) Apply() error {
@@ -50,6 +62,9 @@ func (hana HANARecommendedOSSettings) Apply() error {
 	} else {
 		errs = append(errs, system.SetSysctlInt(system.SysctlNumaBalancing, 0))
 	}
+	// workaround for a tuned problem with section [cpu]
+	errs = append(errs, system.SetPerfBias(hana.PerfBias))
+	errs = append(errs, system.SetGovernor(hana.Governor))
 	err := sap.PrintErrors(errs)
 	return err
 }
