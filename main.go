@@ -55,6 +55,7 @@ func cliArg(i int) string {
 
 var tuneApp *app.App                 // application configuration and tuning states
 var tuningOptions note.TuningOptions // Collection of tuning options from SAP notes and 3rd party vendors.
+var solutionSelector = runtime.GOARCH
 
 func main() {
 	if arg1 := cliArg(1); arg1 == "" || arg1 == "help" || arg1 == "--help" {
@@ -72,7 +73,10 @@ func main() {
 	}
 	saptune_writer := io.MultiWriter(os.Stderr, saptune_log)
 	log.SetOutput(saptune_writer)
-	archSolutions, exist := solution.AllSolutions[runtime.GOARCH]
+	if system.IsPagecacheAvailable() {
+		solutionSelector = solutionSelector + "_PC"
+	}
+	archSolutions, exist := solution.AllSolutions[solutionSelector]
 	if !exist {
 		errorExit("The system architecture (%s) is not supported.", runtime.GOARCH)
 		return
@@ -97,10 +101,10 @@ func DaemonAction(actionName string) {
 	case "start":
 		fmt.Println("Starting daemon (tuned.service), this may take several seconds...")
 		system.SystemctlDisableStop(SapconfService) // do not error exit on failure
-		if err := system.SystemctlEnableStart(TunedService); err != nil {
+		if err := system.WriteTunedAdmProfile("saptune"); err != nil {
 			errorExit("%v", err)
 		}
-		if err := system.TunedAdmProfile("saptune"); err != nil {
+		if err := system.SystemctlEnableStart(TunedService); err != nil {
 			errorExit("%v", err)
 		}
 		// tuned then calls `sapconf daemon apply`
@@ -313,7 +317,7 @@ func SolutionAction(actionName, solName string) {
 		}
 	case "list":
 		fmt.Println("All solutions (* denotes enabled solution):")
-		for _, solName := range solution.GetSortedSolutionNames(runtime.GOARCH) {
+		for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 			format := "\t%s\n"
 			if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
 				format = "*" + format

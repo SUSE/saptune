@@ -111,8 +111,8 @@ func (prepare PrepareForSAPEnvironments) Optimise() (Note, error) {
 	shmCountReferenceValue := conf.GetUint64("SHM_COUNT_REF_VALUE", 0)
 	newPrepare.KernelShmMax = param.MaxU64(newPrepare.KernelShmMax, system.GetTotalMemSizeMB()*1049586 /* MB to Bytes */, 20*1024*1024*1024)
 	newPrepare.KernelShmAll = param.MaxU64(newPrepare.KernelShmAll, system.GetTotalMemSizePages())
-	newPrepare.KernelShmMni = param.MaxU64(newPrepare.KernelShmMni, shmCountReferenceValue, 2048)
-	newPrepare.VMMaxMapCount = param.MaxU64(newPrepare.VMMaxMapCount, 2000000)
+	newPrepare.KernelShmMni = param.MaxU64(newPrepare.KernelShmMni, shmCountReferenceValue, 32768)
+	newPrepare.VMMaxMapCount = param.MaxU64(newPrepare.VMMaxMapCount, 2147483647)
 
 	/*
 		Semaphore limits are set according to 1275776 - Linux: Preparing SLES for SAP environments:

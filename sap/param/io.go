@@ -4,7 +4,10 @@ import (
 	"github.com/HouzuoGuo/saptune/sap"
 	"github.com/HouzuoGuo/saptune/system"
 	"io/ioutil"
+	"log"
 	"path"
+	"strconv"
+	"strings"
 )
 
 // Change IO elevators on all IO devices
@@ -43,6 +46,10 @@ func (ioe BlockDeviceSchedulers) Optimise(newElevatorName interface{}) (Paramete
 func (ioe BlockDeviceSchedulers) Apply() error {
 	errs := make([]error, 0, 0)
 	for name, elevator := range ioe.SchedulerChoice {
+		if !IsValidScheduler(name, elevator) {
+			log.Printf("'%s' is not a valid scheduler for device '%s', skipping.", elevator, name)
+			continue
+		}
 		errs = append(errs, system.SetSysString(path.Join("block", name, "queue", "scheduler"), elevator))
 	}
 	err := sap.PrintErrors(errs)
@@ -80,8 +87,32 @@ func (ior BlockDeviceNrRequests) Optimise(newNrRequestValue interface{}) (Parame
 func (ior BlockDeviceNrRequests) Apply() error {
 	errs := make([]error, 0, 0)
 	for name, nrreq := range ior.NrRequests {
+		if !IsValidforNrRequests(name, strconv.Itoa(nrreq)) {
+			continue
+		}
 		errs = append(errs, system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq))
 	}
 	err := sap.PrintErrors(errs)
 	return err
+}
+
+func IsValidScheduler(blockdev, scheduler string) bool {
+	val, err := ioutil.ReadFile(path.Join("/sys/block/", blockdev, "/queue/scheduler"))
+	if err == nil && strings.Contains(string(val), scheduler) {
+		return true
+	}
+	return false
+}
+func IsValidforNrRequests(blockdev, nrreq string) bool {
+	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
+	if elev != "" {
+		file := path.Join("block", blockdev, "queue", "nr_requests")
+		tst_err := system.TestSysString(file, nrreq)
+		if tst_err != nil {
+			log.Printf("Write error on file '%s'. Can't set nr_request to '%s', seems to large for the device. Leaving untouched.", file, nrreq)
+		} else {
+			return true
+		}
+	}
+	return false
 }

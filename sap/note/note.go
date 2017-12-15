@@ -37,13 +37,16 @@ type TuningOptions map[string]Note // Collection of tuning options from SAP note
 func GetTuningOptions(thirdPartyTuningDir string) TuningOptions {
 	ret := TuningOptions{
 		"2205917":       HANARecommendedOSSettings{},
-		"1557506":       LinuxPagingImprovements{},
 		"1275776":       PrepareForSAPEnvironments{},
 		"1984787":       AfterInstallation{},
 		"2161991":       VmwareGuestIOElevator{},
 		"SUSE-GUIDE-01": SUSESysOptimisation{},
 		"SUSE-GUIDE-02": SUSENetCPUOptimisation{},
 	}
+	if system.IsPagecacheAvailable() {
+		ret["1557506"] = LinuxPagingImprovements{}
+	}
+
 	// Collect those defined by 3rd party
 	_, files, err := system.ListDir(thirdPartyTuningDir)
 	if err != nil {

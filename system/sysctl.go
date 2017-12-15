@@ -4,6 +4,8 @@ package system
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -106,8 +108,10 @@ func GetSysctlUint64Field(param string, field int) (uint64, error) {
 
 // Write a string sysctl value.
 func SetSysctlString(parameter, value string) error {
-	err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 644)
-	if err != nil {
+	err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
+	if os.IsNotExist(err) {
+		log.Printf("sysctl key '%s' is not supported by os, skipping.", parameter)
+	} else if err != nil {
 		return fmt.Errorf("Failed to write sysctl key '%s': %v", parameter, err)
 	}
 	return nil
@@ -139,4 +143,12 @@ func SetSysctlUint64Field(param string, field int, value uint64) error {
 		err = fmt.Errorf("Failed to write sysctl key field '%s' %d: %v", param, field, err)
 	}
 	return err
+}
+
+func IsPagecacheAvailable() bool {
+        _, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(SysctlPagecacheLimitMB, ".", "/", -1)))
+        if err == nil {
+                return true
+        }
+        return false
 }

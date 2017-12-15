@@ -46,6 +46,15 @@ func TunedAdmProfile(profileName string) error {
 	return nil
 }
 
+// Write new profile to tuned
+func WriteTunedAdmProfile(profileName string) error {
+	err := ioutil.WriteFile("/etc/tuned/active_profile", []byte(profileName), 0644)
+	if err != nil {
+		return fmt.Errorf("Failed to write tuned profile '%s' to '%s': %v", profileName, "/etc/tuned/active_profile", err)
+        }
+        return nil
+}
+
 // Return the currently active tuned profile. Return empty string if it cannot be determined.
 func GetTunedProfile() string {
 	content, err := ioutil.ReadFile("/etc/tuned/active_profile")

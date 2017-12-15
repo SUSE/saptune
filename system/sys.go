@@ -45,7 +45,7 @@ func GetSysInt(parameter string) (int, error) {
 
 // Write a string /sys/ value.
 func SetSysString(parameter, value string) error {
-	if err := ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 644); err != nil {
+	if err := ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644); err != nil {
 		return fmt.Errorf("failed to set sys key '%s' to string '%s': %v", parameter, value, err)
 	}
 	return nil
@@ -62,11 +62,11 @@ func TestSysString(parameter, value string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get sys key '%s': %v", parameter, err)
 	}
-	err = ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 644)
+	err = ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
 	if err != nil {
 		fmt.Errorf("failed to set sys key '%s' to string '%s': %v", parameter, value, err)
 	} else {
-		err = ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(save), 644)
+		err = ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(save), 0644)
 		if err != nil {
 			return fmt.Errorf("failed to set sys key '%s' back to string '%s': %v", parameter, value, err)
 		}

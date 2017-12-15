@@ -7,7 +7,6 @@ import (
 	"github.com/HouzuoGuo/saptune/system"
 	"github.com/HouzuoGuo/saptune/txtparser"
 	"log"
-	"path"
 	"strconv"
 	"strings"
 )
@@ -102,12 +101,6 @@ func OptBlkVal(parameter, act_value, cfg_value string) string {
 	switch parameter {
 	case "IO_SCHEDULER":
 		sval = strings.ToLower(cfg_value)
-		switch sval {
-		case "noop", "cfg", "deadline":
-			//nothing to do
-		default:
-			sval = "noop"
-		}
 	case "NRREQ":
 		if sval == "0" {
 			sval = "1024"
@@ -147,14 +140,8 @@ func SetBlkVal(key, value string) error {
 
 		for _, entry := range strings.Fields(value) {
 			fields := strings.Split(entry, "@")
-			file := path.Join("block", fields[0], "queue", "nr_requests")
-			tst_err := system.TestSysString(file, fields[1])
-			if tst_err != nil {
-				fmt.Printf("Write error on file '%s'.\nCan't set nr_request to '%s', seems to large for the device. Leaving untouched.\n", file, fields[1])
-			} else {
-				NrR, _ := strconv.Atoi(fields[1])
-				setNrR.(param.BlockDeviceNrRequests).NrRequests[fields[0]] = NrR
-			}
+			NrR, _ := strconv.Atoi(fields[1])
+			setNrR.(param.BlockDeviceNrRequests).NrRequests[fields[0]] = NrR
 		}
 		err = setNrR.(param.BlockDeviceNrRequests).Apply()
 		if err != nil {
