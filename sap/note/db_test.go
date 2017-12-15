@@ -2,6 +2,8 @@ package note
 
 import (
 	"github.com/HouzuoGuo/saptune/system"
+	"os"
+	"path"
 	"testing"
 )
 
@@ -29,6 +31,9 @@ func TestHANARecommendedOSSettings(t *testing.T) {
 }
 
 func TestLinuxPagingImprovements(t *testing.T) {
+	if _, err := os.Stat(path.Join(OSPackageInGOPATH, "/etc/sysconfig/saptune-note-1557506")); os.IsNotExist(err) {
+		t.Skip("file etc/sysconfig/saptune-note-1557506 not available")
+	}
 	prepare := LinuxPagingImprovements{SysconfigPrefix: OSPackageInGOPATH}
 	if prepare.Name() == "" {
 		t.Fatal(prepare.Name())
