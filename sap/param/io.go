@@ -1,8 +1,8 @@
 package param
 
 import (
-	"github.com/HouzuoGuo/saptune/sap"
-	"github.com/HouzuoGuo/saptune/system"
+	"github.com/SUSE/saptune/sap"
+	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"log"
 	"path"

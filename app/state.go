@@ -2,7 +2,7 @@ package app
 
 import (
 	"encoding/json"
-	"github.com/HouzuoGuo/saptune/sap/note"
+	"github.com/SUSE/saptune/sap/note"
 	"io/ioutil"
 	"os"
 	"path"

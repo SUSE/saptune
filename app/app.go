@@ -2,9 +2,9 @@ package app
 
 import (
 	"fmt"
-	"github.com/HouzuoGuo/saptune/sap/note"
-	"github.com/HouzuoGuo/saptune/sap/solution"
-	"github.com/HouzuoGuo/saptune/txtparser"
+	"github.com/SUSE/saptune/sap/note"
+	"github.com/SUSE/saptune/sap/solution"
+	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
 	"os"
 	"path"
