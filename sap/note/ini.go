@@ -2,10 +2,10 @@ package note
 
 import (
 	"fmt"
-	"github.com/HouzuoGuo/saptune/sap"
-	"github.com/HouzuoGuo/saptune/sap/param"
-	"github.com/HouzuoGuo/saptune/system"
-	"github.com/HouzuoGuo/saptune/txtparser"
+	"github.com/SUSE/saptune/sap"
+	"github.com/SUSE/saptune/sap/param"
+	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"log"
 	"strconv"
 	"strings"

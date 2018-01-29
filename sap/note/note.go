@@ -11,7 +11,7 @@ package note
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/HouzuoGuo/saptune/system"
+	"github.com/SUSE/saptune/system"
 	"log"
 	"path"
 	"reflect"

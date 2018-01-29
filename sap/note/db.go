@@ -1,9 +1,9 @@
 package note
 
 import (
-	"github.com/HouzuoGuo/saptune/sap"
-	"github.com/HouzuoGuo/saptune/system"
-	"github.com/HouzuoGuo/saptune/txtparser"
+	"github.com/SUSE/saptune/sap"
+	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"path"
 )
 
