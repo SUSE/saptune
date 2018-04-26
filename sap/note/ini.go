@@ -7,6 +7,7 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -91,6 +92,9 @@ func GetBlockVal(key string) (string, error) {
 			ret_val = ret_val + fmt.Sprintf("%s@%s ", k, strconv.Itoa(v))
 		}
 	}
+	fields := strings.Fields(ret_val)
+	sort.Strings(fields)
+	ret_val = strings.Join(fields, " ")
 	return ret_val, nil
 }
 
@@ -108,9 +112,12 @@ func OptBlkVal(parameter, act_value, cfg_value string) string {
 	}
 	for _, entry := range strings.Fields(val) {
 		fields := strings.Split(entry, "@")
-		ret_val = ret_val + fmt.Sprintf("%s@%s ", fields[0], sval)
+		if ret_val == "" {
+			ret_val = ret_val + fmt.Sprintf("%s@%s", fields[0], sval)
+		} else {
+			ret_val = ret_val + " " + fmt.Sprintf("%s@%s", fields[0], sval)
+		}
 	}
-
 	return ret_val
 }
 
