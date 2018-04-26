@@ -18,8 +18,7 @@ const (
 	// LogindSAPConfFile is a configuration file full of SAP-specific settings for logind.
 	LogindSAPConfFile = "sap.conf"
 	// LogindSAAPConfContent is the verbatim content of SAP-specific logind settings file.
-	LogindSAPConfContent = `
-[Login]
+	LogindSAPConfContent = `[Login]
 UserTasksMax=infinity
 `
 )
