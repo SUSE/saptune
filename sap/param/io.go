@@ -70,6 +70,10 @@ func (ior BlockDeviceNrRequests) Inspect() (Parameter, error) {
 	}
 	for _, entry := range dirContent {
 		// Remember, GetSysString does not accept the leading /sys/
+		if strings.Contains(entry.Name(), "dm-") {
+			// skip unsupported devices
+			continue
+		}
 		nrreq, err := system.GetSysInt(path.Join("block", entry.Name(), "queue", "nr_requests"))
 		if nrreq >= 0 && err == nil {
 			newIOR.NrRequests[entry.Name()] = nrreq
@@ -88,6 +92,7 @@ func (ior BlockDeviceNrRequests) Apply() error {
 	errs := make([]error, 0, 0)
 	for name, nrreq := range ior.NrRequests {
 		if !IsValidforNrRequests(name, strconv.Itoa(nrreq)) {
+			log.Printf("skipping device '%s', not valid for setting 'number of requests' to '%v'", name, nrreq)
 			continue
 		}
 		errs = append(errs, system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq))
@@ -107,10 +112,7 @@ func IsValidforNrRequests(blockdev, nrreq string) bool {
 	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
 	if elev != "" {
 		file := path.Join("block", blockdev, "queue", "nr_requests")
-		tst_err := system.TestSysString(file, nrreq)
-		if tst_err != nil {
-			log.Printf("Write error on file '%s'. Can't set nr_request to '%s', seems to large for the device. Leaving untouched.", file, nrreq)
-		} else {
+		if tst_err := system.TestSysString(file, nrreq); tst_err == nil {
 			return true
 		}
 	}
