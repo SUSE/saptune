@@ -1,5 +1,5 @@
 language: go
-go_import_path: github.com/HouzuoGuo/saptune
+go_import_path: github.com/SUSE/saptune
 go:
   - 1.7.x
 os:
