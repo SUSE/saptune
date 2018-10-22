@@ -106,8 +106,6 @@ func (inst AfterInstallation) Apply() error {
 	var err error
 	if inst.UuiddSocketStatus {
 		err = system.SystemctlEnableStart("uuidd.socket")
-	} else {
-		err = system.SystemctlDisableStop("uuidd.socket")
 	}
 	if err != nil {
 		return err

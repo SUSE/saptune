@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
 	"path"
 	"regexp"
@@ -23,10 +24,14 @@ func GetPerfBias() string {
 	cmdName := "/usr/bin/cpupower"
 	cmdArgs := []string{"-c", "all", "info", "-b"}
 
+	if _, err := os.Stat(cmdName); os.IsNotExist(err) {
+		log.Printf("command '%s' not found", cmdName)
+		return "all:none"
+	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil {
-		fmt.Printf("There was an error running external command 'cpupower -c all info -b': %v, output: %s", err, cmdOut)
-		return ""
+		log.Printf("There was an error running external command 'cpupower -c all info -b': %v, output: %s", err, cmdOut)
+		return "all:none"
 	}
 
 	for k, line := range strings.Split(strings.TrimSpace(string(cmdOut)), "\n") {
@@ -80,6 +85,10 @@ func SupportsPerfBias() bool {
 	cmdName := "/usr/bin/cpupower"
 	cmdArgs := []string{"info", "-b"}
 
+	if _, err := os.Stat(cmdName); os.IsNotExist(err) {
+		log.Printf("command '%s' not found", cmdName)
+		return false
+	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil || (err == nil && strings.Contains(string(cmdOut), notSupported)) {
 		// does not support perf bias
@@ -126,6 +135,12 @@ func SetGovernor(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "frequency-set", "-g", value)
 	cpu := ""
 	tst := ""
+	cmdName := "/usr/bin/cpupower"
+
+	if _, err := os.Stat(cmdName); os.IsNotExist(err) {
+		log.Printf("command '%s' not found", cmdName)
+		return nil
+	}
 	for k, entry := range strings.Fields(value) {
 		fields := strings.Split(entry, ":")
 		if fields[0] != "all" {

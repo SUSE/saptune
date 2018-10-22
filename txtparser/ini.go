@@ -1,6 +1,7 @@
 package txtparser
 
 import (
+	"github.com/SUSE/saptune/system"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -19,7 +20,7 @@ const (
 
 type Operator string // The comparison or assignment operator used in an INI file entry
 
-var RegexKeyOperatorValue = regexp.MustCompile(`([\w._-]+)\s*([<=>]+)\s*["']*(.*)["']*$`) // Break up a line into key, operator, value.
+var RegexKeyOperatorValue = regexp.MustCompile(`([\w._-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`) // Break up a line into key, operator, value.
 
 // A single key-value pair in INI file.
 type INIEntry struct {
@@ -43,6 +44,16 @@ func GetINIFileDescriptiveName(fileName string) string {
 	}
 	matches := re.FindStringSubmatch(string(content))
 	return fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", matches[3], "", matches[1], matches[2])
+}
+
+func GetINIFileVersion(fileName string) string {
+	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
+	content, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return ""
+	}
+	matches := re.FindStringSubmatch(string(content))
+	return fmt.Sprintf("%s", matches[1])
 }
 
 func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
@@ -101,7 +112,20 @@ func ParseINI(input string) *INIFile {
 			continue
 		}
 		// Break apart a line into key, operator, value.
-		kov := RegexKeyOperatorValue.FindStringSubmatch(line)
+		kov := make([]string, 0)
+		if currentSection == "rpm" {
+			fields := strings.Fields(line)
+			if fields[1] == system.GetOsVers() {
+				kov = []string {"rpm", "rpm:" + fields[0], fields[1], fields[2]}
+			} else {
+				kov = nil
+			}
+		} else {
+			kov = RegexKeyOperatorValue.FindStringSubmatch(line)
+			if currentSection == "grub" {
+				kov[1] = "grub:" + kov[1]
+			}
+		}
 		if kov == nil {
 			// Skip comments, empty, and irregular lines.
 			continue

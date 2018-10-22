@@ -1,9 +1,10 @@
 # 2161991 - VMware vSphere configuration guidelines
 # Description:    3. Recommendations for the guest operating system
-# Version 24 from 07.08.2017 in English
+# Version 25 from 14.08.2018 in English
+
 #
 [version]
-# SAP-NOTE=2161991 VERSION=24 DATE=07.08.2017 NAME="VMware vSphere configuration guidelines"
+# SAP-NOTE=2161991 CATEGORY=VIRT VERSION=25 DATE=14.08.2018 NAME="VMware vSphere configuration guidelines"
 
 [block]
 ## Type:    string

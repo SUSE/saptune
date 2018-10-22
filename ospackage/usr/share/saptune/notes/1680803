@@ -3,10 +3,10 @@
 # as described in the best practice document appended to the note
 # capter 2.2 Configuration for Linux
 # SAP ASE (Sybase)
-# Version 22 from 06.07.2017 in English
+# Version 24 from 20.11.2017 in English
 #
 [version]
-# SAP-NOTE=1680803 VERSION=22 DATE=06.07.2017 NAME="Sybase - SAP Adaptive Server Enterprise"
+# SAP-NOTE=1680803 CATEGORY=SYBASE VERSION=24 DATE=20.11.2017 NAME="Sybase - SAP Adaptive Server Enterprise"
 
 [block]
 ## Type:    string
