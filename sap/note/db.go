@@ -7,53 +7,6 @@ import (
 	"path"
 )
 
-/*
-2205917 - SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12
-Disable kernel memory management features that will introduce additional overhead.
-*/
-type HANARecommendedOSSettings struct {
-	KernelMMTransparentHugepage string
-	KernelMMKsm                 bool
-	KernelNumaBalancing         bool
-}
-
-func (hana HANARecommendedOSSettings) Name() string {
-	return "SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12"
-}
-func (hana HANARecommendedOSSettings) Initialise() (Note, error) {
-	ret := HANARecommendedOSSettings{}
-	ret.KernelMMTransparentHugepage, _ = system.GetSysChoice(SysKernelTHPEnabled)
-	ksmRun, _ := system.GetSysInt(SysKSMRun)
-	ret.KernelMMKsm = ksmRun == 1
-	nuBa, _ := system.GetSysctlInt(system.SysctlNumaBalancing)
-	ret.KernelNumaBalancing = nuBa == 1
-	return ret, nil
-}
-func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
-	ret := HANARecommendedOSSettings{
-		KernelMMKsm:         false,
-		KernelNumaBalancing: false,
-	}
-	ret.KernelMMTransparentHugepage = "never"
-	return ret, nil
-}
-func (hana HANARecommendedOSSettings) Apply() error {
-	errs := make([]error, 0, 0)
-	errs = append(errs, system.SetSysString(SysKernelTHPEnabled, hana.KernelMMTransparentHugepage))
-	if hana.KernelMMKsm {
-		errs = append(errs, system.SetSysInt(SysKSMRun, 1))
-	} else {
-		errs = append(errs, system.SetSysInt(SysKSMRun, 0))
-	}
-	if hana.KernelNumaBalancing {
-		errs = append(errs, system.SetSysctlInt(system.SysctlNumaBalancing, 1))
-	} else {
-		errs = append(errs, system.SetSysctlInt(system.SysctlNumaBalancing, 0))
-	}
-	err := sap.PrintErrors(errs)
-	return err
-}
-
 // 1557506 - Linux paging improvements
 type LinuxPagingImprovements struct {
 	SysconfigPrefix string // Used by test cases to specify alternative sysconfig location
@@ -77,7 +30,8 @@ func (paging LinuxPagingImprovements) Initialise() (Note, error) {
 }
 func (paging LinuxPagingImprovements) Optimise() (Note, error) {
 	newPaging := paging
-	conf, err := txtparser.ParseSysconfigFile(path.Join(newPaging.SysconfigPrefix, "/etc/sysconfig/saptune-note-1557506"), false)
+	//conf, err := txtparser.ParseSysconfigFile(path.Join(newPaging.SysconfigPrefix, "/etc/sysconfig/saptune-note-1557506"), false)
+	conf, err := txtparser.ParseSysconfigFile(path.Join(newPaging.SysconfigPrefix, "/usr/share/saptune/notes/1557506"), false)
 	if err != nil {
 		return nil, err
 	}

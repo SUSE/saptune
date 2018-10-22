@@ -19,7 +19,7 @@ const (
 
 type Operator string // The comparison or assignment operator used in an INI file entry
 
-var RegexKeyOperatorValue = regexp.MustCompile(`([\w._-]+)\s*([<=>]+)\s*(.*)`) // Break up a line into key, operator, value.
+var RegexKeyOperatorValue = regexp.MustCompile(`([\w._-]+)\s*([<=>]+)\s*["']*(.*)["']*$`) // Break up a line into key, operator, value.
 
 // A single key-value pair in INI file.
 type INIEntry struct {

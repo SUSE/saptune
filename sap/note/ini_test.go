@@ -19,6 +19,19 @@ func TestCalculateOptimumValue(t *testing.T) {
 		t.Fatal(val, err)
 	}
 
+	if val, err := CalculateOptimumValue(txtparser.OperatorMoreThanEqual, "21", "20"); val != "21" || err != nil {
+		t.Fatal(val, err)
+	}
+	if val, err := CalculateOptimumValue(txtparser.OperatorMoreThanEqual, "20", "20"); val != "20" || err != nil {
+		t.Fatal(val, err)
+	}
+	if val, err := CalculateOptimumValue(txtparser.OperatorMoreThanEqual, "10", "20"); val != "20" || err != nil {
+		t.Fatal(val, err)
+	}
+	if val, err := CalculateOptimumValue(txtparser.OperatorMoreThanEqual, "", "20"); val != "20" || err != nil {
+		t.Fatal(val, err)
+	}
+
 	if val, err := CalculateOptimumValue(txtparser.OperatorLessThan, "10", "20"); val != "10" || err != nil {
 		t.Fatal(val, err)
 	}
@@ -26,6 +39,19 @@ func TestCalculateOptimumValue(t *testing.T) {
 		t.Fatal(val, err)
 	}
 	if val, err := CalculateOptimumValue(txtparser.OperatorLessThan, "", "10"); val != "9" || err != nil {
+		t.Fatal(val, err)
+	}
+
+	if val, err := CalculateOptimumValue(txtparser.OperatorLessThanEqual, "10", "8"); val != "8" || err != nil {
+		t.Fatal(val, err)
+	}
+	if val, err := CalculateOptimumValue(txtparser.OperatorLessThanEqual, "10", "20"); val != "10" || err != nil {
+		t.Fatal(val, err)
+	}
+	if val, err := CalculateOptimumValue(txtparser.OperatorLessThanEqual, "10", "10"); val != "10" || err != nil {
+		t.Fatal(val, err)
+	}
+	if val, err := CalculateOptimumValue(txtparser.OperatorLessThanEqual, "", "10"); val != "10" || err != nil {
 		t.Fatal(val, err)
 	}
 
