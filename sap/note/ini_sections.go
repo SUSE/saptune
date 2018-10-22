@@ -337,7 +337,6 @@ func GetCpuVal(key string) string {
 func OptCpuVal(key, actval, cfgval string) string {
 	sval := strings.ToLower(cfgval)
 	rval := ""
-	cpu := ""
 	val := "0"
 	switch key {
 	case "energy_perf_bias":
@@ -355,10 +354,6 @@ func OptCpuVal(key, actval, cfgval string) string {
 		}
 		for _, entry := range strings.Fields(actval) {
 			fields := strings.Split(entry, ":")
-			if fields[1] == "none" {
-				//System does not support Intel's performance bias setting
-				val = fields[1]
-			}
 			rval = rval + fmt.Sprintf("%s:%s ", fields[0], val)
 		}
 		sval = strings.TrimSpace(rval)
@@ -366,20 +361,6 @@ func OptCpuVal(key, actval, cfgval string) string {
 		val = sval
 		for _, entry := range strings.Fields(actval) {
 			fields := strings.Split(entry, ":")
-			if fields[1] == "none" {
-				//System does not support a scaling governor
-				val = fields[1]
-			} else {
-				if fields[0] == "all" {
-					cpu = "cpu0"
-				} else {
-					cpu = fields[0]
-				}
-				if !system.IsValidGovernor(cpu, sval) {
-					log.Printf("'%s' is not a valid governor. Set value to 'none' for ignoring", sval)
-					val = "none"
-				}
-			}
 			rval = rval + fmt.Sprintf("%s:%s ", fields[0], val)
 		}
 		sval = strings.TrimSpace(rval)
