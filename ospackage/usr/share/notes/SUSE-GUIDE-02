@@ -1,0 +1,131 @@
+# SUSE-GUIDE-02 - SLES 12: Network, CPU Tuning and Optimization – Part 2
+# SAP/System Tuning/SUSE-GUIDE-02 - SLES 12: Network, CPU Tuning and Optimization – Part 2
+## Description:    Aggressively tuned additional parameters that may yield performance improvements. (https://www.suse.com/communities/blog/sles-1112-network-cpu-tuning-optimization-part-2/)
+
+[version]
+# SAP-NOTE=SUSE-GUIDE-02 VERSION=0 DATE=30.06.2015 NAME="SLES 12: Network, CPU Tuning and Optimization – Part 2"
+
+[sysctl]
+# Linux kernel allocates socket for every network connection that takes place.
+# The socket are two ends of communication channel, every socket has a receive
+# and send buffer which is also known as receive and write buffer. As these
+# buffers get full, it does not accept any more data. As a result no new data
+# can be processed and packets tend to get dropped. You may benefit from 
+# changing raising the values.
+net.core.wmem_max >= 12582912
+net.core.rmem_max >= 12582912
+
+# Increasing the queue size to accommodate maximum incoming packets.
+# Increasing the value to a much higher value is desirable especially on
+# servers where you are expecting latency or higher amount of packet drops.
+net.core.netdev_max_backlog >= 9000
+net.core.somaxconn >= 512
+
+# TCP/IP has its own read and write buffer and these are written to file
+# tcp_rmem and tcp_wmem. By default the kernel sets these values automatically
+# during boot up but these can be optimized further to improve performance.
+# Make sure you have adequate amount of RAM on your server before tuning these
+# values.
+net.ipv4.tcp_rmem >= 9437184
+net.ipv4.tcp_wmem >= 9437184
+
+# Reduce performance issues related to TCP timestamp generation.
+net.ipv4.tcp_timestamps = 0
+
+# If your network is on a high bandwidth then you can try disabling tcp_sack
+# parameter which is enabled by default. Enabling tcp_sack helps to handle
+# network traffic in efficient way which means only the network packet that is
+# dropped is sent again and not the entire packet stream. This is good for most
+# situations but if your network has high bandwidth (10G) it would also means
+# that the selective packet that are sent has to be de-fragmented and put in
+# correct order needing large TCP receive buffers and involves more use of
+# memory.
+net.ipv4.tcp_sack = 0
+net.ipv4.tcp_dsack = 0
+net.ipv4.tcp_fack = 0
+
+# The ipfrag_high_thresh tells the kernel the maximum amount of memory to use
+# to reassemble IP fragments.
+# When and if the high threshold is reached, the fragment handler will toss all
+# packets until the memory usage reaches ipfrag_low_thresh. This means that all
+# fragments that reached us during this time will have to be retransmitted.
+net.ipv4.ipfrag_low_thresh >= 393216
+net.ipv4.ipfrag_high_thresh >= 544288
+
+# All incoming TCP connections are queued until they are services. A TCP Syn
+# queue is created for each port.
+# Once the queue is filed the connection starts getting dropped.
+net.ipv4.tcp_max_syn_backlog >= 8192
+
+# The tcp_synack_retries parameter will define the number of times the kernel
+# will send responses to new incoming connection request.
+# By default the value in SLES is set to 5, for customer network with 1G to
+# 10G connection this can be further reduced to 3 as the servers are generally
+# busy and reducing the number of retries to 3 would help improve network
+# performance.
+net.ipv4.tcp_synack_retries <= 3
+net.ipv4.tcp_retries2 <= 6
+
+# The tcp_keepalive_time option will determine how long an inactive established
+# connection will be maintained.
+# The default value is 7200 seconds which is quite large and the server might
+# end up running off resources if there are just too many requests coming in.
+# It would be good to reduce it to much lower value.
+# tcp_keepalive_probe option will determine how many times the packet is sent
+# to your server before its connection is declared as dead.
+# The default value for keepalive probe is 9 which can be reduced to 4 to
+# terminate the dead connection faster.
+# The tcp_keepalive_intvl parameter allows you to control the interval you want
+# to send the keep alive probe.
+# By default in SLES this interval period is every 75 seconds which is very
+# high as it would be more than 4 minutes for your server to see the connection
+# has failed. A reasonable value for this parameter would be 20.
+net.ipv4.tcp_keepalive_time <= 1000
+net.ipv4.tcp_keepalive_probes <= 4
+net.ipv4.tcp_keepalive_intvl <= 20
+
+# Enable fast recycling of TIME_WAIT sockets, and allow reusing sockets in
+# TIME_WAIT state for new connections.
+net.ipv4.tcp_tw_recycle = 1
+net.ipv4.tcp_tw_reuse = 1
+
+# This setting determines the time that must elapse before TCP/IP can release a
+# closed connection to reuse its resource. In this TIME_WAIT state reopening
+# the connection to the client is less costly than establishing a new
+# connection. If the value for this setting is reduced, TCP/IP can release
+# closed connections much faster, allocating more resources for new connections.
+# The default value in SLES for tcp_fin_timeout is 60, this can be reduced to 30.
+net.ipv4.tcp_fin_timeout <= 30
+
+# Allow TCP connections to utilise larger MTU on capable network interfaces.
+net.ipv4.tcp_mtu_probing = 1
+
+# the following kernel parameters will be set to enhance system security
+# - Enable TCP SYN Cookie Protection
+net.ipv4.tcp_syncookies = 1
+# - Disable IP Source Routing
+net.ipv4.conf.all.accept_source_route = 0
+# - Disable ICMP Redirect Acceptance
+net.ipv4.conf.all.accept_redirects = 0
+# - Enable IP Spoofing Protection
+net.ipv4.conf.all.rp_filter = 1
+# - Enable Ignoring Broadcasts Request
+net.ipv4.icmp_echo_ignore_broadcasts = 1
+# - Enable Bad ICMP Error Message Protection
+net.ipv4.icmp_ignore_bogus_error_responses = 1
+# - Enable Logging of Spoofed Packets, Source Routed Packets, Redirect Packets
+net.ipv4.conf.all.log_martians = 1
+# - Enable Virtual Address Space Randomization
+kernel.randomize_va_space = 2
+# - Hide Exposed Kernel Pointers
+kernel.kptr_restrict = 1
+# - Harden File System Links
+fs.protected_hardlinks = 1
+fs.protected_symlinks = 1
+
+# While forking an applications if you would like to run the child process
+# first over the parents then changing sched_child_runs_first parameter would
+# be useful. Some applications perform better if the child process after
+# forking runs first , in server with multiple CPU the time slice received by
+# parent and child might be the same.
+kernel.sched_child_runs_first = 1

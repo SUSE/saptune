@@ -1,0 +1,22 @@
+# 2161991 - VMware vSphere configuration guidelines
+# Description:    3. Recommendations for the guest operating system
+# Version 24 from 07.08.2017 in English
+#
+[version]
+# SAP-NOTE=2161991 VERSION=24 DATE=07.08.2017 NAME="VMware vSphere configuration guidelines"
+
+[block]
+## Type:    string
+## Default: noop
+#
+# The default I/O scheduler for SLES is CFQ. It offers satisfactory performance
+# for wide range of I/O task, however choosing an alternative scheduler may 
+# potentially yield better latency characteristics and throughput. 
+# "noop" is an alternative scheduler, in comparison to CFQ it may offer more 
+# consistent performance, lower computation overhead, and potentially higher 
+# throughput.
+#
+# When set, all block devices on the system will be switched to the chosen 
+# scheduler.
+IO_SCHEDULER=noop
+

@@ -1,6 +1,7 @@
 package txtparser
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -9,14 +10,16 @@ import (
 )
 
 const (
-	OperatorLessThan = "<"
-	OperatorMoreThan = ">"
-	OperatorEqual    = "="
+	OperatorLessThan      = "<"
+	OperatorLessThanEqual = "<="
+	OperatorMoreThan      = ">"
+	OperatorMoreThanEqual = ">="
+	OperatorEqual         = "="
 )
 
 type Operator string // The comparison or assignment operator used in an INI file entry
 
-var RegexKeyOperatorValue = regexp.MustCompile(`([\w._-]+)\s*([<=>])\s*(.*)`) // Break up a line into key, operator, value.
+var RegexKeyOperatorValue = regexp.MustCompile(`([\w._-]+)\s*([<=>]+)\s*(.*)`) // Break up a line into key, operator, value.
 
 // A single key-value pair in INI file.
 type INIEntry struct {
@@ -30,6 +33,16 @@ type INIEntry struct {
 type INIFile struct {
 	AllValues []INIEntry
 	KeyValue  map[string]map[string]INIEntry
+}
+
+func GetINIFileDescriptiveName(fileName string) string {
+	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=(.*)\s*NAME="([^"]*)"`)
+	content, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return ""
+	}
+	matches := re.FindStringSubmatch(string(content))
+	return fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", matches[3], "", matches[1], matches[2])
 }
 
 func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
@@ -56,6 +69,7 @@ func ParseINI(input string) *INIFile {
 		KeyValue:  make(map[string]map[string]INIEntry),
 	}
 
+	reminder := ""
 	currentSection := ""
 	currentEntriesArray := make([]INIEntry, 0, 8)
 	currentEntriesMap := make(map[string]INIEntry)
@@ -64,14 +78,6 @@ func ParseINI(input string) *INIFile {
 		if len(line) == 0 {
 			continue
 		}
-		if strings.HasPrefix(line, "#") {
-			// Skip comments. Need to be done before
-			// 'break apart the line into key, operator, value'
-			// to support comments like # something (default = 60)
-			// without side effects
-			continue
-		}
-
 		if line[0] == '[' {
 			// Save previous section
 			if currentSection != "" {
@@ -82,6 +88,16 @@ func ParseINI(input string) *INIFile {
 			currentSection = line[1 : len(line)-1]
 			currentEntriesArray = make([]INIEntry, 0, 8)
 			currentEntriesMap = make(map[string]INIEntry)
+			continue
+		}
+		if strings.HasPrefix(line, "#") {
+			// Skip comments. Need to be done before
+			// 'break apart the line into key, operator, value'
+			// to support comments like # something (default = 60)
+			// without side effects
+			if currentSection == "reminder" {
+				reminder = reminder + line + "\n"
+			}
 			continue
 		}
 		// Break apart a line into key, operator, value.
@@ -101,6 +117,25 @@ func ParseINI(input string) *INIFile {
 		currentEntriesArray = append(currentEntriesArray, entry)
 		currentEntriesMap[entry.Key] = entry
 	}
+	// save reminder section
+	// Save previous section
+	if currentSection != "" {
+		ret.KeyValue[currentSection] = currentEntriesMap
+		ret.AllValues = append(ret.AllValues, currentEntriesArray...)
+	}
+	// Start the remider section
+	currentEntriesArray = make([]INIEntry, 0, 8)
+	currentEntriesMap = make(map[string]INIEntry)
+	currentSection = "reminder"
+
+	entry := INIEntry{
+		Section:  "reminder",
+		Key:      "reminder",
+		Operator: "",
+		Value:    reminder,
+	}
+	currentEntriesArray = append(currentEntriesArray, entry)
+	currentEntriesMap[entry.Key] = entry
 	// Save last section
 	if currentSection != "" {
 		ret.KeyValue[currentSection] = currentEntriesMap

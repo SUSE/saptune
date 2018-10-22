@@ -1,0 +1,105 @@
+# 2382421 - Optimizing the Network Configuration on HANA- and OS-Level
+# Version 15 from 28.11.2017 in English
+
+[version]
+# SAP-NOTE=2382421 VERSION=10 DATE=25.08.2017 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
+
+[sysctl]
+# This parameter limits the size of the accept backlog of a listening socket.
+# The Linux default of 128 is not sufficient so you need to set the parameter
+# to 4096 in order that the HANA system can use higher values.
+net.core.somaxconn = 4096
+
+# This is the size of the SYN backlog.
+# To prevent the kernel from using SYN cookies in a situation where lots of
+# connection requests are sent in a short timeframe and to prevent a
+# corresponding warning about a potential SYN flooding attack in the system
+# log, the size of the SYN backlog should be set to a reasonably high value.
+net.ipv4.tcp_max_syn_backlog = 8192
+
+# This setting allows HANA to reuse a client port immediately after the
+# connection has been closed, even though the connection is still in TIME_WAIT
+# state. A precondition for it to take effect is that TCP timestamps are
+# enabled, i.e. net.ipv4.tcp_timestamps = 1, which is the default on most
+# modern systems. Please note that this setting must not be applied if the HANA
+# node needs to communicate with hosts behind a NAT firewall. Moreover, it must
+# not be applied if not all hosts that use a TCP connection to communicate with
+# the HANA node have TCP timestamps enabled. Otherwise you might encounter TCP
+# connection issues after applying this configuration parameter.
+net.ipv4.tcp_tw_reuse = 1
+
+# This setting reduces the time a connection spends in the TIME_WAIT state.
+# One precondition for it to take effect is that TCP timestamps are enabled,
+# i.e. net.ipv4.tcp_timestamps = 1, which is the default on most modern systems.
+# Please note that this setting must not be applied if the HANA node has to
+# communicate with hosts behind a NAT firewall. Moreover, it must not be
+# applied if not all hosts that use a TCP connection to communicate with the
+# HANA node have TCP timestamps enabled. Otherwise you might encounter TCP
+# connection issues after applying this configuration parameter.
+net.ipv4.tcp_tw_recycle = 1
+
+# This setting adds the timestamp field to the TCP header.
+# It should already be active on most modern systems and is a prerequisite for
+# net.ipv4.tcp_tw_reuse and net.ipv4.tcp_tw_recycle.
+# ATTENTION: SUSE-GUIDE-02 will set the value back to 0, if applied after 
+# note 2382421 or solution HANA
+net.ipv4.tcp_timestamps = 1
+
+# The default value for this parameter is 5, which translates to a timeout of
+# about 24 seconds.
+# If the system is under load, a timeout of 24 seconds can be too short and
+# lead to avoidable errors.
+# It also prevents processes to set a longer timeout. The recommended value is
+# 8, which translates into a timeout of 190 seconds.
+net.ipv4.tcp_syn_retries = 8
+
+[reminder]
+# SAP HANA Parameters - all '.ini' file changes - not supported by saptune
+#
+# As HANA uses a considerable number of connections for the internal
+# communication, it makes sense to have as many client ports available as
+# possible for this purpose.
+# At the same time, you need to ensure that you explicitly exclude the ports
+# used by processes and applications which bind to specific ports by adjusting
+# parameter net.ipv4.ip_local_reserved_ports accordingly.
+# If configured correctly, the SAP Host Agent takes care of adjusting this
+# parameter and setting it manually is not required.
+#
+#net.ipv4.ip_local_port_range 
+#
+# This parameter specifies the ports which are reserved for known applications.
+# You especially also have to specify the standard ports that are used by the
+# SAP HANA database. To find out which standard ports are used by your SAP HANA
+# database please refer to SAP Note 2477204.
+# Ports listed in this parameter will not be used by automatic port assignment,
+# while explicit port allocation behavior is unchanged. 
+# If configured correctly, the SAP Host Agent takes care of adjusting this
+# parameter and setting it manually is not required.
+#
+#net.ipv4.ip_local_reserved_ports
+#
+#net.ipv4.tcp_wmem and net.ipv4.tcp_rmem
+# These parameters specify the minimum, default and maximum size of the TCP
+# send and receive buffer.
+# They are mostly relevant for system replication scenarios with a latency
+# higher than usual.
+# The maximum value should be equal to at least the bandwidth delay product of
+# the relevant connection.
+# Both, tcp_wmem and tcp_rmem, are specified as three values separated by
+# blanks: minimum, default and maximum buffer size.
+# Preconditions for these settings to take effect are:
+#
+# net.core.wmem_max and net.core.rmem_max must not be lower than the respective
+# maximum value.
+# TCP window scaling has been enabled by setting net.ipv4.tcp_window_scaling = 1
+#
+#   Example:
+#   net.ipv4.tcp_wmem = 4096 16384 4194304
+#
+# In this example, the current maximum is 4 MB. Given a 10 GBit/s connection
+# with a latency of 1 ms, the required maximum would be
+# 10 GBit/s * 1ms = 1.25 Mbytes, therefore the current setting is fine.
+# If you want to saturate a 1 Gbit/s connection with a latency of 100 ms, the
+# required maximum is 1 GBit/s * 100 ms = 12.5 Mbyte, so in this case the
+# setting should be adjusted to at least 12.5 MByte.
+# The minimum and the default buffer size do not need to be adjusted.

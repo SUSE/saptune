@@ -3,22 +3,10 @@ package note
 import (
 	"fmt"
 	"github.com/SUSE/saptune/sap"
-	"github.com/SUSE/saptune/sap/param"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"log"
-	"sort"
 	"strconv"
-	"strings"
-)
-
-const (
-	INISectionSysctl    = "sysctl"
-	INISectionVM        = "vm"
-	INISectionBlock     = "block"
-	INISectionLimits    = "limits"
-	SysKernelTHPEnabled = "kernel/mm/transparent_hugepage/enabled"
-	SysKSMRun           = "kernel/mm/ksm/run"
 )
 
 // Tuning options composed by a third party vendor.
@@ -38,8 +26,12 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 		switch operator {
 		case txtparser.OperatorLessThan:
 			iCurrentValue = iExpectedValue - 1
+		case txtparser.OperatorLessThanEqual:
+			iCurrentValue = iExpectedValue
 		case txtparser.OperatorMoreThan:
 			iCurrentValue = iExpectedValue + 1
+		case txtparser.OperatorMoreThanEqual:
+			iCurrentValue = iExpectedValue
 		}
 	} else {
 		iCurrentValue, err = strconv.ParseInt(currentValue, 10, 64)
@@ -55,192 +47,17 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 			if iCurrentValue <= iExpectedValue {
 				iCurrentValue = iExpectedValue + 1
 			}
+		case txtparser.OperatorLessThanEqual:
+			if iCurrentValue >= iExpectedValue {
+				iCurrentValue = iExpectedValue
+			}
+		case txtparser.OperatorMoreThanEqual:
+			if iCurrentValue <= iExpectedValue {
+				iCurrentValue = iExpectedValue
+			}
 		}
 	}
 	return strconv.FormatInt(iCurrentValue, 10), nil
-}
-
-// section handling
-
-// section [block]
-type BlockDeviceQueue struct {
-	BlockDeviceSchedulers param.BlockDeviceSchedulers
-	BlockDeviceNrRequests param.BlockDeviceNrRequests
-}
-
-func GetBlockVal(key string) (string, error) {
-	newQueue := make(map[string]string)
-	newReq := make(map[string]int)
-	ret_val := ""
-	switch key {
-	case "IO_SCHEDULER":
-		newIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
-		if err != nil {
-			return "", err
-		}
-		newQueue = newIOQ.(param.BlockDeviceSchedulers).SchedulerChoice
-		for k, v := range newQueue {
-			ret_val = ret_val + fmt.Sprintf("%s@%s ", k, v)
-		}
-	case "NRREQ":
-		newNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
-		if err != nil {
-			return "", err
-		}
-		newReq = newNrR.(param.BlockDeviceNrRequests).NrRequests
-		for k, v := range newReq {
-			ret_val = ret_val + fmt.Sprintf("%s@%s ", k, strconv.Itoa(v))
-		}
-	}
-	fields := strings.Fields(ret_val)
-	sort.Strings(fields)
-	ret_val = strings.Join(fields, " ")
-	return ret_val, nil
-}
-
-func OptBlkVal(parameter, act_value, cfg_value string) string {
-	sval := cfg_value
-	val := act_value
-	ret_val := ""
-	switch parameter {
-	case "IO_SCHEDULER":
-		sval = strings.ToLower(cfg_value)
-	case "NRREQ":
-		if sval == "0" {
-			sval = "1024"
-		}
-	}
-	for _, entry := range strings.Fields(val) {
-		fields := strings.Split(entry, "@")
-		if ret_val == "" {
-			ret_val = ret_val + fmt.Sprintf("%s@%s", fields[0], sval)
-		} else {
-			ret_val = ret_val + " " + fmt.Sprintf("%s@%s", fields[0], sval)
-		}
-	}
-	return ret_val
-}
-
-func SetBlkVal(key, value string) error {
-	var err error
-
-	switch key {
-	case "IO_SCHEDULER":
-		setIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
-		if err != nil {
-			return err
-		}
-
-		for _, entry := range strings.Fields(value) {
-			fields := strings.Split(entry, "@")
-			setIOQ.(param.BlockDeviceSchedulers).SchedulerChoice[fields[0]] = fields[1]
-		}
-		err = setIOQ.(param.BlockDeviceSchedulers).Apply()
-		if err != nil {
-			return err
-		}
-	case "NRREQ":
-		setNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
-		if err != nil {
-			return err
-		}
-
-		for _, entry := range strings.Fields(value) {
-			fields := strings.Split(entry, "@")
-			NrR, _ := strconv.Atoi(fields[1])
-			setNrR.(param.BlockDeviceNrRequests).NrRequests[fields[0]] = NrR
-		}
-		err = setNrR.(param.BlockDeviceNrRequests).Apply()
-		if err != nil {
-			return err
-		}
-	}
-	return err
-}
-
-// section [limits]
-func GetLimitsVal(key string) (string, error) {
-	// Find out current memlock limits
-	LimitMemlock := "0"
-	secLimits, err := system.ParseSecLimitsFile()
-	if err != nil {
-		return "", err
-	}
-	switch key {
-	case "MEMLOCK_HARD":
-		LimitMemlock, _ = secLimits.Get("sybase", "hard", "memlock")
-	case "MEMLOCK_SOFT":
-		LimitMemlock, _ = secLimits.Get("sybase", "soft", "memlock")
-
-	}
-	return LimitMemlock, nil
-}
-
-func OptLimitsVal(act_value, cfg_value string) string {
-	LimitMemlock := ""
-	switch act_value {
-	case "unlimited", "infinity", "-1":
-		LimitMemlock = act_value
-	default:
-		LimMemlock, _ := strconv.Atoi(act_value)
-		switch cfg_value {
-		case "unlimited", "infinity", "-1":
-			LimitMemlock = cfg_value
-		case "0":
-			//RAM in KB - 10%
-			memlock := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
-			LimitMemlock = strconv.Itoa(param.MaxI(LimMemlock, int(memlock)))
-		default:
-			LimLockCFG, _ := strconv.Atoi(cfg_value)
-			LimitMemlock = strconv.Itoa(param.MaxI(LimMemlock, LimLockCFG))
-		}
-	}
-	return LimitMemlock
-}
-
-func SetLimitsVal(key, value string) error {
-	secLimits, err := system.ParseSecLimitsFile()
-	if err != nil {
-		return err
-	}
-	switch key {
-	case "MEMLOCK_HARD":
-		secLimits.Set("sybase", "hard", "memlock", value)
-	case "MEMLOCK_SOFT":
-		secLimits.Set("sybase", "soft", "memlock", value)
-	}
-	err = secLimits.Apply()
-	return err
-}
-
-// section [vm]
-// Manipulate /sys/kernel/mm switches.
-func GetVmVal(parameter string) string {
-	var val string
-	switch parameter {
-	case "INI_THP":
-		val, _ = system.GetSysChoice(SysKernelTHPEnabled)
-	}
-	return val
-}
-
-func OptVmVal(parameter, act_value, cfg_value string) string {
-	val := act_value
-	switch parameter {
-	case "INI_THP":
-		sval := strings.ToLower(cfg_value)
-		if sval != "yes" && sval != "no" {
-			fmt.Println("wrong selection for INI_THP. Now set to 'yes' to disable transarent huge pages")
-			sval = "yes"
-		}
-		if sval == "yes" && act_value != "never" {
-			val = "never"
-		}
-		if sval == "no" && act_value == "never" {
-			val = "always"
-		}
-	}
-	return val
 }
 
 // Tuning options composed by a third party vendor.
@@ -249,9 +66,13 @@ type INISettings struct {
 	ID              string            // ID portion of the tuning configuration
 	DescriptiveName string            // Descriptive name portion of the tuning configuration
 	SysctlParams    map[string]string // Sysctl parameter values from the computer system
+	ValuesToApply   map[string]string // values to apply
 }
 
 func (vend INISettings) Name() string {
+	if len(vend.DescriptiveName) == 0 {
+		vend.DescriptiveName = txtparser.GetINIFileDescriptiveName(vend.ConfFilePath)
+	}
 	return vend.DescriptiveName
 }
 
@@ -273,9 +94,18 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], _ = GetBlockVal(param.Key)
 		case INISectionLimits:
-			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Key)
+			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Key, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value)
+		case INISectionUuidd:
+			vend.SysctlParams[param.Key] = GetUuiddVal()
+		case INISectionLogin:
+			vend.SysctlParams[param.Key], _ = GetLoginVal(param.Key)
+		case INISectionMEM:
+			vend.SysctlParams[param.Key] = GetMemVal(param.Key)
+		case INISectionCPU:
+			vend.SysctlParams[param.Key] = GetCpuVal(param.Key)
+		case INISectionReminder:
+			vend.SysctlParams[param.Key] = param.Value
 		default:
-			// saptune does not yet understand settings outside of [sysctl] section
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
@@ -300,13 +130,22 @@ func (vend INISettings) Optimise() (Note, error) {
 			}
 			vend.SysctlParams[param.Key] = optimisedValue
 		case INISectionVM:
-			vend.SysctlParams[param.Key] = OptVmVal(param.Key, vend.SysctlParams[param.Key], param.Value)
+			vend.SysctlParams[param.Key] = OptVmVal(param.Key, param.Value)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key] = OptBlkVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionLimits:
-			vend.SysctlParams[param.Key] = OptLimitsVal(vend.SysctlParams[param.Key], param.Value)
+			vend.SysctlParams[param.Key] = OptLimitsVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value)
+		case INISectionUuidd:
+			vend.SysctlParams[param.Key] = OptUuiddVal(param.Value)
+		case INISectionLogin:
+			vend.SysctlParams[param.Key] = OptLoginVal(param.Value)
+		case INISectionMEM:
+			vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value)
+		case INISectionCPU:
+			vend.SysctlParams[param.Key] = OptCpuVal(param.Key, vend.SysctlParams[param.Key], param.Value)
+		case INISectionReminder:
+			vend.SysctlParams[param.Key] = param.Value
 		default:
-			// saptune does not yet understand settings outside of [sysctl] section
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
@@ -316,6 +155,10 @@ func (vend INISettings) Optimise() (Note, error) {
 
 func (vend INISettings) Apply() error {
 	errs := make([]error, 0, 0)
+	revertValues := false
+	if len(vend.ValuesToApply) == 0 {
+		revertValues = true
+	}
 	// Parse the configuration file
 	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
 	if err != nil {
@@ -323,22 +166,42 @@ func (vend INISettings) Apply() error {
 	}
 	//for key, value := range vend.SysctlParams {
 	for _, param := range ini.AllValues {
+		if _, ok := vend.ValuesToApply[param.Key]; !ok && !revertValues {
+			continue
+		}
 		switch param.Section {
 		case INISectionSysctl:
 			// Apply sysctl parameters
 			errs = append(errs, system.SetSysctlString(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionVM:
-			errs = append(errs, system.SetSysString(SysKernelTHPEnabled, vend.SysctlParams[param.Key]))
+			errs = append(errs, SetVmVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionBlock:
 			errs = append(errs, SetBlkVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionLimits:
-			errs = append(errs, SetLimitsVal(param.Key, vend.SysctlParams[param.Key]))
+			errs = append(errs, SetLimitsVal(param.Key, vend.SysctlParams[param.Key], ini.KeyValue["limits"]["LIMIT_ITEM"].Value))
+		case INISectionUuidd:
+			errs = append(errs, SetUuiddVal(vend.SysctlParams[param.Key]))
+		case INISectionLogin:
+			errs = append(errs, SetLoginVal(param.Key, vend.SysctlParams[param.Key], revertValues))
+		case INISectionMEM:
+			errs = append(errs, SetMemVal(param.Key, vend.SysctlParams[param.Key]))
+		case INISectionCPU:
+			errs = append(errs, SetCpuVal(param.Key, vend.SysctlParams[param.Key], revertValues))
+		case INISectionReminder:
+			//nothing to do here
 		default:
-			// saptune does not yet understand settings outside of [sysctl] section
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
 	}
 	err = sap.PrintErrors(errs)
 	return err
+}
+
+func (vend INISettings) SetValuesToApply(values []string) (Note) {
+	vend.ValuesToApply = make(map[string]string)
+	for _, v := range values {
+		vend.ValuesToApply[v] = v
+	}
+	return vend
 }

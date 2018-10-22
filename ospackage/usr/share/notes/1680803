@@ -1,0 +1,90 @@
+# 1680803 - SYB: SAP Adaptive Server Enterprise
+# - Best Practice for SAP Business Suite and SAP BW
+# as described in the best practice document appended to the note
+# capter 2.2 Configuration for Linux
+# SAP ASE (Sybase)
+# Version 22 from 06.07.2017 in English
+#
+[version]
+# SAP-NOTE=1680803 VERSION=22 DATE=06.07.2017 NAME="Sybase - SAP Adaptive Server Enterprise"
+
+[block]
+## Type:    string
+## Default: noop
+#
+# The default I/O scheduler for SLES is CFQ. It offers satisfactory performance
+# for wide range of I/O task, however choosing an alternative scheduler may 
+# potentially yield better latency characteristics and throughput. 
+# "noop" is an alternative scheduler, in comparison to CFQ it may offer more 
+# consistent performance, lower computation overhead, and potentially higher 
+# throughput.
+#
+# When set, all block devices on the system will be switched to the chosen 
+# scheduler.
+IO_SCHEDULER=noop
+
+## Type:    integer
+## Default: 1024
+#
+# IO nr_requests
+#
+# When set, the number of requests for all block devices on the system will 
+# be switched to the chosen value
+NRREQ=1024
+
+[limits]
+## Type:    integer
+## Default: 0 (which means calculation: RAM in KB - 10%)
+#
+# memlock
+LIMIT_HARD=0
+LIMIT_SOFT=0
+LIMIT_ITEM=memlock
+LIMIT_DOMAIN=sybase
+
+[vm]
+# Disable transparent hugepages (THP, applies to Intel-based systems only)
+# changes /sys/kernel/mm/transparent_hugepage/enabled
+# 'never' to disable, 'always' to enable
+THP=never
+
+[sysctl]
+# maximum number of asynchronous I/Os.
+fs.aio-max-nr = 1048576
+
+# Increase system file descriptor limit
+fs.file-max >= 6291456
+
+# Increase Linux autotuning TCP buffer limits
+# Set max to 16MB (16777216) for 1GE and 32M (33554432) or 54M (56623104) for 10GE
+# Don't set tcp_mem itself! Let the kernel scale it based on RAM.
+net.core.rmem_max >= 16777216
+net.core.wmem_max >= 16777216
+net.core.rmem_default >= 16777216
+net.core.wmem_default >= 16777216
+net.ipv4.tcp_rmem >= 4096 87380 16777216
+net.ipv4.tcp_wmem >= 4096 65536 16777216
+
+# Increase the max packet backlog
+net.core.netdev_max_backlog >= 30000
+
+# If the server is a heavily used application server, e.g. a Database, it would
+# benefit significantly by using Huge Pages. 
+# The default size of Huge Page in SLES is 2 MB, enabling Huge Pages would aid 
+# in significant improvements for Memory Intensive Applications/Databases, 
+# HPC Machines, this configuration needs to be done if the Applications support
+# Huge Pages. If the Applications do not support Huge Pages then configuring 
+# Huge Pages would result in wastage of memory as it cannot be used any further
+# by the OS. 
+vm.nr_hugepages >= 128
+
+# Discourage Linux from swapping idle processes to disk (default = 60)
+# value between 20 and 10
+vm.swappiness <= 15
+
+[reminder]
+# DBMS data storage settings: use ext4 or xfs file system. 
+# For best performance, disable the journal via tune2fs ^has_journal.
+# For ext4 the recommended mount options are 'noatime,nodiratime', if journaling is disabled or 'noatime,nodiratime,cache=writeback,barrier=0', if journaling is not disabled
+# For xfs the recommended mount options are 'noatime,nodiratime,nobarrier,logbufs=8'
+# network tuning including transmit queue (ifconfig <eth#> txqueuelen <value>). See Best_Practices_SAP_ASE_v1.2b.pdf (appended to the SAP Note) for more information.
