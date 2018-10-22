@@ -6,9 +6,11 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"log"
+	"path"
 	"strconv"
 )
 
+const OverrideTunigSheets  = "/etc/saptune/override/"
 var pc = LinuxPagingImprovements{}
 
 // Tuning options composed by a third party vendor.
@@ -69,6 +71,7 @@ type INISettings struct {
 	DescriptiveName string            // Descriptive name portion of the tuning configuration
 	SysctlParams    map[string]string // Sysctl parameter values from the computer system
 	ValuesToApply   map[string]string // values to apply
+	OverrideParams  map[string]string // parameter values from the override file
 }
 
 func (vend INISettings) Name() string {
@@ -85,9 +88,27 @@ func (vend INISettings) Initialise() (Note, error) {
 		return vend, err
 	}
 
+	// looking for override file
+	override := false
+	ow, err := txtparser.ParseINIFile(path.Join(OverrideTunigSheets, vend.ID), false)
+	if err == nil {
+		override = true
+	}
 	// Read current parameter values
 	vend.SysctlParams = make(map[string]string)
+	vend.OverrideParams = make(map[string]string)
 	for _, param := range ini.AllValues {
+		if override {
+			if len(ow.KeyValue[param.Section]) != 0 && ow.KeyValue[param.Section][param.Key].Value != "" {
+				vend.OverrideParams[param.Key] = ow.KeyValue[param.Section][param.Key].Value
+				if ow.KeyValue[param.Section][param.Key].Operator != param.Operator {
+					// operator from override file will 
+					// replace the operator from our note file
+					param.Operator = ow.KeyValue[param.Section][param.Key].Operator
+				}
+			}
+		}
+
 		switch param.Section {
 		case INISectionSysctl:
 			vend.SysctlParams[param.Key], _ = system.GetSysctlString(param.Key)
@@ -126,6 +147,11 @@ func (vend INISettings) Optimise() (Note, error) {
 
 	for _, param := range ini.AllValues {
 		// Compare current values against INI's definition
+		if len(vend.OverrideParams[param.Key]) != 0 {
+			// use value from override file instead of the value
+			// from the sap note (ConfFile)
+			param.Value = vend.OverrideParams[param.Key]
+		}
 		switch param.Section {
 		case INISectionSysctl:
 			//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
