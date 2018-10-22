@@ -308,6 +308,9 @@ func NoteAction(actionName, noteID string) {
 		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 		for _, noteID := range tuningOptions.GetSortedIDs() {
+			if strings.HasSuffix(noteID, "_n2c") {
+				continue
+			}
 			noteObj := tuningOptions[noteID]
 			format := "\t%s\t\t%s\n"
 			if len(noteID) >= 8 {

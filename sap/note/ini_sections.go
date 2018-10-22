@@ -228,14 +228,25 @@ func OptLimitsVal(key, actval, cfgval, item, domain string) string {
 				if fields[0] != dom {
 					continue
 				}
-				limact, _ := strconv.Atoi(fields[1])
-				if limit == "0" && item == "memlock" {
-					//calculate limit (RAM in KB - 10%)
-					memlock := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
-					limit = strconv.Itoa(param.MaxI(limact, int(memlock)))
-				} else {
-					limcfg, _ := strconv.Atoi(cfgval)
-					limit = strconv.Itoa(param.MaxI(limact, limcfg))
+				switch fields[1] {
+				case "unlimited", "infinity", "-1":
+					limit = fields[1]
+				default:
+					limact, _ := strconv.Atoi(fields[1])
+					switch cfgval {
+					case "unlimited", "infinity", "-1":
+						limit = cfgval
+					case "0":
+						limit = cfgval
+						if item == "memlock" {
+							//calculate limit (RAM in KB - 10%)
+							memlock := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
+							limit = strconv.Itoa(param.MaxI(limact, int(memlock)))
+						}
+					default:
+						limcfg, _ := strconv.Atoi(cfgval)
+						limit = strconv.Itoa(param.MaxI(limact, limcfg))
+					}
 				}
 			}
 			lim = lim + fmt.Sprintf("%s:%s ", dom, limit)
