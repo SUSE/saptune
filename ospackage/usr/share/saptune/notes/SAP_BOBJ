@@ -8,7 +8,7 @@
 # section '4.1.3 Additional requirements for SUSE'
 
 [version]
-# SAP-NOTE=INST-DOC VERSION=0 DATE=10.03.2017 NAME="operating system tuning for SAP Business OBJects (BOBJ)"
+# SAP-NOTE=INST-DOC CATEGORY=BOBJ VERSION=0 DATE=10.03.2017 NAME="operating system tuning for SAP Business OBJects (BOBJ)"
 
 [sysctl]
 kernel.sem = 250 32000 32 1024

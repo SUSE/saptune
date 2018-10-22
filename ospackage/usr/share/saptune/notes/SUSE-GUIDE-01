@@ -3,7 +3,7 @@
 ## Description:    Aggressively tuned additional parameters that may yield performance improvements. (https://www.suse.com/communities/blog/sles-1112-os-tuning-optimisation-guide-part-1/)
 
 [version]
-# SAP-NOTE=SUSE-GUIDE-01 VERSION=0 DATE=11.06.2015 NAME="SLES 12 OS Tuning & Optimization Guide – Part 1"
+# SAP-NOTE=SUSE-GUIDE-01 CATEGORY=SUSE VERSION=0 DATE=11.06.2015 NAME="SLES 12 OS Tuning & Optimization Guide – Part 1"
 
 [block]
 ## Type:    string
@@ -39,7 +39,7 @@ KSM=1
 # do not support Huge Pages then configuring Huge Pages would result in wastage
 # of memory as it cannot be used any further by the OS, by Default no huge
 # pages are allocated.
-vm.nr_hugepages >= 128
+vm.nr_hugepages = 128
 
 # If the amount of used swap is larger than the amount of anon memory pages
 # that you observe in /proc/meminfo, it shows that active memory is being
@@ -50,12 +50,12 @@ vm.nr_hugepages >= 128
 # anonymous pages, then it would degrade performance because active memory is
 # being swapped. It would indicate too much I/O traffic, which might slow down
 # your system.
-vm.swappiness <= 25
+vm.swappiness = 25
 
 # To reduce the rate at which VFS caches are reclaimed it would be good to reduce the vfs_cache_pressure, this
 # variable controls the tendency of the kernel to reclaim memory which is used for VFS Caches versus page cache
 # and swap.
-vm.vfs_cache_pressure <= 50
+vm.vfs_cache_pressure = 50
 
 # Every Linux process generally tries to claim more memory than it needs.
 # The goal is to make the process much faster. If the process does not have
@@ -68,11 +68,11 @@ vm.vfs_cache_pressure <= 50
 # Set
 vm.overcommit_memory = 1
 # allowing over-commit to happen, and
-vm.overcommit_ratio >= 70
+vm.overcommit_ratio = 70
 
 # For performance reasons, written data goes into a cache before being sent to
 # disk.  The cache of data waiting to be written is called "dirty cache".
 # If a server has more than 128 GB of RAM, lowering the dirty cache size may
 # potentially there may be cases were these values should be decreased.
-vm.dirty_ratio <= 10
-vm.dirty_background_ratio <= 5
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 5

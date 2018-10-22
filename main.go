@@ -6,6 +6,7 @@ import (
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"io"
 	"log"
 	"os"
@@ -113,7 +114,7 @@ func DaemonAction(actionName string) {
 		if err := system.SystemctlEnableStart(TunedService); err != nil {
 			errorExit("%v", err)
 		}
-		// tuned then calls `sapconf daemon apply`
+		// tuned then calls `saptune daemon apply`
 		fmt.Println("Daemon (tuned.service) has been enabled and started.")
 		if len(tuneApp.TuneForSolutions) == 0 && len(tuneApp.TuneForNotes) == 0 {
 			fmt.Println("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
@@ -168,94 +169,111 @@ func DaemonAction(actionName string) {
 }
 
 // Print mismatching fields in the note comparison result.
-func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldComparison, printComparison bool) {
-	reminderHead := "Attention:\nHints or values not integrated yet. So please read carefully, check and set manually, if needed:\n"
+func PrintNoteFields(header string, noteComparisons map[string]map[string]note.NoteFieldComparison, printComparison bool) {
+
+	var fmtlen0, fmtlen1, fmtlen2, fmtlen3, fmtlen4 int
+	// initialise
+	printHead := ""
+	sortkeys  := make([]string, 0, len(noteComparisons))
 	hasDiff   := false
 	compliant := "yes"
 	override  := ""
 	format    := "\t%s : %s\n"
+	noteField := ""
+	reminder  := make(map[string]string)
+
+	if printComparison {
+		// verify
+		fmtlen0 = 16
+		fmtlen1 = 12
+		fmtlen2 = 9
+		fmtlen3 = 9
+		fmtlen4 = 7
+	} else {
+		// simulate
+		fmtlen1 = 9
+		fmtlen2 = 9
+		fmtlen3 = 14
+		fmtlen4 = 9
+	}
 
 	// sort output
-	sortkeys := make([]string, 0, len(comparisons))
-	for _, comparison := range comparisons {
-		if len(comparison.ReflectMapKey) != 0 && comparison.ReflectFieldName != "OverrideParams" {
-			sortkeys = append(sortkeys, comparison.ReflectMapKey)
+	for noteID, comparisons := range noteComparisons {
+		for _, comparison := range comparisons {
+			if len(comparison.ReflectMapKey) != 0 && comparison.ReflectFieldName != "OverrideParams" {
+				sortkeys = append(sortkeys, noteID + "@" + comparison.ReflectMapKey)
+			}
 		}
 	}
 	sort.Strings(sortkeys)
 
-	fmt.Printf("%s - %s \n\n", noteID, tuningOptions[noteID].Name())
-	if printComparison {
-		fmtlen1 := 12
-		fmtlen2 := 9
-		fmtlen3 := 9
-		fmtlen4 := 7
+	// setup format values
+	for _ , skey := range sortkeys {
+		keyFields := strings.Split(skey, "@")
+		noteID := keyFields[0]
+		comparisons := noteComparisons[noteID]
 		for _, comparison := range comparisons {
 			if comparison.ReflectMapKey == "reminder" {
 				continue
 			}
-			if len(comparison.ReflectMapKey) != 0 {
-				if comparison.ReflectFieldName == "OverrideParams" && len(comparison.ActualValueJS) > fmtlen3 {
-					fmtlen3 = len(comparison.ActualValueJS)
-					continue
+			if printComparison {
+				// verify
+				if len(noteField) > fmtlen0 {
+					fmtlen0 = len(noteField)
 				}
-				if len(comparison.ReflectMapKey) > fmtlen1 {
-					fmtlen1 = len(comparison.ReflectMapKey)
+				if len(comparison.ReflectMapKey) != 0 {
+					if comparison.ReflectFieldName == "OverrideParams" && len(comparison.ActualValueJS) > fmtlen3 {
+						fmtlen3 = len(comparison.ActualValueJS)
+						continue
+					}
+					if len(comparison.ReflectMapKey) > fmtlen1 {
+						fmtlen1 = len(comparison.ReflectMapKey)
+					}
+					if len(comparison.ExpectedValueJS) > fmtlen2 {
+						fmtlen2 = len(comparison.ExpectedValueJS)
+					}
+					if len(comparison.ActualValueJS) > fmtlen4 {
+						fmtlen4 = len(comparison.ActualValueJS)
+					}
 				}
-				if len(comparison.ExpectedValueJS) > fmtlen2 {
-					fmtlen2 = len(comparison.ExpectedValueJS)
-				}
-				if len(comparison.ActualValueJS) > fmtlen4 {
-					fmtlen4 = len(comparison.ActualValueJS)
-				}
-			}
-		}
-		//format := "\t%s Expected: %s\t Actual: %s\t Compliant: %s\n"
-		format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s| %-" + strconv.Itoa(fmtlen3) + "s | %-" + strconv.Itoa(fmtlen4) + "s | %3s\n"
-		fmt.Printf(format, "Parameter", "Expected", "Override", "Actual", "Compliant")
-		for i := 0; i < fmtlen1+fmtlen2+fmtlen3+fmtlen4+20 ; i++ {
-			if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2 || i == 3+fmtlen1+3+fmtlen2+2+fmtlen3+1 || i == 3+fmtlen1+3+fmtlen2+2+fmtlen3+3+fmtlen4+1 {
-				fmt.Printf("+")
+				format = "   %-" + strconv.Itoa(fmtlen0) + "s | %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s | %-" + strconv.Itoa(fmtlen3) + "s | %-" + strconv.Itoa(fmtlen4) + "s | %3s\n"
 			} else {
-				fmt.Printf("-")
-			}
-		}
-		fmt.Printf("\n")
-	} else {
-		fmtlen1 := 9
-		fmtlen2 := 5
-		fmtlen3 := 9
-		for _, comparison := range comparisons {
-			if comparison.ReflectMapKey == "reminder" {
-				continue
-			}
-			if len(comparison.ReflectMapKey) != 0 {
-				if len(comparison.ReflectMapKey) > fmtlen1 {
-					fmtlen1 = len(comparison.ReflectMapKey)
+				// simulate
+				if len(comparison.ReflectMapKey) != 0 {
+					if len(comparison.ReflectMapKey) > fmtlen1 {
+						fmtlen1 = len(comparison.ReflectMapKey)
+					}
+					if len(comparison.ActualValueJS) > fmtlen2 {
+						fmtlen2 = len(comparison.ActualValueJS)
+					}
+					if len(comparison.ExpectedValueJS) > fmtlen3 {
+						fmtlen3 = len(comparison.ExpectedValueJS)
+					}
 				}
-				if len(comparison.ActualValueJS) > fmtlen2 {
-					fmtlen2 = len(comparison.ExpectedValueJS)
-				}
+				format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s| %-" + strconv.Itoa(fmtlen3) + "s| %-" + strconv.Itoa(fmtlen4) + "s\n"
 			}
 		}
-		format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s| %-" + strconv.Itoa(fmtlen3) + "s\n"
-		fmt.Printf(format, "Parameter", "Value", "Override")
-		for i := 0; i < fmtlen1+fmtlen2+fmtlen3+8 ; i++ {
-			if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2 {
-				fmt.Printf("+")
-			} else {
-				fmt.Printf("-")
-			}
-		}
-		fmt.Printf("\n")
 	}
 
-	reminder := reminderHead
-	for _ , key := range sortkeys {
-		comparison := comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", key)]
-		override = strings.Replace(comparisons[fmt.Sprintf("%s[%s]", "OverrideParams", key)].ExpectedValueJS, "\t", " ", -1)
+	// print
+	noteID := ""
+	for _ , skey := range sortkeys {
+		keyFields := strings.Split(skey, "@")
+		key := keyFields[1]
+		printHead = ""
+		if keyFields[0] != noteID {
+			if noteID == "" {
+				printHead = "yes"
+			}
+			noteID = keyFields[0]
+			noteField = fmt.Sprintf("%s, %s", noteID, txtparser.GetINIFileVersion(noteComparisons[noteID]["ConfFilePath"].ActualValue.(string)))
+		}
+
+		comparison := noteComparisons[noteID][fmt.Sprintf("%s[%s]", "SysctlParams", key)]
+		override = strings.Replace(noteComparisons[noteID][fmt.Sprintf("%s[%s]", "OverrideParams", key)].ExpectedValueJS, "\t", " ", -1)
+
 		if comparison.ReflectMapKey == "reminder" {
-			reminder = reminder + comparison.ExpectedValueJS
+			reminder[noteID] = reminder[noteID] + comparison.ExpectedValueJS
 			continue
 		}
 		if !comparison.MatchExpectation {
@@ -264,19 +282,56 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 		} else {
 			compliant = "yes"
 		}
+
+		// print table header
+		if printHead != "" {
+			if header != "NONE" {
+				fmt.Printf("%s - %s \n\n", noteID, tuningOptions[noteID].Name())
+			}
+			if printComparison {
+				// verify
+				fmt.Printf(format, "SAPNote, Version", "Parameter", "Expected", "Override", "Actual", "Compliant")
+				for i := 0; i < fmtlen0+fmtlen1+fmtlen2+fmtlen3+fmtlen4+28 ; i++ {
+					if i == 3+fmtlen0+1 || i == 3+fmtlen0+3+fmtlen1+1 || i == 3+fmtlen0+3+fmtlen1+4+fmtlen2 || i == 3+fmtlen0+3+fmtlen1+4+fmtlen2+2+fmtlen3+1 || i == 3+fmtlen0+3+fmtlen1+4+fmtlen2+2+fmtlen3+3+fmtlen4+1 {
+						fmt.Printf("+")
+					} else {
+						fmt.Printf("-")
+					}
+				}
+				fmt.Printf("\n")
+			} else {
+				// simulate
+				fmt.Printf(format, "Parameter", "Value set", "Value expected", "Override")
+				for i := 0; i < fmtlen1+fmtlen2+fmtlen3+fmtlen4+8 ; i++ {
+					if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2 || i == 3+fmtlen1+3+fmtlen2+1+fmtlen3+1 {
+						fmt.Printf("+")
+					} else {
+						fmt.Printf("-")
+					}
+				}
+				fmt.Printf("\n")
+			}
+		}
+
+		// print table body
 		if printComparison {
-			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), compliant)
+			// verify
+			fmt.Printf(format, noteField, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), compliant)
 		} else {
-			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override)
+			// simulate
+			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override)
 		}
 	}
-	if !hasDiff {
-		fmt.Printf("\n   (no change)\n\n")
-	} else {
-		fmt.Printf("\n")
+	// print footer
+	if header != "NONE" && !hasDiff {
+		fmt.Printf("\n   (no change)\n")
 	}
-	if reminder != reminderHead {
-		fmt.Printf("%s\n", SetRedText + reminder + ResetTextColor)
+	fmt.Printf("\n")
+	for noteID, reminde := range reminder {
+		if reminde != "" {
+			reminderHead := fmt.Sprintf("Attention for SAP Note %s:\nHints or values not yet handled by saptune. So please read carefully, check and set manually, if needed:\n", noteID)
+			fmt.Printf("%s\n", SetRedText + reminderHead + reminde + ResetTextColor)
+		}
 	}
 }
 
@@ -286,9 +341,7 @@ func VerifyAllParameters() {
 	if err != nil {
 		errorExit("Failed to inspect the current system: %v", err)
 	}
-	for noteID, noteComparison := range comparisons {
-		PrintNoteFields(noteID, noteComparison, true)
-	}
+	PrintNoteFields("NONE", comparisons, true)
 	if len(unsatisfiedNotes) == 0 {
 		fmt.Println("The running system is currently well-tuned according to all of the enabled notes.")
 	} else {
@@ -331,10 +384,6 @@ func NoteAction(actionName, noteID string) {
 			} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
 				format = " " + SetGreenText + "+" + format + ResetTextColor
 			}
-			if noteID == "Block" {
-				// workaround: internal used note for solution ASE. Do not display
-				continue
-			}
 			fmt.Printf(format, noteID, noteObj.Name())
 		}
 		if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
@@ -351,7 +400,9 @@ func NoteAction(actionName, noteID string) {
 			if err != nil {
 				errorExit("Failed to test the current system against the specified note: %v", err)
 			}
-			PrintNoteFields(noteID, comparisons, true)
+			noteComp := make(map[string]map[string]note.NoteFieldComparison)
+			noteComp[noteID] = comparisons
+			PrintNoteFields("HEAD", noteComp, true)
 			if !conforming {
 				errorExit("The parameters listed above have deviated from the specified note.\n")
 			} else {
@@ -367,7 +418,9 @@ func NoteAction(actionName, noteID string) {
 			errorExit("Failed to test the current system against the specified note: %v", err)
 		} else {
 			fmt.Printf("If you run `saptune note apply %s`, the following changes will be applied to your system:\n", noteID)
-			PrintNoteFields(noteID, comparisons, false)
+			noteComp := make(map[string]map[string]note.NoteFieldComparison)
+			noteComp[noteID] = comparisons
+			PrintNoteFields("HEAD", noteComp, true)
 		}
 	case "customise":
 		if noteID == "" {
@@ -453,9 +506,7 @@ func SolutionAction(actionName, solName string) {
 			if err != nil {
 				errorExit("Failed to test the current system against the specified SAP solution: %v", err)
 			}
-			for noteID, noteComparison := range comparisons {
-				PrintNoteFields(noteID, noteComparison, true)
-			}
+			PrintNoteFields("NONE", comparisons, true)
 			if len(unsatisfiedNotes) == 0 {
 				fmt.Println("The system fully conforms to the tuning guidelines of the specified SAP solution.")
 			} else {
@@ -471,9 +522,7 @@ func SolutionAction(actionName, solName string) {
 			errorExit("Failed to test the current system against the specified note: %v", err)
 		} else {
 			fmt.Printf("If you run `saptune solution apply %s`, the following changes will be applied to your system:\n", solName)
-			for noteID, noteComparison := range comparisons {
-				PrintNoteFields(noteID, noteComparison, false)
-			}
+			PrintNoteFields("NONE", comparisons, true)
 		}
 	case "revert":
 		if solName == "" {

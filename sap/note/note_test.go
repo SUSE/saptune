@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-var OSNotesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/notes")
+var OSNotesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes")
 var OSPackageInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/")
 
 func jsonMarshalAndBack(original interface{}, receiver interface{}, t *testing.T) {

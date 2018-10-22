@@ -12,6 +12,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"math"
 )
 
 const (
@@ -21,10 +22,13 @@ const (
 	INISectionMEM       = "mem"
 	INISectionBlock     = "block"
 	INISectionUuidd     = "uuidd"
+	INISectionService   = "service"
 	INISectionLimits    = "limits"
 	INISectionLogin     = "login"
 	INISectionVersion   = "version"
 	INISectionPagecache = "pagecache"
+	INISectionRpm       = "rpm"
+	INISectionGrub      = "grub"
 	INISectionReminder  = "reminder"
 	SysKernelTHPEnabled = "kernel/mm/transparent_hugepage/enabled"
 	SysKSMRun           = "kernel/mm/ksm/run"
@@ -38,6 +42,19 @@ const (
 UserTasksMax=infinity
 `
 )
+
+func GetServiceName(service string) string {
+        switch service {
+        case "UuiddSocket":
+                service = "uuidd.socket"
+        case "Sysstat":
+                service = "sysstat"
+        default:
+                log.Printf("skipping unkown service '%s'", service)
+                service = ""
+        }
+	return service
+}
 
 // section handling
 // section [sysctl]
@@ -66,12 +83,16 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 			fieldE = allFieldsE[k]
 		}
 
+		// use exactly the value from the config file. No calculation any more
+		/*
 		optimisedValue, err := CalculateOptimumValue(operator, fieldC, fieldE)
 		//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
 		if err != nil {
 			return ""
 		}
 		allFieldsS = allFieldsS + optimisedValue + "\t"
+		*/
+		allFieldsS = allFieldsS + fieldE + "\t"
 	}
 
 	return strings.TrimSpace(allFieldsS)
@@ -187,15 +208,12 @@ func GetLimitsVal(key, item, domain string) (string, error) {
 
 		switch key {
 		case "LIMIT_HARD":
-			//lim, _ := secLimits.Get(domain, "hard", item)
 			lim, _ := secLimits.Get(dom, "hard", item)
 			limit = limit + fmt.Sprintf("%s:%s ", dom, lim)
 		case "LIMIT_SOFT":
-			//lim, _ := secLimits.Get(domain, "soft", item)
 			lim, _ := secLimits.Get(dom, "soft", item)
 			limit = limit + fmt.Sprintf("%s:%s ", dom, lim)
 		case "LIMIT_ITEM":
-			//_, isset := secLimits.Get(domain, "soft", item)
 			_, isset := secLimits.Get(dom, "hard", item)
 			if isset {
 				lim = item
@@ -204,7 +222,6 @@ func GetLimitsVal(key, item, domain string) (string, error) {
 			}
 			limit = limit + fmt.Sprintf("%s:%s ", dom, lim)
 		case "LIMIT_DOMAIN":
-			//_, isset := secLimits.Get(domain, "soft", item)
 			_, isset := secLimits.Get(dom, "hard", item)
 			if isset {
 				lim = dom
@@ -232,20 +249,12 @@ func OptLimitsVal(key, actval, cfgval, item, domain string) string {
 				case "unlimited", "infinity", "-1":
 					limit = fields[1]
 				default:
-					limact, _ := strconv.Atoi(fields[1])
-					switch cfgval {
-					case "unlimited", "infinity", "-1":
-						limit = cfgval
-					case "0":
-						limit = cfgval
-						if item == "memlock" {
-							//calculate limit (RAM in KB - 10%)
-							memlock := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
-							limit = strconv.Itoa(param.MaxI(limact, int(memlock)))
-						}
-					default:
-						limcfg, _ := strconv.Atoi(cfgval)
-						limit = strconv.Itoa(param.MaxI(limact, limcfg))
+					limit = cfgval
+					if item == "memlock" && cfgval == "0" {
+						limact, _ := strconv.Atoi(fields[1])
+						//calculate limit (RAM in KB - 10%)
+						memlock := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
+						limit = strconv.Itoa(param.MaxI(limact, int(memlock)))
 					}
 				}
 			}
@@ -395,19 +404,16 @@ func SetCpuVal(key, value string, revert bool) error {
 func GetMemVal(key string) string {
 	var val string
 	switch key {
-	case "KernelShmMax":
-		val, _ = system.GetSysctlString(system.SysctlShmax)
-	case "KernelShmAll":
-		val, _ = system.GetSysctlString(system.SysctlShmall)
-	case "KernelShmMni":
-		val, _ = system.GetSysctlString(system.SysctlShmni)
-	case "VMMaxMapCount":
-		val, _ = system.GetSysctlString(system.SysctlMaxMapCount)
-	case "ShmFileSystemSizeMB":
+	case "VSZ_TMPFS_PERCENT", "ShmFileSystemSizeMB":
 		// Find out size of SHM
 		mount, found := system.ParseProcMounts().GetByMountPoint("/dev/shm")
 		if found {
 			val = strconv.FormatUint(mount.GetFileSystemSizeMB(), 10)
+			if key == "VSZ_TMPFS_PERCENT" {
+				// rounded value
+				percent := math.Floor(float64(mount.GetFileSystemSizeMB())*100/float64(system.GetTotalMemSizeMB()) + 0.5)
+				val = strconv.FormatFloat(percent, 'f', -1, 64)
+			}
 		} else {
 			log.Print("GetMemVal: failed to find /dev/shm mount point")
 			val = "-1"
@@ -416,67 +422,46 @@ func GetMemVal(key string) string {
 	return val
 }
 
-func OptMemVal(key, actval, cfgval string) string {
-	var curval, val uint64
+func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
+	// shmsize       value of ShmFileSystemSizeMB from config file
+	// tmpfspercent  value of VSZ_TMPFS_PERCENT from config file
+	var curval, size uint64
+	var ret string
 
-	val, _ = strconv.ParseUint(cfgval, 10, 64)
 	curval, _ = strconv.ParseUint(actval, 10, 64)
+
+	if curval < 0 {
+		log.Print("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
+		size = 0
+	} else if shmsize == "0" {
+		if tmpfspercent == "0" {
+			// Calculate optimal SHM size (TotalMemSizeMB*75/100) (SAP-Note 941735)
+			size = uint64(system.GetTotalMemSizeMB())*75/100
+		} else {
+			// Calculate optimal SHM size (TotalMemSizeMB*VSZ_TMPFS_PERCENT/100)
+			val, _ := strconv.ParseUint(tmpfspercent, 10, 64)
+			size = uint64(system.GetTotalMemSizeMB())*val/100
+		}
+	} else {
+		size, _ = strconv.ParseUint(shmsize, 10, 64)
+	}
 	switch key {
-	case "KernelShmMax":
-		//KernelShmMax=0 - max of (system, TotalMemSizeMB*1048576, 20*1024*1024*1024)
-		if val == 0 {
-			// Calculate - max of (system, TotalMemSizeMB*1048576, 20*1024*1024*1024)
-			val = param.MaxU64(curval, system.GetTotalMemSizeMB()*1048576 /* MB to Bytes */, 20*1024*1024*1024)
-		} else {
-			// max of (system, value from sap note file)
-			val = param.MaxU64(curval, val)
-		}
-	case "KernelShmAll":
-		//KernelShmAll=0 - max of (system, TotalMemSizePages)
-		if val == 0 {
-			// Calculate - max of (system, TotalMemSizePages)
-			val = param.MaxU64(curval, system.GetTotalMemSizePages())
-		} else {
-			// max of (system, value from sap note file)
-			val = param.MaxU64(curval, val)
-		}
-	case "KernelShmMni":
-		//KernelShmMni >= 2048 - max of (system, KernelShmMni)
-		// max of (system, value from sap note file)
-		val = param.MaxU64(curval, val)
-	case "VMMaxMapCount":
-		//VMMaxMapCount >= 2147483647
-		val = param.MaxU64(curval, val)
+	case "VSZ_TMPFS_PERCENT":
+		ret = cfgval
 	case "ShmFileSystemSizeMB":
-		// ShmFileSystemSizeMB=0 - max of (system, TotalMemSizeMB*75/100) (SAP-Note 941735)
-		// ShmFileSystemSizeMB>0 - max of (system, ShmFileSystemSizeMB)
-		if curval < 0 {
-			log.Print("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
-		} else if val == 0 {
-			// Calculate optimal SHM size (TotalMemSizeMB*75/100)
-			val = param.MaxU64(curval, uint64(system.GetTotalMemSizeMB())*75/100)
+		if size == 0 {
+			ret = "-1"
 		} else {
-			// max of (system, value from sap note file)
-			val = param.MaxU64(curval, val)
+			ret = strconv.FormatUint(size, 10)
 		}
 	}
-	return strconv.FormatUint(val, 10)
+	return ret
 }
 
 func SetMemVal(key, value string) error {
 	var err error
 	switch key {
-	case "KernelShmMax":
-		err = system.SetSysctlString(system.SysctlShmax, value)
-	case "KernelShmAll":
-		err = system.SetSysctlString(system.SysctlShmall, value)
-	case "KernelShmMni":
-		err = system.SetSysctlString(system.SysctlShmni, value)
-	case "VMMaxMapCount":
-		err = system.SetSysctlString(system.SysctlMaxMapCount, value)
 	case "ShmFileSystemSizeMB":
-		// ShmFileSystemSizeMB=0 - max of (system, TotalMemSizeMB*75/100) (SAP-Note 941735)
-		// ShmFileSystemSizeMB>0 - max of (system, ShmFileSystemSizeMB)
 		val, err := strconv.ParseUint(value, 10, 64)
 		if val > 0 {
 			if err = system.RemountSHM(uint64(val)); err != nil {
@@ -487,6 +472,40 @@ func SetMemVal(key, value string) error {
 		}
 	}
 	return err
+}
+
+// section [rpm]
+func GetRpmVal(key string) string {
+	keyFields := strings.Split(key, ":")
+	instvers := system.GetRpmVers(keyFields[1])
+	return instvers
+}
+
+func OptRpmVal(key, cfgval string) string {
+	// nothing to do, only checking for 'verify'
+	return cfgval
+}
+
+func SetRpmVal(value string) error {
+	// nothing to do, only checking for 'verify'
+	return nil
+}
+
+// section [grub]
+func GetGrubVal(key string) string {
+	keyFields := strings.Split(key, ":")
+	val := system.ParseCmdline(keyFields[1])
+	return val
+}
+
+func OptGrubVal(key, cfgval string) string {
+	// nothing to do, only checking for 'verify'
+	return cfgval
+}
+
+func SetGrubVal(value string) error {
+	// nothing to do, only checking for 'verify'
+	return nil
 }
 
 // section [uuidd]
@@ -502,8 +521,8 @@ func GetUuiddVal() string {
 
 func OptUuiddVal(cfgval string) string {
 	sval := strings.ToLower(cfgval)
-	if sval != "start" && sval != "stop" {
-		fmt.Println("wrong selection for UuiddSocket. Now set to 'start' to start the uuid daemon")
+	if sval != "start" {
+		log.Print("wrong selection for UuiddSocket. Now set to 'start' to start the uuid daemon")
 		sval = "start"
 	}
 	return sval
@@ -511,10 +530,58 @@ func OptUuiddVal(cfgval string) string {
 
 func SetUuiddVal(value string) error {
 	var err error
-	if value == "start" {
+	if !system.SystemctlIsRunning("uuidd.socket") {
 		err = system.SystemctlEnableStart("uuidd.socket")
+	}
+	return err
+}
+
+// section [service]
+func GetServiceVal(key string) string {
+	var val string
+	service := GetServiceName(key)
+	if service == "" {
+		return ""
+	}
+	if system.SystemctlIsRunning(service) {
+		val = "start"
 	} else {
-		err = system.SystemctlDisableStop("uuidd.socket")
+		val = "stop"
+	}
+	return val
+}
+
+func OptServiceVal(key, cfgval string) string {
+	sval := strings.ToLower(cfgval)
+	switch key {
+	case "UuiddSocket":
+		if sval != "start" {
+			log.Printf("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
+			sval = "start"
+		}
+	case "Sysstat":
+		if sval != "start" && sval != "stop" {
+			log.Print("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
+			sval = "start"
+		}
+	default:
+		log.Printf("skipping unkown service '%s'", key)
+		return ""
+	}
+	return sval
+}
+
+func SetServiceVal(key, value string) error {
+	var err error
+	service := GetServiceName(key)
+	if service == "" {
+		return nil
+	}
+	if value == "start" && !system.SystemctlIsRunning(service) {
+		err = system.SystemctlEnableStart(service)
+	}
+	if value == "stop" && system.SystemctlIsRunning(service) {
+		err = system.SystemctlDisableStop(service)
 	}
 	return err
 }

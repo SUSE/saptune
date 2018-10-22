@@ -1,8 +1,8 @@
 # 2382421 - Optimizing the Network Configuration on HANA- and OS-Level
-# Version 15 from 28.11.2017 in English
+# Version 24 from 10.09.2018 in English
 
 [version]
-# SAP-NOTE=2382421 VERSION=10 DATE=25.08.2017 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
+# SAP-NOTE=2382421 CATEGORY=HANA VERSION=24 DATE=10.09.2018 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
 
 [sysctl]
 # This parameter limits the size of the accept backlog of a listening socket.
@@ -45,6 +45,25 @@ net.ipv4.tcp_tw_recycle = 1
 # note 2382421 or solution HANA
 net.ipv4.tcp_timestamps = 1
 
+# net.ipv4.tcp_slow_start_after_idle
+# If enabled (=1), provide RFC 2861 behavior and time out the congestion
+# window after an idle period. An idle period is defined as the current
+# RTO (retransmission timeout). If disabled (=0), the congestion window will
+# not be timed out after an idle period.
+#
+# This setting disables the need to scale-up incrementally the TCP window size
+# for TCP connections which were idle for some time. Using this parameter it is
+# ensured that the maximum speed is used from beginning also for previously
+# idle TCP connections.
+#
+# This value is important for large ScaleOut HANA clusters and HANA2 in general.
+# So disable TCP slow start on idle connections
+# set net.ipv4.tcp_slow_start_after_idle=0
+#
+net.ipv4.tcp_slow_start_after_idle = 0
+
+# On SAP HANA 1.0 database Revisions <= 122.14 and on all SAP HANA 2.0 database
+# Revisions of SPS00:
 # The default value for this parameter is 5, which translates to a timeout of
 # about 24 seconds.
 # If the system is under load, a timeout of 24 seconds can be too short and

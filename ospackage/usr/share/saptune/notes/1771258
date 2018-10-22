@@ -1,0 +1,19 @@
+# 1771258 - Linux: User and system resource limits
+# Version 5 from 18.06.2018 in English
+
+[version]
+# SAP-NOTE=1771258 CATEGORY=LINUX VERSION=5 DATE=18.06.2018 NAME="Linux: User and system resource limits"
+
+[limits]
+# /etc/security/limits.conf
+# Maximum number of open files for SAP application groups sapsys, sdba, and dba.
+# Consult with manual page limits.conf(5) for the correct syntax.
+# Note: The "@" sign in LIMIT_DOMAIN matches a group. 
+# If you want to change specific users, e.g. sidadm, you can simply write 
+# 'LIMIT_DOMAIN=sidadm' or 'LIMIT_DOMAIN=@sapsys @sdba  @dba sidadm' to add
+# an entry "sidadm - nofile 65536" to the file.
+#
+LIMIT_HARD = 65536
+LIMIT_SOFT = 65536
+LIMIT_ITEM=nofile
+LIMIT_DOMAIN=@sapsys @sdba  @dba

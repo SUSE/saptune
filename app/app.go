@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	SysconfigSaptuneDir = "/etc/sysconfig/saptune"
-	TuneForSolutionsKey = "TUNE_FOR_SOLUTIONS"
-	TuneForNotesKey     = "TUNE_FOR_NOTES"
+	SysconfigSaptuneFile = "/etc/sysconfig/saptune"
+	TuneForSolutionsKey  = "TUNE_FOR_SOLUTIONS"
+	TuneForNotesKey      = "TUNE_FOR_NOTES"
 )
 
 // Application configuration and serialised state information.
@@ -36,7 +36,7 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 		AllNotes:        allNotes,
 		AllSolutions:    allSolutions,
 	}
-	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneDir), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), true)
 	if err == nil {
 		app.TuneForSolutions = sysconf.GetStringArray(TuneForSolutionsKey, []string{})
 		app.TuneForNotes = sysconf.GetStringArray(TuneForNotesKey, []string{})
@@ -51,13 +51,13 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 
 // Save /etc/sysconfig/saptune.
 func (app *App) SaveConfig() error {
-	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneDir), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), true)
 	if err != nil {
 		return err
 	}
 	sysconf.SetStrArray(TuneForSolutionsKey, app.TuneForSolutions)
 	sysconf.SetStrArray(TuneForNotesKey, app.TuneForNotes)
-	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneDir), []byte(sysconf.ToText()), 0644)
+	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), []byte(sysconf.ToText()), 0644)
 }
 
 // Return the number of all solution-enabled SAP notes, sorted.
@@ -260,8 +260,8 @@ func (app *App) RevertSolution(solName string) error {
 	}
 	// The tricky part: figure out which notes are to be reverted, do not revert manually enabled notes.
 	notesDoNotRevert := make(map[string]struct{})
-	for _, note := range app.TuneForNotes {
-		notesDoNotRevert[note] = struct{}{}
+	for _, noteID := range app.TuneForNotes {
+		notesDoNotRevert[noteID] = struct{}{}
 	}
 	// Do not revert notes that are referred to by other enabled solutions
 	for _, otherSolName := range app.TuneForSolutions {
@@ -364,14 +364,14 @@ func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, compa
 	if err != nil {
 		return nil, nil, err
 	}
-	for _, note := range sol {
-		conforming, noteComparisons, _, err := app.VerifyNote(note)
+	for _, noteID := range sol {
+		conforming, noteComparisons, _, err := app.VerifyNote(noteID)
 		if err != nil {
 			return nil, nil, err
 		} else if !conforming {
-			unsatisfiedNotes = append(unsatisfiedNotes, note)
+			unsatisfiedNotes = append(unsatisfiedNotes, noteID)
 		}
-		comparisons[note] = noteComparisons
+		comparisons[noteID] = noteComparisons
 	}
 	return
 }

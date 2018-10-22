@@ -120,12 +120,18 @@ func (vend INISettings) Initialise() (Note, error) {
 			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Key, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value)
 		case INISectionUuidd:
 			vend.SysctlParams[param.Key] = GetUuiddVal()
+		case INISectionService:
+			vend.SysctlParams[param.Key] = GetServiceVal(param.Key)
 		case INISectionLogin:
 			vend.SysctlParams[param.Key], _ = GetLoginVal(param.Key)
 		case INISectionMEM:
 			vend.SysctlParams[param.Key] = GetMemVal(param.Key)
 		case INISectionCPU:
 			vend.SysctlParams[param.Key] = GetCpuVal(param.Key)
+		case INISectionRpm:
+			vend.SysctlParams[param.Key] = GetRpmVal(param.Key)
+		case INISectionGrub:
+			vend.SysctlParams[param.Key] = GetGrubVal(param.Key)
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
 		case INISectionPagecache:
@@ -165,12 +171,18 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = OptLimitsVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value)
 		case INISectionUuidd:
 			vend.SysctlParams[param.Key] = OptUuiddVal(param.Value)
+		case INISectionService:
+			vend.SysctlParams[param.Key] = OptServiceVal(param.Key, param.Value)
 		case INISectionLogin:
 			vend.SysctlParams[param.Key] = OptLoginVal(param.Value)
 		case INISectionMEM:
-			vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value)
+			vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["mem"]["ShmFileSystemSizeMB"].Value, ini.KeyValue["mem"]["VSZ_TMPFS_PERCENT"].Value)
 		case INISectionCPU:
 			vend.SysctlParams[param.Key] = OptCpuVal(param.Key, vend.SysctlParams[param.Key], param.Value)
+		case INISectionRpm:
+			vend.SysctlParams[param.Key] = OptRpmVal(param.Key, param.Value)
+		case INISectionGrub:
+			vend.SysctlParams[param.Key] = OptGrubVal(param.Key, param.Value)
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
 		case INISectionPagecache:
@@ -211,12 +223,18 @@ func (vend INISettings) Apply() error {
 			errs = append(errs, SetLimitsVal(param.Key, vend.SysctlParams[param.Key], ini.KeyValue["limits"]["LIMIT_ITEM"].Value))
 		case INISectionUuidd:
 			errs = append(errs, SetUuiddVal(vend.SysctlParams[param.Key]))
+		case INISectionService:
+			errs = append(errs, SetServiceVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionLogin:
 			errs = append(errs, SetLoginVal(param.Key, vend.SysctlParams[param.Key], revertValues))
 		case INISectionMEM:
 			errs = append(errs, SetMemVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionCPU:
 			errs = append(errs, SetCpuVal(param.Key, vend.SysctlParams[param.Key], revertValues))
+		case INISectionRpm:
+			//nothing to do here
+		case INISectionGrub:
+			//nothing to do here
 		case INISectionReminder:
 			//nothing to do here
 		case INISectionPagecache:
