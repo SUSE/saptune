@@ -3,8 +3,10 @@ package system
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os/exec"
+	"path"
 	"regexp"
 	"strconv"
 	"strings"
@@ -69,8 +71,72 @@ func SetPerfBias(value string) error {
 		cmd := exec.Command("cpupower", "-c", cpu, "set", "-b", fields[1])
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("failed to invoke external command 'cpupower -c all set -b %s': %v, output: %s", value, err, out)
+			return fmt.Errorf("failed to invoke external command 'cpupower -c %s set -b %s': %v, output: %s", cpu, fields[1], err, out)
 		}
 	}
 	return nil
+}
+
+func GetGovernor() map[string]string {
+	setAll := true
+	oldgov := "99"
+	isCpu := regexp.MustCompile(`^cpu\d+$`)
+	gov := ""
+	gGov := make(map[string]string)
+
+	dirCont, err := ioutil.ReadDir("/sys/devices/system/cpu")
+        if err != nil {
+                return gGov
+        }
+        for _, entry := range dirCont {
+		if isCpu.MatchString(entry.Name()) {
+			gov, _ = GetSysString(path.Join("devices", "system", "cpu", entry.Name(), "cpufreq", "scaling_governor"))
+			if gov == "" {
+				gov = "none"
+			}
+			if oldgov == "99" {
+				// starting point
+				oldgov = gov
+			}
+			if oldgov != gov {
+				setAll = false
+			}
+			gGov[entry.Name()] = gov
+		}
+	}
+	if setAll {
+		gGov = make(map[string]string)
+		gGov["all"] = oldgov
+	}
+	return gGov
+}
+
+func SetGovernor(value string) error {
+	//cmd := exec.Command("cpupower", "-c", "all", "frequency-set", "-g", value)
+	cpu := ""
+	for k, entry := range strings.Fields(value) {
+		fields := strings.Split(entry, ":")
+		if fields[1] == "none" {
+			return nil
+		}
+		if fields[0] != "all" {
+			cpu = strconv.Itoa(k)
+		} else {
+			cpu = fields[0]
+		}
+		cmd := exec.Command("cpupower", "-c", cpu, "frequency-set", "-g", fields[1])
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("failed to invoke external command 'cpupower -c %s frequency-set -g %s': %v, output: %s", cpu, fields[1], err, out)
+		}
+	}
+	return nil
+}
+
+func IsValidGovernor(cpu, gov string) bool {
+	val, err := ioutil.ReadFile(path.Join("/sys/devices/system/cpu/", cpu, "/cpufreq/scaling_available_governors"))
+	if err == nil && strings.Contains(string(val), gov) {
+		return true
+	}
+	return false
 }

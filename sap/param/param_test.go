@@ -38,6 +38,13 @@ func TestMax(t *testing.T) {
 	if val := MaxI64(4, 3, -5, -2, 6); val != 6 {
 		t.Fatal(val)
 	}
+
+	if val := MaxI(); val != 0 {
+		t.Fatal(val)
+	}
+	if val := MaxI(4, 3, -5, -2, 6); val != 6 {
+		t.Fatal(val)
+	}
 }
 
 func TestMin(t *testing.T) {

@@ -9,6 +9,8 @@ import (
 	"strconv"
 )
 
+var pc = LinuxPagingImprovements{}
+
 // Tuning options composed by a third party vendor.
 
 // Calculate optimum parameter value given the current value, comparison operator, and expected value. Return optimised value.
@@ -92,7 +94,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = GetVmVal(param.Key)
 		case INISectionBlock:
-			vend.SysctlParams[param.Key], _ = GetBlockVal(param.Key)
+			vend.SysctlParams[param.Key], _ = GetBlkVal(param.Key)
 		case INISectionLimits:
 			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Key, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value)
 		case INISectionUuidd:
@@ -105,6 +107,8 @@ func (vend INISettings) Initialise() (Note, error) {
 			vend.SysctlParams[param.Key] = GetCpuVal(param.Key)
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
+		case INISectionPagecache:
+			vend.SysctlParams[param.Key] = GetPagecacheVal(param.Key, &pc)
 		default:
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
@@ -124,11 +128,9 @@ func (vend INISettings) Optimise() (Note, error) {
 		// Compare current values against INI's definition
 		switch param.Section {
 		case INISectionSysctl:
-			optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
-			if err != nil {
-				return vend, err
-			}
-			vend.SysctlParams[param.Key] = optimisedValue
+			//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
+			//vend.SysctlParams[param.Key] = optimisedValue
+			vend.SysctlParams[param.Key] = OptSysctlVal(param.Operator, param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = OptVmVal(param.Key, param.Value)
 		case INISectionBlock:
@@ -145,6 +147,8 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = OptCpuVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
+		case INISectionPagecache:
+			vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc, ini.KeyValue)
 		default:
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
@@ -189,6 +193,8 @@ func (vend INISettings) Apply() error {
 			errs = append(errs, SetCpuVal(param.Key, vend.SysctlParams[param.Key], revertValues))
 		case INISectionReminder:
 			//nothing to do here
+		case INISectionPagecache:
+			errs = append(errs, SetPagecacheVal(param.Key, &pc))
 		default:
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/sap/param"
 	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
 	"log"
 	"os"
@@ -39,6 +40,42 @@ UserTasksMax=infinity
 )
 
 // section handling
+// section [sysctl]
+func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) string {
+	allFieldsC := strings.Fields(actval)
+	allFieldsE := strings.Fields(cfgval)
+	allFieldsS := ""
+
+	if len(allFieldsC) != len(allFieldsE) && (operator == txtparser.OperatorEqual || len(allFieldsE) > 1) {
+		log.Printf("wrong number of fields given in the config file for parameter '%s'\n", key)
+		return ""
+	}
+
+	for k, fieldC := range allFieldsC {
+		fieldE := ""
+		if len(allFieldsC) != len(allFieldsE) {
+			fieldE = fieldC
+
+			if (operator == txtparser.OperatorLessThan || operator == txtparser.OperatorLessThanEqual) && k == 0 {
+				fieldE = allFieldsE[0]
+			}
+			if (operator == txtparser.OperatorMoreThan || operator == txtparser.OperatorMoreThanEqual) && k == len(allFieldsC)-1 {
+				fieldE = allFieldsE[0]
+			}
+		} else {
+			fieldE = allFieldsE[k]
+		}
+
+		optimisedValue, err := CalculateOptimumValue(operator, fieldC, fieldE)
+		//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
+		if err != nil {
+			return ""
+		}
+		allFieldsS = allFieldsS + optimisedValue + "\t"
+	}
+
+	return strings.TrimSpace(allFieldsS)
+}
 
 // section [block]
 type BlockDeviceQueue struct {
@@ -46,7 +83,7 @@ type BlockDeviceQueue struct {
 	BlockDeviceNrRequests param.BlockDeviceNrRequests
 }
 
-func GetBlockVal(key string) (string, error) {
+func GetBlkVal(key string) (string, error) {
 	newQueue := make(map[string]string)
 	newReq := make(map[string]int)
 	ret_val := ""
@@ -285,16 +322,25 @@ func GetCpuVal(key string) string {
 	case "energy_perf_bias":
 		// cpupower -c all info  -b
 		val = system.GetPerfBias()
+	case "governor":
+		// cpupower -c all frequency-info -p
+		//or better
+		// cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+		newGov := system.GetGovernor()
+		for k, v := range newGov {
+			val = val + fmt.Sprintf("%s:%s ", k, v)
+		}
 	}
-	return val
+	return strings.TrimSpace(val)
 }
 
 func OptCpuVal(key, actval, cfgval string) string {
 	sval := strings.ToLower(cfgval)
+	rval := ""
+	cpu := ""
 	val := "0"
 	switch key {
 	case "energy_perf_bias":
-		rval := ""
 		//performance - 0, normal - 6, powersave - 15
 		switch sval {
 		case "performance":
@@ -311,14 +357,33 @@ func OptCpuVal(key, actval, cfgval string) string {
 			fields := strings.Split(entry, ":")
 			if fields[1] == "none" {
 				//System does not support Intel's performance bias setting
-				rval = rval + fmt.Sprintf("%s:%s ", fields[0], fields[1])
-			} else {
-				rval = rval + fmt.Sprintf("%s:%s ", fields[0], val)
+				val = fields[1]
 			}
+			rval = rval + fmt.Sprintf("%s:%s ", fields[0], val)
+		}
+		sval = strings.TrimSpace(rval)
+	case "governor":
+		val = sval
+		for _, entry := range strings.Fields(actval) {
+			fields := strings.Split(entry, ":")
+			if fields[1] == "none" {
+				//System does not support a scaling governor
+				val = fields[1]
+			} else {
+				if fields[0] == "all" {
+					cpu = "cpu0"
+				} else {
+					cpu = fields[0]
+				}
+				if !system.IsValidGovernor(cpu, sval) {
+					log.Printf("'%s' is not a valid governor. Set value to 'none' for ignoring", sval)
+					val = "none"
+				}
+			}
+			rval = rval + fmt.Sprintf("%s:%s ", fields[0], val)
 		}
 		sval = strings.TrimSpace(rval)
 	}
-
 	return sval
 }
 
@@ -327,6 +392,8 @@ func SetCpuVal(key, value string, revert bool) error {
 	switch key {
 	case "energy_perf_bias":
 		err = system.SetPerfBias(value)
+	case "governor":
+		err = system.SetGovernor(value)
 	}
 
 	return err
@@ -496,4 +563,82 @@ func SetLoginVal(key, value string, revert bool) error {
 		}
 	}
 	return nil
+}
+
+// section [pagecache]
+func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
+	val := ""
+	currentPagecache, err := LinuxPagingImprovements{}.Initialise()
+	if err != nil {
+		return ""
+	}
+	current := currentPagecache.(LinuxPagingImprovements)
+
+	switch key {
+	case "ENABLE_PAGECACHE_LIMIT":
+		if current.VMPagecacheLimitMB == 0 {
+			val = "no"
+		} else {
+			val = "yes"
+		}
+	case "TUNE_FOR_HANA":
+		if current.UseAlgorithmForHANA {
+			val = "yes"
+		} else {
+			val = "no"
+		}
+	case "PAGECACHE_LIMIT_IGNORE_DIRTY":
+		val = strconv.Itoa(current.VMPagecacheLimitIgnoreDirty)
+	case "OVERRIDE_PAGECACHE_LIMIT_MB":
+		if current.VMPagecacheLimitMB == 0 {
+			val = ""
+		} else {
+			val = strconv.FormatUint(current.VMPagecacheLimitMB, 10)
+		}
+	}
+	*cur = current
+	return val
+}
+
+func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements, keyvalue map[string]map[string]txtparser.INIEntry) string {
+	val := strings.ToLower(cfgval)
+
+	switch key {
+	case "ENABLE_PAGECACHE_LIMIT":
+		if val != "yes" && val != "no" {
+			log.Print("wrong selection for ENABLE_PAGECACHE_LIMIT. Now set to default 'no'")
+			val = "no"
+		}
+	case "TUNE_FOR_HANA":
+		if val != "yes" && val != "no" {
+			log.Print("wrong selection for TUNE_FOR_HANA. Now set to default 'no'")
+			val = "no"
+		}
+	case "PAGECACHE_LIMIT_IGNORE_DIRTY":
+		if val != "2" && val != "1" && val != "0" {
+			log.Print("wrong selection for PAGECACHE_LIMIT_IGNORE_DIRTY. Now set to default '1'")
+			val = "1"
+		}
+		cur.VMPagecacheLimitIgnoreDirty, _ = strconv.Atoi(val)
+	case "OVERRIDE_PAGECACHE_LIMIT_MB":
+		opt, _ := cur.Optimise()
+		optval := opt.(LinuxPagingImprovements).VMPagecacheLimitMB
+		if optval != 0 {
+			cur.VMPagecacheLimitMB = optval
+			val = strconv.FormatUint(optval, 10)
+		} else {
+			cur.VMPagecacheLimitMB = 0
+			val = ""
+		}
+	}
+
+	return val
+}
+
+func SetPagecacheVal(key string, cur *LinuxPagingImprovements) error {
+	var err error
+	if key == "OVERRIDE_PAGECACHE_LIMIT_MB" {
+		err = cur.Apply()
+	}
+	return err
 }
