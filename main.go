@@ -11,6 +11,8 @@ import (
 	"os"
 	"runtime"
 	"sort"
+	"strconv"
+	"strings"
 	"syscall"
 )
 
@@ -22,7 +24,10 @@ const (
 	ExitTunedWrongProfile = 2
 	ExitNotTuned          = 3
 	// ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
-	ExtraTuningSheets = "/etc/saptune/extra/"
+	ExtraTuningSheets     = "/etc/saptune/extra/"
+	SetGreenText          = "\033[32m"
+	SetRedText            = "\033[31m"
+	ResetTextColor        = "\033[0m"
 )
 
 func PrintHelpAndExit(exitStatus int) {
@@ -77,7 +82,7 @@ func main() {
 	}
 	archSolutions, exist := solution.AllSolutions[solutionSelector]
 	if !exist {
-		errorExit("The system architecture (%s) is not supported.", runtime.GOARCH)
+		errorExit("The system architecture (%s) is not supported.", solutionSelector)
 		return
 	}
 	// Initialise application configuration and tuning procedures
@@ -162,21 +167,107 @@ func DaemonAction(actionName string) {
 
 // Print mismatching fields in the note comparison result.
 func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldComparison, printComparison bool) {
-	fmt.Printf("%s - %s -\n", noteID, tuningOptions[noteID].Name())
-	hasDiff := false
-	for name, comparison := range comparisons {
+	reminderHead := "Attention:\nHints or values not integrated yet. So please read carefully, check and set manually, if needed:\n"
+	hasDiff   := false
+	compliant := "yes"
+	format    := "\t%s : %s\n"
+
+	// sort output
+	sortkeys := make([]string, 0, len(comparisons))
+	for _, comparison := range comparisons {
+		if len(comparison.ReflectMapKey) != 0 {
+			sortkeys = append(sortkeys, comparison.ReflectMapKey)
+		}
+	}
+	sort.Strings(sortkeys)
+
+	fmt.Printf("%s - %s \n\n", noteID, tuningOptions[noteID].Name())
+	if printComparison {
+		fmtlen1 := 12
+		fmtlen2 := 9
+		fmtlen3 := 7
+		for _, comparison := range comparisons {
+			if comparison.ReflectMapKey == "reminder" {
+				continue
+			}
+			if len(comparison.ReflectMapKey) != 0 {
+				if len(comparison.ReflectMapKey) > fmtlen1 {
+					fmtlen1 = len(comparison.ReflectMapKey)
+				}
+				if len(comparison.ExpectedValueJS) > fmtlen2 {
+					fmtlen2 = len(comparison.ExpectedValueJS)
+				}
+				if len(comparison.ActualValueJS) > fmtlen3 {
+					fmtlen3 = len(comparison.ActualValueJS)
+				}
+			}
+		}
+		//format := "\t%s Expected: %s\t Actual: %s\t Compliant: %s\n"
+		format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s| %-" + strconv.Itoa(fmtlen3) + "s | %3s\n"
+		fmt.Printf(format, "Parameter", "Expected", "Actual", "Compliant")
+		for i := 0; i < fmtlen1+fmtlen2+fmtlen3+20 ; i++ {
+			if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2 || i == 3+fmtlen1+3+fmtlen2+2+fmtlen3+1 {
+				fmt.Printf("+")
+			} else {
+				fmt.Printf("-")
+			}
+		}
+		fmt.Printf("\n")
+	} else {
+		fmtlen1 := 9
+		fmtlen2 := 5
+		for _, comparison := range comparisons {
+			if comparison.ReflectMapKey == "reminder" {
+				continue
+			}
+			if len(comparison.ReflectMapKey) != 0 {
+				if len(comparison.ReflectMapKey) > fmtlen1 {
+					fmtlen1 = len(comparison.ReflectMapKey)
+				}
+				if len(comparison.ExpectedValueJS) > fmtlen2 {
+					fmtlen2 = len(comparison.ExpectedValueJS)
+				}
+			}
+		}
+		//format := "\t%s Expected: %s\t Actual: %s\t Compliant: %s\n"
+		format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s\n"
+		fmt.Printf(format, "Parameter", "Value")
+		for i := 0; i < fmtlen1+fmtlen2+6 ; i++ {
+			if i == 3+fmtlen1+1 {
+				fmt.Printf("+")
+			} else {
+				fmt.Printf("-")
+			}
+		}
+		fmt.Printf("\n")
+	}
+
+	reminder := reminderHead
+	for _ , key := range sortkeys {
+		comparison := comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", key)]
+		if comparison.ReflectMapKey == "reminder" {
+			reminder = reminder + comparison.ExpectedValueJS
+			continue
+		}
 		if !comparison.MatchExpectation {
 			hasDiff = true
-			if printComparison {
-				fmt.Printf("\t%s Expected: %s\n", name, comparison.ExpectedValueJS)
-				fmt.Printf("\t%s Actual  : %s\n", name, comparison.ActualValueJS)
-			} else {
-				fmt.Printf("\t%s : %s\n", name, comparison.ExpectedValueJS)
-			}
+			compliant = "no"
+		} else {
+			compliant = "yes"
+		}
+		if printComparison {
+			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), strings.Replace(comparison.ActualValueJS, "\t", " ", -1), compliant)
+		} else {
+			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1))
 		}
 	}
 	if !hasDiff {
-		fmt.Printf("\t(no change)\n")
+		fmt.Printf("\n   (no change)\n\n")
+	} else {
+		fmt.Printf("\n")
+	}
+	if reminder != reminderHead {
+		fmt.Printf("%s\n", SetRedText + reminder + ResetTextColor)
 	}
 }
 
@@ -186,12 +277,12 @@ func VerifyAllParameters() {
 	if err != nil {
 		errorExit("Failed to inspect the current system: %v", err)
 	}
+	for noteID, noteComparison := range comparisons {
+		PrintNoteFields(noteID, noteComparison, true)
+	}
 	if len(unsatisfiedNotes) == 0 {
 		fmt.Println("The running system is currently well-tuned according to all of the enabled notes.")
 	} else {
-		for _, unsatisfiedNoteID := range unsatisfiedNotes {
-			PrintNoteFields(unsatisfiedNoteID, comparisons[unsatisfiedNoteID], true)
-		}
 		errorExit("The parameters listed above have deviated from SAP/SUSE recommendations.")
 	}
 }
@@ -216,11 +307,14 @@ func NoteAction(actionName, noteID string) {
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 		for _, noteID := range tuningOptions.GetSortedIDs() {
 			noteObj := tuningOptions[noteID]
-			format := "\t%s\t%s\n"
+			format := "\t%s\t\t%s\n"
+			if len(noteID) >= 8 {
+				format = "\t%s\t%s\n"
+			}
 			if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
-				format = "*" + format
+				format = " " + SetGreenText + "*" + format + ResetTextColor
 			} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
-				format = "+" + format
+				format = " " + SetGreenText + "+" + format + ResetTextColor
 			}
 			if noteID == "Block" {
 				// workaround: internal used note for solution ASE. Do not display
@@ -238,10 +332,12 @@ func NoteAction(actionName, noteID string) {
 			VerifyAllParameters()
 		} else {
 			// Check system parameters against the specified note, no matter the note has been tuned for or not.
-			if conforming, comparisons, err := tuneApp.VerifyNote(noteID); err != nil {
+			conforming, comparisons, err := tuneApp.VerifyNote(noteID)
+			if err != nil {
 				errorExit("Failed to test the current system against the specified note: %v", err)
-			} else if !conforming {
-				PrintNoteFields(noteID, comparisons, true)
+			}
+			PrintNoteFields(noteID, comparisons, true)
+			if !conforming {
 				errorExit("The parameters listed above have deviated from the specified note.\n")
 			} else {
 				fmt.Println("The system fully conforms to the specified note.")
@@ -317,10 +413,15 @@ func SolutionAction(actionName, solName string) {
 	case "list":
 		fmt.Println("All solutions (* denotes enabled solution):")
 		for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
-			format := "\t%s\n"
+			format := "\t%-18s -"
 			if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
-				format = "*" + format
+				format = " " + SetGreenText + "*" + format
 			}
+			solNotes := ""
+			for _, noteString := range solution.AllSolutions[solutionSelector][solName] {
+				solNotes = solNotes + " " + noteString
+			}
+			format = format + solNotes + ResetTextColor + "\n"
 			fmt.Printf(format, solName)
 		}
 		if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
@@ -337,12 +438,12 @@ func SolutionAction(actionName, solName string) {
 			if err != nil {
 				errorExit("Failed to test the current system against the specified SAP solution: %v", err)
 			}
+			for noteID, noteComparison := range comparisons {
+				PrintNoteFields(noteID, noteComparison, true)
+			}
 			if len(unsatisfiedNotes) == 0 {
 				fmt.Println("The system fully conforms to the tuning guidelines of the specified SAP solution.")
 			} else {
-				for _, unsatisfiedNoteID := range unsatisfiedNotes {
-					PrintNoteFields(unsatisfiedNoteID, comparisons[unsatisfiedNoteID], true)
-				}
 				errorExit("The parameters listed above have deviated from the specified SAP solution recommendations.\n")
 			}
 		}
