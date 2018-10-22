@@ -15,7 +15,6 @@ import (
 const	notSupported = "System does not support Intel's performance bias setting"
 
 func GetPerfBias() string {
-
 	isCpu := regexp.MustCompile(`analyzing CPU \d+`)
 	isPBias := regexp.MustCompile(`perf-bias: \d+`)
 	setAll := true
@@ -57,12 +56,12 @@ func GetPerfBias() string {
 func SetPerfBias(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "set", "-b", value)
 	cpu := ""
+	if !SupportsPerfBias() {
+		log.Print(notSupported)
+		return nil
+	}
 	for k, entry := range strings.Fields(value) {
 		fields := strings.Split(entry, ":")
-		if fields[1] == "none" {
-			log.Print(notSupported)
-			return nil
-		}
 		if fields[0] != "all" {
 			cpu = strconv.Itoa(k)
 		} else {
@@ -75,6 +74,18 @@ func SetPerfBias(value string) error {
 		}
 	}
 	return nil
+}
+
+func SupportsPerfBias() bool {
+	cmdName := "/usr/bin/cpupower"
+	cmdArgs := []string{"info", "-b"}
+
+	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	if err != nil || (err == nil && strings.Contains(string(cmdOut), notSupported)) {
+		// does not support perf bias
+		return false
+	}
+	return true
 }
 
 func GetGovernor() map[string]string {
@@ -114,15 +125,19 @@ func GetGovernor() map[string]string {
 func SetGovernor(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "frequency-set", "-g", value)
 	cpu := ""
+	tst := ""
 	for k, entry := range strings.Fields(value) {
 		fields := strings.Split(entry, ":")
-		if fields[1] == "none" {
-			return nil
-		}
 		if fields[0] != "all" {
 			cpu = strconv.Itoa(k)
+			tst = cpu
 		} else {
 			cpu = fields[0]
+			tst = "cpu0"
+		}
+		if !IsValidGovernor(tst, fields[1]) {
+			log.Printf("'%s' is not a valid governor, skipping.", fields[1])
+			continue
 		}
 		cmd := exec.Command("cpupower", "-c", cpu, "frequency-set", "-g", fields[1])
 		out, err := cmd.CombinedOutput()
