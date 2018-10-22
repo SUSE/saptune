@@ -24,6 +24,7 @@ const (
 	ExitTunedWrongProfile = 2
 	ExitNotTuned          = 3
 	NoteTuningSheets      = "/usr/share/saptune/notes/"
+	OverrideTunigSheets   = "/etc/saptune/override/"
 	// ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
 	ExtraTuningSheets     = "/etc/saptune/extra/"
 	SetGreenText          = "\033[32m"
@@ -172,12 +173,13 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 	reminderHead := "Attention:\nHints or values not integrated yet. So please read carefully, check and set manually, if needed:\n"
 	hasDiff   := false
 	compliant := "yes"
+	override  := ""
 	format    := "\t%s : %s\n"
 
 	// sort output
 	sortkeys := make([]string, 0, len(comparisons))
 	for _, comparison := range comparisons {
-		if len(comparison.ReflectMapKey) != 0 {
+		if len(comparison.ReflectMapKey) != 0 && comparison.ReflectFieldName != "OverrideParams" {
 			sortkeys = append(sortkeys, comparison.ReflectMapKey)
 		}
 	}
@@ -187,28 +189,33 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 	if printComparison {
 		fmtlen1 := 12
 		fmtlen2 := 9
-		fmtlen3 := 7
+		fmtlen3 := 9
+		fmtlen4 := 7
 		for _, comparison := range comparisons {
 			if comparison.ReflectMapKey == "reminder" {
 				continue
 			}
 			if len(comparison.ReflectMapKey) != 0 {
+				if comparison.ReflectFieldName == "OverrideParams" && len(comparison.ActualValueJS) > fmtlen3 {
+					fmtlen3 = len(comparison.ActualValueJS)
+					continue
+				}
 				if len(comparison.ReflectMapKey) > fmtlen1 {
 					fmtlen1 = len(comparison.ReflectMapKey)
 				}
 				if len(comparison.ExpectedValueJS) > fmtlen2 {
 					fmtlen2 = len(comparison.ExpectedValueJS)
 				}
-				if len(comparison.ActualValueJS) > fmtlen3 {
-					fmtlen3 = len(comparison.ActualValueJS)
+				if len(comparison.ActualValueJS) > fmtlen4 {
+					fmtlen4 = len(comparison.ActualValueJS)
 				}
 			}
 		}
 		//format := "\t%s Expected: %s\t Actual: %s\t Compliant: %s\n"
-		format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s| %-" + strconv.Itoa(fmtlen3) + "s | %3s\n"
-		fmt.Printf(format, "Parameter", "Expected", "Actual", "Compliant")
-		for i := 0; i < fmtlen1+fmtlen2+fmtlen3+20 ; i++ {
-			if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2 || i == 3+fmtlen1+3+fmtlen2+2+fmtlen3+1 {
+		format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s| %-" + strconv.Itoa(fmtlen3) + "s | %-" + strconv.Itoa(fmtlen4) + "s | %3s\n"
+		fmt.Printf(format, "Parameter", "Expected", "Override", "Actual", "Compliant")
+		for i := 0; i < fmtlen1+fmtlen2+fmtlen3+fmtlen4+20 ; i++ {
+			if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2 || i == 3+fmtlen1+3+fmtlen2+2+fmtlen3+1 || i == 3+fmtlen1+3+fmtlen2+2+fmtlen3+3+fmtlen4+1 {
 				fmt.Printf("+")
 			} else {
 				fmt.Printf("-")
@@ -218,6 +225,7 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 	} else {
 		fmtlen1 := 9
 		fmtlen2 := 5
+		fmtlen3 := 9
 		for _, comparison := range comparisons {
 			if comparison.ReflectMapKey == "reminder" {
 				continue
@@ -226,16 +234,15 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 				if len(comparison.ReflectMapKey) > fmtlen1 {
 					fmtlen1 = len(comparison.ReflectMapKey)
 				}
-				if len(comparison.ExpectedValueJS) > fmtlen2 {
+				if len(comparison.ActualValueJS) > fmtlen2 {
 					fmtlen2 = len(comparison.ExpectedValueJS)
 				}
 			}
 		}
-		//format := "\t%s Expected: %s\t Actual: %s\t Compliant: %s\n"
-		format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s\n"
-		fmt.Printf(format, "Parameter", "Value")
-		for i := 0; i < fmtlen1+fmtlen2+6 ; i++ {
-			if i == 3+fmtlen1+1 {
+		format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s| %-" + strconv.Itoa(fmtlen3) + "s\n"
+		fmt.Printf(format, "Parameter", "Value", "Override")
+		for i := 0; i < fmtlen1+fmtlen2+fmtlen3+8 ; i++ {
+			if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2 {
 				fmt.Printf("+")
 			} else {
 				fmt.Printf("-")
@@ -247,6 +254,7 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 	reminder := reminderHead
 	for _ , key := range sortkeys {
 		comparison := comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", key)]
+		override = strings.Replace(comparisons[fmt.Sprintf("%s[%s]", "OverrideParams", key)].ExpectedValueJS, "\t", " ", -1)
 		if comparison.ReflectMapKey == "reminder" {
 			reminder = reminder + comparison.ExpectedValueJS
 			continue
@@ -258,9 +266,9 @@ func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldCompari
 			compliant = "yes"
 		}
 		if printComparison {
-			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), strings.Replace(comparison.ActualValueJS, "\t", " ", -1), compliant)
+			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), compliant)
 		} else {
-			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1))
+			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override)
 		}
 	}
 	if !hasDiff {
@@ -305,7 +313,7 @@ func NoteAction(actionName, noteID string) {
 				"\n    saptune daemon start")
 		}
 	case "list":
-		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):")
+		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, O denotes override file exists for note):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 		for _, noteID := range tuningOptions.GetSortedIDs() {
 			if strings.HasSuffix(noteID, "_n2c") {
@@ -315,6 +323,9 @@ func NoteAction(actionName, noteID string) {
 			format := "\t%s\t\t%s\n"
 			if len(noteID) >= 8 {
 				format = "\t%s\t%s\n"
+			}
+			if _, err := os.Stat(fmt.Sprintf("%s%s", OverrideTunigSheets, noteID)); err == nil {
+				format = " O" + format
 			}
 			if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
 				format = " " + SetGreenText + "*" + format + ResetTextColor
