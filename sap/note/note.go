@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
 	"log"
+	"os"
 	"path"
 	"reflect"
 	"sort"
@@ -33,9 +34,33 @@ type Note interface {
 
 type TuningOptions map[string]Note // Collection of tuning options from SAP notes and 3rd party vendors.
 
+// check, if there is a note in an older saptune format to revert
+// support revert from older saptune versions
+func Note2Convert(noteID string) string {
+	fileName := fmt.Sprintf("/var/lib/saptune/saved_state/%s_n2c", noteID)
+	if _, err := os.Stat(fileName); err == nil {
+		noteID = fmt.Sprintf("%s_n2c", noteID)
+	}
+	return noteID
+}
+
 // Return all built-in tunable SAP notes together with those defined by 3rd party vendors.
 func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOptions {
-	ret := TuningOptions{}
+	ret := TuningOptions{
+		// compatibility with older saptune versions.
+		// Needed for 'revert' only
+		"1275776_n2c":       PrepareForSAPEnvironments{},
+		"1984787_n2c":       AfterInstallation{},
+		"2205917_n2c":       HANARecommendedOSSettings{},
+		"2161991_n2c":       VmwareGuestIOElevator{},
+		"SUSE-GUIDE-01_n2c": SUSESysOptimisation{},
+		"SUSE-GUIDE-02_n2c": SUSENetCPUOptimisation{},
+		"SAP_ASE_n2c":       CMPTSettings{},
+		"SAP_BOBJ_n2c":      CMPTSettings{},
+	}
+	if system.IsPagecacheAvailable() {
+		ret["1557506_n2c"] = LinuxPagingImprovements{}
+	}
 	// Collect those defined by saptune
 	_, files, err := system.ListDir(saptuneTuningDir)
 	if err != nil {
@@ -75,6 +100,10 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			ConfFilePath:    path.Join(thirdPartyTuningDir, fileName),
 			ID:              id,
 			DescriptiveName: name,
+		}
+		n2rev := Note2Convert(id)
+		if n2rev != id {
+			ret[n2rev] = CMPTSettings{}
 		}
 	}
 	return ret

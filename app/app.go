@@ -204,7 +204,9 @@ func (app *App) TuneAll() error {
 
 // Revert parameters tuned by the note and clear its stored states.
 func (app *App) RevertNote(noteID string, permanent bool) error {
-	noteTemplate, err := app.GetNoteByID(noteID)
+	//support revert from older saptune versions
+	note2revert := note.Note2Convert(noteID)
+	noteTemplate, err := app.GetNoteByID(note2revert)
 	if err != nil {
 		return err
 	}
@@ -224,12 +226,17 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 	// Workaround for Go JSON package's stubbornness, Go developers are not willing to fix their code in this occasion.
 	var noteReflectValue = reflect.New(reflect.TypeOf(noteTemplate))
 	var noteIface interface{} = noteReflectValue.Interface()
-	if err = app.State.Retrieve(noteID, &noteIface); err == nil {
+	if err = app.State.Retrieve(note2revert, &noteIface); err == nil {
 		var noteRecovered note.Note = noteIface.(note.Note)
 		if err := noteRecovered.Apply(); err != nil {
 			return err
-		} else if err := app.State.Remove(noteID); err != nil {
+		} else if err := app.State.Remove(note2revert); err != nil {
 			return err
+		} else {
+			remFileName := fmt.Sprintf("/var/lib/saptune/saved_conf/%s.conf", note2revert)
+			if _, err := os.Stat(remFileName); err == nil {
+				return os.Remove(remFileName)
+			}
 		}
 	} else if !os.IsNotExist(err) {
 		return err
