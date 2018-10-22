@@ -1,0 +1,71 @@
+# 1275776 - Linux: Preparing SLES for SAP environments
+# Description:    Set kernel parameters and increase system resource limits
+# Version 20 from 06.11.2013 in English
+
+[version]
+# SAP-NOTE=1275776 VERSION=20 DATE=06.11.2013 NAME="Linux: Preparing SLES for SAP environments"
+
+[limits]
+## Type:    integer
+#
+LIMIT_HARD >= 32800
+LIMIT_SOFT >= 32800
+LIMIT_ITEM=nofile
+LIMIT_DOMAIN=@sapsys @sdba  @dba
+
+[mem]
+#Calculation of shared memory limits are conducted using combined input from 
+#notes:
+#- 1275776 - Linux: Preparing SLES for SAP environments:
+#- 628131 - SAP MaxDB/liveCache operating system parameters on UNIX
+#- 941735 - SAP memory management system for 64-bit Linux systems
+#Regarding ShmMax:
+#- "kernel.shmmax is in Bytes; minimum 20GB" $((VSZ*1024*1024*1024))
+#- "shmmax >= 1073741824 bytes (= 1 GB)"
+#- kernel.shmmax = 0xffffffffffffffff
+#Regarding ShmAll:
+#- "kernel.shmall is in 4 KB pages; minimum 20GB" $((VSZ*1024*(1024/PSZ)))
+#- kernel.shmall = 0x0fffffffffffff00
+#Regarding ShmMni:
+#- "shmseg >= 1024 You can calculate the maximum number of shared memory 
+#segments required by SAP MaxDB as follows (for details, see the appendix 
+#(section 4)):
+#SAP MaxDB/liveCache 7.3 - 7.9: shmseg >= TasksToApps + 50
+#Limits the maximum number of shared memory segments per process"
+#- "shmseg * 2 (but min. 1024) Defines the number of shared memory identifiers 
+#that are available in the system."
+
+##Default: 0 (which means calculation)
+# max of (system, TotalMemSizeMB*1048576, 20*1024*1024*1024)
+KernelShmMax=0
+# max of (system, TotalMemSizePages)
+KernelShmAll=0
+
+# /dev/shm
+#
+# max of (system, TotalMemSizeMB*75/100) (SAP-Note 941735)
+ShmFileSystemSizeMB=0
+
+# The value is the maximum number of shared memory identifies available in the system.
+# The default value will be at least 2048.
+# If you wish to manually specify the value, SAP recommends using the following formula (Note#628131):
+# 2 x (TasksToApps + 50)
+#
+# max of (system, KernelShmMni)
+KernelShmMni >= 2048
+
+# note 1980196!!!
+# 900929 - Linux: STORAGE_PARAMETERS_WRONG_SET and "mmap() failed"
+# Version 7 from 31.07.2017 in English
+# max of (system, VMMaxMapCount)
+VMMaxMapCount >= 2147483647
+
+[sysctl]
+#Semaphore limits are set according to 1275776 - Linux: Preparing SLES for SAP environments:
+# max (system, KernelSemMsl)
+# max (system, KernelSemMns)
+# max (system, KernelSemOpm)
+# max (system, KernelSemMni)
+#kernel.sem = KernelSemMsl KernelSemMns KernelSemOpm KernelSemMni
+kernel.sem >= 1250 256000 100 8192
+

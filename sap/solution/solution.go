@@ -21,33 +21,33 @@ type Solution []string // Solution is identified by set of note numbers.
 var AllSolutions = map[string]map[string]Solution{
 	ArchX86: {
 		"BOBJ":             {"1275776", "1984787", "SAP_BOBJ"},
-		"SAP-ASE":          {"1275776", "1984787", "SAP_ASE"},
-		"HANA":             {"1275776", "1984787", "2205917"},
+		"SAP-ASE":          {"1275776", "1410736", "1984787", "1680803"},
 		"NETWEAVER":        {"1275776", "1984787"},
 		"MAXDB":            {"1275776", "1984787"},
+		"HANA":             {"1275776", "1984787", "2205917"},
 		"S4HANA-APPSERVER": {"1275776", "1984787"},            // identical to Netweaver
 		"S4HANA-DBSERVER":  {"1275776", "1984787", "2205917"}, // identical to HANA
 	},
 	ArchPPC64LE: {
-		"HANA":             {"1275776", "1984787", "2205917"},
 		"NETWEAVER":        {"1275776", "1984787"},
 		"MAXDB":            {"1275776", "1984787"},
+		"HANA":             {"1275776", "1984787", "2205917"},
 		"S4HANA-APPSERVER": {"1275776", "1984787"},            // identical to Netweaver
 		"S4HANA-DBSERVER":  {"1275776", "1984787", "2205917"}, // identical to HANA
 	},
 	ArchX86_PC: {
 		"BOBJ":             {"1275776", "1984787", "1557506", "SAP_BOBJ"},
-		"SAP-ASE":          {"1275776", "1984787", "1557506", "SAP_ASE"},
-		"HANA":             {"1275776", "1984787", "1557506", "2205917"},
+		"SAP-ASE":          {"1275776", "1410736", "1984787", "1557506", "1680803"},
 		"NETWEAVER":        {"1275776", "1984787", "1557506"},
 		"MAXDB":            {"1275776", "1984787", "1557506"},
+		"HANA":             {"1275776", "1984787", "1557506", "2205917"},
 		"S4HANA-APPSERVER": {"1275776", "1984787", "1557506"},            // identical to Netweaver
 		"S4HANA-DBSERVER":  {"1275776", "1984787", "1557506", "2205917"}, // identical to HANA
 	},
 	ArchPPC64LE_PC: {
-		"HANA":             {"1275776", "1984787", "1557506", "2205917"},
 		"NETWEAVER":        {"1275776", "1984787", "1557506"},
 		"MAXDB":            {"1275776", "1984787", "1557506"},
+		"HANA":             {"1275776", "1984787", "1557506", "2205917"},
 		"S4HANA-APPSERVER": {"1275776", "1984787", "1557506"},            // identical to Netweaver
 		"S4HANA-DBSERVER":  {"1275776", "1984787", "1557506", "2205917"}, // identical to HANA
 	},

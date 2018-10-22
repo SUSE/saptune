@@ -120,7 +120,8 @@ func (app *App) TuneNote(noteID string) error {
 		Otherwise, the state file (serialised parameters) will be overwritten, and it will no longer
 		be possible to revert the note to the state before it was tuned.
 	*/
-	if conforming, _, err := app.VerifyNote(noteID); err != nil {
+	conforming, _, valApplyList, err := app.VerifyNote(noteID)
+	if err != nil {
 		return err
 	} else if conforming {
 		return nil
@@ -135,6 +136,9 @@ func (app *App) TuneNote(noteID string) error {
 	optimised, err := currentState.Optimise()
 	if err != nil {
 		return fmt.Errorf("Failed to calculate optimised parameters for note %s - %v", noteID, err)
+	}
+	if len(valApplyList) != 0 {
+		optimised = optimised.(note.INISettings).SetValuesToApply(valApplyList)
 	}
 	if err := optimised.Apply(); err != nil {
 		return fmt.Errorf("Failed to apply note %s - %v", noteID, err)
@@ -314,7 +318,7 @@ func (app *App) RevertAll(permanent bool) error {
 Inspect the system and verify that all parameters conform to the note's guidelines.
 The note comparison results will always contain all fields, no matter the note is currently conforming or not.
 */
-func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[string]note.NoteFieldComparison, err error) {
+func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[string]note.NoteFieldComparison, valApplyList []string, err error) {
 	theNote, err := app.GetNoteByID(noteID)
 	if err != nil {
 		return
@@ -322,13 +326,13 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 	// Run optimisation routine and compare it against current status
 	inspectedNote, err := theNote.Initialise()
 	if err != nil {
-		return false, nil, err
+		return false, nil, nil, err
 	}
 
 	// to get Apply work:
 	optimisedNote, err := theNote.Initialise()
 	if err != nil {
-		return false, nil, err
+		return false, nil, nil, err
 	}
 	// if used inspectedNote as before, inspectedNote and optimisedNote
 	// will have the same contents after 'Optimise()'
@@ -336,9 +340,9 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 	//optimisedNote, err := inspectedNote.Optimise()
 	optimisedNote, err = optimisedNote.Optimise()
 	if err != nil {
-		return false, nil, err
+		return false, nil, nil, err
 	}
-	conforming, comparisons = note.CompareNoteFields(inspectedNote, optimisedNote)
+	conforming, comparisons, valApplyList = note.CompareNoteFields(inspectedNote, optimisedNote)
 	return
 }
 
@@ -354,7 +358,7 @@ func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, compa
 		return nil, nil, err
 	}
 	for _, note := range sol {
-		conforming, noteComparisons, err := app.VerifyNote(note)
+		conforming, noteComparisons, _, err := app.VerifyNote(note)
 		if err != nil {
 			return nil, nil, err
 		} else if !conforming {
@@ -386,7 +390,7 @@ func (app *App) VerifyAll() (unsatisfiedNotes []string, comparisons map[string]m
 	}
 	for _, noteID := range app.TuneForNotes {
 		// Collect field comparison results from additionally tuned notes
-		conforming, noteComparisons, err := app.VerifyNote(noteID)
+		conforming, noteComparisons, _, err := app.VerifyNote(noteID)
 		if err != nil {
 			return nil, nil, err
 		} else if !conforming {

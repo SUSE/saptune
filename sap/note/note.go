@@ -34,21 +34,24 @@ type Note interface {
 type TuningOptions map[string]Note // Collection of tuning options from SAP notes and 3rd party vendors.
 
 // Return all built-in tunable SAP notes together with those defined by 3rd party vendors.
-func GetTuningOptions(thirdPartyTuningDir string) TuningOptions {
-	ret := TuningOptions{
-		"2205917":       HANARecommendedOSSettings{},
-		"1275776":       PrepareForSAPEnvironments{},
-		"1984787":       AfterInstallation{},
-		"2161991":       VmwareGuestIOElevator{},
-		"SUSE-GUIDE-01": SUSESysOptimisation{},
-		"SUSE-GUIDE-02": SUSENetCPUOptimisation{},
+func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOptions {
+	ret := TuningOptions{}
+	// Collect those defined by saptune
+	_, files, err := system.ListDir(saptuneTuningDir)
+	if err != nil {
+		// Not a fatal error
+		log.Printf("GetTuningOptions: failed to read saptune tuning definitions - %v", err)
 	}
-	if system.IsPagecacheAvailable() {
-		ret["1557506"] = LinuxPagingImprovements{}
+	for _, fileName := range files {
+		ret[fileName] = INISettings{
+			ConfFilePath:    path.Join(saptuneTuningDir, fileName),
+			ID:              fileName,
+			DescriptiveName: "",
+		}
 	}
 
 	// Collect those defined by 3rd party
-	_, files, err := system.ListDir(thirdPartyTuningDir)
+	_, files, err = system.ListDir(thirdPartyTuningDir)
 	if err != nil {
 		// Not a fatal error
 		log.Printf("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
@@ -119,7 +122,7 @@ func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 }
 
 // Compare the content of two notes and return differences in their fields in a human-readable text.
-func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]NoteFieldComparison) {
+func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]NoteFieldComparison, valApplyList []string) {
 	comparisons = make(map[string]NoteFieldComparison)
 	allMatch = true
 	// Compare all fields
@@ -148,6 +151,9 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					MatchExpectation: match,
 				}
 				comparisons[fmt.Sprintf("%s[%s]", fieldName, key.String())] = fieldComparison
+				if !fieldComparison.MatchExpectation && fieldComparison.ReflectFieldName == "SysctlParams" {
+					valApplyList = append(valApplyList, fieldComparison.ReflectMapKey)
+				}
 				if !fieldComparison.MatchExpectation {
 					allMatch = false
 				}

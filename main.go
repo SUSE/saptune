@@ -23,6 +23,7 @@ const (
 	ExitTunedStopped      = 1
 	ExitTunedWrongProfile = 2
 	ExitNotTuned          = 3
+	NoteTuningSheets      = "/usr/share/saptune/notes/"
 	// ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
 	ExtraTuningSheets     = "/etc/saptune/extra/"
 	SetGreenText          = "\033[32m"
@@ -87,7 +88,7 @@ func main() {
 		return
 	}
 	// Initialise application configuration and tuning procedures
-	tuningOptions = note.GetTuningOptions(ExtraTuningSheets)
+	tuningOptions = note.GetTuningOptions(NoteTuningSheets, ExtraTuningSheets)
 	tuneApp = app.InitialiseApp("", "", tuningOptions, archSolutions)
 	switch cliArg(1) {
 	case "daemon":
@@ -333,7 +334,7 @@ func NoteAction(actionName, noteID string) {
 			VerifyAllParameters()
 		} else {
 			// Check system parameters against the specified note, no matter the note has been tuned for or not.
-			conforming, comparisons, err := tuneApp.VerifyNote(noteID)
+			conforming, comparisons, _, err := tuneApp.VerifyNote(noteID)
 			if err != nil {
 				errorExit("Failed to test the current system against the specified note: %v", err)
 			}
@@ -349,7 +350,7 @@ func NoteAction(actionName, noteID string) {
 			PrintHelpAndExit(1)
 		}
 		// Run verify and print out all fields of the note
-		if _, comparisons, err := tuneApp.VerifyNote(noteID); err != nil {
+		if _, comparisons, _, err := tuneApp.VerifyNote(noteID); err != nil {
 			errorExit("Failed to test the current system against the specified note: %v", err)
 		} else {
 			fmt.Printf("If you run `saptune note apply %s`, the following changes will be applied to your system:\n", noteID)
