@@ -15,21 +15,6 @@
 # or no swap space.
 ENABLE_PAGECACHE_LIMIT=no
 
-## Type:    yesno
-## Default: no
-#
-# If the parameter is set to "yes", automatic calculation of pagecache limit 
-# will use the SAP HANA formula. 
-# If set to "no", the SAP NetWeaver formula will be used.
-#
-# For HANA: new limit is 2% system memory (MainMemSizeMB * 2 / 100)
-#
-# For NW: new limit is 1/16 of system memory, within range 512 to 4096
-# (MainMemSizeMB / 16), min. 512, max. 4096
-# Above 64 GB, the recommend limit is 2% of the amount of RAM, but not less 
-# than 4096 MB. (TODO)
-TUNE_FOR_HANA=no
-
 ## Type:    integer
 ## Default: 1
 #

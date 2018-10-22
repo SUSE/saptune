@@ -176,6 +176,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 	// initialise
 	printHead := ""
 	sortkeys  := make([]string, 0, len(noteComparisons))
+	remskeys  := make([]string, 0, len(noteComparisons))
 	hasDiff   := false
 	compliant := "yes"
 	override  := ""
@@ -202,11 +203,18 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 	for noteID, comparisons := range noteComparisons {
 		for _, comparison := range comparisons {
 			if len(comparison.ReflectMapKey) != 0 && comparison.ReflectFieldName != "OverrideParams" {
-				sortkeys = append(sortkeys, noteID + "@" + comparison.ReflectMapKey)
+				if comparison.ReflectMapKey != "reminder" {
+					sortkeys = append(sortkeys, noteID + "@" + comparison.ReflectMapKey)
+				} else {
+					remskeys = append(remskeys, noteID + "@" + comparison.ReflectMapKey)
+				}
 			}
 		}
 	}
 	sort.Strings(sortkeys)
+	for _, rem := range remskeys {
+		sortkeys = append(sortkeys, rem)
+	}
 
 	// setup format values
 	for _ , skey := range sortkeys {
