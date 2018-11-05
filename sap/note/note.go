@@ -169,9 +169,9 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 			for _, key := range actualField.MapKeys() {
 				actualValue := actualField.MapIndex(key).Interface()
 				expectedValue := expectedMap.MapIndex(key).Interface()
+
 				actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue)
-				chkRpm := strings.Split(key.String(), ":")
-				if chkRpm[0] == "rpm" {
+				if strings.Split(key.String(), ":")[0] == "rpm" {
 					match = system.CmpRpmVers(actualValue.(string), expectedValue.(string))
 				}
 				fieldComparison = NoteFieldComparison{

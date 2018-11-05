@@ -339,6 +339,8 @@ func SetVmVal(key, value string) error {
 func GetCpuVal(key string) string {
 	var val string
 	switch key {
+	case "force_latency":
+		val = system.GetForceLatency()
 	case "energy_perf_bias":
 		// cpupower -c all info  -b
 		val = system.GetPerfBias()
@@ -359,6 +361,8 @@ func OptCpuVal(key, actval, cfgval string) string {
 	rval := ""
 	val := "0"
 	switch key {
+	case "force_latency":
+		rval = sval
 	case "energy_perf_bias":
 		//performance - 0, normal - 6, powersave - 15
 		switch sval {
@@ -376,21 +380,23 @@ func OptCpuVal(key, actval, cfgval string) string {
 			fields := strings.Split(entry, ":")
 			rval = rval + fmt.Sprintf("%s:%s ", fields[0], val)
 		}
-		sval = strings.TrimSpace(rval)
 	case "governor":
 		val = sval
 		for _, entry := range strings.Fields(actval) {
 			fields := strings.Split(entry, ":")
 			rval = rval + fmt.Sprintf("%s:%s ", fields[0], val)
 		}
-		sval = strings.TrimSpace(rval)
 	}
+	sval = strings.TrimSpace(rval)
 	return sval
 }
 
 func SetCpuVal(key, value string, revert bool) error {
 	var err error
 	switch key {
+	case "force_latency":
+		//iVal, _ := strconv.Atoi(value)
+		err = system.SetForceLatency(value, revert)
 	case "energy_perf_bias":
 		err = system.SetPerfBias(value)
 	case "governor":
@@ -580,8 +586,16 @@ func SetServiceVal(key, value string) error {
 	if value == "start" && !system.SystemctlIsRunning(service) {
 		err = system.SystemctlEnableStart(service)
 	}
-	if value == "stop" && system.SystemctlIsRunning(service) {
-		err = system.SystemctlDisableStop(service)
+	if value == "stop" {
+		if service == "uuidd.socket" {
+			if !system.SystemctlIsRunning(service) {
+				err = system.SystemctlEnableStart(service)
+			}
+		} else {
+			if system.SystemctlIsRunning(service) {
+				err = system.SystemctlDisableStop(service)
+			}
+		}
 	}
 	return err
 }

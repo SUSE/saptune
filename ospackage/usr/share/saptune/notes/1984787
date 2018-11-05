@@ -5,23 +5,6 @@
 [version]
 # SAP-NOTE=1984787 CATEGORY=LINUX VERSION=32 DATE=26.06.2018 NAME="SUSE LINUX Enterprise Server 12: Installation notes"
 
-[login]
-# /etc/systemd/logind.conf.d/sap.conf UserTasksMax setting
-# see SAP Note 2205917 and 1984787
-# This file configures a parameter of the systemd login manager
-# It sets the maximum number of OS tasks each user may run concurrently
-# The behaviour of the systemd login manager was changed starting SLES12SP2
-# to prevent fork bomb attacks.
-# No need to set in SLES12SP1.
-#
-# Note: A reboot is needed after the first setup or after setting a new value
-# to get the change take effect.
-# The file will be created during the package installation. The value for
-# UserTasksMax will be set to 'infinity'
-# A message will indicate if a reboot/restart is necessary.
-#
-UserTasksMax=infinity
-
 [service]
 # start the related services
 UuiddSocket=start
@@ -86,3 +69,7 @@ vm.dirty_background_bytes=314572800
 [reminder]
 # systemd drop-in configuration file: for SLES12GA and SLES12SP1 handled by saptune package installation
 # installation of uuid daemon: handled by saptune package installation
+
+# /etc/systemd/logind.conf.d/sap.conf UserTasksMax setting
+# UserTasksMax=infinity
+# - done during post install of package installation
