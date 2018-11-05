@@ -46,6 +46,16 @@ func GetINIFileDescriptiveName(fileName string) string {
 	return fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", matches[3], "", matches[1], matches[2])
 }
 
+func GetINIFileCategory(fileName string) string {
+	var re = regexp.MustCompile(`# SAP-NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
+	content, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return ""
+	}
+	matches := re.FindStringSubmatch(string(content))
+	return fmt.Sprintf("%s", matches[1])
+}
+
 func GetINIFileVersion(fileName string) string {
 	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
 	content, err := ioutil.ReadFile(fileName)

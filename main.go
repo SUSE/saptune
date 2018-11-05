@@ -31,6 +31,10 @@ const (
 	SetGreenText          = "\033[32m"
 	SetRedText            = "\033[31m"
 	ResetTextColor        = "\033[0m"
+	footnote1             = "[1] setting is not supported by the system"
+	footnote2             = "[2] setting is not availabel on the system"
+	footnote3             = "[3] value is only checked, but NOT set"
+
 )
 
 func PrintHelpAndExit(exitStatus int) {
@@ -39,10 +43,13 @@ Daemon control:
   saptune daemon [ start | status | stop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify ]
-  saptune note [ apply | simulate | verify | customise | revert ] NoteID
+  saptune note [ apply | simulate | verify | customise ] NoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
-  saptune solution [ apply | simulate | verify | revert ] SolutionName`)
+  saptune solution [ apply | simulate | verify ] SolutionName
+Revert all parameters tuned by the SAP notes or solutions:
+  saptune revert all
+`)
 	os.Exit(exitStatus)
 }
 
@@ -98,9 +105,23 @@ func main() {
 		NoteAction(cliArg(2), cliArg(3))
 	case "solution":
 		SolutionAction(cliArg(2), cliArg(3))
+	case "revert":
+		RevertAction(cliArg(2))
 	default:
 		PrintHelpAndExit(1)
 	}
+}
+
+func RevertAction(actionName string) {
+	if actionName != "all" {
+		PrintHelpAndExit(1)
+	}
+	fmt.Println("Reverting all notes and solutions, this may take some time...")
+	if err := tuneApp.RevertAll(true); err != nil {
+		errorExit("Failed to revert notes: %v", err)
+		//panic(err)
+	}
+	fmt.Println("Parameters tuned by the notes and solutions have been successfully reverted.")
 }
 
 func DaemonAction(actionName string) {
@@ -155,7 +176,7 @@ func DaemonAction(actionName string) {
 		if err := system.SystemctlDisableStop(TunedService); err != nil {
 			errorExit("%v", err)
 		}
-		// tuned then calls `sapconf daemon revert`
+		// tuned then calls `saptune daemon revert`
 		fmt.Println("Daemon (tuned.service) has been disabled and stopped.")
 		fmt.Println("All tuned parameters have been reverted to default.")
 	case "revert":
@@ -176,8 +197,10 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 	printHead := ""
 	sortkeys  := make([]string, 0, len(noteComparisons))
 	remskeys  := make([]string, 0, len(noteComparisons))
+	footnote  := make([]string, 3, 3)
 	hasDiff   := false
 	compliant := "yes"
+	comment   := ""
 	override  := ""
 	format    := "\t%s : %s\n"
 	noteField := ""
@@ -192,9 +215,9 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 		fmtlen4 = 7
 	} else {
 		// simulate
-		fmtlen1 = 9
-		fmtlen2 = 9
-		fmtlen3 = 14
+		fmtlen1 = 12
+		fmtlen2 = 10
+		fmtlen3 = 15
 		fmtlen4 = 9
 	}
 
@@ -244,10 +267,14 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 						fmtlen4 = len(comparison.ActualValueJS)
 					}
 				}
-				format = "   %-" + strconv.Itoa(fmtlen0) + "s | %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s | %-" + strconv.Itoa(fmtlen3) + "s | %-" + strconv.Itoa(fmtlen4) + "s | %3s\n"
+				format = "   %-" + strconv.Itoa(fmtlen0) + "s | %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s | %-" + strconv.Itoa(fmtlen3) + "s | %-" + strconv.Itoa(fmtlen4) + "s | %2s\n"
 			} else {
 				// simulate
 				if len(comparison.ReflectMapKey) != 0 {
+					if comparison.ReflectFieldName == "OverrideParams" && len(comparison.ActualValueJS) > fmtlen4 {
+						fmtlen4 = len(comparison.ActualValueJS)
+						continue
+					}
 					if len(comparison.ReflectMapKey) > fmtlen1 {
 						fmtlen1 = len(comparison.ReflectMapKey)
 					}
@@ -258,7 +285,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 						fmtlen3 = len(comparison.ExpectedValueJS)
 					}
 				}
-				format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s| %-" + strconv.Itoa(fmtlen3) + "s| %-" + strconv.Itoa(fmtlen4) + "s\n"
+				format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s | %-" + strconv.Itoa(fmtlen3) + "s | %-" + strconv.Itoa(fmtlen4) + "s | %2s\n"
 			}
 		}
 	}
@@ -266,6 +293,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 	// print
 	noteID := ""
 	for _ , skey := range sortkeys {
+		comment = ""
 		keyFields := strings.Split(skey, "@")
 		key := keyFields[1]
 		printHead = ""
@@ -291,6 +319,23 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 			compliant = "yes"
 		}
 
+		// prepare footnote
+		switch comparison.ActualValue {
+		case "all:none":
+			compliant = compliant + " [1]"
+			comment = comment + " [1]"
+			footnote[0] = footnote1
+		case "NA":
+			compliant = compliant + " [2]"
+			comment = comment + " [2]"
+			footnote[1] = footnote2
+		}
+		if strings.Contains(comparison.ReflectMapKey, "rpm") || strings.Contains(comparison.ReflectMapKey, "grub") {
+			compliant = compliant + " [3]"
+			comment = comment + " [3]"
+			footnote[2] = footnote3
+		}
+
 		// print table header
 		if printHead != "" {
 			if header != "NONE" {
@@ -309,9 +354,9 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 				fmt.Printf("\n")
 			} else {
 				// simulate
-				fmt.Printf(format, "Parameter", "Value set", "Value expected", "Override")
-				for i := 0; i < fmtlen1+fmtlen2+fmtlen3+fmtlen4+8 ; i++ {
-					if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2 || i == 3+fmtlen1+3+fmtlen2+1+fmtlen3+1 {
+				fmt.Printf(format, "Parameter", "Value set", "Value expected", "Override", "Comment")
+				for i := 0; i < fmtlen1+fmtlen2+fmtlen3+fmtlen4+28 ; i++ {
+					if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2+1 || i == 3+fmtlen1+3+fmtlen2+3+fmtlen3+1 || i == 3+fmtlen1+3+fmtlen2+3+fmtlen3+3+fmtlen4+1 {
 						fmt.Printf("+")
 					} else {
 						fmt.Printf("-")
@@ -327,14 +372,19 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 			fmt.Printf(format, noteField, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), compliant)
 		} else {
 			// simulate
-			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override)
+			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override, comment)
 		}
 	}
 	// print footer
 	if header != "NONE" && !hasDiff {
 		fmt.Printf("\n   (no change)\n")
 	}
-	fmt.Printf("\n")
+	for _, fn := range footnote {
+		if fn != "" {
+			fmt.Printf("\n %s", fn)
+		}
+	}
+	fmt.Printf("\n\n")
 	for noteID, reminde := range reminder {
 		if reminde != "" {
 			reminderHead := fmt.Sprintf("Attention for SAP Note %s:\nHints or values not yet handled by saptune. So please read carefully, check and set manually, if needed:\n", noteID)
@@ -428,7 +478,7 @@ func NoteAction(actionName, noteID string) {
 			fmt.Printf("If you run `saptune note apply %s`, the following changes will be applied to your system:\n", noteID)
 			noteComp := make(map[string]map[string]note.NoteFieldComparison)
 			noteComp[noteID] = comparisons
-			PrintNoteFields("HEAD", noteComp, true)
+			PrintNoteFields("HEAD", noteComp, false)
 		}
 	case "customise":
 		if noteID == "" {
@@ -450,6 +500,7 @@ func NoteAction(actionName, noteID string) {
 		if err := syscall.Exec(editor, []string{editor, fileName}, os.Environ()); err != nil {
 			errorExit("Failed to start launch editor %s: %v", editor, err)
 		}
+/*
 	case "revert":
 		if noteID == "" {
 			PrintHelpAndExit(1)
@@ -459,6 +510,7 @@ func NoteAction(actionName, noteID string) {
 		}
 		fmt.Println("Parameters tuned by the note have been successfully reverted.")
 		fmt.Println("Please note: the reverted note may still show up in list of enabled notes, if an enabled solution refers to it.")
+*/
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -530,8 +582,9 @@ func SolutionAction(actionName, solName string) {
 			errorExit("Failed to test the current system against the specified note: %v", err)
 		} else {
 			fmt.Printf("If you run `saptune solution apply %s`, the following changes will be applied to your system:\n", solName)
-			PrintNoteFields("NONE", comparisons, true)
+			PrintNoteFields("NONE", comparisons, false)
 		}
+/*
 	case "revert":
 		if solName == "" {
 			PrintHelpAndExit(1)
@@ -540,6 +593,7 @@ func SolutionAction(actionName, solName string) {
 			errorExit("Failed to revert tuning for solution %s: %v", solName, err)
 		}
 		fmt.Println("Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
+*/
 	default:
 		PrintHelpAndExit(1)
 	}
