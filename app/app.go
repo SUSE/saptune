@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/sap/solution"
+	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
 	"os"
@@ -130,7 +131,34 @@ func (app *App) TuneNote(noteID string) error {
 	currentState, err := aNote.Initialise()
 	if err != nil {
 		return fmt.Errorf("Failed to examine system for the current status of note %s - %v", noteID, err)
-	} else if err = app.State.Store(noteID, currentState, false); err != nil {
+	}
+	if reflect.TypeOf(currentState).String() == "note.INISettings" {
+		// in case of vm.dirty parameters save additionally the
+		// counterpart values to be able to revert the values
+		addkey := ""
+		_, exist := reflect.TypeOf(currentState).FieldByName("SysctlParams")
+		if exist {
+			for _, mkey := range reflect.ValueOf(currentState).FieldByName("SysctlParams").MapKeys() {
+				switch mkey.String() {
+				case "vm.dirty_background_bytes":
+					addkey = "vm.dirty_background_ratio"
+				case "vm.dirty_bytes":
+					addkey = "vm.dirty_ratio"
+				case "vm.dirty_background_ratio":
+					addkey = "vm.dirty_background_bytes"
+				case "vm.dirty_ratio":
+					addkey = "vm.dirty_bytes"
+				}
+				if addkey != "" {
+					//currentState.(note.INISettings).SysctlParams[addkey], _ = system.GetSysctlString(addkey)
+					addkeyval, _  := system.GetSysctlString(addkey)
+					//func (v Value) SetMapIndex(key, val Value)
+					reflect.ValueOf(currentState).FieldByName("SysctlParams").SetMapIndex(reflect.ValueOf(addkey), reflect.ValueOf(addkeyval))
+				}
+			}
+		}
+	}
+	if err = app.State.Store(noteID, currentState, false); err != nil {
 		return fmt.Errorf("Failed to save current state of note %s - %v", noteID, err)
 	}
 	optimised, err := currentState.Optimise()
