@@ -25,7 +25,7 @@ const (
 	ExitTunedWrongProfile = 2
 	ExitNotTuned          = 3
 	NoteTuningSheets      = "/usr/share/saptune/notes/"
-	OverrideTunigSheets   = "/etc/saptune/override/"
+	OverrideTuningSheets  = "/etc/saptune/override/"
 	// ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
 	ExtraTuningSheets     = "/etc/saptune/extra/"
 	SetGreenText          = "\033[32m"
@@ -95,6 +95,7 @@ func main() {
 		errorExit("The system architecture (%s) is not supported.", solutionSelector)
 		return
 	}
+
 	// Initialise application configuration and tuning procedures
 	tuningOptions = note.GetTuningOptions(NoteTuningSheets, ExtraTuningSheets)
 	tuneApp = app.InitialiseApp("", "", tuningOptions, archSolutions)
@@ -434,7 +435,7 @@ func NoteAction(actionName, noteID string) {
 			if len(noteID) >= 8 {
 				format = "\t%s\t%s\n"
 			}
-			if _, err := os.Stat(fmt.Sprintf("%s%s", OverrideTunigSheets, noteID)); err == nil {
+			if _, err := os.Stat(fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)); err == nil {
 				format = " O" + format
 			}
 			if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
@@ -487,17 +488,43 @@ func NoteAction(actionName, noteID string) {
 		if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 			errorExit("%v", err)
 		}
-		fileName := fmt.Sprintf("/etc/sysconfig/saptune-note-%s", noteID)
+		editFileName := ""
+		fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
 			errorExit("Note %s does not require additional customisation input.", noteID)
 		} else if err != nil {
 			errorExit("Failed to read file '%s' - %v", fileName, err)
 		}
+		ovFileName := fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)
+		if _, err := os.Stat(ovFileName); os.IsNotExist(err) {
+			//copy file
+			src, err := os.Open(fileName)
+			if err != nil {
+				errorExit("Can not open file '%s' - %v", fileName, err)
+			}
+			defer src.Close()
+			dst, err := os.OpenFile(ovFileName, os.O_RDWR|os.O_CREATE, 0644)
+			if err != nil {
+				errorExit("Can not create file '%s' - %v", ovFileName, err)
+			}
+			defer dst.Close()
+			_, err = io.Copy(dst, src)
+			if err != nil {
+				errorExit("Problems while copying '%s' to '%s' - %v", fileName, ovFileName, err)
+			}
+			editFileName = ovFileName
+		} else if err == nil {
+			log.Printf("Note override file already exists, using file '%s' as base for editing\n", ovFileName)
+			editFileName =ovFileName
+		} else {
+			errorExit("Failed to read file '%s' - %v", ovFileName, err)
+		}
 		editor := os.Getenv("EDITOR")
 		if editor == "" {
 			editor = "/usr/bin/vim" // launch vim by default
 		}
-		if err := syscall.Exec(editor, []string{editor, fileName}, os.Environ()); err != nil {
+		//if err := syscall.Exec(editor, []string{editor, fileName}, os.Environ()); err != nil {
+		if err := syscall.Exec(editor, []string{editor, editFileName}, os.Environ()); err != nil {
 			errorExit("Failed to start launch editor %s: %v", editor, err)
 		}
 /*
@@ -539,12 +566,17 @@ func SolutionAction(actionName, solName string) {
 				"\n    saptune daemon start")
 		}
 	case "list":
-		fmt.Println("All solutions (* denotes enabled solution):")
+		fmt.Println("All solutions (* denotes enabled solution, O denotes override file exists for solution):")
 		for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 			format := "\t%-18s -"
 			if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
 				format = " " + SetGreenText + "*" + format
 			}
+			if len(solution.OverrideSolutions[solutionSelector][solName]) != 0 {
+				//override solution
+				format = " O" + format
+			}
+
 			solNotes := ""
 			for _, noteString := range solution.AllSolutions[solutionSelector][solName] {
 				solNotes = solNotes + " " + noteString

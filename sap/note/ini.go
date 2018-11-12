@@ -10,7 +10,7 @@ import (
 	"strconv"
 )
 
-const OverrideTunigSheets  = "/etc/saptune/override/"
+const OverrideTuningSheets  = "/etc/saptune/override/"
 var pc = LinuxPagingImprovements{}
 
 // Tuning options composed by a third party vendor.
@@ -90,7 +90,7 @@ func (vend INISettings) Initialise() (Note, error) {
 
 	// looking for override file
 	override := false
-	ow, err := txtparser.ParseINIFile(path.Join(OverrideTunigSheets, vend.ID), false)
+	ow, err := txtparser.ParseINIFile(path.Join(OverrideTuningSheets, vend.ID), false)
 	if err == nil {
 		override = true
 	}
@@ -214,7 +214,31 @@ func (vend INISettings) Apply() error {
 		switch param.Section {
 		case INISectionSysctl:
 			// Apply sysctl parameters
-			errs = append(errs, system.SetSysctlString(param.Key, vend.SysctlParams[param.Key]))
+			// for the vm.dirty parameters take the counterpart
+			// parameters into account (only during revert)
+			// if vm.dirty_background_bytes is set to a value != 0,
+			// vm.dirty_background_ratio is set to 0 and vice versa
+			// if vm.dirty_bytes is set to a value != 0,
+			// vm.dirty_ratio is set to 0 and vice versa
+			cpart := "" //counterpart parameter
+			switch param.Key {
+			case "vm.dirty_background_bytes":
+				cpart = "vm.dirty_background_ratio"
+			case "vm.dirty_bytes":
+				cpart = "vm.dirty_ratio"
+			case "vm.dirty_background_ratio":
+				cpart = "vm.dirty_background_bytes"
+			case "vm.dirty_ratio":
+				cpart = "vm.dirty_bytes"
+			}
+			// in case of revert of a vm.dirty parameter
+			// check, if the saved counterpart value is != 0
+			// then revert this value
+			if revertValues && cpart != "" && vend.SysctlParams[cpart] != "0" {
+				errs = append(errs, system.SetSysctlString(cpart, vend.SysctlParams[cpart]))
+			} else {
+				errs = append(errs, system.SetSysctlString(param.Key, vend.SysctlParams[param.Key]))
+			}
 		case INISectionVM:
 			errs = append(errs, SetVmVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionBlock:
