@@ -53,20 +53,20 @@ THP=never
 fs.aio-max-nr = 1048576
 
 # Increase system file descriptor limit
-fs.file-max >= 6291456
+fs.file-max = 6291456
 
 # Increase Linux autotuning TCP buffer limits
 # Set max to 16MB (16777216) for 1GE and 32M (33554432) or 54M (56623104) for 10GE
 # Don't set tcp_mem itself! Let the kernel scale it based on RAM.
-net.core.rmem_max >= 16777216
-net.core.wmem_max >= 16777216
-net.core.rmem_default >= 16777216
-net.core.wmem_default >= 16777216
-net.ipv4.tcp_rmem >= 4096 87380 16777216
-net.ipv4.tcp_wmem >= 4096 65536 16777216
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+net.core.rmem_default = 16777216
+net.core.wmem_default = 16777216
+net.ipv4.tcp_rmem = 4096 87380 16777216
+net.ipv4.tcp_wmem = 4096 65536 16777216
 
 # Increase the max packet backlog
-net.core.netdev_max_backlog >= 30000
+net.core.netdev_max_backlog = 30000
 
 # If the server is a heavily used application server, e.g. a Database, it would
 # benefit significantly by using Huge Pages. 
@@ -76,11 +76,11 @@ net.core.netdev_max_backlog >= 30000
 # Huge Pages. If the Applications do not support Huge Pages then configuring 
 # Huge Pages would result in wastage of memory as it cannot be used any further
 # by the OS. 
-vm.nr_hugepages >= 128
+vm.nr_hugepages = 128
 
 # Discourage Linux from swapping idle processes to disk (default = 60)
 # value between 20 and 10
-vm.swappiness <= 15
+vm.swappiness = 15
 
 [reminder]
 # DBMS data storage settings: use ext4 or xfs file system. 
