@@ -2,8 +2,8 @@
 package system
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
 	"strings"
 )
 
@@ -13,7 +13,8 @@ func ParseCmdline(option string) string {
 	opt := "NA"
 	cmdLine, err := ioutil.ReadFile("/proc/cmdline")
 	if err != nil {
-		panic(fmt.Errorf("failed to read /proc/cmdline: %v", err))
+		log.Printf("ParseCmdline: failed to read  /proc/cmdline: %v", err)
+		return opt
 	}
 	for _, param := range strings.Fields(string(cmdLine)) {
 		fields := strings.Split(param, "=")

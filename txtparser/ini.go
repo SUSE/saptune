@@ -38,32 +38,44 @@ type INIFile struct {
 
 func GetINIFileDescriptiveName(fileName string) string {
 	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=(.*)\s*NAME="([^"]*)"`)
+	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return ""
 	}
 	matches := re.FindStringSubmatch(string(content))
-	return fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", matches[3], "", matches[1], matches[2])
+	if len(matches) != 0 {
+		rval = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", matches[3], "", matches[1], matches[2])
+	}
+	return rval
 }
 
 func GetINIFileCategory(fileName string) string {
 	var re = regexp.MustCompile(`# SAP-NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
+	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return ""
 	}
 	matches := re.FindStringSubmatch(string(content))
-	return fmt.Sprintf("%s", matches[1])
+	if len(matches) != 0 {
+		rval = fmt.Sprintf("%s", matches[1])
+	}
+	return rval
 }
 
 func GetINIFileVersion(fileName string) string {
 	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
+	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		return ""
 	}
 	matches := re.FindStringSubmatch(string(content))
-	return fmt.Sprintf("%s", matches[1])
+	if len(matches) != 0 {
+		rval = fmt.Sprintf("%s", matches[1])
+	}
+	return rval
 }
 
 func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {

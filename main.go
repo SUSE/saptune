@@ -491,7 +491,19 @@ func NoteAction(actionName, noteID string) {
 		editFileName := ""
 		fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
-			errorExit("Note %s does not require additional customisation input.", noteID)
+			_, files, err := system.ListDir(ExtraTuningSheets)
+			if err == nil {
+				for _, f := range files {
+					if strings.HasPrefix(f, noteID) {
+						fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, f)
+					}
+				}
+			}
+			if _, err := os.Stat(fileName); os.IsNotExist(err) {
+				errorExit("Note %s not found in %s or %s.", noteID, NoteTuningSheets, ExtraTuningSheets)
+			} else if err != nil {
+				 errorExit("Failed to read file '%s' - %v", fileName, err)
+			}
 		} else if err != nil {
 			errorExit("Failed to read file '%s' - %v", fileName, err)
 		}
