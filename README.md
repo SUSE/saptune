@@ -1,6 +1,5 @@
 
 [![Build Status](https://travis-ci.org/SUSE/saptune.svg?branch=master)](https://travis-ci.org/SUSE/saptune)
-[![Coverage Status](https://coveralls.io/repos/github/angelabriel/saptune/badge.svg?branch=master)](https://coveralls.io/github/angelabriel/saptune?branch=master)
 
 # saptune
 The utility adjusts system parameters such as kernel parameters and resource limits

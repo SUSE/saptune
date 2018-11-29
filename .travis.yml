@@ -5,9 +5,6 @@ go:
 os:
   - linux
 sudo: required
-before_install:
-  - go get github.com/mattn/goveralls
 script:
-  - $GOPATH/bin/goveralls -service=travis-ci
-#- sudo -E env "PATH=$PATH" go test -v -cover ./...
-#- go build
+  - sudo -E env "PATH=$PATH" go test -v -cover ./...
+  - go build
