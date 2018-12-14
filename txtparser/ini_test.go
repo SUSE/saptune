@@ -2,9 +2,15 @@ package txtparser
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"path"
 	"reflect"
 	"testing"
 )
+
+var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1410736")
+var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "TCP/IP: setting keepalive interval", "", "4", "14.12.2017 ")
 
 var iniExample = `
 # comment
@@ -50,6 +56,11 @@ var iniJSON = `
 		"Key": "lima",
 		"Operator": "\u003e",
 		"Value": "5\teeeee"
+	}, {
+		"Section": "reminder",
+		"Key": "reminder",
+		"Operator": "",
+		"Value": ""
 	}],
 	"KeyValue": {
 		"Section A": {
@@ -88,6 +99,14 @@ var iniJSON = `
 				"Operator": "\u003e",
 				"Value": "5\teeeee"
 			}
+		},
+		"reminder": {
+			"reminder": {
+				"Section": "reminder",
+				"Key": "reminder",
+				"Operator": "",
+				"Value": ""
+			}
 		}
 	}
 }`
@@ -102,5 +121,12 @@ func TestParseINI(t *testing.T) {
 	//t.Log(string(b), err)
 	if !reflect.DeepEqual(*actualINI, expectedINI) {
 		t.Fatalf("\n%+v\n%+v\n", *actualINI, expectedINI)
+	}
+}
+
+func TestGetINIFileDescriptiveName(t *testing.T) {
+	str := GetINIFileDescriptiveName(fileName)
+	if str != descName {
+		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, descName)
 	}
 }

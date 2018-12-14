@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/sap/solution"
+	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
 	"os"
@@ -13,9 +14,9 @@ import (
 )
 
 const (
-	SysconfigSaptuneDir = "/etc/sysconfig/saptune"
-	TuneForSolutionsKey = "TUNE_FOR_SOLUTIONS"
-	TuneForNotesKey     = "TUNE_FOR_NOTES"
+	SysconfigSaptuneFile = "/etc/sysconfig/saptune"
+	TuneForSolutionsKey  = "TUNE_FOR_SOLUTIONS"
+	TuneForNotesKey      = "TUNE_FOR_NOTES"
 )
 
 // Application configuration and serialised state information.
@@ -36,7 +37,7 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 		AllNotes:        allNotes,
 		AllSolutions:    allSolutions,
 	}
-	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneDir), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), true)
 	if err == nil {
 		app.TuneForSolutions = sysconf.GetStringArray(TuneForSolutionsKey, []string{})
 		app.TuneForNotes = sysconf.GetStringArray(TuneForNotesKey, []string{})
@@ -51,13 +52,13 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 
 // Save /etc/sysconfig/saptune.
 func (app *App) SaveConfig() error {
-	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneDir), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), true)
 	if err != nil {
 		return err
 	}
 	sysconf.SetStrArray(TuneForSolutionsKey, app.TuneForSolutions)
 	sysconf.SetStrArray(TuneForNotesKey, app.TuneForNotes)
-	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneDir), []byte(sysconf.ToText()), 0644)
+	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), []byte(sysconf.ToText()), 0644)
 }
 
 // Return the number of all solution-enabled SAP notes, sorted.
@@ -120,7 +121,8 @@ func (app *App) TuneNote(noteID string) error {
 		Otherwise, the state file (serialised parameters) will be overwritten, and it will no longer
 		be possible to revert the note to the state before it was tuned.
 	*/
-	if conforming, _, err := app.VerifyNote(noteID); err != nil {
+	conforming, _, valApplyList, err := app.VerifyNote(noteID)
+	if err != nil {
 		return err
 	} else if conforming {
 		return nil
@@ -129,12 +131,42 @@ func (app *App) TuneNote(noteID string) error {
 	currentState, err := aNote.Initialise()
 	if err != nil {
 		return fmt.Errorf("Failed to examine system for the current status of note %s - %v", noteID, err)
-	} else if err = app.State.Store(noteID, currentState, false); err != nil {
+	}
+	if reflect.TypeOf(currentState).String() == "note.INISettings" {
+		// in case of vm.dirty parameters save additionally the
+		// counterpart values to be able to revert the values
+		addkey := ""
+		_, exist := reflect.TypeOf(currentState).FieldByName("SysctlParams")
+		if exist {
+			for _, mkey := range reflect.ValueOf(currentState).FieldByName("SysctlParams").MapKeys() {
+				switch mkey.String() {
+				case "vm.dirty_background_bytes":
+					addkey = "vm.dirty_background_ratio"
+				case "vm.dirty_bytes":
+					addkey = "vm.dirty_ratio"
+				case "vm.dirty_background_ratio":
+					addkey = "vm.dirty_background_bytes"
+				case "vm.dirty_ratio":
+					addkey = "vm.dirty_bytes"
+				}
+				if addkey != "" {
+					//currentState.(note.INISettings).SysctlParams[addkey], _ = system.GetSysctlString(addkey)
+					addkeyval, _  := system.GetSysctlString(addkey)
+					//func (v Value) SetMapIndex(key, val Value)
+					reflect.ValueOf(currentState).FieldByName("SysctlParams").SetMapIndex(reflect.ValueOf(addkey), reflect.ValueOf(addkeyval))
+				}
+			}
+		}
+	}
+	if err = app.State.Store(noteID, currentState, false); err != nil {
 		return fmt.Errorf("Failed to save current state of note %s - %v", noteID, err)
 	}
 	optimised, err := currentState.Optimise()
 	if err != nil {
 		return fmt.Errorf("Failed to calculate optimised parameters for note %s - %v", noteID, err)
+	}
+	if len(valApplyList) != 0 {
+		optimised = optimised.(note.INISettings).SetValuesToApply(valApplyList)
 	}
 	if err := optimised.Apply(); err != nil {
 		return fmt.Errorf("Failed to apply note %s - %v", noteID, err)
@@ -200,7 +232,9 @@ func (app *App) TuneAll() error {
 
 // Revert parameters tuned by the note and clear its stored states.
 func (app *App) RevertNote(noteID string, permanent bool) error {
-	noteTemplate, err := app.GetNoteByID(noteID)
+	//support revert from older saptune versions
+	note2revert := note.Note2Convert(noteID)
+	noteTemplate, err := app.GetNoteByID(note2revert)
 	if err != nil {
 		return err
 	}
@@ -220,12 +254,17 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 	// Workaround for Go JSON package's stubbornness, Go developers are not willing to fix their code in this occasion.
 	var noteReflectValue = reflect.New(reflect.TypeOf(noteTemplate))
 	var noteIface interface{} = noteReflectValue.Interface()
-	if err = app.State.Retrieve(noteID, &noteIface); err == nil {
+	if err = app.State.Retrieve(note2revert, &noteIface); err == nil {
 		var noteRecovered note.Note = noteIface.(note.Note)
 		if err := noteRecovered.Apply(); err != nil {
 			return err
-		} else if err := app.State.Remove(noteID); err != nil {
+		} else if err := app.State.Remove(note2revert); err != nil {
 			return err
+		} else {
+			remFileName := fmt.Sprintf("/var/lib/saptune/saved_conf/%s.conf", note2revert)
+			if _, err := os.Stat(remFileName); err == nil {
+				return os.Remove(remFileName)
+			}
 		}
 	} else if !os.IsNotExist(err) {
 		return err
@@ -249,8 +288,8 @@ func (app *App) RevertSolution(solName string) error {
 	}
 	// The tricky part: figure out which notes are to be reverted, do not revert manually enabled notes.
 	notesDoNotRevert := make(map[string]struct{})
-	for _, note := range app.TuneForNotes {
-		notesDoNotRevert[note] = struct{}{}
+	for _, noteID := range app.TuneForNotes {
+		notesDoNotRevert[noteID] = struct{}{}
 	}
 	// Do not revert notes that are referred to by other enabled solutions
 	for _, otherSolName := range app.TuneForSolutions {
@@ -314,7 +353,7 @@ func (app *App) RevertAll(permanent bool) error {
 Inspect the system and verify that all parameters conform to the note's guidelines.
 The note comparison results will always contain all fields, no matter the note is currently conforming or not.
 */
-func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[string]note.NoteFieldComparison, err error) {
+func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[string]note.NoteFieldComparison, valApplyList []string, err error) {
 	theNote, err := app.GetNoteByID(noteID)
 	if err != nil {
 		return
@@ -322,13 +361,13 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 	// Run optimisation routine and compare it against current status
 	inspectedNote, err := theNote.Initialise()
 	if err != nil {
-		return false, nil, err
+		return false, nil, nil, err
 	}
 
 	// to get Apply work:
 	optimisedNote, err := theNote.Initialise()
 	if err != nil {
-		return false, nil, err
+		return false, nil, nil, err
 	}
 	// if used inspectedNote as before, inspectedNote and optimisedNote
 	// will have the same contents after 'Optimise()'
@@ -336,9 +375,9 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 	//optimisedNote, err := inspectedNote.Optimise()
 	optimisedNote, err = optimisedNote.Optimise()
 	if err != nil {
-		return false, nil, err
+		return false, nil, nil, err
 	}
-	conforming, comparisons = note.CompareNoteFields(inspectedNote, optimisedNote)
+	conforming, comparisons, valApplyList = note.CompareNoteFields(inspectedNote, optimisedNote)
 	return
 }
 
@@ -353,14 +392,14 @@ func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, compa
 	if err != nil {
 		return nil, nil, err
 	}
-	for _, note := range sol {
-		conforming, noteComparisons, err := app.VerifyNote(note)
+	for _, noteID := range sol {
+		conforming, noteComparisons, _, err := app.VerifyNote(noteID)
 		if err != nil {
 			return nil, nil, err
 		} else if !conforming {
-			unsatisfiedNotes = append(unsatisfiedNotes, note)
+			unsatisfiedNotes = append(unsatisfiedNotes, noteID)
 		}
-		comparisons[note] = noteComparisons
+		comparisons[noteID] = noteComparisons
 	}
 	return
 }
@@ -386,7 +425,7 @@ func (app *App) VerifyAll() (unsatisfiedNotes []string, comparisons map[string]m
 	}
 	for _, noteID := range app.TuneForNotes {
 		// Collect field comparison results from additionally tuned notes
-		conforming, noteComparisons, err := app.VerifyNote(noteID)
+		conforming, noteComparisons, _, err := app.VerifyNote(noteID)
 		if err != nil {
 			return nil, nil, err
 		} else if !conforming {

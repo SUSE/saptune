@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
 	"log"
+	"os"
 	"path"
 	"reflect"
 	"sort"
@@ -33,22 +34,49 @@ type Note interface {
 
 type TuningOptions map[string]Note // Collection of tuning options from SAP notes and 3rd party vendors.
 
+// check, if there is a note in an older saptune format to revert
+// support revert from older saptune versions
+func Note2Convert(noteID string) string {
+	fileName := fmt.Sprintf("/var/lib/saptune/saved_state/%s_n2c", noteID)
+	if _, err := os.Stat(fileName); err == nil {
+		noteID = fmt.Sprintf("%s_n2c", noteID)
+	}
+	return noteID
+}
+
 // Return all built-in tunable SAP notes together with those defined by 3rd party vendors.
-func GetTuningOptions(thirdPartyTuningDir string) TuningOptions {
+func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOptions {
 	ret := TuningOptions{
-		"2205917":       HANARecommendedOSSettings{},
-		"1275776":       PrepareForSAPEnvironments{},
-		"1984787":       AfterInstallation{},
-		"2161991":       VmwareGuestIOElevator{},
-		"SUSE-GUIDE-01": SUSESysOptimisation{},
-		"SUSE-GUIDE-02": SUSENetCPUOptimisation{},
+		// compatibility with older saptune versions.
+		// Needed for 'revert' only
+		"1275776_n2c":       PrepareForSAPEnvironments{},
+		"1984787_n2c":       AfterInstallation{},
+		"2205917_n2c":       HANARecommendedOSSettings{},
+		"2161991_n2c":       VmwareGuestIOElevator{},
+		"SUSE-GUIDE-01_n2c": SUSESysOptimisation{},
+		"SUSE-GUIDE-02_n2c": SUSENetCPUOptimisation{},
+		"SAP_ASE_n2c":       CMPTSettings{},
+		"SAP_BOBJ_n2c":      CMPTSettings{},
 	}
 	if system.IsPagecacheAvailable() {
-		ret["1557506"] = LinuxPagingImprovements{}
+		ret["1557506_n2c"] = LinuxPagingImprovements{}
+	}
+	// Collect those defined by saptune
+	_, files, err := system.ListDir(saptuneTuningDir)
+	if err != nil {
+		// Not a fatal error
+		log.Printf("GetTuningOptions: failed to read saptune tuning definitions - %v", err)
+	}
+	for _, fileName := range files {
+		ret[fileName] = INISettings{
+			ConfFilePath:    path.Join(saptuneTuningDir, fileName),
+			ID:              fileName,
+			DescriptiveName: "",
+		}
 	}
 
 	// Collect those defined by 3rd party
-	_, files, err := system.ListDir(thirdPartyTuningDir)
+	_, files, err = system.ListDir(thirdPartyTuningDir)
 	if err != nil {
 		// Not a fatal error
 		log.Printf("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
@@ -72,6 +100,10 @@ func GetTuningOptions(thirdPartyTuningDir string) TuningOptions {
 			ConfFilePath:    path.Join(thirdPartyTuningDir, fileName),
 			ID:              id,
 			DescriptiveName: name,
+		}
+		n2rev := Note2Convert(id)
+		if n2rev != id {
+			ret[n2rev] = CMPTSettings{}
 		}
 	}
 	return ret
@@ -119,7 +151,7 @@ func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 }
 
 // Compare the content of two notes and return differences in their fields in a human-readable text.
-func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]NoteFieldComparison) {
+func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]NoteFieldComparison, valApplyList []string) {
 	comparisons = make(map[string]NoteFieldComparison)
 	allMatch = true
 	// Compare all fields
@@ -137,7 +169,11 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 			for _, key := range actualField.MapKeys() {
 				actualValue := actualField.MapIndex(key).Interface()
 				expectedValue := expectedMap.MapIndex(key).Interface()
+
 				actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue)
+				if strings.Split(key.String(), ":")[0] == "rpm" {
+					match = system.CmpRpmVers(actualValue.(string), expectedValue.(string))
+				}
 				fieldComparison = NoteFieldComparison{
 					ReflectFieldName: fieldName,
 					ReflectMapKey:    key.String(),
@@ -148,6 +184,9 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					MatchExpectation: match,
 				}
 				comparisons[fmt.Sprintf("%s[%s]", fieldName, key.String())] = fieldComparison
+				if !fieldComparison.MatchExpectation && fieldComparison.ReflectFieldName == "SysctlParams" {
+					valApplyList = append(valApplyList, fieldComparison.ReflectMapKey)
+				}
 				if !fieldComparison.MatchExpectation {
 					allMatch = false
 				}

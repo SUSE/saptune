@@ -1,0 +1,78 @@
+# SUSE-GUIDE-01 - SLES 12 OS Tuning & Optimization Guide – Part 1
+## Path:           SAP/System Tuning/SUSE-GUIDE-01 - SLES 12 OS Tuning & Optimization Guide – Part 1
+## Description:    Aggressively tuned additional parameters that may yield performance improvements. (https://www.suse.com/communities/blog/sles-1112-os-tuning-optimisation-guide-part-1/)
+
+[version]
+# SAP-NOTE=SUSE-GUIDE-01 CATEGORY=SUSE VERSION=0 DATE=11.06.2015 NAME="SLES 12 OS Tuning & Optimization Guide – Part 1"
+
+[block]
+## Type:    string
+## Default: noop
+#
+# The default I/O scheduler for SLES is CFQ. It offers satisfactory performance
+# for wide range of I/O task, however choosing an alternative scheduler may 
+# potentially yield better latency characteristics and throughput. 
+# "noop" is an alternative scheduler, in comparison to CFQ it may offer more 
+# consistent performance, lower computation overhead, and potentially higher 
+# throughput.
+#
+# When set, all block devices on the system will be switched to the chosen 
+# scheduler.
+IO_SCHEDULER=noop
+
+[vm]
+# Kernel Samepage Merging (KSM). KSM allows for an application to register with
+# the kernel so as to have its memory pages merged with other processes that
+# also register to have their pages merged. For KVM the KSM mechanism allows
+# for guest virtual machines to share pages with each other. In todays
+# environment where many of the guest operating systems like XEN, KVM are
+# similar and are running on same host machine, this can result in significant
+# memory savings, the default value is set to 0 change it to 1
+KSM=1
+
+[sysctl]
+# If the server is a heavily used application server, e.g. a Database, it would
+# benefit significantly by using Huge Pages. The default size of Huge Page in
+# SLES is 2 MB, enabling Huge Pages would aid in significant improvements for
+# Memory Intensive Applications/Databases, HPC Machines, this configuration
+# needs to be done if the Applications support Huge Pages. If the Applications
+# do not support Huge Pages then configuring Huge Pages would result in wastage
+# of memory as it cannot be used any further by the OS, by Default no huge
+# pages are allocated.
+vm.nr_hugepages = 128
+
+# If the amount of used swap is larger than the amount of anon memory pages
+# that you observe in /proc/meminfo, it shows that active memory is being
+# swapped. This would degrade performance and may be addressed by installing
+# more RAM. If the amount of swap in use is smaller than the amount of inactive
+# anon memory pages in /proc/meminfo, then it would indicate good performance.
+# If, however, you have more memory in swap than the amount of inactive
+# anonymous pages, then it would degrade performance because active memory is
+# being swapped. It would indicate too much I/O traffic, which might slow down
+# your system.
+vm.swappiness = 25
+
+# To reduce the rate at which VFS caches are reclaimed it would be good to reduce the vfs_cache_pressure, this
+# variable controls the tendency of the kernel to reclaim memory which is used for VFS Caches versus page cache
+# and swap.
+vm.vfs_cache_pressure = 50
+
+# Every Linux process generally tries to claim more memory than it needs.
+# The goal is to make the process much faster. If the process does not have
+# this excess memory then it needs to ask the kernel to allocate more memory
+# to the process leading to process getting slower if the request keeps
+# happening due to memory starvation. Some applications tend to perform better
+# if the system is tuned to behave that it has all the memory that application
+# process needs, but this can also lead to out of memory situations where the
+# kernel OOM killer gets invoked.
+# Set
+vm.overcommit_memory = 1
+# allowing over-commit to happen, and
+vm.overcommit_ratio = 70
+
+# For performance reasons, written data goes into a cache before being sent to
+# disk.  The cache of data waiting to be written is called "dirty cache".
+# If a server has more than 128 GB of RAM, lowering the dirty cache size may
+# potentially there may be cases were these values should be decreased.
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 5

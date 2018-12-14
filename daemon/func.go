@@ -1,6 +1,8 @@
 package daemon
 
 import (
+	"encoding/binary"
+	"fmt"
 	"log"
 	"os"
 	"reflect"
@@ -33,6 +35,7 @@ Blocks caller until channel is closed.
 */
 func (host *FunctionHost) maintainDMALatency() {
 	// The file handle must be maintained open in order to set the value
+	latency := make([]byte, 4)
 	dmaLatency, err := os.OpenFile("/dev/cpu_dma_latency", os.O_RDWR, 0600)
 	if err != nil {
 		log.Printf("FunctionHost.maintainDMALatency: failed to open cpu_dma_latency - %v", err)
@@ -42,9 +45,14 @@ func (host *FunctionHost) maintainDMALatency() {
 
 	for {
 		newValue, keepGoing := <-host.forceLatency
+		binary.LittleEndian.PutUint32(latency, uint32(newValue))
 		if keepGoing {
 			log.Printf("FunctionHost.maintainDMALatency: setting cpu_dma_latency to new value %d", newValue)
-			// TODO: write new value into file
+			// write new value into file
+			_, err = dmaLatency.Write(latency)
+			if err != nil {
+				log.Printf("FunctionHost.maintainDMALatency: writing to '/dev/cpu_dma_latency' failed - %v", err)
+			}
 		} else {
 			// Caller is responsible for maintaining forceLatencyIsSet flag
 			log.Print("FunctionHost.maintainDMALatency: stop maintaining cpu_dma_latency")
@@ -81,4 +89,21 @@ func (host *FunctionHost) StopForceLatency(_ DummyAttr, _ *DummyAttr) error {
 		host.forceLatencyIsSet = false
 	}
 	return nil
+}
+
+func GetForceLatency() string {
+	latency := make([]byte, 4)
+	dmaLatency, err := os.OpenFile("/dev/cpu_dma_latency", os.O_RDONLY, 0600)
+	if err != nil {
+		log.Printf("GetForceLatency: failed to open cpu_dma_latency - %v", err)
+	}
+	_, err = dmaLatency.Read(latency)
+	if err != nil {
+		log.Printf("GetForceLatency: reading from '/dev/cpu_dma_latency' failed:", err)
+	}
+	// Close the file handle after the latency value is no longer maintained
+	defer dmaLatency.Close()
+
+	ret := fmt.Sprintf("%v", binary.LittleEndian.Uint32(latency))
+	return ret
 }

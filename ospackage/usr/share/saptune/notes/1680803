@@ -1,9 +1,12 @@
-# This is the config file for tuning SAP ASE (Sybase)
+# 1680803 - SYB: SAP Adaptive Server Enterprise
+# - Best Practice for SAP Business Suite and SAP BW
+# as described in the best practice document appended to the note
+# capter 2.2 Configuration for Linux
+# SAP ASE (Sybase)
+# Version 24 from 20.11.2017 in English
 #
-#
-# You can change the values in this file to values which fit better for your 
-# special ASE configuration
-# You have to restart 'tuned' for the changes to take effect.
+[version]
+# SAP-NOTE=1680803 CATEGORY=SYBASE VERSION=24 DATE=20.11.2017 NAME="Sybase - SAP Adaptive Server Enterprise"
 
 [block]
 ## Type:    string
@@ -16,7 +19,7 @@
 # consistent performance, lower computation overhead, and potentially higher 
 # throughput.
 #
-# When set, all block devices on the system will be switched to the choosen 
+# When set, all block devices on the system will be switched to the chosen 
 # scheduler.
 IO_SCHEDULER=noop
 
@@ -25,7 +28,8 @@ IO_SCHEDULER=noop
 #
 # IO nr_requests
 #
-#
+# When set, the number of requests for all block devices on the system will 
+# be switched to the chosen value
 NRREQ=1024
 
 [limits]
@@ -33,24 +37,18 @@ NRREQ=1024
 ## Default: 0 (which means calculation: RAM in KB - 10%)
 #
 # memlock
-MEMLOCK_HARD=0
-MEMLOCK_SOFT=0
+LIMIT_HARD=0
+LIMIT_SOFT=0
+LIMIT_ITEM=memlock
+LIMIT_DOMAIN=sybase
 
 [vm]
-## Type:    yesno
-## Default: yes
-#
-# disable transparent huge pages (THP)
-#transparent_hugepages=never
-INI_THP=yes
+# Disable transparent hugepages (THP, applies to Intel-based systems only)
+# changes /sys/kernel/mm/transparent_hugepage/enabled
+# 'never' to disable, 'always' to enable
+THP=never
 
 [sysctl]
-
-#SAP-Note 1410736 
-net.ipv4.tcp_keepalive_time = 300
-net.ipv4.tcp_keepalive_intvl = 300
-
-#SAP-Note 1680803
 # maximum number of asynchronous I/Os.
 fs.aio-max-nr = 1048576
 
@@ -78,13 +76,15 @@ net.core.netdev_max_backlog = 30000
 # Huge Pages. If the Applications do not support Huge Pages then configuring 
 # Huge Pages would result in wastage of memory as it cannot be used any further
 # by the OS. 
-vm.nr_hugepages=128
+vm.nr_hugepages = 128
 
 # Discourage Linux from swapping idle processes to disk (default = 60)
 # value between 20 and 10
 vm.swappiness = 15
 
-#SAP-Note 1557506
-# additional the changes for SAP-Note 1557506 are done saptune internal.
-# to overwrite the values please change settings in 
-# /etc/sysconfig/saptune-note-1557506
+[reminder]
+# DBMS data storage settings: use ext4 or xfs file system. 
+# For best performance, disable the journal via tune2fs ^has_journal.
+# For ext4 the recommended mount options are 'noatime,nodiratime', if journaling is disabled or 'noatime,nodiratime,cache=writeback,barrier=0', if journaling is not disabled
+# For xfs the recommended mount options are 'noatime,nodiratime,nobarrier,logbufs=8'
+# network tuning including transmit queue (ifconfig <eth#> txqueuelen <value>). See Best_Practices_SAP_ASE_v1.2b.pdf (appended to the SAP Note) for more information.
