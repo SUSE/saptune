@@ -34,8 +34,7 @@ Tune system according to SAP and SUSE notes:
   saptune note [ apply | simulate | verify | customise | revert ] NoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
-  saptune solution [ apply | simulate | verify | revert ] SolutionName
-`)
+  saptune solution [ apply | simulate | verify | revert ] SolutionName`)
 	os.Exit(exitStatus)
 }
 
