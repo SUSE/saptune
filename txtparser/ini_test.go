@@ -11,6 +11,8 @@ import (
 
 var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1410736")
 var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "TCP/IP: setting keepalive interval", "", "4", "14.12.2017 ")
+var category = "NET"
+var fileVersion = "4"
 
 var iniExample = `
 # comment
@@ -128,5 +130,19 @@ func TestGetINIFileDescriptiveName(t *testing.T) {
 	str := GetINIFileDescriptiveName(fileName)
 	if str != descName {
 		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, descName)
+	}
+}
+
+func TestGetINIFileCategory(t *testing.T) {
+	str := GetINIFileCategory(fileName)
+	if str != category {
+		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, category)
+	}
+}
+
+func TestGetINIFileVersion(t *testing.T) {
+	str := GetINIFileVersion(fileName)
+	if str != fileVersion {
+		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, category)
 	}
 }

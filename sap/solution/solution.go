@@ -29,21 +29,21 @@ type Solution []string // Solution is identified by set of note numbers.
 
 // Architecture VS solution ID VS note numbers
 // AllSolutions = map[string]map[string]Solution
-var AllSolutions = GetSolutionDefintion()
-var OverrideSolutions = GetOverrideSolution()
+var AllSolutions = GetSolutionDefintion(SolutionSheet)
+var OverrideSolutions = GetOverrideSolution(OverrideSolutionSheet, NoteTuningSheets)
 
 // read solution definition from file
 // build same structure for AllSolutions as before
 // can be simplyfied later
-func GetSolutionDefintion() (map[string]map[string]Solution) {
+func GetSolutionDefintion(fileName string) (map[string]map[string]Solution) {
 	sols := make(map[string]map[string]Solution)
 	sol  := make(map[string]Solution)
 	currentArch := ""
 	arch := ""
 	pcarch := ""
-	content, err := txtparser.ParseINIFile(SolutionSheet, false)
+	content, err := txtparser.ParseINIFile(fileName, false)
 	if err != nil {
-		log.Printf("Failed to read solution definition from file '%s'", SolutionSheet)
+		log.Printf("Failed to read solution definition from file '%s'", fileName)
 		return sols
 	}
 
@@ -105,14 +105,14 @@ func GetSolutionDefintion() (map[string]map[string]Solution) {
 // read solution override definition from file
 // build same structure for AllSolutions as before
 // can be simplyfied later
-func GetOverrideSolution() (map[string]map[string]Solution) {
+func GetOverrideSolution(fileName, noteFiles string) (map[string]map[string]Solution) {
 	sols := make(map[string]map[string]Solution)
 	sol  := make(map[string]Solution)
 	currentArch := ""
 	arch := ""
 	pcarch := ""
 	// looking for override file
-	content, err := txtparser.ParseINIFile(OverrideSolutionSheet, false)
+	content, err := txtparser.ParseINIFile(fileName, false)
 	if err != nil {
 		return sols
 	}
@@ -121,8 +121,8 @@ func GetOverrideSolution() (map[string]map[string]Solution) {
 		//check, if all note files used in the override file are available in /usr/share/saptune/note
 		notesOK := true
 		for _, noteID := range strings.Split(content.KeyValue[param.Section][param.Key].Value,"\t") {
-			if _, err := os.Stat(fmt.Sprintf("%s%s", NoteTuningSheets, noteID)); err != nil {
-				log.Printf("Definition for note '%s' used for solution '%s' in override file '%s' not found in %s", noteID, param.Key, OverrideSolutionSheet, NoteTuningSheets)
+			if _, err := os.Stat(fmt.Sprintf("%s%s", noteFiles, noteID)); err != nil {
+				log.Printf("Definition for note '%s' used for solution '%s' in override file '%s' not found in %s", noteID, param.Key, fileName, noteFiles)
 				notesOK = false
 			}
 		}

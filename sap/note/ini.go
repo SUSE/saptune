@@ -8,6 +8,7 @@ import (
 	"log"
 	"path"
 	"strconv"
+	"strings"
 )
 
 const OverrideTuningSheets  = "/etc/saptune/override/"
@@ -135,6 +136,12 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
 		case INISectionPagecache:
+			// page cache is special, has it's own config file
+			// so adjust path to pagecache config file, if needed
+			pcPrefix := strings.Split(vend.ConfFilePath, "/usr/share/saptune/notes/1557506")
+			if len(pcPrefix) != 0 {
+				pc = LinuxPagingImprovements{SysconfigPrefix: strings.Join(pcPrefix, "")}
+			}
 			vend.SysctlParams[param.Key] = GetPagecacheVal(param.Key, &pc)
 		default:
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
@@ -186,7 +193,8 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
 		case INISectionPagecache:
-			vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc, ini.KeyValue)
+			//vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc, ini.KeyValue)
+			vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc)
 		default:
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
@@ -254,7 +262,7 @@ func (vend INISettings) Apply() error {
 		case INISectionMEM:
 			errs = append(errs, SetMemVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionCPU:
-			errs = append(errs, SetCpuVal(param.Key, vend.SysctlParams[param.Key], revertValues))
+			errs = append(errs, SetCpuVal(param.Key, vend.SysctlParams[param.Key], revertValues, vend.ID))
 		case INISectionRpm:
 			//nothing to do here
 		case INISectionGrub:

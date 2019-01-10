@@ -142,11 +142,7 @@ If system does not support Intel's performance bias setting - '\fBall:none\fR' i
 
 When set as 'energy_perf_bias=<performance|normal|powersave> in the Note definition file, the value will be set for \fBall\fR available CPUs.
 .br
-The command '\fBcpupower -c all set -b <value>\fR' is used to set the value.
-.br
-When set as 'energy_perf_bias=cpu0:performance cpu1:normal cpu2:performance cpu3:powersave' in the Note definition file, the values will be set individual for each CPU.
-.br
-The command '\fBcpupower -c <cpu> set -b <value>\fR' is used to set the value.
+The command '\fBcpupower -c all set -b <value>\fR' or '\fBcpupower -c <cpu> set -b <value>\fR' is used to set the value.
 .TP
 .BI governor
 CPU Frequency/Voltage scaling (applies to Intel-based systems only)
@@ -160,11 +156,7 @@ If the governor settings of all available CPUs are equal, '\fBall:<governor>\fR'
 
 When set as 'governor=<performance|powersave> in the Note definition file, the value will be set for \fBall\fR available CPUs.
 .br
-The command '\fBcpupower -c all frequency-set -g <value>\fR' is used to set the value.
-.br
-When set as 'governor==cpu0:performance cpu1:powersave cpu2:performance cpu3:powersave' in the Note definition file, the values will be set individual for each CPU.
-.br
-The command '\fBcpupower -c <cpu> frequency-set -g <value>\fR' is used to set the value.
+The command '\fBcpupower -c all frequency-set -g <value>\fR' or '\fBcpupower -c <cpu> frequency-set -g <value>\fR' is used to set the value.
 .TP
 .BI force_latency= STRING
 
@@ -198,13 +190,22 @@ Syntax:
 .br
 Add one line for each SLE version a package should be checked for, even if the package version is the same.
 .br
-The SLE version should be noted in the same format as the '\fBVERSION=\fR' entry in \fI/etc/os-release\fR. 
+The SLE version has to be noted in the same format as the '\fBVERSION=\fR' entry in \fI/etc/os-release\fR.
 
 e.g
+.br
 systemd 12-SP2 228-142.1
+.br
 sapinit-systemd-compat 12 1.0-2.1
+.br
 sapinit-systemd-compat 12-SP1 1.0-2.1
+.br
 util-linux 12-SP1 2.25-22.1
+
+Only the lines where the SLE version is matching the running system OS are checked and displayed during the 'verify' and 'simulate' option.
+.br
+That means, if there is no matching SLE version for the running OS no rpm entries are listed during the 'verify' and 'simulate' operation.
+
 .SH "[grub]"
 The section "[grub]" is checking kernel commandline settings for grub.
 The values from the Note definition files are only checked against \fI/proc/cmdline\fR. Changing the grub configuration is not supported by saptune.
