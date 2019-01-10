@@ -48,8 +48,7 @@ Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
   saptune solution [ apply | simulate | verify ] SolutionName
 Revert all parameters tuned by the SAP notes or solutions:
-  saptune revert all
-`)
+  saptune revert all`)
 	os.Exit(exitStatus)
 }
 
