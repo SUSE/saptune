@@ -205,7 +205,7 @@ func TestAllSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["LIMIT_ITEM"] != "sybase:memlock " {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["ShmFileSystemSizeMB"] != "25605" {
+	if optimisedINI.SysctlParams["ShmFileSystemSizeMB"] != "25605" && optimisedINI.SysctlParams["ShmFileSystemSizeMB"] != "-1" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["VSZ_TMPFS_PERCENT"] != "60" {
