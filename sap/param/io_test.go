@@ -1,14 +1,11 @@
 package param
 
 import (
-	"github.com/SUSE/saptune/system"
+	"io/ioutil"
 	"testing"
 )
 
 func TestIOElevators(t *testing.T) {
-	if !system.IsUserRoot() {
-		t.Skip("the test requires root access")
-	}
 	inspected, err := BlockDeviceSchedulers{}.Inspect()
 	if err != nil {
 		t.Fatal(err, inspected)
@@ -36,9 +33,6 @@ func TestIOElevators(t *testing.T) {
 }
 
 func TestNrRequests(t *testing.T) {
-	if !system.IsUserRoot() {
-		t.Skip("the test requires root access")
-	}
 	inspected, err := BlockDeviceNrRequests{}.Inspect()
 	if err != nil {
 		t.Fatal(err, inspected)
@@ -61,6 +55,54 @@ func TestNrRequests(t *testing.T) {
 	for name, nrrequest := range optimised.(BlockDeviceNrRequests).NrRequests {
 		if name == "" || nrrequest < 0 {
 			t.Fatal(optimised)
+		}
+	}
+}
+
+func TestIsValidScheduler(t *testing.T) {
+	dirCont, err := ioutil.ReadDir("/sys/block")
+	if err != nil {
+		t.Skip("no block files available. Skip test.")
+	}
+	for _, entry := range dirCont {
+		if entry.Name() == "sda" {
+			if !IsValidScheduler("sda", "cfq") {
+				t.Fatal("'cfq' is not a valid scheduler for 'sda'")
+			}
+			if IsValidScheduler("sda", "hugo") {
+				t.Fatal("'hugo' is a valid scheduler for 'sda'")
+			}
+		}
+		if entry.Name() == "vda" {
+			if !IsValidScheduler("vda", "none") {
+				t.Fatal("'none' is not a valid scheduler for 'vda'")
+			}
+			if IsValidScheduler("vda", "hugo") {
+				t.Fatal("'hugo' is a valid scheduler for 'vda'")
+			}
+		}
+	}
+}
+
+func TestIsValidforNrRequests(t *testing.T) {
+	dirCont, err := ioutil.ReadDir("/sys/block")
+	if err != nil {
+		t.Skip("no block files available. Skip test.")
+	}
+	for _, entry := range dirCont {
+		if entry.Name() == "sda" {
+			if !IsValidforNrRequests("sda", "1024") {
+				t.Log("'1024' is not a valid number of requests for 'sda'")
+			} else {
+				t.Log("'1024' is a valid number of requests for 'sda'")
+			}
+		}
+		if entry.Name() == "vda" {
+			if !IsValidforNrRequests("vda", "128") {
+				t.Log("'128' is not a valid number of requests for 'vda'")
+			} else {
+				t.Log("'128' is a valid number of requests for 'vda'")
+			}
 		}
 	}
 }

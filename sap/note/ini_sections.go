@@ -271,6 +271,9 @@ func OptLimitsVal(key, actval, cfgval, item, domain string) string {
 }
 
 func SetLimitsVal(key, value, item string) error {
+	if key != "LIMIT_HARD" && key != "LIMIT_SOFT" {
+		return nil
+	}
 	secLimits, err := system.ParseSecLimitsFile()
 	if err != nil {
 		return err
@@ -357,6 +360,8 @@ func GetCpuVal(key string) string {
 }
 
 func OptCpuVal(key, actval, cfgval string) string {
+//ANGI TODO - check cfgval is not a single value like 'performance' but
+// cpu0:performance cpu2:powersave
 	sval := strings.ToLower(cfgval)
 	rval := ""
 	val := "0"
@@ -376,6 +381,9 @@ func OptCpuVal(key, actval, cfgval string) string {
 			log.Print("wrong selection for energy_perf_bias. Now set to 'performance'")
 			val = "0"
 		}
+		//ANGI TODO - if actval 'all:6', but cfgval 'cpu0:performance cpu1:normal cpu2:powersave'
+		// - does not work now - check lenght of both?
+		// same for governor
 		for _, entry := range strings.Fields(actval) {
 			fields := strings.Split(entry, ":")
 			rval = rval + fmt.Sprintf("%s:%s ", fields[0], val)
@@ -391,12 +399,12 @@ func OptCpuVal(key, actval, cfgval string) string {
 	return sval
 }
 
-func SetCpuVal(key, value string, revert bool) error {
+func SetCpuVal(key, value string, revert bool, noteId string) error {
 	var err error
 	switch key {
 	case "force_latency":
 		//iVal, _ := strconv.Atoi(value)
-		err = system.SetForceLatency(value, revert)
+		err = system.SetForceLatency(noteId, value, revert)
 	case "energy_perf_bias":
 		err = system.SetPerfBias(value)
 	case "governor":
@@ -431,12 +439,10 @@ func GetMemVal(key string) string {
 func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
 	// shmsize       value of ShmFileSystemSizeMB from config file
 	// tmpfspercent  value of VSZ_TMPFS_PERCENT from config file
-	var curval, size uint64
+	var size uint64
 	var ret string
 
-	curval, _ = strconv.ParseUint(actval, 10, 64)
-
-	if curval < 0 {
+	if actval == "-1" {
 		log.Print("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
 		size = 0
 	} else if shmsize == "0" {
@@ -500,7 +506,7 @@ func SetRpmVal(value string) error {
 // section [grub]
 func GetGrubVal(key string) string {
 	keyFields := strings.Split(key, ":")
-	val := system.ParseCmdline(keyFields[1])
+	val := system.ParseCmdline("/proc/cmdline", keyFields[1])
 	return val
 }
 
@@ -567,7 +573,7 @@ func OptServiceVal(key, cfgval string) string {
 		}
 	case "Sysstat":
 		if sval != "start" && sval != "stop" {
-			log.Print("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
+			log.Printf("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
 			sval = "start"
 		}
 	default:
@@ -641,7 +647,7 @@ func SetLoginVal(key, value string, revert bool) error {
 // section [pagecache]
 func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 	val := ""
-	currentPagecache, err := LinuxPagingImprovements{}.Initialise()
+	currentPagecache, err := LinuxPagingImprovements{SysconfigPrefix: cur.SysconfigPrefix}.Initialise()
 	if err != nil {
 		return ""
 	}
@@ -653,12 +659,6 @@ func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 			val = "no"
 		} else {
 			val = "yes"
-		}
-	case "TUNE_FOR_HANA":
-		if current.UseAlgorithmForHANA {
-			val = "yes"
-		} else {
-			val = "no"
 		}
 	case "PAGECACHE_LIMIT_IGNORE_DIRTY":
 		val = strconv.Itoa(current.VMPagecacheLimitIgnoreDirty)
@@ -673,18 +673,14 @@ func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 	return val
 }
 
-func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements, keyvalue map[string]map[string]txtparser.INIEntry) string {
+//func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements, keyvalue map[string]map[string]txtparser.INIEntry) string {
+func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 	val := strings.ToLower(cfgval)
 
 	switch key {
 	case "ENABLE_PAGECACHE_LIMIT":
 		if val != "yes" && val != "no" {
 			log.Print("wrong selection for ENABLE_PAGECACHE_LIMIT. Now set to default 'no'")
-			val = "no"
-		}
-	case "TUNE_FOR_HANA":
-		if val != "yes" && val != "no" {
-			log.Print("wrong selection for TUNE_FOR_HANA. Now set to default 'no'")
 			val = "no"
 		}
 	case "PAGECACHE_LIMIT_IGNORE_DIRTY":

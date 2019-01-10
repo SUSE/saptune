@@ -54,4 +54,7 @@ func TestMin(t *testing.T) {
 	if val := MinU64(4, 3, 5, 2, 6); val != 2 {
 		t.Fatal(val)
 	}
+	if val := MinU64(); val != 0 {
+		t.Fatal(val)
+	}
 }

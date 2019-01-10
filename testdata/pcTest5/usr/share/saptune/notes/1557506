@@ -1,0 +1,38 @@
+# 1557506 - Linux paging improvements
+# Description:    Tune page cache limit to prevent eviction of SAP applications memory into swap
+# Version 14 from 10.08.2015 in English
+
+[version]
+# SAP-NOTE=1557506 CATEGORY=LINUX VERSION=14 DATE=10.08.2015 NAME="Linux paging improvements"
+
+[pagecache]
+## Type:    yesno
+## Default: no
+#
+# Consider to enable pagecache limit feature if your SAP workloads cause 
+# frequent and excessive swapping activities.
+# It is recommended to leave pagecache limit disabled if the system has low 
+# or no swap space.
+ENABLE_PAGECACHE_LIMIT=no
+
+## Type:    integer
+## Default: 1
+#
+# Whether or not to ignore dirty memory when enforcing the pagecache limit.
+# If set to 0, dirty memory will be freed (written onto disk) when enforcing 
+# the pagecache limit.
+# If set to 1 (default), dirty memory will not be freed when enforcing the 
+# pagecache limit.
+# If set to 2 - a middle ground, some dirty memory will be freed when enforcing
+# the limit.
+PAGECACHE_LIMIT_IGNORE_DIRTY=1
+
+## Type:    integer
+## Default: ""
+#
+# When pagecache limit feature is enabled, the limit value is usually 
+# automatically calculated.
+# However, the value can be overriden if you set this parameter to the desired
+# limit value.
+# To remove the override, set the parameter to empty string.
+OVERRIDE_PAGECACHE_LIMIT_MB=641

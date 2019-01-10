@@ -9,11 +9,11 @@ import (
 
 // Parse /proc/cmdline into key(string) - value(string) pairs.
 // return value for given boot option or 'NA', if not available
-func ParseCmdline(option string) string {
+func ParseCmdline(fileName, option string) string {
 	opt := "NA"
-	cmdLine, err := ioutil.ReadFile("/proc/cmdline")
+	cmdLine, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		log.Printf("ParseCmdline: failed to read  /proc/cmdline: %v", err)
+		log.Printf("ParseCmdline: failed to read  %s: %v", fileName, err)
 		return opt
 	}
 	for _, param := range strings.Fields(string(cmdLine)) {

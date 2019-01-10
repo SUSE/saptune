@@ -14,17 +14,6 @@ import (
 	"strings"
 )
 
-/*
-const (
-	INISectionSysctl    = "sysctl"
-	INISectionVM        = "vm"
-	INISectionBlock     = "block"
-	INISectionLimits    = "limits"
-	SysKernelTHPEnabled = "kernel/mm/transparent_hugepage/enabled"
-	SysKSMRun           = "kernel/mm/ksm/run"
-)
-*/
-
 // No longer active. Only needed for compatibility reasons
 // Revert of notes applied by an older saptune version
 
