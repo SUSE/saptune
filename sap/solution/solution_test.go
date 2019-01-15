@@ -36,9 +36,9 @@ func TestGetOverrideSolution(t *testing.T) {
 	ovsolutionFile := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/saptune-test-override-sols")
 	noteFiles := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata") + "/"
 	hansol := "HANA1 NEWNOTE HANA2"
-	solcount := 1
+	solcount := 2
 	if system.IsPagecacheAvailable() {
-		solcount = 2
+		solcount = 4
 	}
 
 	ovsolutions := GetOverrideSolution(ovsolutionFile, noteFiles)

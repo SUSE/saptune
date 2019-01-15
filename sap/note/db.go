@@ -38,7 +38,9 @@ func (paging LinuxPagingImprovements) Optimise() (Note, error) {
 	inputEnable := conf.GetBool("ENABLE_PAGECACHE_LIMIT", false)
 	inputOverride := conf.GetInt("OVERRIDE_PAGECACHE_LIMIT_MB", 0)
 
-	// For HANA: new limit is 2% system memory
+	// As discussed with SAP and Alliance team, use the HANA formula for
+	// Netweaver too.
+	// So for HANA and Netweaver: new limit is 2% system memory
 	newPaging.VMPagecacheLimitMB = system.GetMainMemSizeMB() * 2 / 100
 	if inputOverride != 0 {
 		newPaging.VMPagecacheLimitMB = uint64(inputOverride)

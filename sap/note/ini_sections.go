@@ -59,6 +59,10 @@ func GetServiceName(service string) string {
 // section handling
 // section [sysctl]
 func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) string {
+	if actval == "" {
+		// sysctl parameter not available in system
+		return ""
+	}
 	allFieldsC := strings.Fields(actval)
 	allFieldsE := strings.Fields(cfgval)
 	allFieldsS := ""
