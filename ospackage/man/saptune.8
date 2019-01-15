@@ -43,7 +43,7 @@ saptune is designed to automate the configuration recommendations from SAP and S
 saptune can apply settings for a single Note definition or can set all settings for a predefined solution, which is a collection of several SAP Notes. Additional it can revert all these settings back to the previous system settings.
 
 It can verify, if the current system configuration is in sync with a specific Note definition or a defined solution and displays the differences.
-Additional it can simulate the setting of a single Note definition or a defined solution and will display the changes which will be done to the system.
+Additionally, it can simulate the setting of a single SAP Note definition or a defined solution and will display the changes which will be done to the system.
 
 saptune does not only set kernel values (like sysctl does), but also values like cpu governor, energy perf bias, force latency (dma latency) and the disk io scheduler. Additionally it will check/verify, if suitable rpm versions are installed and special kernel command line values are set, according to the relevant SAP Notes. So saptune checks and applies values in various locations during runtime like
 .PP
@@ -64,7 +64,7 @@ Report the status of tuned(8) daemon and whether it is using the correct profile
 Stop tuned(8) daemon, and revert all optimisations that were previously applied by saptune. The daemon will no longer automatically activate upon boot.
 
 .SH NOTE ACTIONS
-Note denotes either an SAP note, a vendor specific tuning definition or SUSE recommendation article.
+Note denotes either a SAP note, a vendor specific tuning definition or SUSE recommendation article.
 .SS
 .TP
 .B apply

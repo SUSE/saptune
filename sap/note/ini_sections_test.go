@@ -6,6 +6,7 @@ import (
 	"github.com/SUSE/saptune/txtparser"
 	"os"
 	"path"
+	"runtime"
 	"strconv"
 	"testing"
 )
@@ -115,11 +116,13 @@ func TestOptLimitsVal(t *testing.T) {
 //SetLimitsVal
 
 func TestGetVmVal(t *testing.T) {
-	val := GetVmVal("THP")
-	if val != "always" && val != "madvise" && val != "never" {
-		t.Fatalf("wrong value '%+v' for THP.\n", val)
+	if runtime.GOARCH != "ppc64le" {
+		val := GetVmVal("THP")
+		if val != "always" && val != "madvise" && val != "never" {
+			t.Fatalf("wrong value '%+v' for THP.\n", val)
+		}
 	}
-	val = GetVmVal("KSM")
+	val := GetVmVal("KSM")
 	if val != "1" && val != "0" {
 		t.Fatalf("wrong value '%+v' for KSM.\n", val)
 	}

@@ -5,6 +5,7 @@ import (
 	"github.com/SUSE/saptune/txtparser"
 	"os"
 	"path"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -121,6 +122,10 @@ func TestVendorSettings(t *testing.T) {
 }
 
 func TestAllSettings(t *testing.T) {
+	testString := []string{"vm.nr_hugepages", "THP", "KSM", "Sysstat"}
+	if runtime.GOARCH == "ppc64le" {
+		testString = []string{"KSM", "Sysstat"}
+	}
 	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_all_test.ini")
 	ini := INISettings{ConfFilePath: iniPath}
 
@@ -136,7 +141,7 @@ func TestAllSettings(t *testing.T) {
 		t.Fatal(err)
 	}
 	initialisedINI := initialised.(INISettings)
-	for _, key := range []string{"vm.nr_hugepages", "THP", "KSM", "Sysstat"} {
+	for _, key := range testString {
 		if initialisedINI.SysctlParams[key] == "" {
 			t.Fatal(initialisedINI.SysctlParams)
 		}
@@ -229,8 +234,10 @@ func TestAllSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["UserTasksMax"] != "setinpostinstall" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if i, err := strconv.ParseInt(optimisedINI.SysctlParams["vm.nr_hugepages"], 10, 64); err != nil || i != 128 {
-		t.Fatal(i, err)
+	if runtime.GOARCH != "ppc64le" {
+		if i, err := strconv.ParseInt(optimisedINI.SysctlParams["vm.nr_hugepages"], 10, 64); err != nil || i != 128 {
+			t.Fatal(i, err)
+		}
 	}
 	txt2chk := `# Text to ignore for apply but to display.
 # Everything the customer should know about this note, especially
