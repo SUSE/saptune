@@ -110,4 +110,7 @@ func TestState(t *testing.T) {
 	if num, err := state.List(); len(num) != 0 || err != nil {
 		t.Fatal(num, err)
 	}
+	if err := state.Retrieve("1", &readNote1); err == nil && readNote1 == note1 {
+		t.Fatal(err, readNote1)
+	}
 }

@@ -3,7 +3,6 @@ package system
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"strings"
 )
@@ -38,15 +37,7 @@ func SystemctlIsRunning(thing string) bool {
 	return false
 }
 
-// Call tuned-adm to switch to the specified profile. Panic on error.
-func TunedAdmProfile(profileName string) error {
-	if out, err := exec.Command("tuned-adm", "profile", profileName).CombinedOutput(); err != nil {
-		return fmt.Errorf("Failed to call tuned-adm to active profile %s - %v %s", profileName, err, string(out))
-	}
-	return nil
-}
-
-// Write new profile to tuned
+// Write new profile to tuned, used instead of sometimes unreliable 'tuned-adm' command
 func WriteTunedAdmProfile(profileName string) error {
 	err := ioutil.WriteFile("/etc/tuned/active_profile", []byte(profileName), 0644)
 	if err != nil {
@@ -62,9 +53,4 @@ func GetTunedProfile() string {
 		return ""
 	}
 	return strings.TrimSpace(string(content))
-}
-
-// Return true only if the current user is root.
-func IsUserRoot() bool {
-	return os.Getuid() == 0
 }

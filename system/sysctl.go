@@ -90,22 +90,6 @@ func GetSysctlUint64(parameter string) (uint64, error) {
 	return strconv.ParseUint(value, 10, 64)
 }
 
-// Extract a uint64 value from a sysctl key of many fields.
-func GetSysctlUint64Field(param string, field int) (uint64, error) {
-	fields, err := GetSysctlString(param)
-	if err == nil {
-		allFields := consecutiveSpaces.Split(fields, -1)
-		if field < len(allFields) {
-			value, err := strconv.ParseUint(allFields[field], 10, 64)
-			if err != nil {
-				return 0, fmt.Errorf("Failed to read sysctl key field '%s' %d: %v", param, field, err)
-			}
-			return value, nil
-		}
-	}
-	return 0, err
-}
-
 // Write a string sysctl value.
 func SetSysctlString(parameter, value string) error {
 	err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)

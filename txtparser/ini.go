@@ -137,7 +137,7 @@ func ParseINI(input string) *INIFile {
 		kov := make([]string, 0)
 		if currentSection == "rpm" {
 			fields := strings.Fields(line)
-			if fields[1] == system.GetOsVers() {
+			if fields[1] == "all" || fields[1] == system.GetOsVers() {
 				kov = []string {"rpm", "rpm:" + fields[0], fields[1], fields[2]}
 			} else {
 				kov = nil

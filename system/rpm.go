@@ -3,7 +3,6 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -11,29 +10,6 @@ import (
 )
 
 var alphanumPattern = regexp.MustCompile("([a-zA-Z]+)|([0-9]+)|(~)")
-
-func GetOsVers() string {
-	// VERSION="12", VERSION="15"
-	// VERSION="12-SP1", VERSION="12-SP2", VERSION="12-SP3"
-	var re = regexp.MustCompile(`VERSION="([\w-]+)"`)
-	val, err := ioutil.ReadFile("/etc/os-release")
-	if err != nil {
-		return ""
-	}
-	matches := re.FindStringSubmatch(string(val))
-	return matches[1]
-}
-
-func GetOsName() string {
-	// NAME="SLES"
-	var re = regexp.MustCompile(`NAME="(\w+)"`)
-	val, err := ioutil.ReadFile("/etc/os-release")
-	if err != nil {
-		return ""
-	}
-	matches := re.FindStringSubmatch(string(val))
-	return matches[1]
-}
 
 func GetRpmVers(rpm string) string {
 	// rpm -q --qf '%{VERSION}-%{RELEASE}\n' glibc
@@ -44,7 +20,7 @@ func GetRpmVers(rpm string) string {
 
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil {
-		if strings.TrimSpace(string(cmdOut)) != notInstalled {
+		if len(string(cmdOut)) == 0 || strings.TrimSpace(string(cmdOut)) != notInstalled {
 			fmt.Printf("There was an error running external command 'rpm -q --qf '%%{VERSION}-%%{RELEASE}' %s': %v, output: %s", rpm, err, cmdOut)
 		}
 		return ""

@@ -38,13 +38,18 @@ saptune \- Comprehensive system optimisation management for SAP solutions
 all
 
 .SH DESCRIPTION
-saptune is a utility program that optimises your system according to recommendations/best practice guides written by SAP and SUSE, normally referred to as SAP Notes.
+saptune is designed to automate the configuration recommendations from SAP and SUSE to run an SAP application on SLES for SAP. These configuration recommendations normally referred to as SAP Notes. So some dedicated SAP Notes are the base for the work of saptune. Additional some best practice guides are added as Note definitions to optimise the system for some really special cases.
 
-saptune fully integrates with tuned(8), the tuned-profile name associated with this utility is "saptune".
+saptune can apply settings for a single Note definition or can set all settings for a predefined solution, which is a collection of several SAP Notes. Additional it can revert all these settings back to the previous system settings.
 
-saptune checks and applies values in various locations during runtime like 
+It can verify, if the current system configuration is in sync with a specific Note definition or a defined solution and displays the differences.
+Additionally, it can simulate the setting of a single SAP Note definition or a defined solution and will display the changes which will be done to the system.
+
+saptune does not only set kernel values (like sysctl does), but also values like cpu governor, energy perf bias, force latency (dma latency) and the disk io scheduler. Additionally it will check/verify, if suitable rpm versions are installed and special kernel command line values are set, according to the relevant SAP Notes. So saptune checks and applies values in various locations during runtime like
 .PP
 /proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.conf and some others.
+
+saptune fully integrates with tuned(8), the tuned-profile name associated with this utility is "saptune".
 
 .SH DAEMON ACTIONS
 .SS
@@ -59,7 +64,7 @@ Report the status of tuned(8) daemon and whether it is using the correct profile
 Stop tuned(8) daemon, and revert all optimisations that were previously applied by saptune. The daemon will no longer automatically activate upon boot.
 
 .SH NOTE ACTIONS
-Note denotes either an SAP note, a vendor specific tuning definition or SUSE recommendation article.
+Note denotes either a SAP note, a vendor specific tuning definition or SUSE recommendation article.
 .SS
 .TP
 .B apply
@@ -128,7 +133,7 @@ This allows to customize the values of the saptune Note definitions. The Note de
 The editor is defined by the \fBEDITOR\fR environment variable. If not set editor defaults to /usr/bin/vim.
 
 .SH SOLUTION ACTIONS
-A solution is associated with one or more Notes. Activation of a solution will activate all associated Notes.
+A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.
 .br
 The solution definitions can be found in the file \fI/usr/share/saptune/solutions\fR
 .SS

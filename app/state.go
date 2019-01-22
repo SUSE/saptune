@@ -49,9 +49,6 @@ func (state *State) List() (ret []string, err error) {
 	}
 	ret = make([]string, 0, len(dirContent))
 	for _, info := range dirContent {
-		if info.Name() == "sap_force_latency" {
-			continue
-		}
 		ret = append(ret, info.Name())
 	}
 	return

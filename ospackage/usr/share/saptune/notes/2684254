@@ -1,0 +1,91 @@
+# 2684254 - SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
+# Description:    HANA DB settings
+# Version 5 from 03.01.2019 in English
+
+[version]
+# SAP-NOTE=2684254 CATEGORY=HANA VERSION=5 DATE=03.01.2019 NAME="SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15"
+
+[vm]
+# Disable transparent hugepages (THP, applies to Intel-based systems only)
+# changes /sys/kernel/mm/transparent_hugepage/enabled
+# 'never' to disable, 'always' to enable
+# SAP Note 2131662, 2031375
+#
+THP=never
+
+# Kernel Samepage Merging (KSM). KSM allows for an application to register with
+# the kernel so as to have its memory pages merged with other processes that
+# also register to have their pages merged. For KVM the KSM mechanism allows
+# for guest virtual machines to share pages with each other. In todays
+# environment where many of the guest operating systems like XEN, KVM are
+# similar and are running on same host machine, this can result in significant
+# memory savings, the default value is set to 0.
+# ATTENTION: /usr/share/saptune/note/SUSE-GUIDE-01 will change it to 1, if
+# activated after note 2205917 or solution HANA
+#
+KSM=0
+
+[cpu]
+# Energy Performance Bias EPB (applies to Intel-based systems only)
+# energy_perf_bias: performance - 0, normal - 6, powersave - 15
+# cpupower set -b 0, if system supports Intel's performance bias setting
+# if system does not support Intel's performance bias setting - 'all:none' 
+# is used in verify table
+energy_perf_bias=performance
+
+# CPU Frequency/Voltage scaling (applies to Intel-based systems only)
+# The clock frequency and voltage of modern CPUs can scale, in order to save
+# energy when there’s less work to be done. However HANA as a high-performance
+# database benefits from high CPU frequencies.
+# cpupower frequency-set -g performance
+governor=performance
+
+# force latency
+# input is a decimal (not a hexadecimal) number
+force_latency=70
+
+[sysctl]
+# /proc/sys/kernel/numa_balancing
+# Enables/disables automatic page fault based NUMA memory balancing.
+# Memory is moved automatically to nodes that access it often.
+# Enables/disables automatic NUMA memory balancing. On NUMA machines, there
+# is a performance penalty if remote memory is accessed by a CPU. When this
+# feature is enabled the kernel samples what task thread is accessing memory
+# by periodically unmapping pages and later trapping a page fault. At the
+# time of the page fault, it is determined if the data being accessed should
+# be migrated to a local memory node.
+# The unmapping of pages and trapping faults incur additional overhead that
+# ideally is offset by improved memory locality but there is no universal
+# guarantee. If the target workload is already bound to NUMA nodes then this
+# feature should be disabled. Otherwise, if the system overhead from the
+# feature is too high then the rate the kernel samples for NUMA hinting
+# faults may be controlled by the numa_balancing_scan_period_min_ms,
+# numa_balancing_scan_delay_ms, numa_balancing_scan_period_max_ms,
+# numa_balancing_scan_size_mb, and numa_balancing_settle_count sysctls.
+#
+# Turn off autoNUMA balancing
+# 0 to disable, 1 to enable
+kernel.numa_balancing=0
+
+[grub]
+# /etc/default/grub GRUB_CMDLINE_LINUX_DEFAULT
+# saptune only checks the values. Changing the grub configuration is not
+# supported by saptune
+# some of these values are set by saptune during runtime, so changing the
+# grub configuration is possible but not needed
+#
+# Configure C-States for lower latency in Linux (applies to Intel-based systems
+# only) - see energy_perf_bias and governor in section [cpu]
+intel_idle.max_cstate=1
+processor.max_cstate=1
+
+# Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl]
+numa_balancing=disable
+# Disable transparent hugepages - see THP in section [vm]
+transparent_hugepage=never
+
+[reminder]
+# IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not supported by saptune!
+
+# Intel Cluster-On-Die (COD) / sub-NUMA clustering technology
+# HANA is not supported neither on Intel Cluster-On-Die (COD) technology nor on sub-NUMA clustering technology.
