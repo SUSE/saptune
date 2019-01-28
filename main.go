@@ -43,10 +43,10 @@ Daemon control:
   saptune daemon [ start | status | stop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify ]
-  saptune note [ apply | simulate | verify | customise ] NoteID
+  saptune note [ apply | simulate | verify | customise | revert ] NoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
-  saptune solution [ apply | simulate | verify ] SolutionName
+  saptune solution [ apply | simulate | verify | revert ] SolutionName
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all`)
 	os.Exit(exitStatus)
@@ -538,7 +538,6 @@ func NoteAction(actionName, noteID string) {
 		if err := syscall.Exec(editor, []string{editor, editFileName}, os.Environ()); err != nil {
 			errorExit("Failed to start launch editor %s: %v", editor, err)
 		}
-/*
 	case "revert":
 		if noteID == "" {
 			PrintHelpAndExit(1)
@@ -548,7 +547,6 @@ func NoteAction(actionName, noteID string) {
 		}
 		fmt.Println("Parameters tuned by the note have been successfully reverted.")
 		fmt.Println("Please note: the reverted note may still show up in list of enabled notes, if an enabled solution refers to it.")
-*/
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -627,7 +625,6 @@ func SolutionAction(actionName, solName string) {
 			fmt.Printf("If you run `saptune solution apply %s`, the following changes will be applied to your system:\n", solName)
 			PrintNoteFields("NONE", comparisons, false)
 		}
-/*
 	case "revert":
 		if solName == "" {
 			PrintHelpAndExit(1)
@@ -636,7 +633,6 @@ func SolutionAction(actionName, solName string) {
 			errorExit("Failed to revert tuning for solution %s: %v", solName, err)
 		}
 		fmt.Println("Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
-*/
 	default:
 		PrintHelpAndExit(1)
 	}
