@@ -7,6 +7,7 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"reflect"
@@ -117,15 +118,21 @@ func (app *App) TuneNote(noteID string) error {
 		}
 	}
 	/*
-		Do not apply the note if system already complies with the requirements.
+		Do not apply the note if it was applied before
 		Otherwise, the state file (serialised parameters) will be overwritten, and it will no longer
 		be possible to revert the note to the state before it was tuned.
 	*/
-	conforming, _, valApplyList, err := app.VerifyNote(noteID)
+	_, _, valApplyList, err := app.VerifyNote(noteID)
 	if err != nil {
 		return err
-	} else if conforming {
-		return nil
+	} else {
+		_, err := os.Stat(app.State.GetPathToNote(noteID))
+		if err == nil {
+			// state file for note already exists
+			// do not apply the note again
+			log.Printf("note '%s' already applied. Nothing to do", noteID)
+			return nil
+		}
 	}
 	// Save current state before applying optimisation
 	currentState, err := aNote.Initialise()
@@ -256,6 +263,10 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 	var noteIface interface{} = noteReflectValue.Interface()
 	if err = app.State.Retrieve(note2revert, &noteIface); err == nil {
 		var noteRecovered note.Note = noteIface.(note.Note)
+		if reflect.TypeOf(noteRecovered).String() == "*note.INISettings" {
+			noteRecovered = noteRecovered.(*note.INISettings).SetValuesToApply([]string{"revert"})
+		}
+
 		if err := noteRecovered.Apply(); err != nil {
 			return err
 		} else if err := app.State.Remove(note2revert); err != nil {

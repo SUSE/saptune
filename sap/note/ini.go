@@ -131,10 +131,13 @@ func (vend INISettings) Initialise() (Note, error) {
 			vend.SysctlParams[param.Key] = GetCpuVal(param.Key)
 		case INISectionRpm:
 			vend.SysctlParams[param.Key] = GetRpmVal(param.Key)
+			continue
 		case INISectionGrub:
 			vend.SysctlParams[param.Key] = GetGrubVal(param.Key)
+			continue
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
+			continue
 		case INISectionPagecache:
 			// page cache is special, has it's own config file
 			// so adjust path to pagecache config file, if needed
@@ -146,6 +149,9 @@ func (vend INISettings) Initialise() (Note, error) {
 		default:
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
+		}
+		if vend.SysctlParams[param.Key] != "" {
+			CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
 		}
 	}
 	return vend, nil
@@ -188,16 +194,22 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = OptCpuVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionRpm:
 			vend.SysctlParams[param.Key] = OptRpmVal(param.Key, param.Value)
+			continue
 		case INISectionGrub:
 			vend.SysctlParams[param.Key] = OptGrubVal(param.Key, param.Value)
+			continue
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
+			continue
 		case INISectionPagecache:
 			//vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc, ini.KeyValue)
 			vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc)
 		default:
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
+		}
+		if vend.SysctlParams[param.Key] != "" {
+			AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
 		}
 	}
 	return vend, nil
@@ -206,7 +218,12 @@ func (vend INISettings) Optimise() (Note, error) {
 func (vend INISettings) Apply() error {
 	errs := make([]error, 0, 0)
 	revertValues := false
+
 	if len(vend.ValuesToApply) == 0 {
+		// nothing to apply
+		return nil
+	}
+	if _, ok := vend.ValuesToApply["revert"]; ok {
 		revertValues = true
 	}
 	// Parse the configuration file
@@ -216,8 +233,23 @@ func (vend INISettings) Apply() error {
 	}
 	//for key, value := range vend.SysctlParams {
 	for _, param := range ini.AllValues {
+		switch param.Section {
+		case INISectionRpm, INISectionGrub, INISectionReminder:
+			// These parameters are only checked, but not applied.
+			// So nothing to do during apply and no need for revert
+			continue
+		}
+
 		if _, ok := vend.ValuesToApply[param.Key]; !ok && !revertValues {
 			continue
+		}
+
+		if revertValues && vend.SysctlParams[param.Key] != "" {
+			// revert parameter value
+			pvalue := RevertParameter(param.Key, vend.ID)
+			if pvalue != "" {
+				vend.SysctlParams[param.Key] = pvalue
+			}
 		}
 		switch param.Section {
 		case INISectionSysctl:
@@ -263,12 +295,6 @@ func (vend INISettings) Apply() error {
 			errs = append(errs, SetMemVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionCPU:
 			errs = append(errs, SetCpuVal(param.Key, vend.SysctlParams[param.Key], revertValues, vend.ID))
-		case INISectionRpm:
-			//nothing to do here
-		case INISectionGrub:
-			//nothing to do here
-		case INISectionReminder:
-			//nothing to do here
 		case INISectionPagecache:
 			errs = append(errs, SetPagecacheVal(param.Key, &pc))
 		default:
