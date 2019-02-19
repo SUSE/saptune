@@ -423,7 +423,7 @@ func NoteAction(actionName, noteID string) {
 				"\n    saptune daemon start")
 		}
 	case "list":
-		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, O denotes override file exists for note):")
+		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 		for _, noteID := range tuningOptions.GetSortedIDs() {
 			if strings.HasSuffix(noteID, "_n2c") {
@@ -438,7 +438,12 @@ func NoteAction(actionName, noteID string) {
 				format = " O" + format
 			}
 			if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
-				format = " " + SetGreenText + "*" + format + ResetTextColor
+				j := app.PositionInNoteApplyOrder(tuneApp.NoteApplyOrder, noteID)
+				if j < 0 { // noteID was reverted manually
+					format = " " + SetGreenText + "-" + format + ResetTextColor
+				} else {
+					format = " " + SetGreenText + "*" + format + ResetTextColor
+				}
 			} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
 				format = " " + SetGreenText + "+" + format + ResetTextColor
 			}

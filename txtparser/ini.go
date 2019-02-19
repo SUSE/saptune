@@ -20,7 +20,7 @@ const (
 
 type Operator string // The comparison or assignment operator used in an INI file entry
 
-var RegexKeyOperatorValue = regexp.MustCompile(`([\w._-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`) // Break up a line into key, operator, value.
+var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`) // Break up a line into key, operator, value.
 
 // A single key-value pair in INI file.
 type INIEntry struct {
@@ -163,25 +163,28 @@ func ParseINI(input string) *INIFile {
 		currentEntriesArray = append(currentEntriesArray, entry)
 		currentEntriesMap[entry.Key] = entry
 	}
-	// save reminder section
-	// Save previous section
-	if currentSection != "" {
-		ret.KeyValue[currentSection] = currentEntriesMap
-		ret.AllValues = append(ret.AllValues, currentEntriesArray...)
-	}
-	// Start the remider section
-	currentEntriesArray = make([]INIEntry, 0, 8)
-	currentEntriesMap = make(map[string]INIEntry)
-	currentSection = "reminder"
+	if reminder != "" {
+		// save reminder section
+		// Save previous section
+		if currentSection != "" {
+			ret.KeyValue[currentSection] = currentEntriesMap
+			ret.AllValues = append(ret.AllValues, currentEntriesArray...)
+		}
+		// Start the reminder section
+		currentEntriesArray = make([]INIEntry, 0, 8)
+		currentEntriesMap = make(map[string]INIEntry)
+		currentSection = "reminder"
 
-	entry := INIEntry{
-		Section:  "reminder",
-		Key:      "reminder",
-		Operator: "",
-		Value:    reminder,
+		entry := INIEntry{
+			Section:  "reminder",
+			Key:      "reminder",
+			Operator: "",
+			Value:    reminder,
+		}
+		currentEntriesArray = append(currentEntriesArray, entry)
+		currentEntriesMap[entry.Key] = entry
 	}
-	currentEntriesArray = append(currentEntriesArray, entry)
-	currentEntriesMap[entry.Key] = entry
+
 	// Save last section
 	if currentSection != "" {
 		ret.KeyValue[currentSection] = currentEntriesMap

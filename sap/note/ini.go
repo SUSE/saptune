@@ -99,8 +99,12 @@ func (vend INISettings) Initialise() (Note, error) {
 	vend.SysctlParams = make(map[string]string)
 	vend.OverrideParams = make(map[string]string)
 	for _, param := range ini.AllValues {
-		if override {
-			if len(ow.KeyValue[param.Section]) != 0 && ow.KeyValue[param.Section][param.Key].Value != "" {
+		if override && len(ow.KeyValue[param.Section]) != 0 {
+			if ow.KeyValue[param.Section][param.Key].Value == "" && ow.KeyValue[param.Section][param.Key].Key != "" {
+				// disable parameter setting in override file
+				vend.OverrideParams[param.Key] = "untouched"
+			}
+			if ow.KeyValue[param.Section][param.Key].Value != "" {
 				vend.OverrideParams[param.Key] = ow.KeyValue[param.Section][param.Key].Value
 				if ow.KeyValue[param.Section][param.Key].Operator != param.Operator {
 					// operator from override file will 
@@ -150,7 +154,7 @@ func (vend INISettings) Initialise() (Note, error) {
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
-		if vend.SysctlParams[param.Key] != "" {
+		if _, ok := vend.ValuesToApply["verify"]; ! ok && vend.SysctlParams[param.Key] != "" {
 			CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
 		}
 	}
@@ -169,6 +173,9 @@ func (vend INISettings) Optimise() (Note, error) {
 		if len(vend.OverrideParams[param.Key]) != 0 {
 			// use value from override file instead of the value
 			// from the sap note (ConfFile)
+			if vend.OverrideParams[param.Key] == "untouched" {
+				continue
+			}
 			param.Value = vend.OverrideParams[param.Key]
 		}
 		switch param.Section {
@@ -208,7 +215,7 @@ func (vend INISettings) Optimise() (Note, error) {
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
-		if vend.SysctlParams[param.Key] != "" {
+		if _, ok := vend.ValuesToApply["verify"]; ! ok && vend.SysctlParams[param.Key] != "" {
 			AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
 		}
 	}
