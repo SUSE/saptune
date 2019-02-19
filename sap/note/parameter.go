@@ -66,7 +66,7 @@ func CreateParameterStartValues(param, value string) {
 	}
 	pEntries = GetSavedParameterNotes(param)
 	if len(pEntries.AllNotes) == 0 {
-		log.Printf("Write parameter start value '%s' to file '%s'", value, GetPathToParameter(param))
+		//log.Printf("Write parameter start value '%s' to file '%s'", value, GetPathToParameter(param))
 		// file does not exist, create start entry
 		pEntry := ParameterNoteEntry{
 			NoteId:   "start",
@@ -87,7 +87,7 @@ func AddParameterNoteValues(param, value, noteID string) {
 	}
 	pEntries = GetSavedParameterNotes(param)
 	if len(pEntries.AllNotes) != 0 && !NoteInParameterList(noteID, pEntries.AllNotes) {
-		log.Printf("Write note '%s' parameter value '%s' to file '%s'", noteID, value, GetPathToParameter(param))
+		//log.Printf("Write note '%s' parameter value '%s' to file '%s'", noteID, value, GetPathToParameter(param))
 		// file exis
 		pEntry := ParameterNoteEntry{
 			NoteId:   noteID,
@@ -183,8 +183,15 @@ func RevertParameter(param string, noteID string) (string) {
 	} else {
 		// if the requested noteID is NOT the last one in AllNotes
 		// remove this entry but do not set a new parameter value
+		//
+		// if the requested noteID has no entry in the parameter file
+		// because an override file disabled the parameter setting
+		// prevent removal of start value by checking 'entry > 0'
 		entry := PositionInParameterList(noteID, pEntries.AllNotes)
-		pEntries.AllNotes = append(pEntries.AllNotes[0:entry], pEntries.AllNotes[entry+1:]...)
+		if entry > 0 {
+			// the requested noteID is NOT the last one in AllNotes
+			pEntries.AllNotes = append(pEntries.AllNotes[0:entry], pEntries.AllNotes[entry+1:]...)
+		}
 	}
 	if len(pEntries.AllNotes) == 1 {
 		// remove parameter state file, if only one entry ('start') is left.

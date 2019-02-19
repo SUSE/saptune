@@ -58,11 +58,6 @@ var iniJSON = `
 		"Key": "lima",
 		"Operator": "\u003e",
 		"Value": "5\teeeee"
-	}, {
-		"Section": "reminder",
-		"Key": "reminder",
-		"Operator": "",
-		"Value": ""
 	}],
 	"KeyValue": {
 		"Section A": {
@@ -100,14 +95,6 @@ var iniJSON = `
 				"Key": "lima",
 				"Operator": "\u003e",
 				"Value": "5\teeeee"
-			}
-		},
-		"reminder": {
-			"reminder": {
-				"Section": "reminder",
-				"Key": "reminder",
-				"Operator": "",
-				"Value": ""
 			}
 		}
 	}

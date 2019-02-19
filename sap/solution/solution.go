@@ -77,15 +77,6 @@ func GetSolutionDefintion(fileName string) (map[string]map[string]Solution) {
 			param.Value = strings.Join(OverrideSolutions[arch][param.Key], " ")
 		}
 		sol[param.Key] = strings.Split(param.Value,"\t")
-
-		if system.IsPagecacheAvailable() {
-			if len(OverrideSolutions[pcarch]) != 0 && len(OverrideSolutions[pcarch][param.Key]) != 0 {
-				// in case of an override solution do not attach sap note 1557506
-			} else {
-				//add 1557506 (pagecache note) to list of notes
-				sol[param.Key] = append(sol[param.Key], "1557506")
-			}
-		}
 	}
 	switch currentArch {
 	case "ArchPPC64LE":

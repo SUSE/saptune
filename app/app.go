@@ -18,6 +18,7 @@ const (
 	SysconfigSaptuneFile = "/etc/sysconfig/saptune"
 	TuneForSolutionsKey  = "TUNE_FOR_SOLUTIONS"
 	TuneForNotesKey      = "TUNE_FOR_NOTES"
+	NoteApplyOrderKey    = "NOTE_APPLY_ORDER"
 )
 
 // Application configuration and serialised state information.
@@ -27,6 +28,7 @@ type App struct {
 	AllSolutions     map[string]solution.Solution // all solutions
 	TuneForSolutions []string                     // list of solution names to tune, must always be sorted in ascending order.
 	TuneForNotes     []string                     // list of additional notes to tune, must always be sorted in ascending order.
+	NoteApplyOrder   []string                     // list of notes in applied order. Do NOT sort.
 	State            *State                       // examine and manage serialised notes.
 }
 
@@ -42,13 +44,27 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 	if err == nil {
 		app.TuneForSolutions = sysconf.GetStringArray(TuneForSolutionsKey, []string{})
 		app.TuneForNotes = sysconf.GetStringArray(TuneForNotesKey, []string{})
+		app.NoteApplyOrder = sysconf.GetStringArray(NoteApplyOrderKey, []string{})
 	} else {
 		app.TuneForSolutions = []string{}
 		app.TuneForNotes = []string{}
+		app.NoteApplyOrder = []string{}
 	}
 	sort.Strings(app.TuneForSolutions)
 	sort.Strings(app.TuneForNotes)
 	return
+}
+
+// for a given noteID get the position in the slice NoteApplyOrder
+// return the position of the note within the slice.
+// do not sort the slice
+func PositionInNoteApplyOrder(list []string, noteID string) int {
+        for cnt, note := range list {
+                if note == noteID {
+                        return cnt
+                }
+        }
+        return -1	//not found
 }
 
 // Save /etc/sysconfig/saptune.
@@ -59,6 +75,7 @@ func (app *App) SaveConfig() error {
 	}
 	sysconf.SetStrArray(TuneForSolutionsKey, app.TuneForSolutions)
 	sysconf.SetStrArray(TuneForNotesKey, app.TuneForNotes)
+	sysconf.SetStrArray(NoteApplyOrderKey, app.NoteApplyOrder)
 	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), []byte(sysconf.ToText()), 0644)
 }
 
@@ -106,6 +123,19 @@ func (app *App) TuneNote(noteID string) error {
 	if err != nil {
 		return err
 	}
+	/*
+		Do not apply the note, if it was applied before
+		Otherwise, the state file (serialised parameters) will be overwritten, and it will no longer
+		be possible to revert the note to the state before it was tuned.
+	*/
+	_, err = os.Stat(app.State.GetPathToNote(noteID))
+	if err == nil {
+		// state file for note already exists
+		// do not apply the note again
+		log.Printf("note '%s' already applied. Nothing to do", noteID)
+		return nil
+	}
+
 	solNotes := app.GetSortedSolutionEnabledNotes()
 	searchInSol := sort.SearchStrings(solNotes, noteID)
 	searchInNote := sort.SearchStrings(app.TuneForNotes, noteID)
@@ -113,28 +143,24 @@ func (app *App) TuneNote(noteID string) error {
 		// Note is not covered by any of the existing solution, hence adding it into the additions' list
 		app.TuneForNotes = append(app.TuneForNotes, noteID)
 		sort.Strings(app.TuneForNotes)
-		if err := app.SaveConfig(); err != nil {
-			return err
-		}
 	}
-	/*
-		Do not apply the note if it was applied before
-		Otherwise, the state file (serialised parameters) will be overwritten, and it will no longer
-		be possible to revert the note to the state before it was tuned.
-	*/
-	_, _, valApplyList, err := app.VerifyNote(noteID)
+	// to prevent double noteIDs in the apply order list
+	i := PositionInNoteApplyOrder(app.NoteApplyOrder, noteID)
+	if i < 0 { // noteID not yet avaialbe
+		app.NoteApplyOrder = append(app.NoteApplyOrder, noteID)
+	}
+	if err := app.SaveConfig(); err != nil {
+		return err
+	}
+
+	// check, if system already complies with the requirements.
+	// set values for later use
+	conforming, _, valApplyList, err := app.VerifyNote(noteID)
 	if err != nil {
 		return err
-	} else {
-		_, err := os.Stat(app.State.GetPathToNote(noteID))
-		if err == nil {
-			// state file for note already exists
-			// do not apply the note again
-			log.Printf("note '%s' already applied. Nothing to do", noteID)
-			return nil
-		}
 	}
-	// Save current state before applying optimisation
+
+	// Save current state for the Note in any case
 	currentState, err := aNote.Initialise()
 	if err != nil {
 		return fmt.Errorf("Failed to examine system for the current status of note %s - %v", noteID, err)
@@ -168,6 +194,13 @@ func (app *App) TuneNote(noteID string) error {
 	if err = app.State.Store(noteID, currentState, false); err != nil {
 		return fmt.Errorf("Failed to save current state of note %s - %v", noteID, err)
 	}
+
+	if conforming {
+		// Do not apply the Note, if the system already complies with
+		// the requirements.
+		return nil
+	}
+
 	optimised, err := currentState.Optimise()
 	if err != nil {
 		return fmt.Errorf("Failed to calculate optimised parameters for note %s - %v", noteID, err)
@@ -218,18 +251,7 @@ func (app *App) TuneSolution(solName string) (removedExplicitNotes []string, err
 
 // Tune for all currently enabled solutions and notes.
 func (app *App) TuneAll() error {
-	for _, solName := range app.TuneForSolutions {
-		sol, err := app.GetSolutionByName(solName)
-		if err != nil {
-			return err
-		}
-		for _, noteID := range sol {
-			if err = app.TuneNote(noteID); err != nil {
-				return err
-			}
-		}
-	}
-	for _, noteID := range app.TuneForNotes {
+	for _, noteID := range app.NoteApplyOrder {
 		if err := app.TuneNote(noteID); err != nil {
 			return err
 		}
@@ -251,9 +273,16 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 		i := sort.SearchStrings(app.TuneForNotes, noteID)
 		if i < len(app.TuneForNotes) && app.TuneForNotes[i] == noteID {
 			app.TuneForNotes = append(app.TuneForNotes[0:i], app.TuneForNotes[i+1:]...)
-			if err := app.SaveConfig(); err != nil {
-				return err
-			}
+		}
+		i = PositionInNoteApplyOrder(app.NoteApplyOrder, noteID)
+		if i < 0 {
+			log.Printf("noteID '%s' not found in configuration 'NoteApplyOrder'", noteID)
+		} else if i < len(app.NoteApplyOrder) && app.NoteApplyOrder[i] == noteID {
+			// remove noteID from the configuration 'NoteApplyOrder'
+			app.NoteApplyOrder = append(app.NoteApplyOrder[0:i], app.NoteApplyOrder[i+1:]...)
+		}
+		if err := app.SaveConfig(); err != nil {
+			return err
 		}
 	}
 
@@ -369,6 +398,11 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 	if err != nil {
 		return
 	}
+	if reflect.TypeOf(theNote).String() == "note.INISettings" {
+		// workaround to prevent storing of parameter state files
+		// during verify
+		theNote = theNote.(note.INISettings).SetValuesToApply([]string{"verify"})
+	}
 	// Run optimisation routine and compare it against current status
 	inspectedNote, err := theNote.Initialise()
 	if err != nil {
@@ -381,12 +415,17 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 		return false, nil, nil, err
 	}
 	// if used inspectedNote as before, inspectedNote and optimisedNote
-	// will have the same contents after 'Optimise()'
+	// will have the same content after 'Optimise()'
 	// so CompareNoteFields wont find a difference and NO Apply will done
 	//optimisedNote, err := inspectedNote.Optimise()
 	optimisedNote, err = optimisedNote.Optimise()
 	if err != nil {
 		return false, nil, nil, err
+	}
+	if reflect.TypeOf(theNote).String() == "note.INISettings" {
+		// remove workaround to not affect the 'comparison' result
+		inspectedNote = inspectedNote.(note.INISettings).SetValuesToApply(make([]string, 0))
+		optimisedNote = optimisedNote.(note.INISettings).SetValuesToApply(make([]string, 0))
 	}
 	conforming, comparisons, valApplyList = note.CompareNoteFields(inspectedNote, optimisedNote)
 	return
