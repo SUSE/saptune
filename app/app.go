@@ -146,7 +146,7 @@ func (app *App) TuneNote(noteID string) error {
 	}
 	// to prevent double noteIDs in the apply order list
 	i := PositionInNoteApplyOrder(app.NoteApplyOrder, noteID)
-	if i < 0 { // noteID not yet avaialbe
+	if i < 0 { // noteID not yet available
 		app.NoteApplyOrder = append(app.NoteApplyOrder, noteID)
 	}
 	if err := app.SaveConfig(); err != nil {
