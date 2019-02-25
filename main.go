@@ -32,7 +32,7 @@ const (
 	SetRedText            = "\033[31m"
 	ResetTextColor        = "\033[0m"
 	footnote1             = "[1] setting is not supported by the system"
-	footnote2             = "[2] setting is not availabel on the system"
+	footnote2             = "[2] setting is not available on the system"
 	footnote3             = "[3] value is only checked, but NOT set"
 
 )
