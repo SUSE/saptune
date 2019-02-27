@@ -13,7 +13,7 @@ import (
 
 var mountOptionSeparator = regexp.MustCompile("[[:space:]]*,[[:space:]]*")
 
-// Represent a mount point entry in /proc/mounts or /etc/fstab
+// MountPoint Represent a mount point entry in /proc/mounts or /etc/fstab
 type MountPoint struct {
 	Device     string
 	MountPoint string
@@ -23,12 +23,13 @@ type MountPoint struct {
 	Fsck       int
 }
 
-// Return true only if two mount points are identical in all attributes.
+// Equals return true only if two mount points are identical in all attributes.
 func (mount1 MountPoint) Equals(mount2 MountPoint) bool {
 	return reflect.DeepEqual(mount1, mount2)
 }
 
-// Return the total size of the file system in MegaBytes. Panic on error.
+// GetFileSystemSizeMB return the total size of the file system in MegaBytes.
+// Panic on error.
 func (mount MountPoint) GetFileSystemSizeMB() uint64 {
 	fs := syscall.Statfs_t{}
 	err := syscall.Statfs(mount.MountPoint, &fs)
@@ -41,7 +42,7 @@ func (mount MountPoint) GetFileSystemSizeMB() uint64 {
 // A list of mount points.
 type MountPoints []MountPoint
 
-// Find a mount point by its path.
+// GetByMountPoint find a mount point by its path.
 func (mounts MountPoints) GetByMountPoint(mountPoint string) (MountPoint, bool) {
 	for _, mount := range mounts {
 		if mount.MountPoint == mountPoint {
@@ -51,7 +52,8 @@ func (mounts MountPoints) GetByMountPoint(mountPoint string) (MountPoint, bool) 
 	return MountPoint{}, false
 }
 
-// Return all mount points defined in the input text. Panic on malformed entry.
+// ParseMounts return all mount points defined in the input text.
+// Panic on malformed entry.
 func ParseMounts(txt string) (mounts MountPoints) {
 	mounts = make([]MountPoint, 0, 0)
 	for _, line := range strings.Split(txt, "\n") {
@@ -81,7 +83,7 @@ func ParseMounts(txt string) (mounts MountPoints) {
 	return
 }
 
-// Return all mount points defined in /etc/fstab. Panic on error.
+// ParseFstab return all mount points defined in /etc/fstab. Panic on error.
 func ParseFstab() MountPoints {
 	fstab, err := ioutil.ReadFile("/etc/fstab")
 	if err != nil {
@@ -90,7 +92,8 @@ func ParseFstab() MountPoints {
 	return ParseMounts(string(fstab))
 }
 
-// Return all mount points appearing in /proc/mounts. Panic on error.
+// ParseProcMounts return all mount points appearing in /proc/mounts.
+// Panic on error.
 func ParseProcMounts() MountPoints {
 	mounts, err := ioutil.ReadFile("/proc/mounts")
 	if err != nil {
@@ -99,7 +102,8 @@ func ParseProcMounts() MountPoints {
 	return ParseMounts(string(mounts))
 }
 
-// Return all mount points appearing in /proc/mounts. Panic on error.
+// ParseMtabMounts return all mount points appearing in /proc/mounts.
+// Panic on error.
 func ParseMtabMounts() MountPoints {
 	mounts, err := ioutil.ReadFile("/etc/mtab")
 	if err != nil {
@@ -108,7 +112,7 @@ func ParseMtabMounts() MountPoints {
 	return ParseMounts(string(mounts))
 }
 
-// Invoke mount command to resize /dev/shm to the specified value.
+// RemountSHM invoke mount command to resize /dev/shm to the specified value.
 func RemountSHM(newSizeMB uint64) error {
 	cmd := exec.Command("mount", "-o", fmt.Sprintf("remount,size=%dM", newSizeMB), "/dev/shm")
 	if out, err := cmd.CombinedOutput(); err != nil {
@@ -117,7 +121,7 @@ func RemountSHM(newSizeMB uint64) error {
 	return nil
 }
 
-// List directory content.
+// ListDir list directory content.
 func ListDir(dirPath string) (dirNames, fileNames []string, err error) {
 	entries, err := ioutil.ReadDir(dirPath)
 	if err != nil {

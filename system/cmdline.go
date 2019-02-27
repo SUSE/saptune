@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// Parse /proc/cmdline into key(string) - value(string) pairs.
+// ParseCmdline parse /proc/cmdline into key(string) - value(string) pairs.
 // return value for given boot option or 'NA', if not available
 func ParseCmdline(fileName, option string) string {
 	opt := "NA"

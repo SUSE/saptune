@@ -27,7 +27,8 @@ type Sysconfig struct {
 	KeyValue  map[string]*SysconfigEntry
 }
 
-// Read sysconfig file and parse the file content into memory structures.
+// ParseSysconfigFile read sysconfig file and parse the file content into
+// memory structures.
 func ParseSysconfigFile(fileName string, autoCreate bool) (*Sysconfig, error) {
 	content, err := ioutil.ReadFile(fileName)
 	if os.IsNotExist(err) && autoCreate {
@@ -46,7 +47,7 @@ func ParseSysconfigFile(fileName string, autoCreate bool) (*Sysconfig, error) {
 	return ParseSysconfig(string(content))
 }
 
-// Read sysconfig text and parse the text into memory structures.
+// ParseSysconfig read sysconfig text and parse the text into memory structures.
 func ParseSysconfig(input string) (*Sysconfig, error) {
 	conf := &Sysconfig{
 		AllValues: make([]*SysconfigEntry, 0, 0),
@@ -96,7 +97,8 @@ func (conf *Sysconfig) Set(key string, value interface{}) {
 	conf.KeyValue[key] = kv
 }
 
-// Give a space-separated integer array value to a key. If the key does not yet exist, it is created.
+// SetIntArray give a space-separated integer array value to a key.
+// If the key does not yet exist, it is created.
 func (conf *Sysconfig) SetIntArray(key string, values []int) {
 	strs := make([]string, len(values))
 	for i, val := range values {
@@ -105,12 +107,14 @@ func (conf *Sysconfig) SetIntArray(key string, values []int) {
 	conf.Set(key, strings.Join(strs, " "))
 }
 
-// Give a space-separated string array value to a key. If the key does not yet exist, it is created.
+// SetStrArray give a space-separated string array value to a key.
+// If the key does not yet exist, it is created.
 func (conf *Sysconfig) SetStrArray(key string, values []string) {
 	conf.Set(key, strings.Join(values, " "))
 }
 
-// Return integer value that belongs to the key, or the default value if the key does not exist or value is not an integer.
+// GetInt return integer value that belongs to the key, or the default value
+// if the key does not exist or value is not an integer.
 func (conf *Sysconfig) GetInt(key string, defaultValue int) int {
 	entry, exists := conf.KeyValue[key]
 	if !exists {
@@ -123,7 +127,8 @@ func (conf *Sysconfig) GetInt(key string, defaultValue int) int {
 	return intValue
 }
 
-// Return uint64 value that belongs to the key, or the default value if the key does not exist or value is not an integer.
+// GetUint64 return uint64 value that belongs to the key, or the default value
+// if the key does not exist or value is not an integer.
 func (conf *Sysconfig) GetUint64(key string, defaultValue uint64) uint64 {
 	entry, exists := conf.KeyValue[key]
 	if !exists {
@@ -136,7 +141,8 @@ func (conf *Sysconfig) GetUint64(key string, defaultValue uint64) uint64 {
 	return intValue
 }
 
-// Return string value that belongs to the key, or the default value if the key does not exist.
+// GetString return string value that belongs to the key, or the default value
+// if the key does not exist.
 func (conf *Sysconfig) GetString(key, defaultValue string) string {
 	entry, exists := conf.KeyValue[key]
 	if !exists || strings.TrimSpace(entry.Value) == "" {
@@ -145,7 +151,8 @@ func (conf *Sysconfig) GetString(key, defaultValue string) string {
 	return strings.TrimSpace(entry.Value)
 }
 
-// Assume the key carries a space-separated array value, return the value array.
+// GetStringArray assume the key carries a space-separated array value,
+// return the value array.
 func (conf *Sysconfig) GetStringArray(key string, defaultValue []string) (ret []string) {
 	entry, exists := conf.KeyValue[key]
 	if !exists {
@@ -161,7 +168,8 @@ func (conf *Sysconfig) GetStringArray(key string, defaultValue []string) (ret []
 	return
 }
 
-// Assume the key carries a space-separated array of integers, return the array. Discard malformed integers.
+// GetIntArray assume the key carries a space-separated array of integers,
+// return the array. Discard malformed integers.
 func (conf *Sysconfig) GetIntArray(key string, defaultValue []int) (ret []int) {
 	entry, exists := conf.KeyValue[key]
 	if !exists {
@@ -178,7 +186,8 @@ func (conf *Sysconfig) GetIntArray(key string, defaultValue []int) (ret []int) {
 	return
 }
 
-// Return bool value that belongs to the key, or the default value if key does not exist.
+// GetBool return bool value that belongs to the key, or the default value
+// if key does not exist.
 // True values are "yes" or "true".
 func (conf *Sysconfig) GetBool(key string, defaultValue bool) bool {
 	defaultValStr := "no"
@@ -189,7 +198,8 @@ func (conf *Sysconfig) GetBool(key string, defaultValue bool) bool {
 	return (value == "yes" || value == "true")
 }
 
-// Convert key-value pairs back into text. Values are always surrounded by double-quotes.
+// ToText convert key-value pairs back into text.
+// Values are always surrounded by double-quotes.
 func (conf *Sysconfig) ToText() string {
 	var ret bytes.Buffer
 	for _, kv := range conf.AllValues {

@@ -11,12 +11,14 @@ import (
 	"strings"
 )
 
-const OverrideTuningSheets  = "/etc/saptune/override/"
+const OverrideTuningSheets = "/etc/saptune/override/"
+
 var pc = LinuxPagingImprovements{}
 
 // Tuning options composed by a third party vendor.
 
-// Calculate optimum parameter value given the current value, comparison operator, and expected value. Return optimised value.
+// CalculateOptimumValue calculates optimum parameter value given the current
+// value, comparison operator, and expected value. Return optimised value.
 func CalculateOptimumValue(operator txtparser.Operator, currentValue string, expectedValue string) (string, error) {
 	if operator == txtparser.OperatorEqual {
 		return expectedValue, nil
@@ -75,6 +77,7 @@ type INISettings struct {
 	OverrideParams  map[string]string // parameter values from the override file
 }
 
+// Name returns the name of the related SAP Note or en empty string
 func (vend INISettings) Name() string {
 	if len(vend.DescriptiveName) == 0 {
 		vend.DescriptiveName = txtparser.GetINIFileDescriptiveName(vend.ConfFilePath)
@@ -82,6 +85,7 @@ func (vend INISettings) Name() string {
 	return vend.DescriptiveName
 }
 
+// Initialise retrieves the current parameter values from the system
 func (vend INISettings) Initialise() (Note, error) {
 	// Parse the configuration file
 	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
@@ -107,7 +111,7 @@ func (vend INISettings) Initialise() (Note, error) {
 			if ow.KeyValue[param.Section][param.Key].Value != "" {
 				vend.OverrideParams[param.Key] = ow.KeyValue[param.Section][param.Key].Value
 				if ow.KeyValue[param.Section][param.Key].Operator != param.Operator {
-					// operator from override file will 
+					// operator from override file will
 					// replace the operator from our note file
 					param.Operator = ow.KeyValue[param.Section][param.Key].Operator
 				}
@@ -154,13 +158,16 @@ func (vend INISettings) Initialise() (Note, error) {
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
-		if _, ok := vend.ValuesToApply["verify"]; ! ok && vend.SysctlParams[param.Key] != "" {
+		// do not write parameter values to the saved state file during
+		// a pure 'verify' action
+		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
 			CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
 		}
 	}
 	return vend, nil
 }
 
+// Optimise gets the expected parameter values from the configuration
 func (vend INISettings) Optimise() (Note, error) {
 	// Parse the configuration file
 	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
@@ -215,13 +222,17 @@ func (vend INISettings) Optimise() (Note, error) {
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
-		if _, ok := vend.ValuesToApply["verify"]; ! ok && vend.SysctlParams[param.Key] != "" {
+		// do not write parameter values to the saved state file during
+		// a pure 'verify' action
+		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
 			AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
 		}
 	}
 	return vend, nil
 }
 
+// Apply sets the new parameter values in the system or
+// revert the system to the former parameter values
 func (vend INISettings) Apply() error {
 	errs := make([]error, 0, 0)
 	revertValues := false
@@ -313,7 +324,8 @@ func (vend INISettings) Apply() error {
 	return err
 }
 
-func (vend INISettings) SetValuesToApply(values []string) (Note) {
+// SetValuesToApply fills the data structure for applying the changes
+func (vend INISettings) SetValuesToApply(values []string) Note {
 	vend.ValuesToApply = make(map[string]string)
 	for _, v := range values {
 		vend.ValuesToApply[v] = v

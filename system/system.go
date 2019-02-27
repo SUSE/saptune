@@ -6,12 +6,12 @@ import (
 	"regexp"
 )
 
-// Return true only if the current user is root.
+// IsUserRoot return true only if the current user is root.
 func IsUserRoot() bool {
 	return os.Getuid() == 0
 }
 
-// Returns true, if the cmd is available.
+// CmdIsAvailable returns true, if the cmd is available.
 func CmdIsAvailable(cmdName string) bool {
 	if _, err := os.Stat(cmdName); os.IsNotExist(err) {
 		return false
@@ -19,6 +19,7 @@ func CmdIsAvailable(cmdName string) bool {
 	return true
 }
 
+// GetOsVers returns the OS version
 func GetOsVers() string {
 	// VERSION="12", VERSION="15"
 	// VERSION="12-SP1", VERSION="12-SP2", VERSION="12-SP3"
@@ -34,6 +35,7 @@ func GetOsVers() string {
 	return matches[1]
 }
 
+// GetOsName returns the OS name
 func GetOsName() string {
 	// NAME="SLES"
 	var re = regexp.MustCompile(`NAME="([\w\s]+)"`)

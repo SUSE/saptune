@@ -15,12 +15,13 @@ type State struct {
 	StateDirPrefix string
 }
 
-// Return path to the serialised note state file.
+// GetPathToNote returns path to the serialised note state file.
 func (state *State) GetPathToNote(noteID string) string {
 	return path.Join(state.StateDirPrefix, SaptuneStateDir, noteID)
 }
 
-// Create a file under state directory with the object serialised into JSON. Overwrite existing file if there is any.
+// Store creates a file under state directory with the object serialised
+// into JSON. Overwrite existing file if there is any.
 func (state *State) Store(noteID string, obj note.Note, overwriteExisting bool) error {
 	content, err := json.Marshal(obj)
 	if err != nil {
@@ -54,7 +55,8 @@ func (state *State) List() (ret []string, err error) {
 	return
 }
 
-// Deserialise an SAP note into the destination pointer. The destination must be a pointer.
+// Retrieve deserialises a SAP note into the destination pointer.
+// The destination must be a pointer.
 func (state *State) Retrieve(noteID string, dest interface{}) error {
 	content, err := ioutil.ReadFile(state.GetPathToNote(noteID))
 	if err != nil {

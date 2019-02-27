@@ -318,15 +318,12 @@ func (st SUSENetCPUOptimisation) Apply() error {
 	return err
 }
 
-
-
-
 // Tuning options composed by a third party vendor.
 
 // section [block]
 //type BlockDeviceQueue struct {
-	//BlockDeviceSchedulers param.BlockDeviceSchedulers
-	//BlockDeviceNrRequests param.BlockDeviceNrRequests
+//BlockDeviceSchedulers param.BlockDeviceSchedulers
+//BlockDeviceNrRequests param.BlockDeviceNrRequests
 //}
 
 func CmpSetBlkVal(key, value string) error {
@@ -447,4 +444,3 @@ func (cmptvend CMPTSettings) Apply() error {
 	err = sap.PrintErrors(errs)
 	return err
 }
-

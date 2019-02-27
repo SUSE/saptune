@@ -15,6 +15,7 @@ import (
 	"strings"
 )
 
+//constant definition
 const (
 	notSupported = "System does not support Intel's performance bias setting"
 	forceLatDir  = "/var/lib/saptune/force_latency"
@@ -27,6 +28,7 @@ var isCpu = regexp.MustCompile(`^cpu\d+$`)
 var isState = regexp.MustCompile(`^state\d+$`)
 var forceLatFile = path.Join(forceLatDir, "/sap_force_latency")
 
+// GetPerfBias retrieve CPU performance configuration from the system
 func GetPerfBias() string {
 	isPBCpu := regexp.MustCompile(`analyzing CPU \d+`)
 	isPBias := regexp.MustCompile(`perf-bias: \d+`)
@@ -70,6 +72,7 @@ func GetPerfBias() string {
 	return strings.TrimSpace(str)
 }
 
+// SetPerfBias set CPU performance configuration to the system using 'cpupower' command
 func SetPerfBias(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "set", "-b", value)
 	cpu := ""
@@ -93,6 +96,7 @@ func SetPerfBias(value string) error {
 	return nil
 }
 
+// SupportsPerfBias check, if the system will support CPU performance settings
 func SupportsPerfBias() bool {
 	cmdName := cpupower_cmd
 	cmdArgs := []string{"info", "-b"}
@@ -109,6 +113,8 @@ func SupportsPerfBias() bool {
 	return true
 }
 
+// GetGovernor retrieve performance configuration regarding to cpu frequency
+// from the system
 func GetGovernor() map[string]string {
 	setAll := true
 	oldgov := "99"
@@ -116,10 +122,10 @@ func GetGovernor() map[string]string {
 	gGov := make(map[string]string)
 
 	dirCont, err := ioutil.ReadDir(cpu_dir)
-        if err != nil {
-                return gGov
-        }
-        for _, entry := range dirCont {
+	if err != nil {
+		return gGov
+	}
+	for _, entry := range dirCont {
 		if isCpu.MatchString(entry.Name()) {
 			gov, _ = GetSysString(path.Join(cpu_dir_sys, entry.Name(), "cpufreq", "scaling_governor"))
 			if gov == "" {
@@ -142,6 +148,8 @@ func GetGovernor() map[string]string {
 	return gGov
 }
 
+// SetGovernor set performance configuration regarding to cpu frequency
+// to the system using 'cpupower' command
 func SetGovernor(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "frequency-set", "-g", value)
 	cpu := ""
@@ -174,6 +182,7 @@ func SetGovernor(value string) error {
 	return nil
 }
 
+// IsValidGovernor check, if the system will support CPU frequency settings
 func IsValidGovernor(cpu, gov string) bool {
 	val, err := ioutil.ReadFile(path.Join(cpu_dir, cpu, "/cpufreq/scaling_available_governors"))
 	if err == nil && strings.Contains(string(val), gov) {
@@ -182,6 +191,7 @@ func IsValidGovernor(cpu, gov string) bool {
 	return false
 }
 
+// GetForceLatency retrieve CPU latency configuration from the system
 func GetForceLatency() string {
 	flval := ""
 	supported := false
@@ -190,10 +200,10 @@ func GetForceLatency() string {
 	// on VMs it's not supported
 
 	dirCont, err := ioutil.ReadDir(cpu_dir)
-        if err != nil {
+	if err != nil {
 		return "all:none"
-        }
-        for _, entry := range dirCont {
+	}
+	for _, entry := range dirCont {
 		// cpu0 ... cpuXY
 		if isCpu.MatchString(entry.Name()) {
 			_, err := ioutil.ReadDir(path.Join(cpu_dir, entry.Name(), "cpuidle"))
@@ -217,9 +227,10 @@ func GetForceLatency() string {
 	} else {
 		flval = string(val)
 	}
-        return flval
+	return flval
 }
 
+// SetForceLatency set CPU latency configuration to the system
 func SetForceLatency(noteId, value string, revert bool) error {
 	oldLat := ""
 	oldLatStates := make(map[string]string)
@@ -240,10 +251,10 @@ func SetForceLatency(noteId, value string, revert bool) error {
 	}
 
 	dirCont, err := ioutil.ReadDir(cpu_dir)
-        if err != nil {
+	if err != nil {
 		return fmt.Errorf("latency settings not supported by the system")
-        }
-        for _, entry := range dirCont {
+	}
+	for _, entry := range dirCont {
 		// cpu0 ... cpuXY
 		if isCpu.MatchString(entry.Name()) {
 			cpudirCont, err := ioutil.ReadDir(path.Join(cpu_dir, entry.Name(), "cpuidle"))
@@ -320,6 +331,7 @@ func SetForceLatency(noteId, value string, revert bool) error {
 	return err
 }
 
+// GetdmaLatency retrieve DMA latency configuration from the system
 func GetdmaLatency() string {
 	latency := make([]byte, 4)
 	dmaLatency, err := os.OpenFile("/dev/cpu_dma_latency", os.O_RDONLY, 0600)

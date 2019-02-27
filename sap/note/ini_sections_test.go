@@ -69,6 +69,7 @@ func TestOptBlkVal(t *testing.T) {
 		t.Fatal(val)
 	}
 }
+
 //SetBlkVal
 
 //GetLimitsVal
@@ -113,6 +114,7 @@ func TestOptLimitsVal(t *testing.T) {
 		t.Fatal(val)
 	}
 }
+
 //SetLimitsVal
 
 func TestGetVmVal(t *testing.T) {
@@ -150,6 +152,7 @@ func TestOptVmVal(t *testing.T) {
 		t.Fatal(val)
 	}
 }
+
 //SetVmVal
 
 func TestGetCpuVal(t *testing.T) {
@@ -181,7 +184,8 @@ func TestOptCpuVal(t *testing.T) {
 	if val != "cpu0:0 cpu1:0 cpu2:0" {
 		t.Fatal(val)
 	}
-/* future feature
+
+	/* future feature
 	val = OptCpuVal("energy_perf_bias", "cpu0:6 cpu1:6 cpu2:6", "cpu0:performance cpu1:normal cpu2:powersave")
 	if val != "cpu0:0 cpu1:6 cpu2:15" {
 		t.Fatal(val)
@@ -190,7 +194,7 @@ func TestOptCpuVal(t *testing.T) {
 	if val != "cpu0:performance cpu1:normal cpu2:powersave" {
 		t.Fatal(val)
 	}
-*/
+	*/
 
 	val = OptCpuVal("governor", "all:powersave", "performance")
 	if val != "all:performance" {
@@ -200,7 +204,7 @@ func TestOptCpuVal(t *testing.T) {
 	if val != "cpu0:performance cpu1:performance cpu2:performance" {
 		t.Fatal(val)
 	}
-/* future feature
+	/* future feature
 	val = OptCpuVal("governor", "cpu0:powersave cpu1:performance cpu2:powersave", "cpu0:performance cpu1:powersave cpu2:performance")
 	if val != "cpu0:performance cpu1:powersave cpu2:performance" {
 		t.Fatal(val)
@@ -209,8 +213,9 @@ func TestOptCpuVal(t *testing.T) {
 	if val != "cpu0:performance cpu1:powersave cpu2:performance" {
 		t.Fatal(val)
 	}
-*/
+	*/
 }
+
 //SetCpuVal
 
 func TestGetMemVal(t *testing.T) {
@@ -238,8 +243,8 @@ func TestOptMemVal(t *testing.T) {
 		t.Fatal(val)
 	}
 
-	size75 := uint64(system.GetTotalMemSizeMB())*75/100
-	size80 := uint64(system.GetTotalMemSizeMB())*80/100
+	size75 := uint64(system.GetTotalMemSizeMB()) * 75 / 100
+	size80 := uint64(system.GetTotalMemSizeMB()) * 80 / 100
 
 	val = OptMemVal("ShmFileSystemSizeMB", "16043", "0", "0", "80")
 	if val != strconv.FormatUint(size80, 10) {
@@ -286,6 +291,7 @@ func TestOptMemVal(t *testing.T) {
 		t.Fatal(val)
 	}
 }
+
 //SetMemVal
 
 func TestGetRpmVal(t *testing.T) {
@@ -355,6 +361,7 @@ func TestOptUuiddVal(t *testing.T) {
 		t.Fatal(val)
 	}
 }
+
 //SetUuiddVal
 
 func TestGetServiceVal(t *testing.T) {
@@ -440,6 +447,7 @@ func TestOptLoginVal(t *testing.T) {
 		t.Fatal(val)
 	}
 }
+
 // SetLoginVal
 
 func TestGetPagecacheVal(t *testing.T) {
