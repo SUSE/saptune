@@ -26,13 +26,13 @@ saptune \- Comprehensive system optimisation management for SAP solutions
 [ list | verify ]
 
 \fBsaptune note\fP
-[ apply | simulate | verify | customise ]  NoteID
+[ apply | simulate | verify | customise | revert ]  NoteID
 
 \fBsaptune solution\fP
 [ list | verify ]
 
 \fBsaptune solution\fP
-[ apply | simulate | verify ] SolutionName
+[ apply | simulate | verify | revert ] SolutionName
 
 \fBsaptune revert\fP
 all
@@ -131,6 +131,9 @@ If a Note definition contains a '\fB[reminder]\fR' section, this section will be
 .B customise
 This allows to customize the values of the saptune Note definitions. The Note definition file will be copied from \fI/usr/share/saptune/notes\fR or \fI/etc/saptune/extra\fR to the override location at \fI/etc/saptune/override\fR, if the file does not exist already. After that an editor will be launched to allow changing the Note definitions.
 The editor is defined by the \fBEDITOR\fR environment variable. If not set editor defaults to /usr/bin/vim.
+.TP
+.B revert
+Revert optimisation settings carried out by the Note, and the Note will no longer be activated automatically upon system boot.
 
 .SH SOLUTION ACTIONS
 A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.
@@ -149,6 +152,9 @@ Show all notes that are associated with the specified SAP solution, and all chan
 .TP
 .B verify
 If a solution name is specified, saptune verifies the current running system against the recommended settings of the SAP solution. If solution name is not specified, saptune verifies all system parameters against all implemented solutions.
+.TP
+.B revert
+Revert optimisation settings recommended by the SAP solution, and these settings will no longer be activated automatically upon system boot.
 
 .SH REVERT ACTIONS
 .TP

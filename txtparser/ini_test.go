@@ -28,6 +28,9 @@ india_julia < 4	dddd
 
 [Section D]
 lima > 5	eeeee
+
+[Section E]
+mike.november+oscar_papa-quebeck > 6	ffffff
 `
 
 // iniExample parsed and serialised into JSON
@@ -59,10 +62,10 @@ var iniJSON = `
 		"Operator": "\u003e",
 		"Value": "5\teeeee"
 	}, {
-		"Section": "reminder",
-		"Key": "reminder",
-		"Operator": "",
-		"Value": ""
+		"Section": "Section E",
+		"Key": "mike.november+oscar_papa-quebeck",
+		"Operator": "\u003e",
+		"Value": "6\tffffff"
 	}],
 	"KeyValue": {
 		"Section A": {
@@ -102,12 +105,12 @@ var iniJSON = `
 				"Value": "5\teeeee"
 			}
 		},
-		"reminder": {
-			"reminder": {
-				"Section": "reminder",
-				"Key": "reminder",
-				"Operator": "",
-				"Value": ""
+		"Section E": {
+			"mike.november+oscar_papa-quebeck": {
+				"Section": "Section E",
+				"Key": "mike.november+oscar_papa-quebeck",
+				"Operator": "\u003e",
+				"Value": "6\tffffff"
 			}
 		}
 	}
