@@ -6,23 +6,24 @@ A system can be tuned for more than one solutions at a time.
 package solution
 
 import (
+	"fmt"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
-	"fmt"
 	"log"
 	"os"
 	"sort"
 	"strings"
 )
 
+// solution constant definitions
 const (
 	SolutionSheet         = "/usr/share/saptune/solutions"
 	OverrideSolutionSheet = "/etc/saptune/override/solutions"
 	NoteTuningSheets      = "/usr/share/saptune/notes/"
-	ArchX86     = "amd64"   // ArchX86 is the GOARCH value for x86 platform.
-	ArchPPC64LE = "ppc64le" // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform.
-	ArchX86_PC     = "amd64_PC"   // ArchX86 is the GOARCH value for x86 platform. _PC indicates PageCache is available
-	ArchPPC64LE_PC = "ppc64le_PC" // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform. _PC indicates PageCache is available
+	ArchX86               = "amd64"      // ArchX86 is the GOARCH value for x86 platform.
+	ArchPPC64LE           = "ppc64le"    // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform.
+	ArchX86_PC            = "amd64_PC"   // ArchX86 is the GOARCH value for x86 platform. _PC indicates PageCache is available
+	ArchPPC64LE_PC        = "ppc64le_PC" // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform. _PC indicates PageCache is available
 )
 
 type Solution []string // Solution is identified by set of note numbers.
@@ -32,12 +33,12 @@ type Solution []string // Solution is identified by set of note numbers.
 var AllSolutions = GetSolutionDefintion(SolutionSheet)
 var OverrideSolutions = GetOverrideSolution(OverrideSolutionSheet, NoteTuningSheets)
 
-// read solution definition from file
+// GetSolutionDefintion reads solution definition from file
 // build same structure for AllSolutions as before
 // can be simplyfied later
-func GetSolutionDefintion(fileName string) (map[string]map[string]Solution) {
+func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
 	sols := make(map[string]map[string]Solution)
-	sol  := make(map[string]Solution)
+	sol := make(map[string]Solution)
 	currentArch := ""
 	arch := ""
 	pcarch := ""
@@ -76,7 +77,7 @@ func GetSolutionDefintion(fileName string) (map[string]map[string]Solution) {
 		if len(OverrideSolutions[arch]) != 0 && len(OverrideSolutions[arch][param.Key]) != 0 {
 			param.Value = strings.Join(OverrideSolutions[arch][param.Key], " ")
 		}
-		sol[param.Key] = strings.Split(param.Value,"\t")
+		sol[param.Key] = strings.Split(param.Value, "\t")
 	}
 	switch currentArch {
 	case "ArchPPC64LE":
@@ -93,12 +94,12 @@ func GetSolutionDefintion(fileName string) (map[string]map[string]Solution) {
 	return sols
 }
 
-// read solution override definition from file
+// GetOverrideSolution reads solution override definition from file
 // build same structure for AllSolutions as before
 // can be simplyfied later
-func GetOverrideSolution(fileName, noteFiles string) (map[string]map[string]Solution) {
+func GetOverrideSolution(fileName, noteFiles string) map[string]map[string]Solution {
 	sols := make(map[string]map[string]Solution)
-	sol  := make(map[string]Solution)
+	sol := make(map[string]Solution)
 	currentArch := ""
 	arch := ""
 	pcarch := ""
@@ -111,7 +112,7 @@ func GetOverrideSolution(fileName, noteFiles string) (map[string]map[string]Solu
 	for _, param := range content.AllValues {
 		//check, if all note files used in the override file are available in /usr/share/saptune/note
 		notesOK := true
-		for _, noteID := range strings.Split(content.KeyValue[param.Section][param.Key].Value,"\t") {
+		for _, noteID := range strings.Split(content.KeyValue[param.Section][param.Key].Value, "\t") {
 			if _, err := os.Stat(fmt.Sprintf("%s%s", noteFiles, noteID)); err != nil {
 				log.Printf("Definition for note '%s' used for solution '%s' in override file '%s' not found in %s", noteID, param.Key, fileName, noteFiles)
 				notesOK = false
@@ -147,7 +148,7 @@ func GetOverrideSolution(fileName, noteFiles string) (map[string]map[string]Solu
 				pcarch = "amd64_PC"
 			}
 		}
-		sol[param.Key] = strings.Split(param.Value,"\t")
+		sol[param.Key] = strings.Split(param.Value, "\t")
 	}
 	switch currentArch {
 	case "ArchPPC64LE":
@@ -164,7 +165,7 @@ func GetOverrideSolution(fileName, noteFiles string) (map[string]map[string]Solu
 	return sols
 }
 
-// Return all solution names, sorted alphabetically.
+// GetSortedSolutionNames returns all solution names, sorted alphabetically.
 func GetSortedSolutionNames(archName string) (ret []string) {
 	ret = make([]string, 0, len(AllSolutions))
 	for id := range AllSolutions[archName] {

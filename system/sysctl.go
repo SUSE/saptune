@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// mapping of system parameter names to configuration names
 const (
 	SysctlPagecacheLimitMB          = "vm.pagecache_limit_mb"
 	SysctlPagecacheLimitIgnoreDirty = "vm.pagecache_limit_ignore_dirty"
@@ -63,7 +64,7 @@ const (
 	SysctlRunChildFirst             = "kernel.sched_child_runs_first"
 )
 
-// Read a sysctl key and return the string value.
+// GetSysctlString read a sysctl key and return the string value.
 func GetSysctlString(parameter string) (string, error) {
 	val, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)))
 	if err != nil {
@@ -72,7 +73,7 @@ func GetSysctlString(parameter string) (string, error) {
 	return strings.TrimSpace(string(val)), nil
 }
 
-// Read an integer sysctl key.
+// GetSysctlInt read an integer sysctl key.
 func GetSysctlInt(parameter string) (int, error) {
 	value, err := GetSysctlString(parameter)
 	if err != nil {
@@ -81,7 +82,7 @@ func GetSysctlInt(parameter string) (int, error) {
 	return strconv.Atoi(value)
 }
 
-// Read an uint64 sysctl key.
+// GetSysctlUint64 read an uint64 sysctl key.
 func GetSysctlUint64(parameter string) (uint64, error) {
 	value, err := GetSysctlString(parameter)
 	if err != nil {
@@ -90,7 +91,7 @@ func GetSysctlUint64(parameter string) (uint64, error) {
 	return strconv.ParseUint(value, 10, 64)
 }
 
-// Write a string sysctl value.
+// SetSysctlString write a string sysctl value.
 func SetSysctlString(parameter, value string) error {
 	err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
 	if os.IsNotExist(err) {
@@ -101,19 +102,19 @@ func SetSysctlString(parameter, value string) error {
 	return nil
 }
 
-// Write an integer sysctl value.
+// SetSysctlInt write an integer sysctl value.
 func SetSysctlInt(parameter string, value int) error {
 	err := SetSysctlString(parameter, strconv.Itoa(value))
 	return err
 }
 
-// Write an integer sysctl value.
+// SetSysctlUint64 write an integer sysctl value.
 func SetSysctlUint64(parameter string, value uint64) error {
 	err := SetSysctlString(parameter, strconv.FormatUint(value, 10))
 	return err
 }
 
-// Write an integer sysctl value into the specified field pf the key.
+// SetSysctlUint64Field write an integer sysctl value into the specified field pf the key.
 func SetSysctlUint64Field(param string, field int, value uint64) error {
 	fields, err := GetSysctlString(param)
 	if err != nil {
@@ -129,10 +130,11 @@ func SetSysctlUint64Field(param string, field int, value uint64) error {
 	return err
 }
 
+// IsPagecacheAvailable check, if system supports pagecache limit
 func IsPagecacheAvailable() bool {
-        _, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(SysctlPagecacheLimitMB, ".", "/", -1)))
-        if err == nil {
-                return true
-        }
-        return false
+	_, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(SysctlPagecacheLimitMB, ".", "/", -1)))
+	if err == nil {
+		return true
+	}
+	return false
 }

@@ -7,7 +7,6 @@ import (
 	"testing"
 )
 
-
 func TestSupportsPerfBias(t *testing.T) {
 	if !IsUserRoot() {
 		t.Skip("the test requires root access")

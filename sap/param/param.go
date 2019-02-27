@@ -1,10 +1,13 @@
 /*
-Parameters are tunable switches on the system that are tuned in very specific ways.
+Parameters are tunable switches on the system that are tuned in very specific
+ways.
 
-Each tunable parameter is able to inspect the system to determine the current value, calculate a new value according
-to system environment and/or user input, and be able to apply the new value upon request.
+Each tunable parameter is able to inspect the system to determine the current
+value, calculate a new value according to system environment and/or user input,
+and be able to apply the new value upon request.
 
-There's only one way to tune a parameter, however a parameter can be referred to by one or more SAP notes.
+There's only one way to tune a parameter, however a parameter can be referred
+to by one or more SAP notes.
 */
 package param
 
@@ -22,7 +25,8 @@ type Parameter interface {
 	Apply() error                                            // Apply the parameter value without further calculation.
 }
 
-// Return the maximum among the input values. If there isn't any input value, return 0.
+// MaxI64 returns the maximum among the input values.
+// If there isn't any input value, return 0.
 func MaxI64(values ...int64) int64 {
 	var ret int64
 	for _, value := range values {
@@ -33,7 +37,8 @@ func MaxI64(values ...int64) int64 {
 	return ret
 }
 
-// Return the maximum among the input values. If there isn't any input value, return 0.
+// MaxI returns the maximum among the input values.
+// If there isn't any input value, return 0.
 func MaxI(values ...int) int {
 	var ret int
 	for _, value := range values {
@@ -44,7 +49,8 @@ func MaxI(values ...int) int {
 	return ret
 }
 
-// Return the maximum among the input values. If there isn't any input value, return 0.
+// MaxU64 returns the maximum among the input values.
+// If there isn't any input value, return 0.
 func MaxU64(values ...uint64) uint64 {
 	var ret uint64
 	for _, value := range values {
@@ -55,7 +61,8 @@ func MaxU64(values ...uint64) uint64 {
 	return ret
 }
 
-// Return the minimum among the input values. If there isn't any input value, return 0.
+// MinU64 returns the minimum among the input values.
+// If there isn't any input value, return 0.
 func MinU64(values ...uint64) uint64 {
 	if len(values) == 0 {
 		return 0

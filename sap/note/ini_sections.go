@@ -7,14 +7,15 @@ import (
 	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
-	"math"
 )
 
+// section name definition
 const (
 	INISectionSysctl    = "sysctl"
 	INISectionVM        = "vm"
@@ -43,16 +44,17 @@ UserTasksMax=infinity
 `
 )
 
+// GetServiceName returns the systemd service name for supported services
 func GetServiceName(service string) string {
-        switch service {
-        case "UuiddSocket":
-                service = "uuidd.socket"
-        case "Sysstat":
-                service = "sysstat"
-        default:
-                log.Printf("skipping unkown service '%s'", service)
-                service = ""
-        }
+	switch service {
+	case "UuiddSocket":
+		service = "uuidd.socket"
+	case "Sysstat":
+		service = "sysstat"
+	default:
+		log.Printf("skipping unkown service '%s'", service)
+		service = ""
+	}
 	return service
 }
 
@@ -89,12 +91,12 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 
 		// use exactly the value from the config file. No calculation any more
 		/*
-		optimisedValue, err := CalculateOptimumValue(operator, fieldC, fieldE)
-		//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
-		if err != nil {
-			return ""
-		}
-		allFieldsS = allFieldsS + optimisedValue + "\t"
+			optimisedValue, err := CalculateOptimumValue(operator, fieldC, fieldE)
+			//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
+			if err != nil {
+				return ""
+			}
+			allFieldsS = allFieldsS + optimisedValue + "\t"
 		*/
 		allFieldsS = allFieldsS + fieldE + "\t"
 	}
@@ -337,7 +339,7 @@ func SetVmVal(key, value string) error {
 		err = system.SetSysString(SysKernelTHPEnabled, value)
 	case "KSM":
 		ksmval, _ := strconv.Atoi(value)
-                err = system.SetSysInt(SysKSMRun, ksmval)
+		err = system.SetSysInt(SysKSMRun, ksmval)
 	}
 	return err
 }
@@ -364,8 +366,8 @@ func GetCpuVal(key string) string {
 }
 
 func OptCpuVal(key, actval, cfgval string) string {
-//ANGI TODO - check cfgval is not a single value like 'performance' but
-// cpu0:performance cpu2:powersave
+	//ANGI TODO - check cfgval is not a single value like 'performance' but
+	// cpu0:performance cpu2:powersave
 	sval := strings.ToLower(cfgval)
 	rval := ""
 	val := "0"
@@ -452,11 +454,11 @@ func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
 	} else if shmsize == "0" {
 		if tmpfspercent == "0" {
 			// Calculate optimal SHM size (TotalMemSizeMB*75/100) (SAP-Note 941735)
-			size = uint64(system.GetTotalMemSizeMB())*75/100
+			size = uint64(system.GetTotalMemSizeMB()) * 75 / 100
 		} else {
 			// Calculate optimal SHM size (TotalMemSizeMB*VSZ_TMPFS_PERCENT/100)
 			val, _ := strconv.ParseUint(tmpfspercent, 10, 64)
-			size = uint64(system.GetTotalMemSizeMB())*val/100
+			size = uint64(system.GetTotalMemSizeMB()) * val / 100
 		}
 	} else {
 		size, _ = strconv.ParseUint(shmsize, 10, 64)

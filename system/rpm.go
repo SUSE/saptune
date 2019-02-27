@@ -11,6 +11,7 @@ import (
 
 var alphanumPattern = regexp.MustCompile("([a-zA-Z]+)|([0-9]+)|(~)")
 
+// GetRpmVers return the version of an installed RPM
 func GetRpmVers(rpm string) string {
 	// rpm -q --qf '%{VERSION}-%{RELEASE}\n' glibc
 	notInstalled := fmt.Sprintf("package %s is not installed", rpm)
@@ -32,7 +33,6 @@ func GetRpmVers(rpm string) string {
 	return rpmVers
 }
 
-
 /* compare rpm versions
 func CmpRpmVers, func CheckRpmVers
 build on base of information from http://rpm.org/user_doc/dependencies.html
@@ -40,12 +40,16 @@ and https://github.com/rpm-software-management/rpm/blob/master/lib/rpmvercmp.c
 Equal == 0, GreaterThan > 0, LessThan < 0
 vers1 is '228-150.22.1', vers2 is '228-142.1'
 */
+
+// CmpRpmVers compare versions of 2 RPMs (installed version, expected version)
+// Return true, if installed package version is equal or higher than expected
+// Return false, if installed package version is less than expected
 func CmpRpmVers(vers1, vers2 string) bool {
 	if vers1 == "" {
 		// package not installed
 		return false
 	}
-	if vers1  == vers2 {
+	if vers1 == vers2 {
 		// rpm version and release are equal
 		return true
 	}
@@ -72,6 +76,8 @@ func CmpRpmVers(vers1, vers2 string) bool {
 	}
 }
 
+// CheckRpmVers compare versions of 2 RPMs (installed version, expected version)
+// Return 0 (Equal), 1 (GreaterThan) or -1 (LessThan)
 func CheckRpmVers(vers1, vers2 string) int {
 	// per definition numbers are greater than alphas
 	if vers1 == vers2 {

@@ -13,12 +13,12 @@ import (
 )
 
 type ParameterNoteEntry struct {
-	NoteId   string
-	Value    string
+	NoteId string
+	Value  string
 }
 
 type ParameterNotes struct {
-	AllNotes []ParameterNoteEntry	// list of applied notes, which manipulate the given system parameter
+	AllNotes []ParameterNoteEntry // list of applied notes, which manipulate the given system parameter
 }
 
 // Directory where to store the parameter state files
@@ -27,7 +27,7 @@ const SaptuneParameterStateDir = "/var/lib/saptune/parameter"
 
 // Return path to the serialised parameter state file.
 func GetPathToParameter(param string) string {
-        return path.Join(SaptuneParameterStateDir, param)
+	return path.Join(SaptuneParameterStateDir, param)
 }
 
 // Check, if given noteID is already part of the parameter list of notes
@@ -61,7 +61,7 @@ func ListParams() (ret []string, err error) {
 
 // Create parameter state file and insert the start values.
 func CreateParameterStartValues(param, value string) {
-	pEntries := ParameterNotes {
+	pEntries := ParameterNotes{
 		AllNotes: make([]ParameterNoteEntry, 0, 64),
 	}
 	pEntries = GetSavedParameterNotes(param)
@@ -69,8 +69,8 @@ func CreateParameterStartValues(param, value string) {
 		//log.Printf("Write parameter start value '%s' to file '%s'", value, GetPathToParameter(param))
 		// file does not exist, create start entry
 		pEntry := ParameterNoteEntry{
-			NoteId:   "start",
-			Value:    value,
+			NoteId: "start",
+			Value:  value,
 		}
 		pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
 		err := StoreParameter(param, pEntries, true)
@@ -82,7 +82,7 @@ func CreateParameterStartValues(param, value string) {
 
 // Add note parameter values to the state file.
 func AddParameterNoteValues(param, value, noteID string) {
-	pEntries := ParameterNotes {
+	pEntries := ParameterNotes{
 		AllNotes: make([]ParameterNoteEntry, 0, 64),
 	}
 	pEntries = GetSavedParameterNotes(param)
@@ -90,8 +90,8 @@ func AddParameterNoteValues(param, value, noteID string) {
 		//log.Printf("Write note '%s' parameter value '%s' to file '%s'", noteID, value, GetPathToParameter(param))
 		// file exis
 		pEntry := ParameterNoteEntry{
-			NoteId:   noteID,
-			Value:    value,
+			NoteId: noteID,
+			Value:  value,
 		}
 		pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
 		err := StoreParameter(param, pEntries, true)
@@ -102,8 +102,8 @@ func AddParameterNoteValues(param, value, noteID string) {
 }
 
 // Read content of stored paramter states. Return the content as ParameterNotes
-func GetSavedParameterNotes(param string) (ParameterNotes) {
-	pEntries := ParameterNotes {
+func GetSavedParameterNotes(param string) ParameterNotes {
+	pEntries := ParameterNotes{
 		AllNotes: make([]ParameterNoteEntry, 0, 64),
 	}
 	content, err := ioutil.ReadFile(GetPathToParameter(param))
@@ -116,7 +116,7 @@ func GetSavedParameterNotes(param string) (ParameterNotes) {
 
 // read all saved parameters from the state directory
 // fill structure app.AllParameters
-func GetAllSavedParameters() (map[string]ParameterNotes) {
+func GetAllSavedParameters() map[string]ParameterNotes {
 	params := make(map[string]ParameterNotes)
 	allParams, err := ListParams()
 	if err == nil {
@@ -132,7 +132,7 @@ func GetAllSavedParameters() (map[string]ParameterNotes) {
 }
 
 // Store parameter values to state directory
-// Write a json file with the name of the given parameter containing the 
+// Write a json file with the name of the given parameter containing the
 // applied noteIDs for this parameter and the associated parameter values
 func StoreParameter(param string, obj ParameterNotes, overwriteExisting bool) error {
 	content, err := json.Marshal(obj)
@@ -162,9 +162,9 @@ func PositionInParameterList(noteID string, list []ParameterNoteEntry) int {
 
 // Revert parameter value and remove noteID reference from parameter file
 // return value of parameter, if needed to change, empty string else
-func RevertParameter(param string, noteID string) (string) {
+func RevertParameter(param string, noteID string) string {
 	pvalue := ""
-	pEntries := ParameterNotes {
+	pEntries := ParameterNotes{
 		AllNotes: make([]ParameterNoteEntry, 0, 64),
 	}
 	// read values from the parameter state file

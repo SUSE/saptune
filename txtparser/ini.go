@@ -1,8 +1,8 @@
 package txtparser
 
 import (
-	"github.com/SUSE/saptune/system"
 	"fmt"
+	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"
@@ -36,6 +36,7 @@ type INIFile struct {
 	KeyValue  map[string]map[string]INIEntry
 }
 
+// GetINIFileDescriptiveName return the descriptive name of the Note
 func GetINIFileDescriptiveName(fileName string) string {
 	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=(.*)\s*NAME="([^"]*)"`)
 	rval := ""
@@ -50,6 +51,7 @@ func GetINIFileDescriptiveName(fileName string) string {
 	return rval
 }
 
+// GetINIFileCategory return the category the Note belongs to
 func GetINIFileCategory(fileName string) string {
 	var re = regexp.MustCompile(`# SAP-NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
 	rval := ""
@@ -64,6 +66,8 @@ func GetINIFileCategory(fileName string) string {
 	return rval
 }
 
+// GetINIFileVersion return the version of the Note used to setup the Note
+// configuration file
 func GetINIFileVersion(fileName string) string {
 	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
 	rval := ""
@@ -78,6 +82,7 @@ func GetINIFileVersion(fileName string) string {
 	return rval
 }
 
+// ParseINIFile read the content of the configuration file
 func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
 	content, err := ioutil.ReadFile(fileName)
 	if os.IsNotExist(err) && autoCreate {
@@ -96,6 +101,7 @@ func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
 	return ParseINI(string(content)), nil
 }
 
+// ParseINI parse the content of the configuration file
 func ParseINI(input string) *INIFile {
 	ret := &INIFile{
 		AllValues: make([]INIEntry, 0, 64),
@@ -138,7 +144,7 @@ func ParseINI(input string) *INIFile {
 		if currentSection == "rpm" {
 			fields := strings.Fields(line)
 			if fields[1] == "all" || fields[1] == system.GetOsVers() {
-				kov = []string {"rpm", "rpm:" + fields[0], fields[1], fields[2]}
+				kov = []string{"rpm", "rpm:" + fields[0], fields[1], fields[2]}
 			} else {
 				kov = nil
 			}
