@@ -162,7 +162,11 @@ func (vend INISettings) Initialise() (Note, error) {
 		// do not write parameter values to the saved state file during
 		// a pure 'verify' action
 		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
-			CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
+			if param.Section == INISectionLimits {
+				SaveLimitsParameter(param.Key, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, vend.SysctlParams[param.Key], "start", "")
+			} else {
+				CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
+			}
 		}
 	}
 	return vend, nil
@@ -226,7 +230,11 @@ func (vend INISettings) Optimise() (Note, error) {
 		// do not write parameter values to the saved state file during
 		// a pure 'verify' action
 		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
-			AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
+			if param.Section == INISectionLimits {
+				SaveLimitsParameter(param.Key, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, vend.SysctlParams[param.Key], "add", vend.ID)
+			} else {
+				AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
+			}
 		}
 	}
 	return vend, nil
@@ -266,7 +274,12 @@ func (vend INISettings) Apply() error {
 
 		if revertValues && vend.SysctlParams[param.Key] != "" {
 			// revert parameter value
-			pvalue := RevertParameter(param.Key, vend.ID)
+			pvalue := ""
+			if param.Section == INISectionLimits {
+				pvalue = RevertLimitsParameter(param.Key, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, vend.ID)
+			} else {
+				pvalue = RevertParameter(param.Key, vend.ID)
+			}
 			if pvalue != "" {
 				vend.SysctlParams[param.Key] = pvalue
 			}
