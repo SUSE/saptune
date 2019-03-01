@@ -152,7 +152,7 @@ func (limits *SecLimits) ToText() string {
 			ret.WriteRune('\n')
 		}
 		// prevent useless empty lines
-		if entry.Domain != "" && entry.Type != "" && entry.Item != "" {
+		if entry.Domain != "" && entry.Type != "" && entry.Item != "" && entry.Value != "" {
 			ret.WriteString(fmt.Sprintf("%s %s %s %s\n", entry.Domain, entry.Type, entry.Item, entry.Value))
 		}
 	}

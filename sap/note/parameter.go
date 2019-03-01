@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 )
 
 // ParameterNoteEntry stores the parameter values set by a Note
@@ -102,6 +103,37 @@ func AddParameterNoteValues(param, value, noteID string) {
 		err := StoreParameter(param, pEntries, true)
 		if err != nil {
 			log.Printf("Failed to store note '%s' values for parameter file '%s' for parameter '%s'", noteID, GetPathToParameter(param), param)
+		}
+	}
+}
+
+// SaveLimitsParameter creates or modifies parameter state files for the
+// limit parameter
+func SaveLimitsParameter(key, domain, item, value, action, id string) {
+	if key != "LIMIT_HARD" && key != "LIMIT_SOFT" {
+		return
+	}
+	for _, dom := range strings.Fields(domain) {
+		for _, entry := range strings.Fields(value) {
+			fields := strings.Split(entry, ":")
+			if fields[0] != dom {
+				continue
+			}
+			// parameter saved state file name
+			// type_item_domain
+			saveParam := fmt.Sprintf("%s_%s_%s", key, item, dom)
+			val := ""
+			if len(fields) > 1 {
+				val = fmt.Sprintf("%s:%s ", dom, fields[1])
+			} else {
+				val = fmt.Sprintf("%s: ", dom)
+			}
+			switch action {
+			case "start":
+				CreateParameterStartValues(saveParam, val)
+			case "add":
+				AddParameterNoteValues(saveParam, val, id)
+			}
 		}
 	}
 }
@@ -217,12 +249,19 @@ func RevertParameter(param string, noteID string) string {
 	return pvalue
 }
 
-/*
-For just reading the last element of a slice:
-
-sl[len(sl)-1]
-
-For removing it:
-
-sl = sl[:len(sl)-1]
-*/
+// RevertLimitsParameter retrieves the stored values from the parameter state
+// files for the limit parameter
+func RevertLimitsParameter(key, domain, item, id string) string {
+	if key != "LIMIT_HARD" && key != "LIMIT_SOFT" {
+		return ""
+	}
+	pvalue := ""
+	for _, dom := range strings.Fields(domain) {
+		// parameter saved state file name
+		// type_item_domain
+		saveParam := fmt.Sprintf("%s_%s_%s", key, item, dom)
+		pv := RevertParameter(saveParam, id)
+		pvalue = pvalue + pv
+	}
+	return pvalue
+}
