@@ -1,3 +1,5 @@
+package param
+
 /*
 Parameters are tunable switches on the system that are tuned in very specific
 ways.
@@ -9,14 +11,13 @@ and be able to apply the new value upon request.
 There's only one way to tune a parameter, however a parameter can be referred
 to by one or more SAP notes.
 */
-package param
 
 import (
 	"math"
 )
 
 /*
-A tunable parameter, usually calculated based on user input and/or automatically.
+Parameter is a tunable parameter, usually calculated based on user input and/or automatically.
 Parameter is immutable. Internal state changes can only be made to copies.
 */
 type Parameter interface {

@@ -7,6 +7,7 @@ import (
 	"path"
 )
 
+// LinuxPagingImprovements defines SAP Note 1557506
 // 1557506 - Linux paging improvements
 type LinuxPagingImprovements struct {
 	SysconfigPrefix string // Used by test cases to specify alternative sysconfig location
@@ -16,7 +17,7 @@ type LinuxPagingImprovements struct {
 	UseAlgorithmForHANA         bool
 }
 
-// Name returns the name of the related note
+// Name returns the name of the related SAP Note
 func (paging LinuxPagingImprovements) Name() string {
 	return "Linux paging improvements"
 }

@@ -39,7 +39,7 @@ func (mount MountPoint) GetFileSystemSizeMB() uint64 {
 	return uint64(fs.Bsize) * fs.Blocks / 1048576
 }
 
-// A list of mount points.
+// MountPoints contains a list of mount points.
 type MountPoints []MountPoint
 
 // GetByMountPoint find a mount point by its path.

@@ -125,7 +125,7 @@ func RevertAction(actionName string) {
 	fmt.Println("Parameters tuned by the notes and solutions have been successfully reverted.")
 }
 
-// Handle daemon actions like start, stop, status asm.
+// DaemonAction handles daemon actions like start, stop, status asm.
 func DaemonAction(actionName string) {
 	switch actionName {
 	case "start":
@@ -192,7 +192,7 @@ func DaemonAction(actionName string) {
 }
 
 // PrintNoteFields Print mismatching fields in the note comparison result.
-func PrintNoteFields(header string, noteComparisons map[string]map[string]note.NoteFieldComparison, printComparison bool) {
+func PrintNoteFields(header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool) {
 
 	var fmtlen0, fmtlen1, fmtlen2, fmtlen3, fmtlen4 int
 	// initialise
@@ -466,7 +466,7 @@ func NoteAction(actionName, noteID string) {
 			if err != nil {
 				errorExit("Failed to test the current system against the specified note: %v", err)
 			}
-			noteComp := make(map[string]map[string]note.NoteFieldComparison)
+			noteComp := make(map[string]map[string]note.FieldComparison)
 			noteComp[noteID] = comparisons
 			PrintNoteFields("HEAD", noteComp, true)
 			if !conforming {
@@ -484,7 +484,7 @@ func NoteAction(actionName, noteID string) {
 			errorExit("Failed to test the current system against the specified note: %v", err)
 		} else {
 			fmt.Printf("If you run `saptune note apply %s`, the following changes will be applied to your system:\n", noteID)
-			noteComp := make(map[string]map[string]note.NoteFieldComparison)
+			noteComp := make(map[string]map[string]note.FieldComparison)
 			noteComp[noteID] = comparisons
 			PrintNoteFields("HEAD", noteComp, false)
 		}

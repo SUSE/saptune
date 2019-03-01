@@ -117,106 +117,106 @@ func TestOptLimitsVal(t *testing.T) {
 
 //SetLimitsVal
 
-func TestGetVmVal(t *testing.T) {
+func TestGetVMVal(t *testing.T) {
 	if runtime.GOARCH != "ppc64le" {
-		val := GetVmVal("THP")
+		val := GetVMVal("THP")
 		if val != "always" && val != "madvise" && val != "never" {
 			t.Fatalf("wrong value '%+v' for THP.\n", val)
 		}
 	}
-	val := GetVmVal("KSM")
+	val := GetVMVal("KSM")
 	if val != "1" && val != "0" {
 		t.Fatalf("wrong value '%+v' for KSM.\n", val)
 	}
 }
 
-func TestOptVmVal(t *testing.T) {
-	val := OptVmVal("THP", "always")
+func TestOptVMVal(t *testing.T) {
+	val := OptVMVal("THP", "always")
 	if val != "always" {
 		t.Fatal(val)
 	}
-	val = OptVmVal("THP", "unknown")
+	val = OptVMVal("THP", "unknown")
 	if val != "never" {
 		t.Fatal(val)
 	}
-	val = OptVmVal("KSM", "1")
+	val = OptVMVal("KSM", "1")
 	if val != "1" {
 		t.Fatal(val)
 	}
-	val = OptVmVal("KSM", "2")
+	val = OptVMVal("KSM", "2")
 	if val != "0" {
 		t.Fatal(val)
 	}
-	val = OptVmVal("UNKOWN_PARAMETER", "unknown")
+	val = OptVMVal("UNKOWN_PARAMETER", "unknown")
 	if val != "unknown" {
 		t.Fatal(val)
 	}
 }
 
-//SetVmVal
+//SetVMVal
 
-func TestGetCpuVal(t *testing.T) {
-	val := GetCpuVal("force_latency")
+func TestGetCPUVal(t *testing.T) {
+	val := GetCPUVal("force_latency")
 	if val != "all:none" {
 		t.Logf("force_latency supported: '%s'\n", val)
 	}
-	val = GetCpuVal("energy_perf_bias")
+	val = GetCPUVal("energy_perf_bias")
 	if val != "all:none" {
 		t.Logf("energy_perf_bias supported: '%s'\n", val)
 	}
-	val = GetCpuVal("governor")
+	val = GetCPUVal("governor")
 	if val != "all:none" && val != "" {
 		t.Logf("governor supported: '%s'\n", val)
 	}
 }
 
-func TestOptCpuVal(t *testing.T) {
-	val := OptCpuVal("force_latency", "1000", "70")
+func TestOptCPUVal(t *testing.T) {
+	val := OptCPUVal("force_latency", "1000", "70")
 	if val != "70" {
 		t.Fatal(val)
 	}
 
-	val = OptCpuVal("energy_perf_bias", "all:15", "performance")
+	val = OptCPUVal("energy_perf_bias", "all:15", "performance")
 	if val != "all:0" {
 		t.Fatal(val)
 	}
-	val = OptCpuVal("energy_perf_bias", "cpu0:15 cpu1:6 cpu2:0", "performance")
+	val = OptCPUVal("energy_perf_bias", "cpu0:15 cpu1:6 cpu2:0", "performance")
 	if val != "cpu0:0 cpu1:0 cpu2:0" {
 		t.Fatal(val)
 	}
 
 	/* future feature
-	val = OptCpuVal("energy_perf_bias", "cpu0:6 cpu1:6 cpu2:6", "cpu0:performance cpu1:normal cpu2:powersave")
+	val = OptCPUVal("energy_perf_bias", "cpu0:6 cpu1:6 cpu2:6", "cpu0:performance cpu1:normal cpu2:powersave")
 	if val != "cpu0:0 cpu1:6 cpu2:15" {
 		t.Fatal(val)
 	}
-	val = OptCpuVal("energy_perf_bias", "all:6", "cpu0:performance cpu1:normal cpu2:powersave")
+	val = OptCPUVal("energy_perf_bias", "all:6", "cpu0:performance cpu1:normal cpu2:powersave")
 	if val != "cpu0:performance cpu1:normal cpu2:powersave" {
 		t.Fatal(val)
 	}
 	*/
 
-	val = OptCpuVal("governor", "all:powersave", "performance")
+	val = OptCPUVal("governor", "all:powersave", "performance")
 	if val != "all:performance" {
 		t.Fatal(val)
 	}
-	val = OptCpuVal("governor", "cpu0:powersave cpu1:performance cpu2:powersave", "performance")
+	val = OptCPUVal("governor", "cpu0:powersave cpu1:performance cpu2:powersave", "performance")
 	if val != "cpu0:performance cpu1:performance cpu2:performance" {
 		t.Fatal(val)
 	}
 	/* future feature
-	val = OptCpuVal("governor", "cpu0:powersave cpu1:performance cpu2:powersave", "cpu0:performance cpu1:powersave cpu2:performance")
+	val = OptCPUVal("governor", "cpu0:powersave cpu1:performance cpu2:powersave", "cpu0:performance cpu1:powersave cpu2:performance")
 	if val != "cpu0:performance cpu1:powersave cpu2:performance" {
 		t.Fatal(val)
 	}
-	val = OptCpuVal("energy_perf_bias", "all:powersave", "cpu0:performance cpu1:powersave cpu2:performance")
+	val = OptCPUVal("energy_perf_bias", "all:powersave", "cpu0:performance cpu1:powersave cpu2:performance")
 	if val != "cpu0:performance cpu1:powersave cpu2:performance" {
 		t.Fatal(val)
 	}
 	*/
 }
 
-//SetCpuVal
+//SetCPUVal
 
 func TestGetMemVal(t *testing.T) {
 	val := GetMemVal("VSZ_TMPFS_PERCENT")

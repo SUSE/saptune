@@ -61,7 +61,7 @@ func (ioe BlockDeviceSchedulers) Apply() error {
 	return err
 }
 
-// Change IO nr_requests on all block devices
+// BlockDeviceNrRequests changes IO nr_requests on all block devices
 type BlockDeviceNrRequests struct {
 	NrRequests map[string]int
 }
@@ -125,7 +125,7 @@ func IsValidforNrRequests(blockdev, nrreq string) bool {
 	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
 	if elev != "" {
 		file := path.Join("block", blockdev, "queue", "nr_requests")
-		if tst_err := system.TestSysString(file, nrreq); tst_err == nil {
+		if tstErr := system.TestSysString(file, nrreq); tstErr == nil {
 			return true
 		}
 	}

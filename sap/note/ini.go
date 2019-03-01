@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// OverrideTuningSheets defines saptunes override directory
 const OverrideTuningSheets = "/etc/saptune/override/"
 
 var pc = LinuxPagingImprovements{}
@@ -67,7 +68,7 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 	return strconv.FormatInt(iCurrentValue, 10), nil
 }
 
-// Tuning options composed by a third party vendor.
+// INISettings defines tuning options composed by a third party vendor.
 type INISettings struct {
 	ConfFilePath    string            // Full path to the 3rd party vendor's tuning configuration file
 	ID              string            // ID portion of the tuning configuration
@@ -122,7 +123,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionSysctl:
 			vend.SysctlParams[param.Key], _ = system.GetSysctlString(param.Key)
 		case INISectionVM:
-			vend.SysctlParams[param.Key] = GetVmVal(param.Key)
+			vend.SysctlParams[param.Key] = GetVMVal(param.Key)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], _ = GetBlkVal(param.Key)
 		case INISectionLimits:
@@ -136,7 +137,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionMEM:
 			vend.SysctlParams[param.Key] = GetMemVal(param.Key)
 		case INISectionCPU:
-			vend.SysctlParams[param.Key] = GetCpuVal(param.Key)
+			vend.SysctlParams[param.Key] = GetCPUVal(param.Key)
 		case INISectionRpm:
 			vend.SysctlParams[param.Key] = GetRpmVal(param.Key)
 			continue
@@ -191,7 +192,7 @@ func (vend INISettings) Optimise() (Note, error) {
 			//vend.SysctlParams[param.Key] = optimisedValue
 			vend.SysctlParams[param.Key] = OptSysctlVal(param.Operator, param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionVM:
-			vend.SysctlParams[param.Key] = OptVmVal(param.Key, param.Value)
+			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key] = OptBlkVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionLimits:
@@ -205,7 +206,7 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionMEM:
 			vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["mem"]["ShmFileSystemSizeMB"].Value, ini.KeyValue["mem"]["VSZ_TMPFS_PERCENT"].Value)
 		case INISectionCPU:
-			vend.SysctlParams[param.Key] = OptCpuVal(param.Key, vend.SysctlParams[param.Key], param.Value)
+			vend.SysctlParams[param.Key] = OptCPUVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionRpm:
 			vend.SysctlParams[param.Key] = OptRpmVal(param.Key, param.Value)
 			continue
@@ -249,6 +250,7 @@ func (vend INISettings) Apply() error {
 	if err != nil {
 		return err
 	}
+
 	//for key, value := range vend.SysctlParams {
 	for _, param := range ini.AllValues {
 		switch param.Section {
@@ -298,7 +300,7 @@ func (vend INISettings) Apply() error {
 				errs = append(errs, system.SetSysctlString(param.Key, vend.SysctlParams[param.Key]))
 			}
 		case INISectionVM:
-			errs = append(errs, SetVmVal(param.Key, vend.SysctlParams[param.Key]))
+			errs = append(errs, SetVMVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionBlock:
 			errs = append(errs, SetBlkVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionLimits:
@@ -312,7 +314,7 @@ func (vend INISettings) Apply() error {
 		case INISectionMEM:
 			errs = append(errs, SetMemVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionCPU:
-			errs = append(errs, SetCpuVal(param.Key, vend.SysctlParams[param.Key], revertValues, vend.ID))
+			errs = append(errs, SetCPUVal(param.Key, vend.SysctlParams[param.Key], revertValues, vend.ID))
 		case INISectionPagecache:
 			errs = append(errs, SetPagecacheVal(param.Key, &pc))
 		default:

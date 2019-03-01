@@ -1,5 +1,6 @@
-// Gather information about kernel cmdline
 package system
+
+// Gather information about kernel cmdline
 
 import (
 	"io/ioutil"

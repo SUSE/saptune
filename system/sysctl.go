@@ -1,5 +1,6 @@
-// Manipulate sysctl switches.
 package system
+
+// Manipulate sysctl switches.
 
 import (
 	"fmt"

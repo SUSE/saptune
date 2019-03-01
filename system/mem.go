@@ -1,5 +1,6 @@
-// Gather information about system memory and swap memory.
 package system
+
+// Gather information about system memory and swap memory.
 
 import (
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"strings"
 )
 
+// string definitions for parsing /proc/meminfo output
 const (
 	MemMainTotalKey = "MemTotal"
 	MemSwapTotalKey = "SwapTotal"

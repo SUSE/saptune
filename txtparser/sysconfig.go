@@ -1,5 +1,6 @@
-// Implement a universal parser for /etc/sysconfig files.
 package txtparser
+
+// Implement a universal parser for /etc/sysconfig files.
 
 import (
 	"bytes"
@@ -14,14 +15,15 @@ import (
 
 var consecutiveSpaces = regexp.MustCompile("[[:space:]]+")
 
-// A single key-value pair in sysconfig file.
+// SysconfigEntry contains a single key-value pair in sysconfig file.
 type SysconfigEntry struct {
 	LeadingComments []string // The comment lines leading to the key-value pair, including prefix '#', excluding end-of-line.
 	Key             string   // The key.
 	Value           string   // The value, excluding '=' character and double-quotes. Values will always come in double-quotes when converted to text.
 }
 
-// Key-value pairs of a sysconfig file. It is able to convert back to original text in the original key order.
+// Sysconfig contains key-value pairs of a sysconfig file.
+// It is able to convert back to original text in the original key order.
 type Sysconfig struct {
 	AllValues []*SysconfigEntry // All key-value pairs in the orignal order.
 	KeyValue  map[string]*SysconfigEntry

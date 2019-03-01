@@ -1,5 +1,6 @@
-// Implement a parser for /etc/security/limits.conf.
 package system
+
+// Implement a parser for /etc/security/limits.conf.
 
 import (
 	"bytes"
@@ -12,7 +13,8 @@ import (
 
 var consecutiveSpaces = regexp.MustCompile("[[:space:]]+")
 
-type SecurityLimitInt int // SecurityLimitInt is an integer number where -1 represents unlimited value.
+// SecurityLimitInt is an integer number where -1 represents unlimited value.
+type SecurityLimitInt int
 
 // SecurityLimitUnlimitedValue is the constant integer value that represents unrestricted limit.
 const SecurityLimitUnlimitedValue = SecurityLimitInt(-1)
@@ -40,7 +42,7 @@ func ToSecurityLimitInt(in string) SecurityLimitInt {
 	return SecurityLimitInt(i)
 }
 
-// A single entry in security/limits.conf file.
+// SecLimitsEntry is a single entry in security/limits.conf file.
 type SecLimitsEntry struct {
 	LeadingComments    []string // The comment lines leading to the key-value pair, including prefix '#', excluding end-of-line.
 	Domain, Type, Item string
