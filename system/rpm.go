@@ -1,5 +1,6 @@
-// wrapper to rpm command
 package system
+
+// wrapper to rpm command
 
 import (
 	"fmt"
@@ -70,10 +71,9 @@ func CmpRpmVers(vers1, vers2 string) bool {
 	if ret < 0 {
 		// installed package release is less than expected
 		return false
-	} else {
-		// installed package release is equal or higher than expected
-		return true
 	}
+	// installed package release is equal or higher than expected
+	return true
 }
 
 // CheckRpmVers compare versions of 2 RPMs (installed version, expected version)

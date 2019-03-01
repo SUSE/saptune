@@ -1,9 +1,10 @@
+package solution
+
 /*
 Solutions are collections of relevant SAP notes, all of which are applicable to specific SAP products.
 
 A system can be tuned for more than one solutions at a time.
 */
-package solution
 
 import (
 	"fmt"
@@ -22,15 +23,22 @@ const (
 	NoteTuningSheets      = "/usr/share/saptune/notes/"
 	ArchX86               = "amd64"      // ArchX86 is the GOARCH value for x86 platform.
 	ArchPPC64LE           = "ppc64le"    // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform.
-	ArchX86_PC            = "amd64_PC"   // ArchX86 is the GOARCH value for x86 platform. _PC indicates PageCache is available
-	ArchPPC64LE_PC        = "ppc64le_PC" // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform. _PC indicates PageCache is available
+	ArchX86PC             = "amd64_PC"   // ArchX86 is the GOARCH value for x86 platform. PC indicates PageCache is available
+	ArchPPC64LEPC         = "ppc64le_PC" // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform. PC indicates PageCache is available
 )
 
-type Solution []string // Solution is identified by set of note numbers.
+// Solution is identified by set of note numbers.
+type Solution []string
 
 // Architecture VS solution ID VS note numbers
 // AllSolutions = map[string]map[string]Solution
+
+// AllSolutions contains a list of all available solutions with their related
+// SAP Notes for all supported architectures
 var AllSolutions = GetSolutionDefintion(SolutionSheet)
+
+// OverrideSolutions contains a list of all available override solutions with
+// their related SAP Notes for all supported architectures
 var OverrideSolutions = GetOverrideSolution(OverrideSolutionSheet, NoteTuningSheets)
 
 // GetSolutionDefintion reads solution definition from file
@@ -82,12 +90,12 @@ func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
 	switch currentArch {
 	case "ArchPPC64LE":
 		if system.IsPagecacheAvailable() {
-			sols[ArchPPC64LE_PC] = sol
+			sols[ArchPPC64LEPC] = sol
 		}
 		sols[ArchPPC64LE] = sol
 	case "ArchX86":
 		if system.IsPagecacheAvailable() {
-			sols[ArchX86_PC] = sol
+			sols[ArchX86PC] = sol
 		}
 		sols[ArchX86] = sol
 	}
@@ -153,12 +161,12 @@ func GetOverrideSolution(fileName, noteFiles string) map[string]map[string]Solut
 	switch currentArch {
 	case "ArchPPC64LE":
 		if system.IsPagecacheAvailable() {
-			sols[ArchPPC64LE_PC] = sol
+			sols[ArchPPC64LEPC] = sol
 		}
 		sols[ArchPPC64LE] = sol
 	case "ArchX86":
 		if system.IsPagecacheAvailable() {
-			sols[ArchX86_PC] = sol
+			sols[ArchX86PC] = sol
 		}
 		sols[ArchX86] = sol
 	}

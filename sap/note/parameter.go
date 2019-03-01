@@ -1,6 +1,3 @@
-/*
-SAP notes tune one or more parameters at a time.
-*/
 package note
 
 import (
@@ -12,35 +9,42 @@ import (
 	"path"
 )
 
+// ParameterNoteEntry stores the parameter values set by a Note
 type ParameterNoteEntry struct {
-	NoteId string
+	NoteID string
 	Value  string
 }
 
+// ParameterNotes includes a list of applied notes, which manipulate the
+// given system parameter
+// the entries are stored in exactly the order the Notes were applied.
+// So you get a (timeline) chain of applied parameter values
 type ParameterNotes struct {
-	AllNotes []ParameterNoteEntry // list of applied notes, which manipulate the given system parameter
+	AllNotes []ParameterNoteEntry
 }
 
-// Directory where to store the parameter state files
+// SaptuneParameterStateDir defines the directory where to store the
+// parameter state files
 // separated from the note state file directory
 const SaptuneParameterStateDir = "/var/lib/saptune/parameter"
 
-// Return path to the serialised parameter state file.
+// GetPathToParameter returns path to the serialised parameter state file.
 func GetPathToParameter(param string) string {
 	return path.Join(SaptuneParameterStateDir, param)
 }
 
-// Check, if given noteID is already part of the parameter list of notes
-func NoteInParameterList(noteID string, list []ParameterNoteEntry) bool {
+// IDInParameterList checks, if given noteID is already part of the
+// parameter list of notes
+func IDInParameterList(noteID string, list []ParameterNoteEntry) bool {
 	for _, note := range list {
-		if note.NoteId == noteID {
+		if note.NoteID == noteID {
 			return true
 		}
 	}
 	return false
 }
 
-// List all stored paramter states. Return paramter names
+// ListParams lists all stored paramter states. Return paramter names
 func ListParams() (ret []string, err error) {
 	if err = os.MkdirAll(SaptuneParameterStateDir, 0755); err != nil {
 		return
@@ -59,7 +63,8 @@ func ListParams() (ret []string, err error) {
 	return
 }
 
-// Create parameter state file and insert the start values.
+// CreateParameterStartValues creates the parameter state file and inserts
+// the start values.
 func CreateParameterStartValues(param, value string) {
 	pEntries := ParameterNotes{
 		AllNotes: make([]ParameterNoteEntry, 0, 64),
@@ -69,7 +74,7 @@ func CreateParameterStartValues(param, value string) {
 		//log.Printf("Write parameter start value '%s' to file '%s'", value, GetPathToParameter(param))
 		// file does not exist, create start entry
 		pEntry := ParameterNoteEntry{
-			NoteId: "start",
+			NoteID: "start",
 			Value:  value,
 		}
 		pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
@@ -80,17 +85,17 @@ func CreateParameterStartValues(param, value string) {
 	}
 }
 
-// Add note parameter values to the state file.
+// AddParameterNoteValues adds note parameter values to the state file.
 func AddParameterNoteValues(param, value, noteID string) {
 	pEntries := ParameterNotes{
 		AllNotes: make([]ParameterNoteEntry, 0, 64),
 	}
 	pEntries = GetSavedParameterNotes(param)
-	if len(pEntries.AllNotes) != 0 && !NoteInParameterList(noteID, pEntries.AllNotes) {
+	if len(pEntries.AllNotes) != 0 && !IDInParameterList(noteID, pEntries.AllNotes) {
 		//log.Printf("Write note '%s' parameter value '%s' to file '%s'", noteID, value, GetPathToParameter(param))
 		// file exis
 		pEntry := ParameterNoteEntry{
-			NoteId: noteID,
+			NoteID: noteID,
 			Value:  value,
 		}
 		pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
@@ -101,7 +106,8 @@ func AddParameterNoteValues(param, value, noteID string) {
 	}
 }
 
-// Read content of stored paramter states. Return the content as ParameterNotes
+// GetSavedParameterNotes reads content of stored paramter states.
+// Return the content as ParameterNotes
 func GetSavedParameterNotes(param string) ParameterNotes {
 	pEntries := ParameterNotes{
 		AllNotes: make([]ParameterNoteEntry, 0, 64),
@@ -114,7 +120,7 @@ func GetSavedParameterNotes(param string) ParameterNotes {
 	return pEntries
 }
 
-// read all saved parameters from the state directory
+// GetAllSavedParameters reads all saved parameters from the state directory
 // fill structure app.AllParameters
 func GetAllSavedParameters() map[string]ParameterNotes {
 	params := make(map[string]ParameterNotes)
@@ -131,7 +137,7 @@ func GetAllSavedParameters() map[string]ParameterNotes {
 	return params
 }
 
-// Store parameter values to state directory
+// StoreParameter stores parameter values to state directory
 // Write a json file with the name of the given parameter containing the
 // applied noteIDs for this parameter and the associated parameter values
 func StoreParameter(param string, obj ParameterNotes, overwriteExisting bool) error {
@@ -148,19 +154,21 @@ func StoreParameter(param string, obj ParameterNotes, overwriteExisting bool) er
 	return nil
 }
 
-// for a given noteID get the position in the slice AllNotes
+// PositionInParameterList gets the position in the slice AllNotes for a
+// given noteID
 // return the position of the note within the slice.
 // do not sort the slice
 func PositionInParameterList(noteID string, list []ParameterNoteEntry) int {
 	for cnt, note := range list {
-		if note.NoteId == noteID {
+		if note.NoteID == noteID {
 			return cnt
 		}
 	}
 	return 0
 }
 
-// Revert parameter value and remove noteID reference from parameter file
+// RevertParameter reverts parameter values and removes noteID reference
+// from the parameter file
 // return value of parameter, if needed to change, empty string else
 func RevertParameter(param string, noteID string) string {
 	pvalue := ""
@@ -174,7 +182,7 @@ func RevertParameter(param string, noteID string) string {
 	}
 	lastNote := pEntries.AllNotes[len(pEntries.AllNotes)-1]
 	pvalue = lastNote.Value
-	if lastNote.NoteId == noteID {
+	if lastNote.NoteID == noteID {
 		// if the requested noteID is the last one in AllNotes
 		// remove this entry and set the parameter value to the 'next to last'
 		pEntries.AllNotes = pEntries.AllNotes[:len(pEntries.AllNotes)-1]

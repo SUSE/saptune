@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Operator definitions
 const (
 	OperatorLessThan      = "<"
 	OperatorLessThanEqual = "<="
@@ -18,11 +19,13 @@ const (
 	OperatorEqual         = "="
 )
 
-type Operator string // The comparison or assignment operator used in an INI file entry
+// Operator is the comparison or assignment operator used in an INI file entry
+type Operator string
 
-var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`) // Break up a line into key, operator, value.
+// RegexKeyOperatorValue breaks up a line into key, operator, value.
+var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`)
 
-// A single key-value pair in INI file.
+// INIEntry contains a single key-value pair in INI file.
 type INIEntry struct {
 	Section  string
 	Key      string
@@ -30,7 +33,7 @@ type INIEntry struct {
 	Value    string
 }
 
-// All key-value pairs of an INI file.
+// INIFile contains all key-value pairs of an INI file.
 type INIFile struct {
 	AllValues []INIEntry
 	KeyValue  map[string]map[string]INIEntry

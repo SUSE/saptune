@@ -66,8 +66,8 @@ func TestIsValidScheduler(t *testing.T) {
 	}
 	for _, entry := range dirCont {
 		if entry.Name() == "sda" {
-			if !IsValidScheduler("sda", "cfq") {
-				t.Fatal("'cfq' is not a valid scheduler for 'sda'")
+			if !IsValidScheduler("sda", "none") {
+				t.Fatal("'none' is not a valid scheduler for 'sda'")
 			}
 			if IsValidScheduler("sda", "hugo") {
 				t.Fatal("'hugo' is a valid scheduler for 'sda'")

@@ -18,5 +18,5 @@ func PrintErrors(errors []error) error {
 	if hasNil {
 		return nil
 	}
-	return fmt.Errorf("The tuning procedure failed entirely.")
+	return fmt.Errorf("the tuning procedure failed entirely")
 }
