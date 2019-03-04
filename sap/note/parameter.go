@@ -235,10 +235,7 @@ func RevertParameter(param string, noteID string) string {
 	}
 	if len(pEntries.AllNotes) == 1 {
 		// remove parameter state file, if only one entry ('start') is left.
-		remFileName := GetPathToParameter(param)
-		if _, err := os.Stat(remFileName); err == nil {
-			os.Remove(remFileName)
-		}
+		CleanUpParamFile(param)
 	} else {
 		//store changes pEntries
 		err := StoreParameter(param, pEntries, true)
@@ -264,4 +261,12 @@ func RevertLimitsParameter(key, domain, item, id string) string {
 		pvalue = pvalue + pv
 	}
 	return pvalue
+}
+
+// CleanUpParamFile removes the parameter state file
+func CleanUpParamFile(param string) {
+	remFileName := GetPathToParameter(param)
+	if _, err := os.Stat(remFileName); err == nil {
+		os.Remove(remFileName)
+	}
 }
