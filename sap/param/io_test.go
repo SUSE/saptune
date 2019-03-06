@@ -2,6 +2,7 @@ package param
 
 import (
 	"io/ioutil"
+	"path"
 	"testing"
 )
 
@@ -60,22 +61,31 @@ func TestNrRequests(t *testing.T) {
 }
 
 func TestIsValidScheduler(t *testing.T) {
+	scheduler := ""
 	dirCont, err := ioutil.ReadDir("/sys/block")
 	if err != nil {
 		t.Skip("no block files available. Skip test.")
 	}
 	for _, entry := range dirCont {
+		_, err := ioutil.ReadDir(path.Join("/sys/block/", entry.Name(), "mq"))
+		if err != nil {
+			// single queue scheduler (values: noop deadline cfq)
+			scheduler = "cfq"
+		} else {
+			// multi queue scheduler (values: mq-deadline kyber bfq none)
+			scheduler = "none"
+		}
 		if entry.Name() == "sda" {
-			if !IsValidScheduler("sda", "cfq") {
-				t.Fatal("'cfq' is not a valid scheduler for 'sda'")
+			if !IsValidScheduler("sda", scheduler) {
+				t.Fatalf("'%s' is not a valid scheduler for 'sda'\n", scheduler)
 			}
 			if IsValidScheduler("sda", "hugo") {
 				t.Fatal("'hugo' is a valid scheduler for 'sda'")
 			}
 		}
 		if entry.Name() == "vda" {
-			if !IsValidScheduler("vda", "none") {
-				t.Fatal("'none' is not a valid scheduler for 'vda'")
+			if !IsValidScheduler("vda", scheduler) {
+				t.Fatalf("'%s' is not a valid scheduler for 'vda'\n", scheduler)
 			}
 			if IsValidScheduler("vda", "hugo") {
 				t.Fatal("'hugo' is a valid scheduler for 'vda'")

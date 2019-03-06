@@ -11,6 +11,12 @@ import (
 	"testing"
 )
 
+func cleanUp() {
+	var parameterStateDir = "/var/lib/saptune/parameter"
+	os.RemoveAll(parameterStateDir)
+	defer os.RemoveAll(parameterStateDir)
+}
+
 func TestCalculateOptimumValue(t *testing.T) {
 	if val, err := CalculateOptimumValue(txtparser.OperatorMoreThan, "21", "20"); val != "21" || err != nil {
 		t.Fatal(val, err)
@@ -70,6 +76,7 @@ func TestCalculateOptimumValue(t *testing.T) {
 }
 
 func TestVendorSettings(t *testing.T) {
+	cleanUp()
 	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_test.ini")
 	ini := INISettings{ConfFilePath: iniPath}
 
@@ -122,6 +129,7 @@ func TestVendorSettings(t *testing.T) {
 }
 
 func TestAllSettings(t *testing.T) {
+	cleanUp()
 	testString := []string{"vm.nr_hugepages", "THP", "KSM", "Sysstat"}
 	if runtime.GOARCH == "ppc64le" {
 		testString = []string{"KSM", "Sysstat"}
@@ -249,6 +257,7 @@ func TestAllSettings(t *testing.T) {
 }
 
 func TestPageCacheSettings(t *testing.T) {
+	cleanUp()
 	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest6/usr/share/saptune/notes/1557506")
 	ini := INISettings{ConfFilePath: iniPath}
 
@@ -279,4 +288,5 @@ func TestPageCacheSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["OVERRIDE_PAGECACHE_LIMIT_MB"] != "641" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
+	cleanUp()
 }

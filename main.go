@@ -17,6 +17,7 @@ import (
 	"syscall"
 )
 
+// constant definitions
 const (
 	SapconfService        = "sapconf.service"
 	TunedService          = "tuned.service"
@@ -26,17 +27,16 @@ const (
 	ExitNotTuned          = 3
 	NoteTuningSheets      = "/usr/share/saptune/notes/"
 	OverrideTuningSheets  = "/etc/saptune/override/"
-	// ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
-	ExtraTuningSheets     = "/etc/saptune/extra/"
+	ExtraTuningSheets     = "/etc/saptune/extra/" // ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
 	SetGreenText          = "\033[32m"
 	SetRedText            = "\033[31m"
 	ResetTextColor        = "\033[0m"
 	footnote1             = "[1] setting is not supported by the system"
 	footnote2             = "[2] setting is not available on the system"
 	footnote3             = "[3] value is only checked, but NOT set"
-
 )
 
+// PrintHelpAndExit Print the usage and exit
 func PrintHelpAndExit(exitStatus int) {
 	fmt.Println(`saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
@@ -79,13 +79,13 @@ func main() {
 		errorExit("Please run saptune with root privilege.")
 		return
 	}
-	var saptune_log io.Writer
-	saptune_log, err := os.OpenFile("/var/log/tuned/tuned.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+	var saptuneLog io.Writer
+	saptuneLog, err := os.OpenFile("/var/log/tuned/tuned.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
 		panic(err.Error())
 	}
-	saptune_writer := io.MultiWriter(os.Stderr, saptune_log)
-	log.SetOutput(saptune_writer)
+	saptuneWriter := io.MultiWriter(os.Stderr, saptuneLog)
+	log.SetOutput(saptuneWriter)
 	if system.IsPagecacheAvailable() {
 		solutionSelector = solutionSelector + "_PC"
 	}
@@ -112,6 +112,7 @@ func main() {
 	}
 }
 
+// RevertAction Revert all notes and solutions
 func RevertAction(actionName string) {
 	if actionName != "all" {
 		PrintHelpAndExit(1)
@@ -124,6 +125,7 @@ func RevertAction(actionName string) {
 	fmt.Println("Parameters tuned by the notes and solutions have been successfully reverted.")
 }
 
+// DaemonAction handles daemon actions like start, stop, status asm.
 func DaemonAction(actionName string) {
 	switch actionName {
 	case "start":
@@ -189,22 +191,22 @@ func DaemonAction(actionName string) {
 	}
 }
 
-// Print mismatching fields in the note comparison result.
-func PrintNoteFields(header string, noteComparisons map[string]map[string]note.NoteFieldComparison, printComparison bool) {
+// PrintNoteFields Print mismatching fields in the note comparison result.
+func PrintNoteFields(header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool) {
 
 	var fmtlen0, fmtlen1, fmtlen2, fmtlen3, fmtlen4 int
 	// initialise
-	printHead := ""
-	sortkeys  := make([]string, 0, len(noteComparisons))
-	remskeys  := make([]string, 0, len(noteComparisons))
-	footnote  := make([]string, 3, 3)
-	hasDiff   := false
 	compliant := "yes"
-	comment   := ""
-	override  := ""
-	format    := "\t%s : %s\n"
+	printHead := ""
 	noteField := ""
-	reminder  := make(map[string]string)
+	sortkeys := make([]string, 0, len(noteComparisons))
+	remskeys := make([]string, 0, len(noteComparisons))
+	footnote := make([]string, 3, 3)
+	reminder := make(map[string]string)
+	override := ""
+	comment := ""
+	hasDiff := false
+	format := "\t%s : %s\n"
 
 	if printComparison {
 		// verify
@@ -226,9 +228,9 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 		for _, comparison := range comparisons {
 			if len(comparison.ReflectMapKey) != 0 && comparison.ReflectFieldName != "OverrideParams" {
 				if comparison.ReflectMapKey != "reminder" {
-					sortkeys = append(sortkeys, noteID + "@" + comparison.ReflectMapKey)
+					sortkeys = append(sortkeys, noteID+"@"+comparison.ReflectMapKey)
 				} else {
-					remskeys = append(remskeys, noteID + "@" + comparison.ReflectMapKey)
+					remskeys = append(remskeys, noteID+"@"+comparison.ReflectMapKey)
 				}
 			}
 		}
@@ -239,7 +241,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 	}
 
 	// setup format values
-	for _ , skey := range sortkeys {
+	for _, skey := range sortkeys {
 		keyFields := strings.Split(skey, "@")
 		noteID := keyFields[0]
 		comparisons := noteComparisons[noteID]
@@ -292,7 +294,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 
 	// print
 	noteID := ""
-	for _ , skey := range sortkeys {
+	for _, skey := range sortkeys {
 		comment = ""
 		keyFields := strings.Split(skey, "@")
 		key := keyFields[1]
@@ -344,7 +346,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 			if printComparison {
 				// verify
 				fmt.Printf(format, "SAPNote, Version", "Parameter", "Expected", "Override", "Actual", "Compliant")
-				for i := 0; i < fmtlen0+fmtlen1+fmtlen2+fmtlen3+fmtlen4+28 ; i++ {
+				for i := 0; i < fmtlen0+fmtlen1+fmtlen2+fmtlen3+fmtlen4+28; i++ {
 					if i == 3+fmtlen0+1 || i == 3+fmtlen0+3+fmtlen1+1 || i == 3+fmtlen0+3+fmtlen1+4+fmtlen2 || i == 3+fmtlen0+3+fmtlen1+4+fmtlen2+2+fmtlen3+1 || i == 3+fmtlen0+3+fmtlen1+4+fmtlen2+2+fmtlen3+3+fmtlen4+1 {
 						fmt.Printf("+")
 					} else {
@@ -355,7 +357,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 			} else {
 				// simulate
 				fmt.Printf(format, "Parameter", "Value set", "Value expected", "Override", "Comment")
-				for i := 0; i < fmtlen1+fmtlen2+fmtlen3+fmtlen4+28 ; i++ {
+				for i := 0; i < fmtlen1+fmtlen2+fmtlen3+fmtlen4+28; i++ {
 					if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2+1 || i == 3+fmtlen1+3+fmtlen2+3+fmtlen3+1 || i == 3+fmtlen1+3+fmtlen2+3+fmtlen3+3+fmtlen4+1 {
 						fmt.Printf("+")
 					} else {
@@ -388,12 +390,12 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.N
 	for noteID, reminde := range reminder {
 		if reminde != "" {
 			reminderHead := fmt.Sprintf("Attention for SAP Note %s:\nHints or values not yet handled by saptune. So please read carefully, check and set manually, if needed:\n", noteID)
-			fmt.Printf("%s\n", SetRedText + reminderHead + reminde + ResetTextColor)
+			fmt.Printf("%s\n", SetRedText+reminderHead+reminde+ResetTextColor)
 		}
 	}
 }
 
-// Verify that all system parameters do not deviate from any of the enabled solutions/notes.
+// VerifyAllParameters Verify that all system parameters do not deviate from any of the enabled solutions/notes.
 func VerifyAllParameters() {
 	unsatisfiedNotes, comparisons, err := tuneApp.VerifyAll()
 	if err != nil {
@@ -407,6 +409,7 @@ func VerifyAllParameters() {
 	}
 }
 
+// NoteAction  Note actions like apply, revert, verify asm.
 func NoteAction(actionName, noteID string) {
 	switch actionName {
 	case "apply":
@@ -463,7 +466,7 @@ func NoteAction(actionName, noteID string) {
 			if err != nil {
 				errorExit("Failed to test the current system against the specified note: %v", err)
 			}
-			noteComp := make(map[string]map[string]note.NoteFieldComparison)
+			noteComp := make(map[string]map[string]note.FieldComparison)
 			noteComp[noteID] = comparisons
 			PrintNoteFields("HEAD", noteComp, true)
 			if !conforming {
@@ -481,7 +484,7 @@ func NoteAction(actionName, noteID string) {
 			errorExit("Failed to test the current system against the specified note: %v", err)
 		} else {
 			fmt.Printf("If you run `saptune note apply %s`, the following changes will be applied to your system:\n", noteID)
-			noteComp := make(map[string]map[string]note.NoteFieldComparison)
+			noteComp := make(map[string]map[string]note.FieldComparison)
 			noteComp[noteID] = comparisons
 			PrintNoteFields("HEAD", noteComp, false)
 		}
@@ -506,7 +509,7 @@ func NoteAction(actionName, noteID string) {
 			if _, err := os.Stat(fileName); os.IsNotExist(err) {
 				errorExit("Note %s not found in %s or %s.", noteID, NoteTuningSheets, ExtraTuningSheets)
 			} else if err != nil {
-				 errorExit("Failed to read file '%s' - %v", fileName, err)
+				errorExit("Failed to read file '%s' - %v", fileName, err)
 			}
 		} else if err != nil {
 			errorExit("Failed to read file '%s' - %v", fileName, err)
@@ -531,7 +534,7 @@ func NoteAction(actionName, noteID string) {
 			editFileName = ovFileName
 		} else if err == nil {
 			log.Printf("Note override file already exists, using file '%s' as base for editing\n", ovFileName)
-			editFileName =ovFileName
+			editFileName = ovFileName
 		} else {
 			errorExit("Failed to read file '%s' - %v", ovFileName, err)
 		}
@@ -557,6 +560,7 @@ func NoteAction(actionName, noteID string) {
 	}
 }
 
+// SolutionAction  Solution actions like apply, revert, verify asm.
 func SolutionAction(actionName, solName string) {
 	switch actionName {
 	case "apply":

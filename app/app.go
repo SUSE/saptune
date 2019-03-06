@@ -14,6 +14,7 @@ import (
 	"sort"
 )
 
+// define saptunes main configuration file and variables
 const (
 	SysconfigSaptuneFile = "/etc/sysconfig/saptune"
 	TuneForSolutionsKey  = "TUNE_FOR_SOLUTIONS"
@@ -21,7 +22,7 @@ const (
 	NoteApplyOrderKey    = "NOTE_APPLY_ORDER"
 )
 
-// Application configuration and serialised state information.
+// App defines the application configuration and serialised state information.
 type App struct {
 	SysconfigPrefix  string
 	AllNotes         map[string]note.Note         // all notes
@@ -32,7 +33,7 @@ type App struct {
 	State            *State                       // examine and manage serialised notes.
 }
 
-// Load application configuration. Panic on error.
+// InitialiseApp load application configuration. Panic on error.
 func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]note.Note, allSolutions map[string]solution.Solution) (app *App) {
 	app = &App{
 		SysconfigPrefix: sysconfigPrefix,
@@ -55,19 +56,19 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 	return
 }
 
+// PositionInNoteApplyOrder returns the position of the note within the slice.
 // for a given noteID get the position in the slice NoteApplyOrder
-// return the position of the note within the slice.
 // do not sort the slice
 func PositionInNoteApplyOrder(list []string, noteID string) int {
-        for cnt, note := range list {
-                if note == noteID {
-                        return cnt
-                }
-        }
-        return -1	//not found
+	for cnt, note := range list {
+		if note == noteID {
+			return cnt
+		}
+	}
+	return -1 //not found
 }
 
-// Save /etc/sysconfig/saptune.
+// SaveConfig save configuration to file /etc/sysconfig/saptune.
 func (app *App) SaveConfig() error {
 	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), true)
 	if err != nil {
@@ -79,7 +80,8 @@ func (app *App) SaveConfig() error {
 	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), []byte(sysconf.ToText()), 0644)
 }
 
-// Return the number of all solution-enabled SAP notes, sorted.
+// GetSortedSolutionEnabledNotes returns the number of all solution-enabled
+// SAP notes, sorted.
 func (app *App) GetSortedSolutionEnabledNotes() (allNoteIDs []string) {
 	allNoteIDs = make([]string, 0, 0)
 	for _, sol := range app.TuneForSolutions {
@@ -93,31 +95,31 @@ func (app *App) GetSortedSolutionEnabledNotes() (allNoteIDs []string) {
 	return
 }
 
-// Return the note corresponding to the number, or an error if the note does not exist.
+// GetNoteByID return the note corresponding to the number, or an error
+// if the note does not exist.
 func (app *App) GetNoteByID(id string) (note.Note, error) {
 	if n, exists := app.AllNotes[id]; exists {
 		return n, nil
 	}
-	return nil, fmt.Errorf(`Note ID "%s" is not recognised by saptune.
+	return nil, fmt.Errorf(`the Note ID "%s" is not recognised by saptune.
 Run "saptune note list" for a complete list of supported notes.
-and then please double check your input and /etc/sysconfig/saptune.`, id)
+and then please double check your input and /etc/sysconfig/saptune`, id)
 }
 
-// Return the solution corresponding to the name, or an error if it does not exist.
+// GetSolutionByName return the solution corresponding to the name,
+// or an error if it does not exist.
 func (app *App) GetSolutionByName(name string) (solution.Solution, error) {
 	if n, exists := app.AllSolutions[name]; exists {
 		return n, nil
 	}
-	return nil, fmt.Errorf(`Solution name "%s" is not recognised by saptune.
+	return nil, fmt.Errorf(`solution name "%s" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
-and then please double check your input and /etc/sysconfig/saptune.`, name)
+and then please double check your input and /etc/sysconfig/saptune`, name)
 }
 
-/*
-Apply tuning for a note.
-If the note is not yet covered by one of the enabled solutions, the note number will be
-added into the list of additional notes.
-*/
+// TuneNote apply tuning for a note.
+// If the note is not yet covered by one of the enabled solutions,
+// the note number will be added into the list of additional notes.
 func (app *App) TuneNote(noteID string) error {
 	aNote, err := app.GetNoteByID(noteID)
 	if err != nil {
@@ -184,7 +186,7 @@ func (app *App) TuneNote(noteID string) error {
 				}
 				if addkey != "" {
 					//currentState.(note.INISettings).SysctlParams[addkey], _ = system.GetSysctlString(addkey)
-					addkeyval, _  := system.GetSysctlString(addkey)
+					addkeyval, _ := system.GetSysctlString(addkey)
 					//func (v Value) SetMapIndex(key, val Value)
 					reflect.ValueOf(currentState).FieldByName("SysctlParams").SetMapIndex(reflect.ValueOf(addkey), reflect.ValueOf(addkeyval))
 				}
@@ -215,11 +217,10 @@ func (app *App) TuneNote(noteID string) error {
 	return nil
 }
 
-/*
-Apply tuning for a solution.
-If the solution is not yet enabled, the name will be added into the list of tuned solution names.
-If the solution covers any of the additional notes, those notes will be removed.
-*/
+// TuneSolution apply tuning for a solution.
+// If the solution is not yet enabled, the name will be added into the list
+// of tuned solution names.
+// If the solution covers any of the additional notes, those notes will be removed.
 func (app *App) TuneSolution(solName string) (removedExplicitNotes []string, err error) {
 	removedExplicitNotes = make([]string, 0, 0)
 	sol, err := app.GetSolutionByName(solName)
@@ -249,7 +250,7 @@ func (app *App) TuneSolution(solName string) (removedExplicitNotes []string, err
 	return
 }
 
-// Tune for all currently enabled solutions and notes.
+// TuneAll tune for all currently enabled solutions and notes.
 func (app *App) TuneAll() error {
 	for _, noteID := range app.NoteApplyOrder {
 		if err := app.TuneNote(noteID); err != nil {
@@ -259,7 +260,7 @@ func (app *App) TuneAll() error {
 	return nil
 }
 
-// Revert parameters tuned by the note and clear its stored states.
+// RevertNote revert parameters tuned by the note and clear its stored states.
 func (app *App) RevertNote(noteID string, permanent bool) error {
 	//support revert from older saptune versions
 	note2revert := note.Note2Convert(noteID)
@@ -312,7 +313,8 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 	return nil
 }
 
-// Permanently revert notes tuned by the solution and clear their stored states.
+// RevertSolution permanently revert notes tuned by the solution and
+// clear their stored states.
 func (app *App) RevertSolution(solName string) error {
 	sol, err := app.GetSolutionByName(solName)
 	if err != nil {
@@ -361,7 +363,8 @@ func (app *App) RevertSolution(solName string) error {
 	return fmt.Errorf("Failed to revert one or more SAP notes that belong to the solution: %v", noteErrs)
 }
 
-// Revert all tuned parameters (both solutions and additional notes), and clear stored states.
+// RevertAll revert all tuned parameters (both solutions and additional notes),
+// and clear stored states.
 func (app *App) RevertAll(permanent bool) error {
 	allErrs := make([]error, 0, 0)
 
@@ -389,11 +392,11 @@ func (app *App) RevertAll(permanent bool) error {
 	return fmt.Errorf("Failed to revert one or more SAP notes/solutions: %v", allErrs)
 }
 
-/*
-Inspect the system and verify that all parameters conform to the note's guidelines.
-The note comparison results will always contain all fields, no matter the note is currently conforming or not.
-*/
-func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[string]note.NoteFieldComparison, valApplyList []string, err error) {
+// VerifyNote inspect the system and verify that all parameters conform
+// to the note's guidelines.
+// The note comparison results will always contain all fields, no matter
+// the note is currently conforming or not.
+func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[string]note.FieldComparison, valApplyList []string, err error) {
 	theNote, err := app.GetNoteByID(noteID)
 	if err != nil {
 		return
@@ -431,13 +434,12 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 	return
 }
 
-/*
-Inspect the system and verify that all parameters conform to all of the notes associated to the solution.
-The note comparison results will always contain all fields from all notes.
-*/
-func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, comparisons map[string]map[string]note.NoteFieldComparison, err error) {
+// VerifySolution inspect the system and verify that all parameters conform
+// to all of the notes associated to the solution.
+// The note comparison results will always contain all fields from all notes.
+func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, comparisons map[string]map[string]note.FieldComparison, err error) {
 	unsatisfiedNotes = make([]string, 0, 0)
-	comparisons = make(map[string]map[string]note.NoteFieldComparison)
+	comparisons = make(map[string]map[string]note.FieldComparison)
 	sol, err := app.GetSolutionByName(solName)
 	if err != nil {
 		return nil, nil, err
@@ -454,13 +456,12 @@ func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, compa
 	return
 }
 
-/*
-Inspect the system and verify all parameters against all enabled notes/solutions.
-The note comparison results will always contain all fields from all notes.
-*/
-func (app *App) VerifyAll() (unsatisfiedNotes []string, comparisons map[string]map[string]note.NoteFieldComparison, err error) {
+// VerifyAll inspect the system and verify all parameters against all enabled
+// notes/solutions.
+// The note comparison results will always contain all fields from all notes.
+func (app *App) VerifyAll() (unsatisfiedNotes []string, comparisons map[string]map[string]note.FieldComparison, err error) {
 	unsatisfiedNotes = make([]string, 0, 0)
-	comparisons = make(map[string]map[string]note.NoteFieldComparison)
+	comparisons = make(map[string]map[string]note.FieldComparison)
 	for _, solName := range app.TuneForSolutions {
 		// Collect field comparison results from solution notes
 		unsatisfiedSolNotes, noteComparisons, err := app.VerifySolution(solName)

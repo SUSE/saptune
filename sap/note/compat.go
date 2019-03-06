@@ -17,6 +17,7 @@ import (
 // No longer active. Only needed for compatibility reasons
 // Revert of notes applied by an older saptune version
 
+// PrepareForSAPEnvironments defines SAP Note 1275776
 // 1275776 - Linux: Preparing SLES for SAP environments
 type PrepareForSAPEnvironments struct {
 	SysconfigPrefix                                         string
@@ -28,17 +29,28 @@ type PrepareForSAPEnvironments struct {
 	KernelSemMsl, KernelSemMns, KernelSemOpm, KernelSemMni  uint64
 }
 
+// Name returns the name of the related SAP Note
 func (prepare PrepareForSAPEnvironments) Name() string {
 	return "Linux: Preparing SLES for SAP environments"
 }
+
+// Initialise initialises the SAP Note structure
+// no longer needed
 func (prepare PrepareForSAPEnvironments) Initialise() (Note, error) {
 	newPrepare := prepare
 	return newPrepare, nil
 }
+
+// Optimise optimises the SAP Note structure
+// no longer needed
 func (prepare PrepareForSAPEnvironments) Optimise() (Note, error) {
 	newPrepare := prepare
 	return newPrepare, nil
 }
+
+// Apply sets the values from the SAP Note structure
+// to the system
+// Only used to revert notes applied by an older saptune version
 func (prepare PrepareForSAPEnvironments) Apply() error {
 	errs := make([]error, 0, 0)
 	// Apply new SHM size
@@ -75,21 +87,33 @@ func (prepare PrepareForSAPEnvironments) Apply() error {
 	return nil
 }
 
+// AfterInstallation defines SAP Note 1984787
 // 1984787 - SUSE LINUX Enterprise Server 12: Installation notes
 type AfterInstallation struct {
 	UuiddSocketStatus bool // UuiddSocketStatus is the status of systemd unit called "uuidd.socket"
 	LogindConfigured  bool // LogindConfigured is true if SAP's logind customisation file is in-place
 }
 
+// Name returns the name of the related SAP Note
 func (inst AfterInstallation) Name() string {
 	return "SUSE LINUX Enterprise Server 12: Installation notes"
 }
+
+// Initialise initialises the SAP Note structure
+// no longer needed
 func (inst AfterInstallation) Initialise() (Note, error) {
 	return AfterInstallation{UuiddSocketStatus: true, LogindConfigured: true}, nil
 }
+
+// Optimise optimises the SAP Note structure
+// no longer needed
 func (inst AfterInstallation) Optimise() (Note, error) {
 	return AfterInstallation{UuiddSocketStatus: true, LogindConfigured: true}, nil
 }
+
+// Apply sets the values from the SAP Note structure
+// to the system
+// Only used to revert notes applied by an older saptune version
 func (inst AfterInstallation) Apply() error {
 	// Set UUID socket status
 	var err error
@@ -113,20 +137,28 @@ func (inst AfterInstallation) Apply() error {
 	return nil
 }
 
+// VmwareGuestIOElevator defines SAP Note 2161991
 // 2161991 - VMware vSphere (guest) configuration guidelines
 type VmwareGuestIOElevator struct {
 	BlockDeviceSchedulers param.BlockDeviceSchedulers
 }
 
+// Name returns the name of the related SAP Note
 func (vmio VmwareGuestIOElevator) Name() string {
 	return "VMware vSphere (guest) configuration guidelines"
 }
+
+// Initialise initialises the SAP Note structure
+// no longer needed
 func (vmio VmwareGuestIOElevator) Initialise() (Note, error) {
 	inspectedParam, err := vmio.BlockDeviceSchedulers.Inspect()
 	return VmwareGuestIOElevator{
 		BlockDeviceSchedulers: inspectedParam.(param.BlockDeviceSchedulers),
 	}, err
 }
+
+// Optimise optimises the SAP Note structure
+// no longer needed
 func (vmio VmwareGuestIOElevator) Optimise() (Note, error) {
 	// SAP recommends noop for Vmware guests
 	optimisedParam, err := vmio.BlockDeviceSchedulers.Optimise("noop")
@@ -134,31 +166,45 @@ func (vmio VmwareGuestIOElevator) Optimise() (Note, error) {
 		BlockDeviceSchedulers: optimisedParam.(param.BlockDeviceSchedulers),
 	}, err
 }
+
+// Apply sets the values from the SAP Note structure
+// to the system
+// Only used to revert notes applied by an older saptune version
 func (vmio VmwareGuestIOElevator) Apply() error {
 	return vmio.BlockDeviceSchedulers.Apply()
 }
 
-/*
-2205917 - SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12
-Disable kernel memory management features that will introduce additional overhead.
-*/
+// HANARecommendedOSSettings defines SAP Note 2205917
+// 2205917 - SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12
+// Disable kernel memory management features that will introduce additional overhead.
 type HANARecommendedOSSettings struct {
 	KernelMMTransparentHugepage string
 	KernelMMKsm                 bool
 	KernelNumaBalancing         bool
 }
 
+// Name returns the name of the related SAP Note
 func (hana HANARecommendedOSSettings) Name() string {
 	return "SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12"
 }
+
+// Initialise initialises the SAP Note structure
+// no longer needed
 func (hana HANARecommendedOSSettings) Initialise() (Note, error) {
 	ret := HANARecommendedOSSettings{}
 	return ret, nil
 }
+
+// Optimise optimises the SAP Note structure
+// no longer needed
 func (hana HANARecommendedOSSettings) Optimise() (Note, error) {
 	ret := HANARecommendedOSSettings{}
 	return ret, nil
 }
+
+// Apply sets the values from the SAP Note structure
+// to the system
+// Only used to revert notes applied by an older saptune version
 func (hana HANARecommendedOSSettings) Apply() error {
 	errs := make([]error, 0, 0)
 	errs = append(errs, system.SetSysString(SysKernelTHPEnabled, hana.KernelMMTransparentHugepage))
@@ -176,10 +222,9 @@ func (hana HANARecommendedOSSettings) Apply() error {
 	return err
 }
 
-/*
-SUSE-GUIDE-01 - SLES 11/12 OS Tuning & Optimization Guide – Part 1
-https://www.suse.com/communities/blog/sles-1112-os-tuning-optimisation-guide-part-1/
-*/
+// SUSESysOptimisation defines SUSE-GUIDE-01
+// SUSE-GUIDE-01 - SLES 11/12 OS Tuning & Optimization Guide – Part 1
+// https://www.suse.com/communities/blog/sles-1112-os-tuning-optimisation-guide-part-1/
 type SUSESysOptimisation struct {
 	SysconfigPrefix string
 
@@ -192,18 +237,29 @@ type SUSESysOptimisation struct {
 	BlockDeviceSchedulers                param.BlockDeviceSchedulers
 }
 
+// Name returns the name of the related SUSE Guide
 func (st SUSESysOptimisation) Name() string {
 	// Do not mention SLES 11 here
 	return "SLES 12 OS Tuning & Optimization Guide – Part 1"
 }
+
+// Initialise initialises the SUSE Guide structure
+// no longer needed
 func (st SUSESysOptimisation) Initialise() (Note, error) {
 	newST := st
 	return newST, nil
 }
+
+// Optimise optimises the SUSE Guide structure
+// no longer needed
 func (st SUSESysOptimisation) Optimise() (Note, error) {
 	newST := st
 	return newST, nil
 }
+
+// Apply sets the values from the SUSE Guide structure
+// to the system
+// Only used to revert notes applied by an older saptune version
 func (st SUSESysOptimisation) Apply() error {
 	errs := make([]error, 0, 0)
 	errs = append(errs, system.SetSysctlUint64(system.SysctlNumberHugepages, st.VMNumberHugePages))
@@ -221,10 +277,9 @@ func (st SUSESysOptimisation) Apply() error {
 	return err
 }
 
-/*
-SUSE-GUIDE-01 - SLES 11/12: Network, CPU Tuning and Optimization – Part 2
-https://www.suse.com/communities/blog/sles-1112-network-cpu-tuning-optimization-part-2/
-*/
+// SUSENetCPUOptimisation defines SUSE-GUIDE-02
+// SUSE-GUIDE-02 - SLES 11/12: Network, CPU Tuning and Optimization – Part 2
+// https://www.suse.com/communities/blog/sles-1112-network-cpu-tuning-optimization-part-2/
 type SUSENetCPUOptimisation struct {
 	SysconfigPrefix string
 
@@ -250,18 +305,29 @@ type SUSENetCPUOptimisation struct {
 	KernelSchedChildRunsFirst                                             uint64
 }
 
+// Name returns the name of the related SUSE Guide
 func (st SUSENetCPUOptimisation) Name() string {
 	// Do not mention SLES 11 here
 	return "SLES 12: Network, CPU Tuning and Optimization – Part 2"
 }
+
+// Initialise initialises the SUSE Guide structure
+// no longer needed
 func (st SUSENetCPUOptimisation) Initialise() (Note, error) {
 	newST := st
 	return newST, nil
 }
+
+// Optimise optimises the SUSE Guide structure
+// no longer needed
 func (st SUSENetCPUOptimisation) Optimise() (Note, error) {
 	newST := st
 	return newST, nil
 }
+
+// Apply sets the values from the SUSE Guide structure
+// to the system
+// Only used to revert notes applied by an older saptune version
 func (st SUSENetCPUOptimisation) Apply() error {
 	// Section "SLES11/12 Network Tuning & Optimization"
 	errs := make([]error, 0, 0)
@@ -318,17 +384,15 @@ func (st SUSENetCPUOptimisation) Apply() error {
 	return err
 }
 
-
-
-
 // Tuning options composed by a third party vendor.
 
 // section [block]
 //type BlockDeviceQueue struct {
-	//BlockDeviceSchedulers param.BlockDeviceSchedulers
-	//BlockDeviceNrRequests param.BlockDeviceNrRequests
+//BlockDeviceSchedulers param.BlockDeviceSchedulers
+//BlockDeviceNrRequests param.BlockDeviceNrRequests
 //}
 
+// CmpSetBlkVal sets block device values
 func CmpSetBlkVal(key, value string) error {
 	var err error
 
@@ -356,8 +420,8 @@ func CmpSetBlkVal(key, value string) error {
 		for _, entry := range strings.Fields(value) {
 			fields := strings.Split(entry, "@")
 			file := path.Join("block", fields[0], "queue", "nr_requests")
-			tst_err := system.TestSysString(file, fields[1])
-			if tst_err != nil {
+			tstErr := system.TestSysString(file, fields[1])
+			if tstErr != nil {
 				fmt.Printf("Write error on file '%s'.\nCan't set nr_request to '%s', seems to large for the device. Leaving untouched.\n", file, fields[1])
 			} else {
 				NrR, _ := strconv.Atoi(fields[1])
@@ -373,6 +437,8 @@ func CmpSetBlkVal(key, value string) error {
 }
 
 // section [limits]
+
+// CmpSetLimitsVal sets security limits
 func CmpSetLimitsVal(key, value string) error {
 	secLimits, err := system.ParseSecLimitsFile()
 	if err != nil {
@@ -389,7 +455,8 @@ func CmpSetLimitsVal(key, value string) error {
 }
 
 // section [vm]
-// Manipulate /sys/kernel/mm switches.
+
+// CMPTSettings manipulates /sys/kernel/mm switches.
 // Tuning options composed by a third party vendor.
 type CMPTSettings struct {
 	ConfFilePath    string            // Full path to the 3rd party vendor's tuning configuration file
@@ -398,20 +465,28 @@ type CMPTSettings struct {
 	SysctlParams    map[string]string // Sysctl parameter values from the computer system
 }
 
+// Name returns the name of the third party vendor Note
 func (cmptvend CMPTSettings) Name() string {
 	return cmptvend.DescriptiveName
 }
 
+// Initialise initialises the third party vendor Note structure
+// no longer needed
 func (cmptvend CMPTSettings) Initialise() (Note, error) {
 	cmptvend.SysctlParams = make(map[string]string)
 	return cmptvend, nil
 }
 
+// Optimise optimises the third party vendor Note structure
+// no longer needed
 func (cmptvend CMPTSettings) Optimise() (Note, error) {
 	cmptvend.SysctlParams = make(map[string]string)
 	return cmptvend, nil
 }
 
+// Apply sets the values from the third party vendor Note structure
+// to the system
+// Only used to revert notes applied by an older saptune version
 func (cmptvend CMPTSettings) Apply() error {
 	errs := make([]error, 0, 0)
 	// Parse the configuration file
@@ -447,4 +522,3 @@ func (cmptvend CMPTSettings) Apply() error {
 	err = sap.PrintErrors(errs)
 	return err
 }
-

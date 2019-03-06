@@ -7,14 +7,15 @@ import (
 	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
 	"log"
+	"math"
 	"os"
 	"path"
 	"sort"
 	"strconv"
 	"strings"
-	"math"
 )
 
+// section name definition
 const (
 	INISectionSysctl    = "sysctl"
 	INISectionVM        = "vm"
@@ -43,21 +44,25 @@ UserTasksMax=infinity
 `
 )
 
+// GetServiceName returns the systemd service name for supported services
 func GetServiceName(service string) string {
-        switch service {
-        case "UuiddSocket":
-                service = "uuidd.socket"
-        case "Sysstat":
-                service = "sysstat"
-        default:
-                log.Printf("skipping unkown service '%s'", service)
-                service = ""
-        }
+	switch service {
+	case "UuiddSocket":
+		service = "uuidd.socket"
+	case "Sysstat":
+		service = "sysstat"
+	default:
+		log.Printf("skipping unkown service '%s'", service)
+		service = ""
+	}
 	return service
 }
 
 // section handling
 // section [sysctl]
+
+// OptSysctlVal optimises a sysctl parameter value
+// use exactly the value from the config file. No calculation any more
 func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) string {
 	if actval == "" {
 		// sysctl parameter not available in system
@@ -89,12 +94,12 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 
 		// use exactly the value from the config file. No calculation any more
 		/*
-		optimisedValue, err := CalculateOptimumValue(operator, fieldC, fieldE)
-		//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
-		if err != nil {
-			return ""
-		}
-		allFieldsS = allFieldsS + optimisedValue + "\t"
+			optimisedValue, err := CalculateOptimumValue(operator, fieldC, fieldE)
+			//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
+			if err != nil {
+				return ""
+			}
+			allFieldsS = allFieldsS + optimisedValue + "\t"
 		*/
 		allFieldsS = allFieldsS + fieldE + "\t"
 	}
@@ -103,15 +108,19 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 }
 
 // section [block]
+
+// BlockDeviceQueue defines block device structures
 type BlockDeviceQueue struct {
 	BlockDeviceSchedulers param.BlockDeviceSchedulers
 	BlockDeviceNrRequests param.BlockDeviceNrRequests
 }
 
+// GetBlkVal initialise the block device structure with the current
+// system settings
 func GetBlkVal(key string) (string, error) {
 	newQueue := make(map[string]string)
 	newReq := make(map[string]int)
-	ret_val := ""
+	retVal := ""
 	switch key {
 	case "IO_SCHEDULER":
 		newIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
@@ -120,7 +129,7 @@ func GetBlkVal(key string) (string, error) {
 		}
 		newQueue = newIOQ.(param.BlockDeviceSchedulers).SchedulerChoice
 		for k, v := range newQueue {
-			ret_val = ret_val + fmt.Sprintf("%s@%s ", k, v)
+			retVal = retVal + fmt.Sprintf("%s@%s ", k, v)
 		}
 	case "NRREQ":
 		newNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
@@ -129,19 +138,21 @@ func GetBlkVal(key string) (string, error) {
 		}
 		newReq = newNrR.(param.BlockDeviceNrRequests).NrRequests
 		for k, v := range newReq {
-			ret_val = ret_val + fmt.Sprintf("%s@%s ", k, strconv.Itoa(v))
+			retVal = retVal + fmt.Sprintf("%s@%s ", k, strconv.Itoa(v))
 		}
 	}
-	fields := strings.Fields(ret_val)
+	fields := strings.Fields(retVal)
 	sort.Strings(fields)
-	ret_val = strings.Join(fields, " ")
-	return ret_val, nil
+	retVal = strings.Join(fields, " ")
+	return retVal, nil
 }
 
+// OptBlkVal optimises the block device structure with the settings
+// from the configuration file
 func OptBlkVal(key, actval, cfgval string) string {
 	sval := cfgval
 	val := actval
-	ret_val := ""
+	retVal := ""
 	switch key {
 	case "IO_SCHEDULER":
 		sval = strings.ToLower(cfgval)
@@ -152,15 +163,16 @@ func OptBlkVal(key, actval, cfgval string) string {
 	}
 	for _, entry := range strings.Fields(val) {
 		fields := strings.Split(entry, "@")
-		if ret_val == "" {
-			ret_val = ret_val + fmt.Sprintf("%s@%s", fields[0], sval)
+		if retVal == "" {
+			retVal = retVal + fmt.Sprintf("%s@%s", fields[0], sval)
 		} else {
-			ret_val = ret_val + " " + fmt.Sprintf("%s@%s", fields[0], sval)
+			retVal = retVal + " " + fmt.Sprintf("%s@%s", fields[0], sval)
 		}
 	}
-	return ret_val
+	return retVal
 }
 
+// SetBlkVal applies the settings to the system
 func SetBlkVal(key, value string) error {
 	var err error
 
@@ -199,6 +211,9 @@ func SetBlkVal(key, value string) error {
 }
 
 // section [limits]
+
+// GetLimitsVal initialise the security limit structure with the current
+// system settings
 func GetLimitsVal(key, item, domain string) (string, error) {
 	// Find out current limits
 	limit := ""
@@ -238,6 +253,8 @@ func GetLimitsVal(key, item, domain string) (string, error) {
 	return limit, nil
 }
 
+// OptLimitsVal optimises the security limit structure with the settings
+// from the configuration file or with a calculation
 func OptLimitsVal(key, actval, cfgval, item, domain string) string {
 	limit := cfgval
 	lim := ""
@@ -274,6 +291,7 @@ func OptLimitsVal(key, actval, cfgval, item, domain string) string {
 	return lim
 }
 
+// SetLimitsVal applies the settings to the system
 func SetLimitsVal(key, value, item string) error {
 	if key != "LIMIT_HARD" && key != "LIMIT_SOFT" {
 		return nil
@@ -301,7 +319,10 @@ func SetLimitsVal(key, value, item string) error {
 
 // section [vm]
 // Manipulate /sys/kernel/mm switches.
-func GetVmVal(key string) string {
+
+// GetVMVal initialise the memory management structure with the current
+// system settings
+func GetVMVal(key string) string {
 	var val string
 	switch key {
 	case "THP":
@@ -313,7 +334,9 @@ func GetVmVal(key string) string {
 	return val
 }
 
-func OptVmVal(key, cfgval string) string {
+// OptVMVal optimises the memory management structure with the settings
+// from the configuration file
+func OptVMVal(key, cfgval string) string {
 	val := strings.ToLower(cfgval)
 	switch key {
 	case "THP":
@@ -330,20 +353,24 @@ func OptVmVal(key, cfgval string) string {
 	return val
 }
 
-func SetVmVal(key, value string) error {
+// SetVMVal applies the settings to the system
+func SetVMVal(key, value string) error {
 	var err error
 	switch key {
 	case "THP":
 		err = system.SetSysString(SysKernelTHPEnabled, value)
 	case "KSM":
 		ksmval, _ := strconv.Atoi(value)
-                err = system.SetSysInt(SysKSMRun, ksmval)
+		err = system.SetSysInt(SysKSMRun, ksmval)
 	}
 	return err
 }
 
 // section [cpu]
-func GetCpuVal(key string) string {
+
+// GetCPUVal initialise the cpu performance structure with the current
+// system settings
+func GetCPUVal(key string) string {
 	var val string
 	switch key {
 	case "force_latency":
@@ -363,9 +390,11 @@ func GetCpuVal(key string) string {
 	return strings.TrimSpace(val)
 }
 
-func OptCpuVal(key, actval, cfgval string) string {
-//ANGI TODO - check cfgval is not a single value like 'performance' but
-// cpu0:performance cpu2:powersave
+// OptCPUVal optimises the cpu performance structure with the settings
+// from the configuration file
+func OptCPUVal(key, actval, cfgval string) string {
+	//ANGI TODO - check cfgval is not a single value like 'performance' but
+	// cpu0:performance cpu2:powersave
 	sval := strings.ToLower(cfgval)
 	rval := ""
 	val := "0"
@@ -403,12 +432,13 @@ func OptCpuVal(key, actval, cfgval string) string {
 	return sval
 }
 
-func SetCpuVal(key, value string, revert bool, noteId string) error {
+// SetCPUVal applies the settings to the system
+func SetCPUVal(key, value string, revert bool, noteID string) error {
 	var err error
 	switch key {
 	case "force_latency":
 		//iVal, _ := strconv.Atoi(value)
-		err = system.SetForceLatency(noteId, value, revert)
+		err = system.SetForceLatency(noteID, value, revert)
 	case "energy_perf_bias":
 		err = system.SetPerfBias(value)
 	case "governor":
@@ -419,6 +449,9 @@ func SetCpuVal(key, value string, revert bool, noteId string) error {
 }
 
 // section [mem]
+
+// GetMemVal initialise the shared memory structure with the current
+// system settings
 func GetMemVal(key string) string {
 	var val string
 	switch key {
@@ -440,6 +473,8 @@ func GetMemVal(key string) string {
 	return val
 }
 
+// OptMemVal optimises the shared memory structure with the settings
+// from the configuration file or with a calculation
 func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
 	// shmsize       value of ShmFileSystemSizeMB from config file
 	// tmpfspercent  value of VSZ_TMPFS_PERCENT from config file
@@ -452,11 +487,11 @@ func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
 	} else if shmsize == "0" {
 		if tmpfspercent == "0" {
 			// Calculate optimal SHM size (TotalMemSizeMB*75/100) (SAP-Note 941735)
-			size = uint64(system.GetTotalMemSizeMB())*75/100
+			size = uint64(system.GetTotalMemSizeMB()) * 75 / 100
 		} else {
 			// Calculate optimal SHM size (TotalMemSizeMB*VSZ_TMPFS_PERCENT/100)
 			val, _ := strconv.ParseUint(tmpfspercent, 10, 64)
-			size = uint64(system.GetTotalMemSizeMB())*val/100
+			size = uint64(system.GetTotalMemSizeMB()) * val / 100
 		}
 	} else {
 		size, _ = strconv.ParseUint(shmsize, 10, 64)
@@ -474,6 +509,7 @@ func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
 	return ret
 }
 
+// SetMemVal applies the settings to the system
 func SetMemVal(key, value string) error {
 	var err error
 	switch key {
@@ -491,40 +527,51 @@ func SetMemVal(key, value string) error {
 }
 
 // section [rpm]
+
+// GetRpmVal initialise the rpm structure with the current system settings
 func GetRpmVal(key string) string {
 	keyFields := strings.Split(key, ":")
 	instvers := system.GetRpmVers(keyFields[1])
 	return instvers
 }
 
+// OptRpmVal returns the value from the configuration file
 func OptRpmVal(key, cfgval string) string {
 	// nothing to do, only checking for 'verify'
 	return cfgval
 }
 
+// SetRpmVal nothing to do, only checking for 'verify'
 func SetRpmVal(value string) error {
 	// nothing to do, only checking for 'verify'
 	return nil
 }
 
 // section [grub]
+
+// GetGrubVal initialise the grub structure with the current system settings
 func GetGrubVal(key string) string {
 	keyFields := strings.Split(key, ":")
 	val := system.ParseCmdline("/proc/cmdline", keyFields[1])
 	return val
 }
 
+// OptGrubVal returns the value from the configuration file
 func OptGrubVal(key, cfgval string) string {
 	// nothing to do, only checking for 'verify'
 	return cfgval
 }
 
+// SetGrubVal nothing to do, only checking for 'verify'
 func SetGrubVal(value string) error {
 	// nothing to do, only checking for 'verify'
 	return nil
 }
 
 // section [uuidd]
+
+// GetUuiddVal initialise the uuidd socket service structure with the current
+// system settings
 func GetUuiddVal() string {
 	var val string
 	if system.SystemctlIsRunning("uuidd.socket") {
@@ -535,6 +582,8 @@ func GetUuiddVal() string {
 	return val
 }
 
+// OptUuiddVal optimises the uuidd socket service structure with the settings
+// from the configuration file
 func OptUuiddVal(cfgval string) string {
 	sval := strings.ToLower(cfgval)
 	if sval != "start" {
@@ -544,6 +593,7 @@ func OptUuiddVal(cfgval string) string {
 	return sval
 }
 
+// SetUuiddVal applies the settings to the system
 func SetUuiddVal(value string) error {
 	var err error
 	if !system.SystemctlIsRunning("uuidd.socket") {
@@ -553,6 +603,9 @@ func SetUuiddVal(value string) error {
 }
 
 // section [service]
+
+// GetServiceVal initialise the systemd service structure with the current
+// system settings
 func GetServiceVal(key string) string {
 	var val string
 	service := GetServiceName(key)
@@ -567,6 +620,8 @@ func GetServiceVal(key string) string {
 	return val
 }
 
+// OptServiceVal optimises the systemd service structure with the settings
+// from the configuration file
 func OptServiceVal(key, cfgval string) string {
 	sval := strings.ToLower(cfgval)
 	switch key {
@@ -587,6 +642,7 @@ func OptServiceVal(key, cfgval string) string {
 	return sval
 }
 
+// SetServiceVal applies the settings to the system
 func SetServiceVal(key, value string) error {
 	var err error
 	service := GetServiceName(key)
@@ -611,6 +667,9 @@ func SetServiceVal(key, value string) error {
 }
 
 // section [login]
+
+// GetLoginVal initialise the systemd login structure with the current
+// system settings
 func GetLoginVal(key string) (string, error) {
 	var val string
 	switch key {
@@ -626,10 +685,12 @@ func GetLoginVal(key string) (string, error) {
 	return val, nil
 }
 
+// OptLoginVal returns the value from the configuration file
 func OptLoginVal(cfgval string) string {
 	return strings.ToLower(cfgval)
 }
 
+// SetLoginVal applies the settings to the system
 func SetLoginVal(key, value string, revert bool) error {
 	switch key {
 	case "UserTasksMax":
@@ -649,6 +710,9 @@ func SetLoginVal(key, value string, revert bool) error {
 }
 
 // section [pagecache]
+
+// GetPagecacheVal initialise the pagecache structure with the current
+// system settings
 func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 	val := ""
 	currentPagecache, err := LinuxPagingImprovements{SysconfigPrefix: cur.SysconfigPrefix}.Initialise()
@@ -677,6 +741,8 @@ func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 	return val
 }
 
+// OptPagecacheVal optimises the pagecache structure with the settings
+// from the configuration file or with a calculation
 //func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements, keyvalue map[string]map[string]txtparser.INIEntry) string {
 func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 	val := strings.ToLower(cfgval)
@@ -708,6 +774,7 @@ func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 	return val
 }
 
+// SetPagecacheVal applies the settings to the system
 func SetPagecacheVal(key string, cur *LinuxPagingImprovements) error {
 	var err error
 	if key == "OVERRIDE_PAGECACHE_LIMIT_MB" {

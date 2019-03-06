@@ -11,12 +11,15 @@ import (
 	"strings"
 )
 
-const OverrideTuningSheets  = "/etc/saptune/override/"
+// OverrideTuningSheets defines saptunes override directory
+const OverrideTuningSheets = "/etc/saptune/override/"
+
 var pc = LinuxPagingImprovements{}
 
 // Tuning options composed by a third party vendor.
 
-// Calculate optimum parameter value given the current value, comparison operator, and expected value. Return optimised value.
+// CalculateOptimumValue calculates optimum parameter value given the current
+// value, comparison operator, and expected value. Return optimised value.
 func CalculateOptimumValue(operator txtparser.Operator, currentValue string, expectedValue string) (string, error) {
 	if operator == txtparser.OperatorEqual {
 		return expectedValue, nil
@@ -65,7 +68,7 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 	return strconv.FormatInt(iCurrentValue, 10), nil
 }
 
-// Tuning options composed by a third party vendor.
+// INISettings defines tuning options composed by a third party vendor.
 type INISettings struct {
 	ConfFilePath    string            // Full path to the 3rd party vendor's tuning configuration file
 	ID              string            // ID portion of the tuning configuration
@@ -75,6 +78,7 @@ type INISettings struct {
 	OverrideParams  map[string]string // parameter values from the override file
 }
 
+// Name returns the name of the related SAP Note or en empty string
 func (vend INISettings) Name() string {
 	if len(vend.DescriptiveName) == 0 {
 		vend.DescriptiveName = txtparser.GetINIFileDescriptiveName(vend.ConfFilePath)
@@ -82,6 +86,7 @@ func (vend INISettings) Name() string {
 	return vend.DescriptiveName
 }
 
+// Initialise retrieves the current parameter values from the system
 func (vend INISettings) Initialise() (Note, error) {
 	// Parse the configuration file
 	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
@@ -107,7 +112,7 @@ func (vend INISettings) Initialise() (Note, error) {
 			if ow.KeyValue[param.Section][param.Key].Value != "" {
 				vend.OverrideParams[param.Key] = ow.KeyValue[param.Section][param.Key].Value
 				if ow.KeyValue[param.Section][param.Key].Operator != param.Operator {
-					// operator from override file will 
+					// operator from override file will
 					// replace the operator from our note file
 					param.Operator = ow.KeyValue[param.Section][param.Key].Operator
 				}
@@ -118,7 +123,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionSysctl:
 			vend.SysctlParams[param.Key], _ = system.GetSysctlString(param.Key)
 		case INISectionVM:
-			vend.SysctlParams[param.Key] = GetVmVal(param.Key)
+			vend.SysctlParams[param.Key] = GetVMVal(param.Key)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], _ = GetBlkVal(param.Key)
 		case INISectionLimits:
@@ -132,7 +137,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionMEM:
 			vend.SysctlParams[param.Key] = GetMemVal(param.Key)
 		case INISectionCPU:
-			vend.SysctlParams[param.Key] = GetCpuVal(param.Key)
+			vend.SysctlParams[param.Key] = GetCPUVal(param.Key)
 		case INISectionRpm:
 			vend.SysctlParams[param.Key] = GetRpmVal(param.Key)
 			continue
@@ -154,13 +159,20 @@ func (vend INISettings) Initialise() (Note, error) {
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
-		if _, ok := vend.ValuesToApply["verify"]; ! ok && vend.SysctlParams[param.Key] != "" {
-			CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
+		// do not write parameter values to the saved state file during
+		// a pure 'verify' action
+		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
+			if param.Section == INISectionLimits {
+				SaveLimitsParameter(param.Key, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, vend.SysctlParams[param.Key], "start", "")
+			} else {
+				CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
+			}
 		}
 	}
 	return vend, nil
 }
 
+// Optimise gets the expected parameter values from the configuration
 func (vend INISettings) Optimise() (Note, error) {
 	// Parse the configuration file
 	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
@@ -184,7 +196,7 @@ func (vend INISettings) Optimise() (Note, error) {
 			//vend.SysctlParams[param.Key] = optimisedValue
 			vend.SysctlParams[param.Key] = OptSysctlVal(param.Operator, param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionVM:
-			vend.SysctlParams[param.Key] = OptVmVal(param.Key, param.Value)
+			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key] = OptBlkVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionLimits:
@@ -198,7 +210,7 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionMEM:
 			vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["mem"]["ShmFileSystemSizeMB"].Value, ini.KeyValue["mem"]["VSZ_TMPFS_PERCENT"].Value)
 		case INISectionCPU:
-			vend.SysctlParams[param.Key] = OptCpuVal(param.Key, vend.SysctlParams[param.Key], param.Value)
+			vend.SysctlParams[param.Key] = OptCPUVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionRpm:
 			vend.SysctlParams[param.Key] = OptRpmVal(param.Key, param.Value)
 			continue
@@ -215,13 +227,21 @@ func (vend INISettings) Optimise() (Note, error) {
 			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
-		if _, ok := vend.ValuesToApply["verify"]; ! ok && vend.SysctlParams[param.Key] != "" {
-			AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
+		// do not write parameter values to the saved state file during
+		// a pure 'verify' action
+		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
+			if param.Section == INISectionLimits {
+				SaveLimitsParameter(param.Key, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, vend.SysctlParams[param.Key], "add", vend.ID)
+			} else {
+				AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
+			}
 		}
 	}
 	return vend, nil
 }
 
+// Apply sets the new parameter values in the system or
+// revert the system to the former parameter values
 func (vend INISettings) Apply() error {
 	errs := make([]error, 0, 0)
 	revertValues := false
@@ -238,6 +258,7 @@ func (vend INISettings) Apply() error {
 	if err != nil {
 		return err
 	}
+
 	//for key, value := range vend.SysctlParams {
 	for _, param := range ini.AllValues {
 		switch param.Section {
@@ -253,7 +274,12 @@ func (vend INISettings) Apply() error {
 
 		if revertValues && vend.SysctlParams[param.Key] != "" {
 			// revert parameter value
-			pvalue := RevertParameter(param.Key, vend.ID)
+			pvalue := ""
+			if param.Section == INISectionLimits {
+				pvalue = RevertLimitsParameter(param.Key, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, vend.ID)
+			} else {
+				pvalue = RevertParameter(param.Key, vend.ID)
+			}
 			if pvalue != "" {
 				vend.SysctlParams[param.Key] = pvalue
 			}
@@ -287,7 +313,7 @@ func (vend INISettings) Apply() error {
 				errs = append(errs, system.SetSysctlString(param.Key, vend.SysctlParams[param.Key]))
 			}
 		case INISectionVM:
-			errs = append(errs, SetVmVal(param.Key, vend.SysctlParams[param.Key]))
+			errs = append(errs, SetVMVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionBlock:
 			errs = append(errs, SetBlkVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionLimits:
@@ -301,7 +327,7 @@ func (vend INISettings) Apply() error {
 		case INISectionMEM:
 			errs = append(errs, SetMemVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionCPU:
-			errs = append(errs, SetCpuVal(param.Key, vend.SysctlParams[param.Key], revertValues, vend.ID))
+			errs = append(errs, SetCPUVal(param.Key, vend.SysctlParams[param.Key], revertValues, vend.ID))
 		case INISectionPagecache:
 			errs = append(errs, SetPagecacheVal(param.Key, &pc))
 		default:
@@ -313,7 +339,8 @@ func (vend INISettings) Apply() error {
 	return err
 }
 
-func (vend INISettings) SetValuesToApply(values []string) (Note) {
+// SetValuesToApply fills the data structure for applying the changes
+func (vend INISettings) SetValuesToApply(values []string) Note {
 	vend.ValuesToApply = make(map[string]string)
 	for _, v := range values {
 		vend.ValuesToApply[v] = v

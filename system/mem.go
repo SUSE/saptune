@@ -1,5 +1,6 @@
-// Gather information about system memory and swap memory.
 package system
+
+// Gather information about system memory and swap memory.
 
 import (
 	"fmt"
@@ -9,12 +10,14 @@ import (
 	"strings"
 )
 
+// string definitions for parsing /proc/meminfo output
 const (
 	MemMainTotalKey = "MemTotal"
 	MemSwapTotalKey = "SwapTotal"
 )
 
-// Parse /proc/meminfo into key(string) - value(int) pairs. Panic on error.
+// ParseMeminfo parse /proc/meminfo into key(string) - value(int) pairs.
+// Panic on error.
 func ParseMeminfo() (infoMap map[string]uint64) {
 	infoMap = make(map[string]uint64)
 	memInfo, err := ioutil.ReadFile("/proc/meminfo")
@@ -38,22 +41,25 @@ func ParseMeminfo() (infoMap map[string]uint64) {
 	return
 }
 
-// Return size of system main memory, excluding swap. Panic on error.
+// GetMainMemSizeMB return size of system main memory, excluding swap.
+// Panic on error.
 func GetMainMemSizeMB() uint64 {
 	return ParseMeminfo()[MemMainTotalKey] / 1024
 }
 
-// Return size of system main memory plus swap. Panic on error.
+// GetTotalMemSizeMB return size of system main memory plus swap.
+// Panic on error.
 func GetTotalMemSizeMB() uint64 {
 	return (ParseMeminfo()[MemMainTotalKey] + ParseMeminfo()[MemSwapTotalKey]) / 1024
 }
 
-// Return size of system main memory plus swap, in pages. Panic on error.
+// GetTotalMemSizePages return size of system main memory plus swap, in pages.
+// Panic on error.
 func GetTotalMemSizePages() uint64 {
 	return (ParseMeminfo()[MemMainTotalKey] + ParseMeminfo()[MemSwapTotalKey]) / uint64(os.Getpagesize())
 }
 
-// Return kernel semaphore limits. Panic on error.
+// GetSemaphoreLimits return kernel semaphore limits. Panic on error.
 func GetSemaphoreLimits() (msl, mns, opm, mni uint64) {
 	field, err := GetSysctlString("kernel.sem")
 	if err != nil {

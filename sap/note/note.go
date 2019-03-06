@@ -1,3 +1,5 @@
+package note
+
 /*
 SAP notes tune one or more parameters at a time.
 
@@ -6,7 +8,6 @@ in calculating an optimised value, and apply all parameters.
 
 A system can be tuned for more than one note at a time.
 */
-package note
 
 import (
 	"encoding/json"
@@ -21,10 +22,10 @@ import (
 	"strings"
 )
 
-/*
-An SAP note consisting of a series of tunable parameters that can be applied and reverted.
-Parameter is immutable. Internal state changes can only be made to copies.
-*/
+// Note defines the structure and actions for a SAP Note
+// An SAP note consisting of a series of tunable parameters that can be
+// applied and reverted.
+// Parameter is immutable. Internal state changes can only be made to copies.
 type Note interface {
 	Initialise() (Note, error) // Inspect all tuning parameters and return.
 	Optimise() (Note, error)   // (Re)calculate all parameters, but do not apply.
@@ -32,9 +33,11 @@ type Note interface {
 	Name() string              // The original note name.
 }
 
-type TuningOptions map[string]Note // Collection of tuning options from SAP notes and 3rd party vendors.
+// TuningOptions is the collection of tuning options from SAP notes and
+// 3rd party vendors.
+type TuningOptions map[string]Note
 
-// check, if there is a note in an older saptune format to revert
+// Note2Convert checks, if there is a note in an older saptune format to revert
 // support revert from older saptune versions
 func Note2Convert(noteID string) string {
 	fileName := fmt.Sprintf("/var/lib/saptune/saved_state/%s_n2c", noteID)
@@ -44,7 +47,8 @@ func Note2Convert(noteID string) string {
 	return noteID
 }
 
-// Return all built-in tunable SAP notes together with those defined by 3rd party vendors.
+// GetTuningOptions returns all built-in tunable SAP notes together with those
+// defined by 3rd party vendors.
 func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOptions {
 	ret := TuningOptions{
 		// compatibility with older saptune versions.
@@ -109,7 +113,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 	return ret
 }
 
-// Return all tuning option IDs, sorted in ascending order.
+// GetSortedIDs returns all tuning option IDs, sorted in ascending order.
 func (opts *TuningOptions) GetSortedIDs() (ret []string) {
 	ret = make([]string, 0, len(*opts))
 	for id := range *opts {
@@ -119,8 +123,9 @@ func (opts *TuningOptions) GetSortedIDs() (ret []string) {
 	return
 }
 
-// Record the actual value versus expected value for a note field. The field name has to be the actual name in Go struct.
-type NoteFieldComparison struct {
+// FieldComparison records the actual value versus expected value for
+// a note field. The field name has to be the actual name in Go struct.
+type FieldComparison struct {
 	ReflectFieldName               string // Structure field name
 	ReflectMapKey                  string // If structure field is a map, this is the map key
 	ActualValue, ExpectedValue     interface{}
@@ -128,7 +133,8 @@ type NoteFieldComparison struct {
 	MatchExpectation               bool
 }
 
-// Compare JSON representation of two values and see if they match.
+// CompareJSValue compares JSON representation of two values and see
+// if they match.
 func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 	v1JSBytes, err := json.Marshal(v1)
 	if err != nil {
@@ -150,15 +156,16 @@ func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 	return
 }
 
-// Compare the content of two notes and return differences in their fields in a human-readable text.
-func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]NoteFieldComparison, valApplyList []string) {
-	comparisons = make(map[string]NoteFieldComparison)
+// CompareNoteFields compares the content of two notes and return differences
+// in their fields in a human-readable text.
+func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]FieldComparison, valApplyList []string) {
+	comparisons = make(map[string]FieldComparison)
 	allMatch = true
 	// Compare all fields
 	refActualNote := reflect.ValueOf(actualNote)
 	refExpectedNote := reflect.ValueOf(expectedNote)
 	for i := 0; i < refActualNote.NumField(); i++ {
-		var fieldComparison NoteFieldComparison
+		var fieldComparison FieldComparison
 		// Retrieve actualField value from actual and expected note
 		fieldName := reflect.TypeOf(actualNote).Field(i).Name
 		actualField := refActualNote.Field(i)
@@ -174,7 +181,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 				if strings.Split(key.String(), ":")[0] == "rpm" {
 					match = system.CmpRpmVers(actualValue.(string), expectedValue.(string))
 				}
-				fieldComparison = NoteFieldComparison{
+				fieldComparison = FieldComparison{
 					ReflectFieldName: fieldName,
 					ReflectMapKey:    key.String(),
 					ActualValue:      actualValue,
@@ -196,7 +203,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 			actualValue := refActualNote.Field(i).Interface()
 			expectedValue := refExpectedNote.Field(i).Interface()
 			actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue)
-			fieldComparison = NoteFieldComparison{
+			fieldComparison = FieldComparison{
 				ReflectFieldName: fieldName,
 				ActualValue:      actualValue,
 				ExpectedValue:    expectedValue,

@@ -4,7 +4,6 @@ import (
 	"testing"
 )
 
-
 func TestIsUserRoot(t *testing.T) {
 	if !IsUserRoot() {
 		t.Log("the test requires root access")
