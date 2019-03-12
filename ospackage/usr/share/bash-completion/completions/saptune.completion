@@ -1,0 +1,63 @@
+# v1.0 	
+#
+#   saptune daemon [ start | status | stop ]
+#   saptune note [ list | verify ]
+#   saptune note [ apply | simulate | verify | customise | revert ] NoteID
+#   saptune solution [ list | verify ]
+#   saptune solution [ apply | simulate | verify | revert ] SolutionName
+#   saptune revert all
+
+_saptune() {
+    local cur prev opts base pattern
+
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    
+    case ${COMP_CWORD} in 
+
+        1)  opts="daemon solution note revert"
+            ;;
+        
+        2)  case "${prev}" in
+                daemon)     opts="start status stop"
+                            ;;
+                solution)   opts="list verify apply simulate customise revert"
+                            ;;
+                note)       opts="list verify apply simulate customise revert"       
+                            ;;
+		revert)	    opts="all"	
+			    ;;
+                *)          ;;
+            esac
+            ;;
+
+        3)  case "${prev}" in
+                apply|simulate|verify|customise|revert)
+                        case "${COMP_WORDS[COMP_CWORD-2]}" in
+                            note)       opts=$((ls -1q /usr/share/saptune/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | cut -d '-' -f 1) | tr '\n' ' ') 
+                                        ;;
+                            solution)   case "$(uname -i)" in
+						x86_64)	pattern="^\[ArchX86\]$" ;;
+						?????)  pattern="^\[ArchPPC64LE\]$" ;;
+					            *)  pattern="%%%" ;; # impossible pattern
+					esac
+					opts=$(sed -n "/${pattern}/,/^\$/p" /usr/share/saptune/solutions |  grep '=' | cut -d '=' -f1 | tr '\n' ' ')
+                                        ;;
+                        esac
+			;;
+                *)  return 0
+                    ;;
+            esac 
+	    ;;
+
+        *)  return 0
+            ;;
+    esac
+
+    COMPREPLY=($(compgen -W "${opts}" -- ${cur}))  
+    return 0
+}
+
+complete -F _saptune saptune
+

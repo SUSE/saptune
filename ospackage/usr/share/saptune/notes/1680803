@@ -32,16 +32,6 @@ IO_SCHEDULER=noop
 # be switched to the chosen value
 NRREQ=1024
 
-[limits]
-## Type:    integer
-## Default: 0 (which means calculation: RAM in KB - 10%)
-#
-# memlock
-LIMIT_HARD=0
-LIMIT_SOFT=0
-LIMIT_ITEM=memlock
-LIMIT_DOMAIN=sybase
-
 [vm]
 # Disable transparent hugepages (THP, applies to Intel-based systems only)
 # changes /sys/kernel/mm/transparent_hugepage/enabled
@@ -67,16 +57,6 @@ net.ipv4.tcp_wmem = 4096 65536 16777216
 
 # Increase the max packet backlog
 net.core.netdev_max_backlog = 30000
-
-# If the server is a heavily used application server, e.g. a Database, it would
-# benefit significantly by using Huge Pages. 
-# The default size of Huge Page in SLES is 2 MB, enabling Huge Pages would aid 
-# in significant improvements for Memory Intensive Applications/Databases, 
-# HPC Machines, this configuration needs to be done if the Applications support
-# Huge Pages. If the Applications do not support Huge Pages then configuring 
-# Huge Pages would result in wastage of memory as it cannot be used any further
-# by the OS. 
-vm.nr_hugepages = 128
 
 # Discourage Linux from swapping idle processes to disk (default = 60)
 # value between 20 and 10
