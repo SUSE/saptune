@@ -201,9 +201,12 @@ func TestOptimiseNoteOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1001", "1002"}, []string{})
-	// change expected value from "optimised2" to "optimised1", as we do no
-	// longer apply a note again, which was already applied before.
-	VerifyFileContent(t, SampleParamFile, "optimised1")
+	// change expected value from "optimised1" back to "optimised2"
+	// we do no longer apply a note again, which was already applied before
+	// but the check was moved to main.go (NoteAction) to suppress
+	// misleading messages for the customer
+	// so function 'TuneNote' will work as before.
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
 	}
@@ -262,9 +265,9 @@ func TestOptimiseSolutionOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
-	// change expected value from "optimised2" to "optimised1", as we do no
-	// longer apply a note again, which was already applied before.
-	VerifyFileContent(t, SampleParamFile, "optimised1")
+	// change expected value from "optimised1" back to "optimised2", as
+	// the check for already applied notes has moved
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
 	}
@@ -281,9 +284,9 @@ func TestOptimiseSolutionOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12"})
-	// change expected value from "optimised1" to "optimised2", as we do no
-	// longer apply a note again, which was already applied before.
-	VerifyFileContent(t, SampleParamFile, "optimised2")
+	// change expected value from "optimised2" back to "optimised1", as
+	// the check for already applied notes has moved
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.RevertSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
@@ -346,17 +349,17 @@ func TestOverlappingSolutions(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12", "sol2"})
-	// change expected value from "optimised2" to "optimised1", as we do no
-	// longer apply a note again, which was already applied before.
-	VerifyFileContent(t, SampleParamFile, "optimised1")
+	// change expected value from "optimised1" back to "optimised2", as
+	// the check for already applied notes has moved
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
 	// Reverting sol12 should not affect anything
-	// change expected value from "optimised2" to "optimised1", as we do no
-	// longer apply a note again, which was already applied before.
-	VerifyFileContent(t, SampleParamFile, "optimised1")
+	// change expected value from "optimised1" back to "optimised2", as
+	// the check for already applied notes has moved
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 }
 
 func TestCombiningSolutionAndNotes(t *testing.T) {

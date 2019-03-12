@@ -416,6 +416,17 @@ func NoteAction(actionName, noteID string) {
 		if noteID == "" {
 			PrintHelpAndExit(1)
 		}
+		// Do not apply the note, if it was applied before
+		// Otherwise, the state file (serialised parameters) will be
+		// overwritten, and it will no longer be possible to revert the
+		// note to the state before it was tuned.
+		_, err := os.Stat(tuneApp.State.GetPathToNote(noteID))
+		if err == nil {
+			// state file for note already exists
+			// do not apply the note again
+			log.Printf("note '%s' already applied. Nothing to do", noteID)
+			os.Exit(0)
+		}
 		if err := tuneApp.TuneNote(noteID); err != nil {
 			errorExit("Failed to tune for note %s: %v", noteID, err)
 		}
