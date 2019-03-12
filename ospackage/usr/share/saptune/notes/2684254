@@ -67,6 +67,11 @@ force_latency=70
 # 0 to disable, 1 to enable
 kernel.numa_balancing=0
 
+[rpm]
+# dependencies handled by saptune package installation
+libopenssl1_0_0 15 1.0.2n-3.3.1
+libssh2-1 15 1.8.0-2.35
+
 [grub]
 # /etc/default/grub GRUB_CMDLINE_LINUX_DEFAULT
 # saptune only checks the values. Changing the grub configuration is not
