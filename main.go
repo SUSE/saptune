@@ -578,6 +578,12 @@ func SolutionAction(actionName, solName string) {
 		if solName == "" {
 			PrintHelpAndExit(1)
 		}
+		if len(tuneApp.TuneForSolutions) > 0 {
+			// already one solution applied.
+			// do not apply another solution. Does not make sense
+			log.Println("There is already one solution applied. Applying another solution is NOT supported.")
+			os.Exit(0)
+		}
 		removedAdditionalNotes, err := tuneApp.TuneSolution(solName)
 		if err != nil {
 			errorExit("Failed to tune for solution %s: %v", solName, err)
