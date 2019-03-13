@@ -23,3 +23,14 @@ func TestGetTunedProfile(t *testing.T) {
 		t.Log("seams there is no tuned profile, skip test")
 	}
 }
+
+func TestGetTunedAdmProfile(t *testing.T) {
+	// check, if command is available
+	if !CmdIsAvailable("/usr/sbin/tuned-adm") {
+		t.Skip("command '/usr/sbin/tuned-adm' not available. Skip tests")
+	}
+	actualVal := GetTunedAdmProfile()
+	if actualVal == "" {
+		t.Log("seams there is no tuned profile, skip test")
+	}
+}
