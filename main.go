@@ -131,11 +131,16 @@ func DaemonAction(actionName string) {
 	case "start":
 		fmt.Println("Starting daemon (tuned.service), this may take several seconds...")
 		system.SystemctlDisableStop(SapconfService) // do not error exit on failure
-		if err := system.WriteTunedAdmProfile("saptune"); err != nil {
+		if err := system.TunedAdmProfile("saptune"); err != nil {
 			errorExit("%v", err)
 		}
 		if err := system.SystemctlEnableStart(TunedService); err != nil {
 			errorExit("%v", err)
+		}
+		// Check tuned profile
+		if system.GetTunedAdmProfile() != TunedProfileName {
+			fmt.Fprintln(os.Stderr, "tuned.service profile is incorrect. Please check tuned logs for more information")
+			os.Exit(ExitTunedWrongProfile)
 		}
 		// tuned then calls `saptune daemon apply`
 		fmt.Println("Daemon (tuned.service) has been enabled and started.")
