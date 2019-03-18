@@ -1,0 +1,67 @@
+# 2578899 - SUSE Linux Enterprise Server 15: Installation Note
+# Description:    You want to use SAP software on SUSE Linux Enterprise Server 15 (SLES 15) or SUSE Linux Enterprise Server 15 for SAP Applications  (SLES for SAP 15).
+# Version 11 from 03.01.2019 in English
+
+[version]
+# SAP-NOTE=2578899 CATEGORY=LINUX VERSION=11 DATE=03.01.2019 NAME="SUSE LINUX Enterprise Server 15: Installation notes"
+
+[service]
+# start the related services
+UuiddSocket=start
+Sysstat=start
+
+[block]
+# The default I/O scheduler for SLES is CFQ. It offers satisfactory performance
+# for wide range of I/O task, however choosing an alternative scheduler may 
+# potentially yield better latency characteristics and throughput. 
+# "noop" is an alternative scheduler, in comparison to CFQ it may offer more 
+# consistent performance, lower computation overhead, and potentially higher 
+# throughput.
+# For most SAP environments (RAID, storage arrays, virtualizaton) 'noop' is the
+# better choice.
+#   
+# When set, all block devices on the system will be switched to the chosen 
+# scheduler.
+IO_SCHEDULER=noop
+
+[rpm]
+# dependencies handled by saptune package installation
+libopenssl1_0_0 15 1.0.2n-3.3.1
+libssh2-1 15 1.8.0-2.35
+
+[sysctl]
+# vm.dirty_bytes (indirect vm.dirty_ratio)
+# Contains the amount of dirty memory at which a process generating disk writes
+# will itself start writeback.
+# Note: dirty_bytes is the counterpart of dirty_ratio. Only one of them may be
+# specified at a time. When one sysctl is written it is immediately taken into
+# account to evaluate the dirty memory limits and the other appears as 0 when
+# read.
+# Note: when changing the tuned profile or switching off tuned, both values
+# will be set back to their previous settings.
+# Note: the minimum value allowed for dirty_bytes is two pages (in bytes); any
+# value lower than this limit will be ignored and the old configuration will be
+# retained.
+#
+# vm.dirty_bytes should be set to 629145600 (see TID_7010287)
+#
+vm.dirty_bytes=629145600
+
+# vm.dirty_background_bytes (indirect vm.dirty_background_ratio)
+# Contains the amount of dirty memory at which the background kernel
+# flusher threads will start writeback.
+# Note: dirty_background_bytes is the counterpart of dirty_background_ratio.
+# Only one of them may be specified at a time. When one sysctl is written it is
+# immediately taken into account to evaluate the dirty memory limits and the
+# other appears as 0 when read.
+# Note: when changing the tuned profile or switching off tuned, both values
+# will be set back to their previous settings.
+#
+# vm.dirty_background_bytes should be set to 314572800 (see TID_7010287)
+#
+vm.dirty_background_bytes=314572800
+
+[reminder]
+# /etc/systemd/logind.conf.d/sap.conf UserTasksMax setting
+# UserTasksMax=infinity
+# - done during post install of package installation

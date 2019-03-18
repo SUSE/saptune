@@ -125,19 +125,6 @@ func (app *App) TuneNote(noteID string) error {
 	if err != nil {
 		return err
 	}
-	/*
-		Do not apply the note, if it was applied before
-		Otherwise, the state file (serialised parameters) will be overwritten, and it will no longer
-		be possible to revert the note to the state before it was tuned.
-	*/
-	_, err = os.Stat(app.State.GetPathToNote(noteID))
-	if err == nil {
-		// state file for note already exists
-		// do not apply the note again
-		log.Printf("note '%s' already applied. Nothing to do", noteID)
-		return nil
-	}
-
 	solNotes := app.GetSortedSolutionEnabledNotes()
 	searchInSol := sort.SearchStrings(solNotes, noteID)
 	searchInNote := sort.SearchStrings(app.TuneForNotes, noteID)

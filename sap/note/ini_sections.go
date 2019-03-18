@@ -597,7 +597,7 @@ func OptUuiddVal(cfgval string) string {
 func SetUuiddVal(value string) error {
 	var err error
 	if !system.SystemctlIsRunning("uuidd.socket") {
-		err = system.SystemctlEnableStart("uuidd.socket")
+		err = system.SystemctlStart("uuidd.socket")
 	}
 	return err
 }
@@ -650,16 +650,16 @@ func SetServiceVal(key, value string) error {
 		return nil
 	}
 	if value == "start" && !system.SystemctlIsRunning(service) {
-		err = system.SystemctlEnableStart(service)
+		err = system.SystemctlStart(service)
 	}
 	if value == "stop" {
 		if service == "uuidd.socket" {
 			if !system.SystemctlIsRunning(service) {
-				err = system.SystemctlEnableStart(service)
+				err = system.SystemctlStart(service)
 			}
 		} else {
 			if system.SystemctlIsRunning(service) {
-				err = system.SystemctlDisableStop(service)
+				err = system.SystemctlStop(service)
 			}
 		}
 	}

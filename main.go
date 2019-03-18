@@ -131,11 +131,16 @@ func DaemonAction(actionName string) {
 	case "start":
 		fmt.Println("Starting daemon (tuned.service), this may take several seconds...")
 		system.SystemctlDisableStop(SapconfService) // do not error exit on failure
-		if err := system.WriteTunedAdmProfile("saptune"); err != nil {
+		if err := system.TunedAdmProfile("saptune"); err != nil {
 			errorExit("%v", err)
 		}
 		if err := system.SystemctlEnableStart(TunedService); err != nil {
 			errorExit("%v", err)
+		}
+		// Check tuned profile
+		if system.GetTunedAdmProfile() != TunedProfileName {
+			fmt.Fprintln(os.Stderr, "tuned.service profile is incorrect. Please check tuned logs for more information")
+			os.Exit(ExitTunedWrongProfile)
 		}
 		// tuned then calls `saptune daemon apply`
 		fmt.Println("Daemon (tuned.service) has been enabled and started.")
@@ -416,6 +421,17 @@ func NoteAction(actionName, noteID string) {
 		if noteID == "" {
 			PrintHelpAndExit(1)
 		}
+		// Do not apply the note, if it was applied before
+		// Otherwise, the state file (serialised parameters) will be
+		// overwritten, and it will no longer be possible to revert the
+		// note to the state before it was tuned.
+		_, err := os.Stat(tuneApp.State.GetPathToNote(noteID))
+		if err == nil {
+			// state file for note already exists
+			// do not apply the note again
+			log.Printf("note '%s' already applied. Nothing to do", noteID)
+			os.Exit(0)
+		}
 		if err := tuneApp.TuneNote(noteID); err != nil {
 			errorExit("Failed to tune for note %s: %v", noteID, err)
 		}
@@ -566,6 +582,12 @@ func SolutionAction(actionName, solName string) {
 	case "apply":
 		if solName == "" {
 			PrintHelpAndExit(1)
+		}
+		if len(tuneApp.TuneForSolutions) > 0 {
+			// already one solution applied.
+			// do not apply another solution. Does not make sense
+			log.Println("There is already one solution applied. Applying another solution is NOT supported.")
+			os.Exit(0)
 		}
 		removedAdditionalNotes, err := tuneApp.TuneSolution(solName)
 		if err != nil {
