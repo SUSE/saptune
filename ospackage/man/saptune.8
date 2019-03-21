@@ -1,5 +1,5 @@
 .\"/*
-.\" * Copyright (c) 2017-2018 SUSE LLC.
+.\" * Copyright (c) 2017-2019 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Howard Guo, Angela Briel
 .\" *
@@ -14,253 +14,21 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "November 2018" "" "System Optimisation For SAP"
+.TH saptune "8" "March 2019" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions
 
-.SH SYNOPSIS
-\fBsaptune daemon\fP
-[ start | status | stop ]
-
-\fBsaptune note\fP
-[ list | verify ]
-
-\fBsaptune note\fP
-[ apply | simulate | verify | customise | revert ]  NoteID
-
-\fBsaptune solution\fP
-[ list | verify ]
-
-\fBsaptune solution\fP
-[ apply | simulate | verify | revert ] SolutionName
-
-\fBsaptune revert\fP
-all
-
 .SH DESCRIPTION
-saptune is designed to automate the configuration recommendations from SAP and SUSE to run an SAP application on SLES for SAP. These configuration recommendations normally referred to as SAP Notes. So some dedicated SAP Notes are the base for the work of saptune. Additional some best practice guides are added as Note definitions to optimise the system for some really special cases.
+saptune has been improved to much more better adapt the needs of an SAP environment. So at the moment we will support 2 versions of saptune.
 
-saptune can apply settings for a single Note definition or can set all settings for a predefined solution, which is a collection of several SAP Notes. Additional it can revert all these settings back to the previous system settings.
+We now have our good old version 1 of saptune, which is now deprecated and will be removed with the next release. It's available for compatibility reasons and to give the admin the ability to smoothly migrate his SAP system tunings to the new settings demanded by SAP. To get the man page for the version 1 of saptune please use saptune_v1(8).
+To get more information about the migration path from saptune version 1 to saptune version 2 please see saptune-migrate(5)
 
-It can verify, if the current system configuration is in sync with a specific Note definition or a defined solution and displays the differences.
-Additionally, it can simulate the setting of a single SAP Note definition or a defined solution and will display the changes which will be done to the system.
-
-saptune does not only set kernel values (like sysctl does), but also values like cpu governor, energy perf bias, force latency (dma latency) and the disk io scheduler. Additionally it will check/verify, if suitable rpm versions are installed and special kernel command line values are set, according to the relevant SAP Notes. So saptune checks and applies values in various locations during runtime like
-.PP
-/proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.conf and some others.
-
-saptune fully integrates with tuned(8), the tuned-profile name associated with this utility is "saptune".
-
-.SH DAEMON ACTIONS
-.SS
-.TP
-.B start
-Start tuned(8) daemon, set tuning profile to "saptune", and apply a set of optimisations to the system, if solutions or notes were selected during a previous call of saptune. The daemon will be automatically activated upon system boot.
-.TP
-.B status
-Report the status of tuned(8) daemon and whether it is using the correct profile.
-.TP
-.B stop
-Stop tuned(8) daemon, and revert all optimisations that were previously applied by saptune. The daemon will no longer automatically activate upon boot.
-
-.SH NOTE ACTIONS
-Note denotes either a SAP note, a vendor specific tuning definition or SUSE recommendation article.
-.SS
-.TP
-.B apply
-Apply optimisation settings specified in the Note. The Note will be automatically activated upon system boot if the daemon is enabled.
-
-If a Note definition contains a '\fB[reminder]\fR' section, this section will be printed after the note has applied successfully. It will be highlighted with red colour.
-.TP
-.B list
-List all SAP notes, vendor specific tuning definitions and SUSE recommendation articles that saptune is capable of implementing.
-
-Currently implemented notes are marked with '\fB+\fR', if manually enabled, or '\fB*\fR', if enabled by solutions. In both cases the notes are highlighted with green colour.
-.br
-If an \fBoverride\fR file exists for a NoteID, the note is marked with '\fBO\fR'.
-.TP
-.B verify
-If a Note ID is specified, saptune verifies the current running system against the recommendations specified in the Note. If Note ID is not specified, saptune verifies all system parameters against all implemented Notes. As a result you will see a table containing the following columns
-
-SAPNote, Version | Parameter | Expected | Override | Actual | Compliant
-
-\fBExpected\fR shows the values read from the Note definition file
-.br
-\fBOverride\fR shows the values found in an \fBoverride\fR file
-.br
-\fBActual\fR shows the current system value
-.br
-\fBCompliant\fR shows \fByes\fR, if the 'Expected' and 'Actual' value matches, or \fBno\fR, if there is no match.
-.br
-In some rows you can find references to \fBfootnotes\fR containing additional information. They may explain, why a value does not match.
-
-e.g.
-.br
-[1] setting is not supported by the system
-.br
-[2] setting is not available on the system
-.br
-[3] value is only checked, but NOT set
-
-If a Note definition contains a '\fB[reminder]\fR' section, this section will be printed below the table and the footnotes. It will be highlighted with red colour.
-.TP
-.B simulate
-Show all changes that will be applied to the system if the specified Note is applied.
-As a result you will see a table containing the following columns
-
-Parameter | Value set | Value expected | Override | Comment
-
-\fBValue set\fR shows the current system value
-.br
-\fBValue expected\fR shows the values read from the Note definition file
-.br
-\fBOverride\fR shows the values found in an \fBoverride\fR file
-.br
-\fBComment\fR shows references to \fBfootnotes\fR containing additional information. They may explain, why a value will not be set by saptune.
-
-e.g.
-.br
-[1] setting is not supported by the system
-.br
-[2] setting is not available on the system
-.br
-[3] value is only checked, but NOT set
-
-If a Note definition contains a '\fB[reminder]\fR' section, this section will be printed below the table and the footnotes. It will be highlighted with red colour.
-.TP
-.B customise
-This allows to customize the values of the saptune Note definitions. The Note definition file will be copied from \fI/usr/share/saptune/notes\fR or \fI/etc/saptune/extra\fR to the override location at \fI/etc/saptune/override\fR, if the file does not exist already. After that an editor will be launched to allow changing the Note definitions.
-The editor is defined by the \fBEDITOR\fR environment variable. If not set editor defaults to /usr/bin/vim.
-.TP
-.B revert
-Revert optimisation settings carried out by the Note, and the Note will no longer be activated automatically upon system boot.
-
-.SH SOLUTION ACTIONS
-A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.
-.br
-The solution definitions can be found in the file \fI/usr/share/saptune/solutions\fR
-.SS
-.TP
-.B apply
-Apply optimisation settings recommended by the SAP solution. These settings will be automatically activated upon system boot if the daemon is enabled.
-.TP
-.B list
-List all SAP solution names that saptune is capable of implementing. The marked ones are currently implemented.
-.TP
-.B simulate
-Show all notes that are associated with the specified SAP solution, and all changes that will be applied once the solution is activated.
-.TP
-.B verify
-If a solution name is specified, saptune verifies the current running system against the recommended settings of the SAP solution. If solution name is not specified, saptune verifies all system parameters against all implemented solutions.
-.TP
-.B revert
-Revert optimisation settings recommended by the SAP solution, and these settings will no longer be activated automatically upon system boot.
-
-.SH REVERT ACTIONS
-.TP
-.B revert all
-Revert all optimisation settings recommended by the SAP solution and/or the Notes, and these settings will no longer be activated automatically upon system boot.
-
-.SH VENDOR SUPPORT
-To support vendor or customer specific tuning values, saptune supports 'drop-in' files residing in \fI/etc/saptune/extra\fR. All files found in \fI/etc/saptune/extra\fR are listed when running '\fBsaptune note list\fR'. All \fBnote options\fR are available for these files.
-.SS
-.RS 0
-Syntax of the file names:
-<NoteID>-<description>
-.br
-e.g. Vendor-Recommended_OS_Settings
-.br
-or   SAP4711-very_aromatic_tunings
-.RE
-.SS
-.RS 0
-Syntax of the file:
-The content of the 'drop-in' file should be written in a INI file style with sections headed by '[section_name]' keywords. See saptune-note(5) to find the supported sections and their available options.
-.PP
-
-.SH "PACKAGE REQUIREMENTS"
-.TP 4
-.BI USERTASKSMAX=infinity
-The file \fB/etc/systemd/logind.conf.d/sap.conf\fP configures a parameter of the systemd login manager. It sets the maximum number of OS tasks each user may run concurrently. The behaviour of the systemd login manager was changed starting SLES12SP2 to prevent fork bomb attacks. So no need to set in SLES12SP1.
-
-The file will be created during package installation, if it does not already exists.
-.br
-Note: A reboot is needed after the first setup to get the change take effect.
-A message will indicate if a reboot is necessary.
-
-There is no rollback. So please remove the file manually, if it is not needed any longer.
-.br
-Note: A reboot is needed after the removal of the file to get the change take effect.
-.PP
-
-.SH FILES
-.PP
-\fI/usr/share/saptune/notes\fR
-.RS 4
-the saptune SAP Note definitions, which can be listed by '\fBsaptune note list\fR'
-
-The files are named with the number of their corresponding SAP Note (==NoteID).
-.br
-A description of the syntax and the available tuning options can be found in saptune-note(5)
-.br
-Please do not change the files located here. You will lose all your changes during a saptune package update.
-.RE
-.PP
-\fI/etc/saptune/extra\fR
-.RS 4
-vendor or customer specific tuning definitions.
-.br
-Please see \fBVENDOR SUPPORT\fR above for more information.
-.RE
-.PP
-\fI/etc/saptune/override\fR
-.RS 4
-the saptune Note definition override location.
-
-If you need to customize the Note definitions found in \fI/usr/share/saptune/notes\fR or \fI/etc/saptune/extra\fR, you can copy them to \fI/etc/saptune/override\fR and modify them as you need. Please stay with the original name of the Note definition (the NoteID) and do \fBNOT\fR rename it.
-
-Or use '\fBsaptune note customize NoteID\fR' to do the job for you.
-
-You can only change the value from already available parameters of the note. But you are not able to add new parameters. If you want to use new parameters to tune the system, please create your own custom Note definition file in \fI/etc/saptune/extra\fR.
-
-The values from the override files will take precedence over the values from \fI/usr/share/saptune/notes\fR or \fI/etc/saptune/extra\fR. In such case you will not lose your customized Notes between saptune or vendor updates.
-.br
-The saptune options 'list', 'verify' and 'simulate' will mark the existence of an override file and the contained values.
-
-When creating an override file for an already applied SAP Note definition, please do a 'revert all' and then apply the Notes again, to get the changes take effect.
-.RE
-.PP
-\fI/usr/share/saptune/solutions\fR
-.RS 4
-this file contains the saptune solution definitions, which can be listed by '\fBsaptune solution list\fR'
-.br
-At the moment saptune supports two architectures - \fIArchX86\fR for the x86 platform and \fIArchPPC64LE\fR for 64-bit PowerPC little endian platform - with different solution definitions.
-
-Please do not change as maintenance updates of package saptune will overwrite this file without preserving any custom changes.
-.RE
-.PP
-\fI/var/lib/saptune/saved_state/\fR
-.RS 4
-saptune was designed to preserve the state of the system before starting the SAP specific tuning, so that it will be possible to restore this previous state of the system, if the SAP specific tuning is no longer needed or should be changed.
-
-This system state is saved during the 'apply' operation of saptune in the saptune internal used files in /var/lib/saptune/saved_state. The content of these files highly depends on the previous state of the system.
-.br
-If the values are applied by saptune, no further monitoring of the system parameters are done, so changes of saptune relevant parameters will not be observed. If a SAP Note or a SAP solution should be reverted, then first the values read from the /var/lib/saptune/saved_state files will be applied to the system to restore the previous system state and then the corresponding save_state file will be removed.
-
-Please do not change or remove files in this directory. The knowledge about the previous system state gets lost and the revert functionality of saptune will be destructed. So you will lose the capability to revert back the tunings saptune has done.
-.RE
-
-.SH NOTE
-When the values from the saptune Note definitions are applied to the system, no further monitoring of the system parameters are done. So changes of saptune relevant parameters by using the 'sysctl' command or by editing configuration files will not be observed. If the values set by saptune should be reverted, these unrecognized changed settings will be overwritten by the previous saved system settings from saptune.
-
-.SH ATTENTION
-Higher or lower system values set by the system, the SAP installer or by the administrator using sysctl command or sysctl configuration files will be now \fBoverwritten\fR by saptune, if they are part of the applied Note definitions.
-
-saptune now sets the values read from the Note definition files irrespective of already set higher system values. If you need other tuning values as defined in the Note definition files, please use the possibility to create \fBoverride\fR files, which contain the values you need.
+Our new improved saptune version 2 and the new configuration possibilities and syntax are described in saptuen_v2(8).
 
 .SH SEE ALSO
 .NF
-saptune-note(5) tuned(8) tuned-adm(8)
+saptune-note(5) saptune-migrate(5) saptune_v1(8) saptune_v2(8) tuned(8) tuned-adm(8)
 
 .SH AUTHOR
 .NF

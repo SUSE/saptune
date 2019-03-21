@@ -1,8 +1,8 @@
 # 2382421 - Optimizing the Network Configuration on HANA- and OS-Level
-# Version 24 from 10.09.2018 in English
+# Version 27 from 30.11.2018 in English
 
 [version]
-# SAP-NOTE=2382421 CATEGORY=HANA VERSION=24 DATE=10.09.2018 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
+# SAP-NOTE=2382421 CATEGORY=HANA VERSION=27 DATE=30.11.2018 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
 
 [sysctl]
 # This parameter limits the size of the accept backlog of a listening socket.
@@ -62,8 +62,16 @@ net.ipv4.tcp_timestamps = 1
 #
 net.ipv4.tcp_slow_start_after_idle = 0
 
-# On SAP HANA 1.0 database Revisions <= 122.14 and on all SAP HANA 2.0 database
-# Revisions of SPS00:
+# net.ipv4.tcp_window_scaling
+# This setting enables the TCP window scaling.
+# On most systems it already should be active. Moreover, it is a prerequisite
+# for net.ipv4.tcp_wmem and net.ipv4.tcp_rmem.
+#
+net.ipv4.tcp_window_scaling = 1
+
+# On SAP HANA 1.0 Revisions <= 122.14 and on all SAP HANA 2.0 Revisions
+# of SPS00 you additionally need to set the following parameter:
+# net.ipv4.tcp_syn_retries
 # The default value for this parameter is 5, which translates to a timeout of
 # about 24 seconds.
 # If the system is under load, a timeout of 24 seconds can be too short and
@@ -107,18 +115,24 @@ net.ipv4.tcp_syn_retries = 8
 # Both, tcp_wmem and tcp_rmem, are specified as three values separated by
 # blanks: minimum, default and maximum buffer size.
 # Preconditions for these settings to take effect are:
-#
-# net.core.wmem_max and net.core.rmem_max must not be lower than the respective
-# maximum value.
-# TCP window scaling has been enabled by setting net.ipv4.tcp_window_scaling = 1
+# * net.core.wmem_max and net.core.rmem_max must not be lower than the
+#   respective maximum value.
+# * TCP window scaling has been enabled by setting net.ipv4.tcp_window_scaling=1
 #
 #   Example:
 #   net.ipv4.tcp_wmem = 4096 16384 4194304
 #
-# In this example, the current maximum is 4 MB. Given a 10 GBit/s connection
-# with a latency of 1 ms, the required maximum would be
-# 10 GBit/s * 1ms = 1.25 Mbytes, therefore the current setting is fine.
-# If you want to saturate a 1 Gbit/s connection with a latency of 100 ms, the
-# required maximum is 1 GBit/s * 100 ms = 12.5 Mbyte, so in this case the
-# setting should be adjusted to at least 12.5 MByte.
-# The minimum and the default buffer size do not need to be adjusted.
+#   In this example, the current maximum is 4 MB. Given a 10 GBit/s connection
+#   with a latency of 1 ms, the required maximum would be
+#   10 GBit/s * 1ms = 1.25 Mbytes, therefore the current setting is fine.
+#   If you want to saturate a 1 Gbit/s connection with a latency of 100 ms, the
+#   required maximum is 1 GBit/s * 100 ms = 12.5 Mbyte, so in this case the
+#   setting should be adjusted to at least 12.5 MByte.
+#   The minimum and the default buffer size do not need to be adjusted.
+#
+# net.core.wmem_max and net.core.rmem_max
+# These settings define the maximum socket send and receive buffer size.
+# To ensure complete functionality it must be ensured that the wmem_max and
+# rmem_max values are at least the same as the respective maximum value of the
+# parameters net.ipv4.tcp_wmem and net.ipv4.tcp_rmem.
+#

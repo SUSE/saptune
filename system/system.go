@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
+	"strings"
 )
 
 // IsUserRoot return true only if the current user is root.
@@ -48,4 +49,18 @@ func GetOsName() string {
 		return ""
 	}
 	return matches[1]
+}
+
+// CheckForPattern returns true, if the file is available and
+// contains the expected string
+func CheckForPattern(file, pattern string) bool {
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		return false
+	}
+	content, err := ioutil.ReadFile(file)
+	if err != nil {
+		return false
+	}
+	//check whether content contains substring pattern
+	return strings.Contains(string(content), pattern)
 }
