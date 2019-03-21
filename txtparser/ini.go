@@ -41,7 +41,7 @@ type INIFile struct {
 
 // GetINIFileDescriptiveName return the descriptive name of the Note
 func GetINIFileDescriptiveName(fileName string) string {
-	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=(.*)\s*NAME="([^"]*)"`)
+	var re = regexp.MustCompile(`# .*NOTE=.*VERSION=(\d*)\s*DATE=(.*)\s*NAME="([^"]*)"`)
 	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
