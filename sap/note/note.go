@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"log"
 	"os"
 	"path"
@@ -79,15 +80,29 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			log.Println("For more information refer to the man page saptune-migrate(5)")
 			continue
 		}
-		// By convention, the portion before dash makes up the ID.
-		idName := strings.SplitN(fileName, "-", 2)
-		if len(idName) != 2 {
-			log.Printf("GetTuningOptions: skip bad file name \"%s\"", fileName)
-			continue
+		id := ""
+		// get the description of the note from the header inside the file
+		name := txtparser.GetINIFileDescriptiveName(path.Join(thirdPartyTuningDir, fileName))
+		if name == "" {
+			// no header found in the vendor file
+			// fall back to the old style vendor file names
+			// support of old style vendor file names for compatibility reasons
+			log.Printf("GetTuningOptions: no header information found in file \"%s\"", fileName)
+			log.Println("falling back to old style vendor file names")
+			// By convention, the portion before dash makes up the ID.
+			idName := strings.SplitN(fileName, "-", 2)
+			if len(idName) != 2 {
+				log.Printf("GetTuningOptions: skip bad file name \"%s\"", fileName)
+				continue
+			}
+			id = idName[0]
+			// Just for the cosmetics, remove suffix .conf from description
+			name = strings.TrimSuffix(idName[1], ".conf")
+		} else {
+			// description found in header of the file
+			// let name empty, to get the right information during 'note list'
+			id = strings.TrimSuffix(fileName, ".conf")
 		}
-		id := idName[0]
-		// Just for the cosmetics, remove suffix .conf from description
-		name := strings.TrimSuffix(idName[1], ".conf")
 		// Do not allow vendor to override built-in
 		if _, exists := ret[id]; exists {
 			log.Printf("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
