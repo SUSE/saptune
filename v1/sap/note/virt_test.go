@@ -1,28 +1,14 @@
 package note
 
 import (
+	"github.com/SUSE/saptune/v1/system"
 	"testing"
 )
 
-func TestAfterInstallation(t *testing.T) {
-	inst := AfterInstallation{}
-	if inst.Name() == "" {
-		t.Fatal(inst.Name())
-	}
-	initInst, err := inst.Initialise()
-	if err != nil {
-		t.Fatal(err)
-	}
-	optimised, err := initInst.(AfterInstallation).Optimise()
-	if !optimised.(AfterInstallation).UuiddSocketStatus {
-		t.Fatal(optimised)
-	}
-	if !optimised.(AfterInstallation).LogindConfigured {
-		t.Fatal(optimised)
-	}
-}
-
 func TestVmwareGuestIOElevator(t *testing.T) {
+	if !system.IsUserRoot() {
+		t.Skip("the test requires root access")
+	}
 	ioel, err := VmwareGuestIOElevator{}.Initialise()
 	if ioel.Name() == "" {
 		t.Fatal(ioel.Name())

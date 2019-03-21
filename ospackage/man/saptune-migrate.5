@@ -1,0 +1,76 @@
+.\"/*
+.\" * Copyright (c) 2017-2019 SUSE LLC.
+.\" * All rights reserved
+.\" * Authors: Sören Schmidt, Angela Briel
+.\" *
+.\" * This program is free software; you can redistribute it and/or
+.\" * modify it under the terms of the GNU General Public License
+.\" * as published by the Free Software Foundation; either version 2
+.\" * of the License, or (at your option) any later version.
+.\" *
+.\" * This program is distributed in the hope that it will be useful,
+.\" * but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" * GNU General Public License for more details.
+.\" */
+.\"
+
+.TH "saptune-migrate" "5" "March 2019" "" "migration from saptune version 1 to saptune version 2"
+.SH NAME
+saptune\-migration \- migration of saptune version 1 to saptune version 2
+
+\fBfirst DRAFT\fP
+
+.SH DESCRIPTION
+As there are too many logical and structural changes between the saptune versions 1 and 2 and as the tuning of a system running SAP workloads is to important to do it wrong or change it during an package update or a system reboot, you need to manually migrate your saptune configuration from version 1 to version 2.
+
+see below the needed steps. And refer to the blog post <add here the link> for more information.
+
+.SH ACTIONS 
+The following steps need to perform during a migration from a running and configured saptune version 1 to saptune version 2
+
+.IP \[bu]
+check the old, in the future no longer used configuration files \fI/etc/sysconfig/saptune-note-*\fR for customer specific changes
+
+.IP \[bu]
+check the new note configuration files in \fB/usr/share/saptune/\fR to see if there is a need to transfer the old customization to the new note definitions and how to do this transition
+.IP \[bu]
+Create override files for notes in \fB/etc/saptune/override\fR if needed
+.IP \[bu]
+check for \fI/etc/tuned/saptune/tuned.conf\fR.
+.IP \[bu]
+check \fB/etc/saptune/extras\fR, if the settings needed any longer
+.IP \[bu]
+use the command '\fIsaptune note revert <note id>\fR' or '\fIsaptune solution revert <solution name>\fR' to revert all setting properly and to clean the configuration
+.IP \[bu]
+check and remove all files listed in the section "FILES to remove after the migration"
+.IP \[bu]
+change saptune version in file \fI/etc/sysconfig/saptune\fR from '1' to '\fB2\fR'
+.IP \[bu]
+use the command '\fIsaptune solution apply <solution name>\fR' and/or '\fIsaptune note apply <note id>\fR' to get back you tuning for the SAP workload
+.IP \[bu]
+check again the configuration for left overs
+
+.SH FILES to remove after the migration
+
+The package update from version 1 to version 2 creates or copies some files during post install to allows this smooth migration. But after finishing the migration these files should be removed manually.
+
+.BI /etc/saptune/extra/SAP_BOBJ-SAP_Business_OBJects.conf
+.PP
+.BI /etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf
+.PP
+.BI /etc/tuned/saptune/tuned.conf 
+and the directory
+.BI /etc/tuned/saptune
+.PP
+.BI /var/lib/saptune/saved_state/*_n2c
+.PP
+.BI /etc/sysconfig/saptune-note-*
+
+.SH SEE ALSO
+.NF
+saptune-note(5) saptune(8) saptune_v1(8) saptune_v2(8) tuned(8) tuned-adm(8)
+
+.SH AUTHOR
+.NF
+Soeren Schmidt <soeren.schmidt@suse.com>, Angela Briel <abriel@suse.com>
