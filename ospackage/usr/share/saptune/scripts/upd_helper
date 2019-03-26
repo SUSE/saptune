@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+
+# saptune update helper script
+# upd_helper is called by post script of saptune package installation to
+# update the SAP Note name changes between SLE12 and SLE15 in the
+# configuration files, saved state files or in the name of the configuration
+# files
+# only called in postinstallation, if it is a package update
+# NOT called, if it is an initial package installation
+
+SAPTUNE_SYSCONFIG=/etc/sysconfig/saptune
+
+OVERRIDEDIR=/etc/saptune/override
+SAVEDSTATEDIR=/var/lib/saptune/saved_state
+PARAMETERSTATEDIR=/var/lib/saptune/parameter
+
+NOTEDIR=/usr/share/saptune/notes
+NOTES2CHANGE_12to15="1984787,2578899 2205917,2684254"
+NOTES2DELETE_15="1557506"
+
+OIFS=$IFS
+for notepair in $NOTES2CHANGE_12to15; do
+    IFS=","
+    # shellcheck disable=SC2086
+    set -- $notepair
+    oldNote=$1
+    newNote=$2
+    IFS=$OIFS
+    if [ ! -f ${NOTEDIR}/"${oldNote}" ] && [ -f ${NOTEDIR}/"${newNote}" ]; then
+        # the old note definition name is NOT available, but the new one
+        # so update from SLE12 to SLE15
+        # change config
+
+        # 1. change variable TUNE_FOR_NOTES and NOTE_APPLY_ORDER in /etc/sysconfig/saptune
+        # " ${oldNote} " or " ${oldNote}\"" or "\"${oldNote}\""
+        # srch_pat="[ \"]${oldNote}[ \"]"
+        srch_pat1="[ ]${oldNote}[ ]"
+        new_pat1=" ${newNote} "
+        if grep "$srch_pat1" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
+            echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
+            sed -i "s/$srch_pat1/$new_pat1/g" $SAPTUNE_SYSCONFIG
+        fi
+        srch_pat2=" ${oldNote}\""
+        new_pat2=" ${newNote}\""
+        if grep "$srch_pat2" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
+            echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
+            sed -i "s/$srch_pat2/$new_pat2/g" $SAPTUNE_SYSCONFIG
+        fi
+        srch_pat3="\"${oldNote}\""
+        new_pat3="\"${newNote}\""
+        if grep "$srch_pat3" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
+            echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
+            sed -i "s/$srch_pat3/$new_pat3/g" $SAPTUNE_SYSCONFIG
+        fi
+
+        # 2. check existence of override file and change name
+        if [ -f ${OVERRIDEDIR}/"$oldNote" ]; then
+            echo "### mv old override filename '${OVERRIDEDIR}/$oldNote' to new filename '${OVERRIDEDIR}/$newNote'"
+            echo "WARNING: the header information in section [version] will NOT be adapted. So it will show the old SAP Note name and the related information"
+            mv ${OVERRIDEDIR}/"$oldNote" ${OVERRIDEDIR}/"$newNote"
+        fi
+
+        # 3. check existence of saved_state file and change name
+        if [ -f ${SAVEDSTATEDIR}/"$oldNote" ]; then
+            echo "### mv old saved state file to the new name"
+            mv ${SAVEDSTATEDIR}/"$oldNote" ${SAVEDSTATEDIR}/"$newNote"
+        fi
+
+        # 4. check, if old note name is available in any parameter saved state file
+        srch_pat="\"${oldNote}\""
+        new_pat="\"${newNote}\""
+        if grep "$srch_pat" "${PARAMETERSTATEDIR}"/* >/dev/null 2>&1; then
+            echo "### changing the parameter saved state files"
+        fi
+        for pfile in "${PARAMETERSTATEDIR}"/*; do
+            if grep "$srch_pat" "$pfile" >/dev/null 2>&1; then
+                sed -i "s/$srch_pat/$new_pat/g" "$pfile"
+            fi
+        done
+    #else
+        # if both note files are available - not possible, rpm should cover
+        # if both note files NOT available - not possible, rpm should cover
+        # if oldNote is available, but newNote not
+        #    still on SLE12, no update from 12 to 15, so nothing to do
+    fi
+done
+
+for delnote in $NOTES2DELETE_15; do
+    if [ ! -f ${NOTEDIR}/"${delnote}" ]; then
+        # 1. delete Note from variable TUNE_FOR_NOTES and NOTE_APPLY_ORDER in /etc/sysconfig/saptune
+        # " ${delnote} " or " ${delnote}\"" or "\"${delnote}\""
+        # srch_pat="[ \"]${delnote}[ \"]"
+        srch_pat1="[ ]${delnote}[ ]"
+        del_pat1=" "
+        if grep "$srch_pat1" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
+            echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
+            sed -i "s/$srch_pat1/$del_pat1/g" $SAPTUNE_SYSCONFIG
+        fi
+        srch_pat2=" ${delnote}\""
+        del_pat2="\""
+        if grep "$srch_pat2" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
+            echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
+            sed -i "s/$srch_pat2/$del_pat2/g" $SAPTUNE_SYSCONFIG
+        fi
+        srch_pat3="\"${delnote}\""
+        del_pat3="\"\""
+        if grep "$srch_pat3" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
+            echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
+            sed -i "s/$srch_pat3/$del_pat3/g" $SAPTUNE_SYSCONFIG
+        fi
+
+        # 2. check existence of override file and print a WARNING
+        if [ -f ${OVERRIDEDIR}/"$delnote" ]; then
+            echo "WARNING: override file '${OVERRIDEDIR}/$delnote' exists, but Note definition is no longer supported."
+            echo "Please check and remove superfluous file"
+        fi
+
+        # 3. check existence of saved_state file and remove file
+        # normally shouldn't be available
+        if [ -f ${SAVEDSTATEDIR}/"$oldNote" ]; then
+            echo "WARNING: old saved state file '${SAVEDSTATEDIR}/$delnote' found, removing superfluous file."
+            rm ${SAVEDSTATEDIR}/"$delnote"
+        fi
+    fi
+done
+
