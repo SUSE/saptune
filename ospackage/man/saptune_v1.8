@@ -1,6 +1,6 @@
 .\"/*
 .\" * All rights reserved
-.\" * Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
+.\" * Copyright (c) 2017-2019 SUSE LINUX GmbH, Nuernberg, Germany.
 .\" * Authors: Howard Guo
 .\" *
 .\" * This program is free software; you can redistribute it and/or
@@ -14,9 +14,9 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "May 2017" "" "System Optimisation For SAP"
+.TH saptune_v1 "8" "March 2019" "" "System Optimisation For SAP"
 .SH NAME
-saptune \- Comprehensive system optimisation management for SAP solutions
+saptune \- Comprehensive system optimisation management for SAP solutions (Version 1)
 
 .SH SYNOPSIS
 \fBsaptune daemon\fP
@@ -35,6 +35,8 @@ saptune \- Comprehensive system optimisation management for SAP solutions
 [ apply | simulate | verify | revert ] SolutionName
 
 .SH DESCRIPTION
+\fBThis is verson 1 of saptune which is deprecated. Please migrate to saptune version 2. Refere to saptune-migrate(7) for more information\fR
+
 saptune is a utility program that optimises your system according to recommendations/best practice guides written by SAP and SUSE.
 
 saptune fully integrates with tuned(8), the tuned-profile name associated with this utility is "saptune".
@@ -118,7 +120,7 @@ Revert optimisation settings recommended by the SAP solution, and these settings
 
 .SH SEE ALSO
 .NF
-tuned(8) tuned-adm(8)
+saptune-note(5) saptune-migrate(7) saptune(8) saptune_v2(8) tuned(8) tuned-adm(8)
 
 .SH AUTHOR
 .NF

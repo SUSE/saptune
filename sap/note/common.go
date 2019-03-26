@@ -2,10 +2,10 @@ package note
 
 import (
 	"fmt"
-	"github.com/SUSE/saptune/sap"
-	"github.com/SUSE/saptune/sap/param"
-	"github.com/SUSE/saptune/system"
-	"github.com/SUSE/saptune/txtparser"
+	"github.com/SUSE/saptune_v1/sap"
+	"github.com/SUSE/saptune_v1/sap/param"
+	"github.com/SUSE/saptune_v1/system"
+	"github.com/SUSE/saptune_v1/txtparser"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,7 +35,7 @@ type PrepareForSAPEnvironments struct {
 }
 
 func (prepare PrepareForSAPEnvironments) Name() string {
-	return "Linux: Preparing SLES for SAP environments"
+	return "Linux: Preparing SLES for SAP environments (SAP note updated - saptune version 1 does not match anymore. Migrate to saptune version 2 instead)"
 }
 func (prepare PrepareForSAPEnvironments) Initialise() (Note, error) {
 	newPrepare := prepare

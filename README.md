@@ -1,5 +1,5 @@
 
-[![Build Status](https://travis-ci.org/SUSE/saptune.svg?branch=master)](https://travis-ci.org/SUSE/saptune)
+[![Build Status](https://travis-ci.org/SUSE/saptune.svg?branch=v1_1)](https://travis-ci.org/SUSE/saptune)
 
 # saptune
 The utility adjusts system parameters such as kernel parameters and resource limits

@@ -2,13 +2,13 @@ package note
 
 import (
 	"encoding/json"
-	"github.com/SUSE/saptune/sap/param"
+	"github.com/SUSE/saptune_v1/sap/param"
 	"os"
 	"path"
 	"testing"
 )
 
-var OSPackageInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/")
+var OSPackageInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune_v1/ospackage/")
 
 func jsonMarshalAndBack(original interface{}, receiver interface{}, t *testing.T) {
 	serialised, err := json.Marshal(original)

@@ -1,7 +1,7 @@
 package param
 
 import (
-	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune_v1/system"
 	"testing"
 )
 
