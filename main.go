@@ -248,6 +248,9 @@ func DaemonAction(actionName string) {
 		}
 	case "stop":
 		fmt.Println("Stopping daemon (tuned.service), this may take several seconds...")
+		if err := system.TunedAdmOff(); err != nil {
+			errorExit("%v", err)
+		}
 		if err := system.SystemctlDisableStop(TunedService); err != nil {
 			errorExit("%v", err)
 		}
