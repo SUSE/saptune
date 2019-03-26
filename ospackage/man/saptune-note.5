@@ -1,5 +1,5 @@
 .\"/* 
-.\" * Copyright (c) 2018 SUSE LLC.
+.\" * Copyright (c) 2018-2019 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Angela Briel
 .\" *
@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "November 2018" "" "saptune note file format description"
+.TH "saptune-note" "5" "March 2019" "" "saptune note file format description"
 .SH NAME
 saptune\-note - saptune note definition files
 .SH DESCRIPTION
@@ -33,9 +33,11 @@ A section starts with a '[section_name]' keyword in the first line, followed by 
 
 The following section definitions are available and used in the saptune SAP Note definition files. Each of these sections can be used in a vendor or customer specific tuning definition placed in \fI/etc/saptune/extra\fR.
 .SH "[version]"
-This section is used to display version and last change date of the underlying SAP Note during saptune option 'list'.
+This section is used to display version, description and last change date of the underlying Note during saptune option 'list'.
 .br
-This section will not be utilized for vendor or customer specific Note definition files in \fI/etc/saptune/extra\fR or for override files in \fI/etc/saptune/override\fR.
+Syntax:
+# <prefix>-NOTE=<noteId> CATEGORY=<category> VERSION=<versionNo> DATE=<release date of used note and related values> NAME="<description of the note>"
+
 .SH "[sysctl]"
 The section "[sysctl]" can be used to modify kernel parameters. The parameters available are those listed under /proc/sys/. 
 .br
@@ -254,4 +256,5 @@ However, the value can be overriden if you set this parameter to the desired lim
 To remove the override, set the parameter to empty string.
 .SH "SEE ALSO"
 .LP
-saptune(8)
+saptune-migrate(7) saptune(8) saptune_v1(8) saptune_v2(8) tuned(8) tuned-adm(8)
+

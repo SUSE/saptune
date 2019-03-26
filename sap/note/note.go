@@ -77,7 +77,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		// the migration of saptune version 1 to saptune version 2
 		if fileName == "SAP_BOBJ-SAP_Business_OBJects.conf" || fileName == "SAP_ASE-SAP_Adaptive_Server_Enterprise.conf" {
 			log.Printf("GetTuningOptions: skip old note definition \"%s\" from saptune version 1.", fileName)
-			log.Println("For more information refer to the man page saptune-migrate(5)")
+			log.Println("For more information refer to the man page saptune-migrate(7)")
 			continue
 		}
 		id := ""

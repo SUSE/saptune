@@ -50,7 +50,11 @@ Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
   saptune solution [ apply | simulate | verify | revert ] SolutionName
 Revert all parameters tuned by the SAP notes or solutions:
-  saptune revert all`)
+  saptune revert all
+Print current saptune version:
+  saptune version
+Print this message:
+  saptune help`)
 	os.Exit(exitStatus)
 }
 
@@ -157,22 +161,22 @@ func checkUpdateLeftOvers() {
 	if system.CheckForPattern("/etc/tuned/saptune/tuned.conf", "#stv1tov2#") {
 		log.Println("WARNING: found file '/etc/tuned/saptune/tuned.conf' left over from the migration of saptune version 1 to saptune version 2.")
 		log.Println("         Please check and remove this file as it may work against the settings of some SAP Notes")
-		log.Println("         For more information refer to the man page saptune-migrate(5)")
+		log.Println("         For more information refer to the man page saptune-migrate(7)")
 	}
 
 	// check for saved state information in an older, no longer supported
 	// saptune format
 	leftOver, check := tuneApp.State.CheckForOldRevertData()
 	if check {
-		errorExit("found old saved state files '%s' related to applied notes.\nSeems there were some steps missed during the migration from saptune version 1 to version 2.\nPlease check. Refer to saptune-migrate(5) for more information", strings.Join(leftOver, ", "))
+		errorExit("found old saved state files '%s' related to applied notes.\nSeems there were some steps missed during the migration from saptune version 1 to version 2.\nPlease check. Refer to saptune-migrate(7) for more information", strings.Join(leftOver, ", "))
 	} else if len(leftOver) != 0 {
 		log.Printf("WARNING: found old saved state files '%s', but unrelated to applied notes.", strings.Join(leftOver, ", "))
 		log.Println("         Seems there are some files left over from the migration of saptune version 1 to saptune version 2.")
 		log.Println("         Please check and remove these files")
-		log.Println("         For more information refer to the man page saptune-migrate(5)")
+		log.Println("         For more information refer to the man page saptune-migrate(7)")
 	}
 	if len(tuneApp.NoteApplyOrder) == 0 && (len(tuneApp.TuneForNotes) != 0 || len(tuneApp.TuneForSolutions) != 0) {
-		errorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'.\nSeems there were some steps missed during the migration from saptune version 1 to version 2.\nPlease check. Refer to saptune-migrate(5) for more information")
+		errorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'.\nSeems there were some steps missed during the migration from saptune version 1 to version 2.\nPlease check. Refer to saptune-migrate(7) for more information")
 	}
 }
 
