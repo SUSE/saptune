@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"log"
 	"os"
 	"path"
@@ -50,21 +51,7 @@ func Note2Convert(noteID string) string {
 // GetTuningOptions returns all built-in tunable SAP notes together with those
 // defined by 3rd party vendors.
 func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOptions {
-	ret := TuningOptions{
-		// compatibility with older saptune versions.
-		// Needed for 'revert' only
-		"1275776_n2c":       PrepareForSAPEnvironments{},
-		"1984787_n2c":       AfterInstallation{},
-		"2205917_n2c":       HANARecommendedOSSettings{},
-		"2161991_n2c":       VmwareGuestIOElevator{},
-		"SUSE-GUIDE-01_n2c": SUSESysOptimisation{},
-		"SUSE-GUIDE-02_n2c": SUSENetCPUOptimisation{},
-		"SAP_ASE_n2c":       CMPTSettings{},
-		"SAP_BOBJ_n2c":      CMPTSettings{},
-	}
-	if system.IsPagecacheAvailable() {
-		ret["1557506_n2c"] = LinuxPagingImprovements{}
-	}
+	ret := TuningOptions{}
 	// Collect those defined by saptune
 	_, files, err := system.ListDir(saptuneTuningDir)
 	if err != nil {
@@ -86,15 +73,36 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		log.Printf("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
 	}
 	for _, fileName := range files {
-		// By convention, the portion before dash makes up the ID.
-		idName := strings.SplitN(fileName, "-", 2)
-		if len(idName) != 2 {
-			log.Printf("GetTuningOptions: skip bad file name \"%s\"", fileName)
+		// ignore left over files (BOBJ and ASE definition files) from
+		// the migration of saptune version 1 to saptune version 2
+		if fileName == "SAP_BOBJ-SAP_Business_OBJects.conf" || fileName == "SAP_ASE-SAP_Adaptive_Server_Enterprise.conf" {
+			log.Printf("GetTuningOptions: skip old note definition \"%s\" from saptune version 1.", fileName)
+			log.Println("For more information refer to the man page saptune-migrate(5)")
 			continue
 		}
-		id := idName[0]
-		// Just for the cosmetics, remove suffix .conf from description
-		name := strings.TrimSuffix(idName[1], ".conf")
+		id := ""
+		// get the description of the note from the header inside the file
+		name := txtparser.GetINIFileDescriptiveName(path.Join(thirdPartyTuningDir, fileName))
+		if name == "" {
+			// no header found in the vendor file
+			// fall back to the old style vendor file names
+			// support of old style vendor file names for compatibility reasons
+			log.Printf("GetTuningOptions: no header information found in file \"%s\"", fileName)
+			log.Println("falling back to old style vendor file names")
+			// By convention, the portion before dash makes up the ID.
+			idName := strings.SplitN(fileName, "-", 2)
+			if len(idName) != 2 {
+				log.Printf("GetTuningOptions: skip bad file name \"%s\"", fileName)
+				continue
+			}
+			id = idName[0]
+			// Just for the cosmetics, remove suffix .conf from description
+			name = strings.TrimSuffix(idName[1], ".conf")
+		} else {
+			// description found in header of the file
+			// let name empty, to get the right information during 'note list'
+			id = strings.TrimSuffix(fileName, ".conf")
+		}
 		// Do not allow vendor to override built-in
 		if _, exists := ret[id]; exists {
 			log.Printf("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
@@ -104,10 +112,6 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			ConfFilePath:    path.Join(thirdPartyTuningDir, fileName),
 			ID:              id,
 			DescriptiveName: name,
-		}
-		n2rev := Note2Convert(id)
-		if n2rev != id {
-			ret[n2rev] = CMPTSettings{}
 		}
 	}
 	return ret

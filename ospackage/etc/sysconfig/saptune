@@ -26,3 +26,9 @@ TUNE_FOR_NOTES=""
 # order
 # The value is a list of note numbers, separated by spaces.
 NOTE_APPLY_ORDER=""
+
+## Type:    string
+## Default: "2"
+#
+# Version of saptune
+SAPTUNE_VERSION="2"
