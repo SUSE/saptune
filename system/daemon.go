@@ -95,6 +95,14 @@ func GetTunedProfile() string {
 	return strings.TrimSpace(string(content))
 }
 
+// TunedAdmOff calls tuned-adm to switch off the active profile.
+func TunedAdmOff() error {
+	if out, err := exec.Command("tuned-adm", "off").CombinedOutput(); err != nil {
+		return fmt.Errorf("Failed to call tuned-adm to switch off the active profile - %v %s", err, string(out))
+	}
+	return nil
+}
+
 // TunedAdmProfile calls tuned-adm to switch to the specified profile.
 // newer versions of tuned seems to be reliable with this command and they
 // changed the behaviour/handling of the file /etc/tuned/active_profile
