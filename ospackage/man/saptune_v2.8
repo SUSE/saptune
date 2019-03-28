@@ -37,6 +37,10 @@ saptune \- Comprehensive system optimisation management for SAP solutions (Versi
 \fBsaptune revert\fP
 all
 
+\fBsaptune version\fP
+
+\fBsaptune help\fP
+
 .SH DESCRIPTION
 saptune is designed to automate the configuration recommendations from SAP and SUSE to run an SAP application on SLES for SAP. These configuration recommendations normally referred to as SAP Notes. So some dedicated SAP Notes are the base for the work of saptune. Additional some best practice guides are added as Note definitions to optimise the system for some really special cases.
 
@@ -161,11 +165,31 @@ Revert optimisation settings recommended by the SAP solution, and these settings
 .B revert all
 Revert all optimisation settings recommended by the SAP solution and/or the Notes, and these settings will no longer be activated automatically upon system boot.
 
+.SH VERSION ACTIONS
+.TP
+.B version
+Will display the currently active saptune version.
+
+.SH HELP ACTIONS
+.TP
+.B help
+Will display the syntax of saptune
+
 .SH VENDOR SUPPORT
 To support vendor or customer specific tuning values, saptune supports 'drop-in' files residing in \fI/etc/saptune/extra\fR. All files found in \fI/etc/saptune/extra\fR are listed when running '\fBsaptune note list\fR'. All \fBnote options\fR are available for these files.
+
+We simplify the file name syntax for these vendor files. But the old file names still valid and supported.
+.br
+Related to this we add 'header' support (see description of section [version] in saptune-note(5)) for the vendor files as already available for the note definition files in /usr/share/saptune/notes to get a proper description during saptune option 'list'
+
 .SS
 .RS 0
 Syntax of the file names:
+<NoteID>.conf
+.br
+e.g. V4711.conf
+
+old syntax of the file names:
 <NoteID>-<description>
 .br
 e.g. Vendor-Recommended_OS_Settings
@@ -260,7 +284,7 @@ saptune now sets the values read from the Note definition files irrespective of 
 
 .SH SEE ALSO
 .NF
-saptune-note(5) saptune(8) tuned(8) tuned-adm(8)
+saptune-note(5) saptune-migrate(7) saptune(8) saptune_v1(8) tuned(8) tuned-adm(8)
 
 .SH AUTHOR
 .NF
