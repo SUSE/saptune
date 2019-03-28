@@ -1,10 +1,10 @@
 package note
 
 import (
-	"github.com/SUSE/saptune_v1/sap"
-	"github.com/SUSE/saptune_v1/sap/param"
-	"github.com/SUSE/saptune_v1/system"
-	"github.com/SUSE/saptune_v1/txtparser"
+	"github.com/SUSE/saptune/sap"
+	"github.com/SUSE/saptune/sap/param"
+	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"path"
 )
 

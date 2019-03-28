@@ -1,7 +1,7 @@
 package note
 
 import (
-	"github.com/SUSE/saptune_v1/system"
+	"github.com/SUSE/saptune/system"
 	"os"
 	"path"
 	"testing"

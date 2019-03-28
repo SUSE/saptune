@@ -2,9 +2,9 @@ package app
 
 import (
 	"fmt"
-	"github.com/SUSE/saptune_v1/sap/note"
-	"github.com/SUSE/saptune_v1/sap/param"
-	"github.com/SUSE/saptune_v1/sap/solution"
+	"github.com/SUSE/saptune/sap/note"
+	"github.com/SUSE/saptune/sap/param"
+	"github.com/SUSE/saptune/sap/solution"
 	"io/ioutil"
 	"os"
 	"path"
@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-var OSPackageInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune_v1/ospackage/")
+var OSPackageInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/")
 var SampleNoteDataDir = "/tmp/saptunetest"
 var SampleParamFile = path.Join(SampleNoteDataDir, "saptune-sample-param")
 

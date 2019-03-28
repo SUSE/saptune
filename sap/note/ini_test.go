@@ -1,7 +1,7 @@
 package note
 
 import (
-	"github.com/SUSE/saptune_v1/txtparser"
+	"github.com/SUSE/saptune/txtparser"
 	"os"
 	"path"
 	"strconv"
@@ -41,7 +41,7 @@ func TestCalculateOptimumValue(t *testing.T) {
 }
 
 func TestVendorSettings(t *testing.T) {
-	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune_v1/sap/note/ini_test.ini")
+	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/sap/note/ini_test.ini")
 	ini := INISettings{ConfFilePath: iniPath}
 
 	initialised, err := ini.Initialise()

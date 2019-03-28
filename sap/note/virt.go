@@ -1,7 +1,7 @@
 package note
 
 import (
-	"github.com/SUSE/saptune_v1/sap/param"
+	"github.com/SUSE/saptune/sap/param"
 )
 
 // 2161991 - VMware vSphere (guest) configuration guidelines

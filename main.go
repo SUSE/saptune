@@ -2,10 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/SUSE/saptune_v1/app"
-	"github.com/SUSE/saptune_v1/sap/note"
-	"github.com/SUSE/saptune_v1/sap/solution"
-	"github.com/SUSE/saptune_v1/system"
+	"github.com/SUSE/saptune/app"
+	"github.com/SUSE/saptune/sap/note"
+	"github.com/SUSE/saptune/sap/solution"
+	"github.com/SUSE/saptune/system"
 	"io"
 	"log"
 	"os"
