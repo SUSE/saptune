@@ -420,13 +420,13 @@ func TestGetLoginVal(t *testing.T) {
 	}
 
 	val, err = GetLoginVal("UserTasksMax")
-	if _, errno := os.Stat("/etc/systemd/logind.conf.d/sap.conf"); errno != nil {
+	if _, errno := os.Stat("/etc/systemd/logind.conf.d/saptune-UserTasksMax.conf"); errno != nil {
 		if !os.IsNotExist(errno) {
 			if val != "" || err == nil {
 				t.Fatal(val)
 			}
 		} else {
-			if val != "" || err != nil {
+			if val != "NA" || err != nil {
 				t.Fatal(val)
 			}
 		}

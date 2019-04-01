@@ -5,6 +5,17 @@
 [version]
 # SAP-NOTE=2205917 CATEGORY=HANA VERSION=42 DATE=02.03.2018 NAME="SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12"
 
+[login]
+# /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf UserTasksMax setting
+# This file configures a parameter of the systemd login manager
+# It sets the maximum number of OS tasks each user may run concurrently
+# The behaviour of the systemd login manager was changed starting SLES12SP2
+# to prevent fork bomb attacks.
+# The value for UserTasksMax will be set to 'infinity'
+# With this setting your system is vulnerable to fork bomb attacks
+#
+UserTasksMax=infinity
+
 [vm]
 # Disable transparent hugepages (THP, applies to Intel-based systems only)
 # changes /sys/kernel/mm/transparent_hugepage/enabled
@@ -110,7 +121,3 @@ transparent_hugepage=never
 
 [reminder]
 # IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not supported by saptune!
-
-# /etc/systemd/logind.conf.d/sap.conf UserTasksMax setting
-# UserTasksMax=infinity
-# - done during post install of package installation

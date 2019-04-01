@@ -270,3 +270,14 @@ func CleanUpParamFile(param string) {
 		os.Remove(remFileName)
 	}
 }
+
+// IsLastNoteOfParameter returns true, if there is no parameter state file
+// or false, which means that another note changing the parameter is still
+// applied
+func IsLastNoteOfParameter(param string) bool {
+	chkFileName := GetPathToParameter(param)
+	if _, err := os.Stat(chkFileName); os.IsNotExist(err) {
+		return true
+	}
+	return false
+}

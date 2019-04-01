@@ -25,6 +25,14 @@ func SystemctlDisable(thing string) error {
 	return nil
 }
 
+// SystemctlRestart call systemctl restart on thing.
+func SystemctlRestart(thing string) error {
+	if out, err := exec.Command("systemctl", "restart", thing).CombinedOutput(); err != nil {
+		return fmt.Errorf("Failed to call systemctl restart on %s - %v %s", thing, err, string(out))
+	}
+	return nil
+}
+
 // SystemctlStart call systemctl start on thing.
 func SystemctlStart(thing string) error {
 	if out, err := exec.Command("systemctl", "start", thing).CombinedOutput(); err != nil {
