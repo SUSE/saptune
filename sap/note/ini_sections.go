@@ -10,6 +10,7 @@ import (
 	"math"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -37,11 +38,7 @@ const (
 	// LoginConfDir is the path to systemd's logind configuration directory under /etc.
 	LogindConfDir = "/etc/systemd/logind.conf.d"
 	// LogindSAPConfFile is a configuration file full of SAP-specific settings for logind.
-	LogindSAPConfFile = "sap.conf"
-	// LogindSAAPConfContent is the verbatim content of SAP-specific logind settings file.
-	LogindSAPConfContent = `[Login]
-UserTasksMax=infinity
-`
+	LogindSAPConfFile = "saptune-UserTasksMax.conf"
 )
 
 // GetServiceName returns the systemd service name for supported services
@@ -672,14 +669,18 @@ func SetServiceVal(key, value string) error {
 // system settings
 func GetLoginVal(key string) (string, error) {
 	var val string
+	var utmPat = regexp.MustCompile(`UserTasksMax=(.*)`)
 	switch key {
 	case "UserTasksMax":
 		logindContent, err := ioutil.ReadFile(path.Join(LogindConfDir, LogindSAPConfFile))
 		if err != nil && !os.IsNotExist(err) {
 			return "", err
 		}
-		if string(logindContent) == LogindSAPConfContent {
-			val = "infinity"
+		matches := utmPat.FindStringSubmatch(string(logindContent))
+		if len(matches) != 0 {
+			val = matches[1]
+		} else {
+			val = "NA"
 		}
 	}
 	return val, nil
@@ -694,16 +695,43 @@ func OptLoginVal(cfgval string) string {
 func SetLoginVal(key, value string, revert bool) error {
 	switch key {
 	case "UserTasksMax":
-		// Prepare logind config file
-		if err := os.MkdirAll(LogindConfDir, 0755); err != nil {
-			return err
+		if revert && IsLastNoteOfParameter("UserTasksMax") {
+			// revert - remove logind drop-in file
+			os.Remove(path.Join(LogindConfDir, LogindSAPConfFile))
+			// restart systemd-logind.service
+			if err := system.SystemctlRestart("systemd-logind.service"); err != nil {
+				return err
+			}
+			return nil
 		}
-		if err := ioutil.WriteFile(path.Join(LogindConfDir, LogindSAPConfFile), []byte(LogindSAPConfContent), 0644); err != nil {
-			return err
-		}
-		if !revert {
-			log.Print("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
-				"This opens up entire system to fork-bomb style attacks. Please reboot the system for the changes to take effect.")
+		if value != "" && value != "NA" {
+			// revert with value from another former applied note
+			// or
+			// apply - Prepare logind drop-in file
+			// LogindSAPConfContent is the verbatim content of
+			// SAP-specific logind settings file.
+			LogindSAPConfContent := fmt.Sprintf("[Login]\nUserTasksMax=%s\n", value)
+			if err := os.MkdirAll(LogindConfDir, 0755); err != nil {
+				return err
+			}
+			if err := ioutil.WriteFile(path.Join(LogindConfDir, LogindSAPConfFile), []byte(LogindSAPConfContent), 0644); err != nil {
+				return err
+			}
+			// restart systemd-logind.service
+			if err := system.SystemctlRestart("systemd-logind.service"); err != nil {
+				return err
+			}
+			if value == "infinity" {
+				log.Print("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
+					"This opens up entire system to fork-bomb style attacks.")
+			}
+			// set per user
+			for _, userID := range system.GetCurrentLogins() {
+				//oldLimit := system.GetTasksMax(userID)
+				if err := system.SetTasksMax(userID, value); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
