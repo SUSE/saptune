@@ -6,6 +6,8 @@
 #   saptune solution [ list | verify ]
 #   saptune solution [ apply | simulate | verify | revert ] SolutionName
 #   saptune revert all
+#   saptune version
+#   saptune --version
 
 _saptune() {
     local cur prev opts base pattern
@@ -16,7 +18,7 @@ _saptune() {
     
     case ${COMP_CWORD} in 
 
-        1)  opts="daemon solution note revert"
+        1)  opts="daemon solution note revert version --version"
             ;;
         
         2)  case "${prev}" in
