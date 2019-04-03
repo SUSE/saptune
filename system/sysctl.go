@@ -5,7 +5,6 @@ package system
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strconv"
@@ -69,7 +68,8 @@ const (
 func GetSysctlString(parameter string) (string, error) {
 	val, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)))
 	if err != nil {
-		return "", fmt.Errorf("Failed to read sysctl key '%s': %v", parameter, err)
+		WarningLog("Failed to read sysctl key '%s': %v", parameter, err)
+		return "", err
 	}
 	return strings.TrimSpace(string(val)), nil
 }
@@ -96,9 +96,10 @@ func GetSysctlUint64(parameter string) (uint64, error) {
 func SetSysctlString(parameter, value string) error {
 	err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
 	if os.IsNotExist(err) {
-		log.Printf("sysctl key '%s' is not supported by os, skipping.", parameter)
+		WarningLog("sysctl key '%s' is not supported by os, skipping.", parameter)
 	} else if err != nil {
-		return fmt.Errorf("Failed to write sysctl key '%s': %v", parameter, err)
+		WarningLog("Failed to write sysctl key '%s': %v", parameter, err)
+		return err
 	}
 	return nil
 }

@@ -2,6 +2,7 @@ package sap
 
 import (
 	"fmt"
+	//"github.com/SUSE/saptune/system"
 	"log"
 )
 
@@ -13,6 +14,8 @@ func PrintErrors(errors []error) error {
 			hasNil = true
 		} else {
 			log.Printf("%v", err)
+			//txt := fmt.Sprintf("%v", err)
+			//system.ErrorLog(txt)
 		}
 	}
 	if hasNil {

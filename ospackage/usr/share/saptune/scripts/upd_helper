@@ -70,7 +70,7 @@ create_tuned_conf() {
 	sed -i '/^\[main\]/i\
 #\
 # for compatibility support of saptune version 1 the tuned config script\
-# /usr/lib/tuned/saptune/tuned.conf is copied to $CUSTOM_TUNED_CONF\
+# /usr/lib/tuned/saptune/tuned.conf is copied to /etc/tuned/saptune/tuned.conf\
 # during the saptune package update from version 1 to version 2\
 #\
 ' $CUSTOM_TUNED_CONF

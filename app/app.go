@@ -7,7 +7,6 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"reflect"
@@ -263,7 +262,7 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 		}
 		i = PositionInNoteApplyOrder(app.NoteApplyOrder, noteID)
 		if i < 0 {
-			log.Printf("noteID '%s' not found in configuration 'NoteApplyOrder'", noteID)
+			system.WarningLog("noteID '%s' not found in configuration 'NoteApplyOrder'", noteID)
 		} else if i < len(app.NoteApplyOrder) && app.NoteApplyOrder[i] == noteID {
 			// remove noteID from the configuration 'NoteApplyOrder'
 			app.NoteApplyOrder = append(app.NoteApplyOrder[0:i], app.NoteApplyOrder[i+1:]...)

@@ -2,7 +2,6 @@ package system
 
 import (
 	"fmt"
-	"log"
 	"os/exec"
 	"strings"
 )
@@ -13,12 +12,12 @@ func GetCurrentLogins() []string {
 	cmdName := "/usr/bin/loginctl"
 	cmdArgs := []string{"--no-pager", "--no-legend", "--no-ask-password", "list-users"}
 	if !CmdIsAvailable(cmdName) {
-		log.Printf("command '%s' not found", cmdName)
+		WarningLog("command '%s' not found", cmdName)
 		return uID
 	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil {
-		log.Printf("failed to invoke external command '%s %v': %v, output: %s", cmdName, cmdArgs, err, string(cmdOut))
+		WarningLog("failed to invoke external command '%s %v': %v, output: %s", cmdName, cmdArgs, err, string(cmdOut))
 		return uID
 	}
 	for _, logins := range strings.Split(string(cmdOut), "\n") {
@@ -40,12 +39,12 @@ func GetTasksMax(userID string) string {
 	cmdArgs := []string{"show", "-p", "TasksMax", uSlice}
 
 	if !CmdIsAvailable(cmdName) {
-		log.Printf("command '%s' not found", cmdName)
+		WarningLog("command '%s' not found", cmdName)
 		return ""
 	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil {
-		log.Printf("failed to invoke external command '%s %v': %v, output: %s", cmdName, cmdArgs, err, string(cmdOut))
+		WarningLog("failed to invoke external command '%s %v': %v, output: %s", cmdName, cmdArgs, err, string(cmdOut))
 		return ""
 	}
 	tasksMax := strings.Split(strings.TrimSpace(string(cmdOut)), "=")
