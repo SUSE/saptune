@@ -3,8 +3,8 @@ package app
 import (
 	"encoding/json"
 	"github.com/SUSE/saptune/sap/note"
+	"github.com/SUSE/saptune/system"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -100,7 +100,7 @@ func (state *State) CheckForOldRevertData() (oldUpdFiles []string, check bool) {
 					// note and the 'n2c' file from the
 					// update path v1 to v2
 					oldUpdFiles = append(oldUpdFiles, fileName)
-					log.Printf("found old saved state file for Note '%s'.", fileName)
+					system.WarningLog("found old saved state file for Note '%s'.", fileName)
 					check = true
 				} else {
 					oldUpdFiles = append(oldUpdFiles, entry)

@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
-	"log"
 	"os"
 	"sort"
 	"strings"
@@ -52,7 +51,7 @@ func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
 	pcarch := ""
 	content, err := txtparser.ParseINIFile(fileName, false)
 	if err != nil {
-		log.Printf("Failed to read solution definition from file '%s'", fileName)
+		system.ErrorLog("Failed to read solution definition from file '%s'", fileName)
 		return sols
 	}
 
@@ -122,7 +121,7 @@ func GetOverrideSolution(fileName, noteFiles string) map[string]map[string]Solut
 		notesOK := true
 		for _, noteID := range strings.Split(content.KeyValue[param.Section][param.Key].Value, "\t") {
 			if _, err := os.Stat(fmt.Sprintf("%s%s", noteFiles, noteID)); err != nil {
-				log.Printf("Definition for note '%s' used for solution '%s' in override file '%s' not found in %s", noteID, param.Key, fileName, noteFiles)
+				system.WarningLog("Definition for note '%s' used for solution '%s' in override file '%s' not found in %s", noteID, param.Key, fileName, noteFiles)
 				notesOK = false
 			}
 		}

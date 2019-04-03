@@ -23,7 +23,7 @@ func GetRpmVers(rpm string) string {
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil {
 		if len(string(cmdOut)) == 0 || strings.TrimSpace(string(cmdOut)) != notInstalled {
-			fmt.Printf("There was an error running external command 'rpm -q --qf '%%{VERSION}-%%{RELEASE}' %s': %v, output: %s", rpm, err, cmdOut)
+			WarningLog("There was an error running external command 'rpm -q --qf '%%{VERSION}-%%{RELEASE}' %s': %v, output: %s", rpm, err, cmdOut)
 		}
 		return ""
 	}

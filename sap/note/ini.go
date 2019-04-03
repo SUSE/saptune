@@ -1,11 +1,9 @@
 package note
 
 import (
-	"fmt"
 	"github.com/SUSE/saptune/sap"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
-	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -28,7 +26,8 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 	var iCurrentValue int64
 	iExpectedValue, err := strconv.ParseInt(expectedValue, 10, 64)
 	if err != nil {
-		return "", fmt.Errorf("Expected value \"%s\" should be but is not an integer", expectedValue)
+		system.ErrorLog("Expected value \"%s\" should be but is not an integer", expectedValue)
+		return "", err
 	}
 	if currentValue == "" {
 		switch operator {
@@ -44,7 +43,8 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 	} else {
 		iCurrentValue, err = strconv.ParseInt(currentValue, 10, 64)
 		if err != nil {
-			return "", fmt.Errorf("Current value \"%s\" should be but is not an integer", currentValue)
+			system.ErrorLog("Current value \"%s\" should be but is not an integer", currentValue)
+			return "", err
 		}
 		switch operator {
 		case txtparser.OperatorLessThan:
@@ -156,7 +156,7 @@ func (vend INISettings) Initialise() (Note, error) {
 			}
 			vend.SysctlParams[param.Key] = GetPagecacheVal(param.Key, &pc)
 		default:
-			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
+			system.WarningLog("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
 		// do not write parameter values to the saved state file during
@@ -224,7 +224,7 @@ func (vend INISettings) Optimise() (Note, error) {
 			//vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc, ini.KeyValue)
 			vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc)
 		default:
-			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
+			system.WarningLog("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
 		// do not write parameter values to the saved state file during
@@ -331,7 +331,7 @@ func (vend INISettings) Apply() error {
 		case INISectionPagecache:
 			errs = append(errs, SetPagecacheVal(param.Key, &pc))
 		default:
-			log.Printf("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
+			system.WarningLog("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"runtime"
@@ -60,8 +59,7 @@ Print this message:
 
 // Print the message to stderr and exit 1.
 func errorExit(template string, stuff ...interface{}) {
-	log.Printf("ERROR: "+template+"\n", stuff...)
-	//fmt.Fprintf(os.Stderr, template+"\n", stuff...)
+	system.ErrorLog(template+"\n", stuff...)
 	os.Exit(1)
 }
 
@@ -79,13 +77,7 @@ var solutionSelector = runtime.GOARCH
 
 func main() {
 	// activate logging
-	var saptuneLog io.Writer
-	saptuneLog, err := os.OpenFile("/var/log/tuned/tuned.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
-	if err != nil {
-		panic(err.Error())
-	}
-	saptuneWriter := io.MultiWriter(os.Stderr, saptuneLog)
-	log.SetOutput(saptuneWriter)
+	system.LogInit()
 
 	// get saptune version
 	sconf, err := txtparser.ParseSysconfigFile("/etc/sysconfig/saptune", true)
@@ -159,24 +151,19 @@ func checkUpdateLeftOvers() {
 	// the package update from saptune v1 to saptune v2
 	// give a Warning but go ahead tuning the system
 	if system.CheckForPattern("/etc/tuned/saptune/tuned.conf", "#stv1tov2#") {
-		log.Println("WARNING: found file '/etc/tuned/saptune/tuned.conf' left over from the migration of saptune version 1 to saptune version 2.")
-		log.Println("         Please check and remove this file as it may work against the settings of some SAP Notes")
-		log.Println("         For more information refer to the man page saptune-migrate(7)")
+		system.WarningLog("found file '/etc/tuned/saptune/tuned.conf' left over from the migration of saptune version 1 to saptune version 2. Please check and remove this file as it may work against the settings of some SAP Notes. For more information refer to the man page saptune-migrate(7)")
 	}
 
 	// check for saved state information in an older, no longer supported
 	// saptune format
 	leftOver, check := tuneApp.State.CheckForOldRevertData()
 	if check {
-		errorExit("found old saved state files '%s' related to applied notes.\nSeems there were some steps missed during the migration from saptune version 1 to version 2.\nPlease check. Refer to saptune-migrate(7) for more information", strings.Join(leftOver, ", "))
+		errorExit("found old saved state files '%s' related to applied notes. Seems there were some steps missed during the migration from saptune version 1 to version 2. Please check. Refer to saptune-migrate(7) for more information", strings.Join(leftOver, ", "))
 	} else if len(leftOver) != 0 {
-		log.Printf("WARNING: found old saved state files '%s', but unrelated to applied notes.", strings.Join(leftOver, ", "))
-		log.Println("         Seems there are some files left over from the migration of saptune version 1 to saptune version 2.")
-		log.Println("         Please check and remove these files")
-		log.Println("         For more information refer to the man page saptune-migrate(7)")
+		system.WarningLog("found old saved state files '%s', but unrelated to applied notes. Seems there are some files left over from the migration of saptune version 1 to saptune version 2. Please check and remove these files. For more information refer to the man page saptune-migrate(7)", strings.Join(leftOver, ", "))
 	}
 	if len(tuneApp.NoteApplyOrder) == 0 && (len(tuneApp.TuneForNotes) != 0 || len(tuneApp.TuneForSolutions) != 0) {
-		errorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'.\nSeems there were some steps missed during the migration from saptune version 1 to version 2.\nPlease check. Refer to saptune-migrate(7) for more information")
+		errorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'. Seems there were some steps missed during the migration from saptune version 1 to version 2. Please check. Refer to saptune-migrate(7) for more information")
 	}
 }
 
@@ -207,7 +194,7 @@ func DaemonAction(actionName string) {
 		}
 		// Check tuned profile
 		if system.GetTunedAdmProfile() != TunedProfileName {
-			fmt.Fprintln(os.Stderr, "tuned.service profile is incorrect. Please check tuned logs for more information")
+			system.ErrorLog("tuned.service profile is incorrect. Please check tuned logs for more information")
 			os.Exit(exitTunedWrongProfile)
 		}
 		// tuned then calls `saptune daemon apply`
@@ -500,7 +487,7 @@ func NoteAction(actionName, noteID string) {
 		if err == nil {
 			// state file for note already exists
 			// do not apply the note again
-			log.Printf("note '%s' already applied. Nothing to do", noteID)
+			system.InfoLog("note '%s' already applied. Nothing to do", noteID)
 			os.Exit(0)
 		}
 		if err := tuneApp.TuneNote(noteID); err != nil {
@@ -620,7 +607,7 @@ func NoteAction(actionName, noteID string) {
 			}
 			editFileName = ovFileName
 		} else if err == nil {
-			log.Printf("Note override file already exists, using file '%s' as base for editing\n", ovFileName)
+			system.InfoLog("Note override file already exists, using file '%s' as base for editing\n", ovFileName)
 			editFileName = ovFileName
 		} else {
 			errorExit("Failed to read file '%s' - %v", ovFileName, err)
@@ -657,7 +644,7 @@ func SolutionAction(actionName, solName string) {
 		if len(tuneApp.TuneForSolutions) > 0 {
 			// already one solution applied.
 			// do not apply another solution. Does not make sense
-			log.Println("There is already one solution applied. Applying another solution is NOT supported.")
+			system.InfoLog("There is already one solution applied. Applying another solution is NOT supported.")
 			os.Exit(0)
 		}
 		removedAdditionalNotes, err := tuneApp.TuneSolution(solName)

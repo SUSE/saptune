@@ -6,7 +6,6 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
-	"log"
 	"math"
 	"os"
 	"path"
@@ -49,7 +48,7 @@ func GetServiceName(service string) string {
 	case "Sysstat":
 		service = "sysstat"
 	default:
-		log.Printf("skipping unkown service '%s'", service)
+		system.WarningLog("skipping unkown service '%s'", service)
 		service = ""
 	}
 	return service
@@ -70,7 +69,7 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 	allFieldsS := ""
 
 	if len(allFieldsC) != len(allFieldsE) && (operator == txtparser.OperatorEqual || len(allFieldsE) > 1) {
-		log.Printf("wrong number of fields given in the config file for parameter '%s'\n", key)
+		system.WarningLog("wrong number of fields given in the config file for parameter '%s'\n", key)
 		return ""
 	}
 
@@ -338,12 +337,12 @@ func OptVMVal(key, cfgval string) string {
 	switch key {
 	case "THP":
 		if val != "always" && val != "madvise" && val != "never" {
-			log.Print("wrong selection for THP. Now set to 'never' to disable transarent huge pages")
+			system.WarningLog("wrong selection for THP. Now set to 'never' to disable transarent huge pages")
 			val = "never"
 		}
 	case "KSM":
 		if val != "1" && val != "0" {
-			log.Print("wrong selection for KSM. Now set to default value '0'")
+			system.WarningLog("wrong selection for KSM. Now set to default value '0'")
 			val = "0"
 		}
 	}
@@ -408,7 +407,7 @@ func OptCPUVal(key, actval, cfgval string) string {
 		case "powersave":
 			val = "15"
 		default:
-			log.Print("wrong selection for energy_perf_bias. Now set to 'performance'")
+			system.WarningLog("wrong selection for energy_perf_bias. Now set to 'performance'")
 			val = "0"
 		}
 		//ANGI TODO - if actval 'all:6', but cfgval 'cpu0:performance cpu1:normal cpu2:powersave'
@@ -463,7 +462,7 @@ func GetMemVal(key string) string {
 				val = strconv.FormatFloat(percent, 'f', -1, 64)
 			}
 		} else {
-			log.Print("GetMemVal: failed to find /dev/shm mount point")
+			system.WarningLog("GetMemVal: failed to find /dev/shm mount point")
 			val = "-1"
 		}
 	}
@@ -479,7 +478,7 @@ func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
 	var ret string
 
 	if actval == "-1" {
-		log.Print("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
+		system.WarningLog("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
 		size = 0
 	} else if shmsize == "0" {
 		if tmpfspercent == "0" {
@@ -517,7 +516,7 @@ func SetMemVal(key, value string) error {
 				return err
 			}
 		} else {
-			log.Print("SetMemVal: /dev/shm is not a valid mount point, will not adjust its size.")
+			system.WarningLog("SetMemVal: /dev/shm is not a valid mount point, will not adjust its size.")
 		}
 	}
 	return err
@@ -584,7 +583,7 @@ func GetUuiddVal() string {
 func OptUuiddVal(cfgval string) string {
 	sval := strings.ToLower(cfgval)
 	if sval != "start" {
-		log.Print("wrong selection for UuiddSocket. Now set to 'start' to start the uuid daemon")
+		system.WarningLog("wrong selection for UuiddSocket. Now set to 'start' to start the uuid daemon")
 		sval = "start"
 	}
 	return sval
@@ -624,16 +623,16 @@ func OptServiceVal(key, cfgval string) string {
 	switch key {
 	case "UuiddSocket":
 		if sval != "start" {
-			log.Printf("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
+			system.WarningLog("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
 			sval = "start"
 		}
 	case "Sysstat":
 		if sval != "start" && sval != "stop" {
-			log.Printf("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
+			system.WarningLog("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
 			sval = "start"
 		}
 	default:
-		log.Printf("skipping unkown service '%s'", key)
+		system.WarningLog("skipping unkown service '%s'", key)
 		return ""
 	}
 	return sval
@@ -722,7 +721,7 @@ func SetLoginVal(key, value string, revert bool) error {
 				return err
 			}
 			if value == "infinity" {
-				log.Print("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
+				system.WarningLog("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
 					"This opens up entire system to fork-bomb style attacks.")
 			}
 			// set per user
@@ -778,12 +777,12 @@ func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 	switch key {
 	case "ENABLE_PAGECACHE_LIMIT":
 		if val != "yes" && val != "no" {
-			log.Print("wrong selection for ENABLE_PAGECACHE_LIMIT. Now set to default 'no'")
+			system.WarningLog("wrong selection for ENABLE_PAGECACHE_LIMIT. Now set to default 'no'")
 			val = "no"
 		}
 	case "PAGECACHE_LIMIT_IGNORE_DIRTY":
 		if val != "2" && val != "1" && val != "0" {
-			log.Print("wrong selection for PAGECACHE_LIMIT_IGNORE_DIRTY. Now set to default '1'")
+			system.WarningLog("wrong selection for PAGECACHE_LIMIT_IGNORE_DIRTY. Now set to default '1'")
 			val = "1"
 		}
 		cur.VMPagecacheLimitIgnoreDirty, _ = strconv.Atoi(val)
