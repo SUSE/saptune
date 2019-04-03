@@ -9,6 +9,17 @@
 # only called in postinstallation, if it is a package update
 # NOT called, if it is an initial package installation
 
+# upd_helper v1tov2pi
+# upd_helper v1tov2pt
+# upd_helper sle12to15pt
+
+if [ "$1" == "" ]; then
+    echo "ERROR: missing argument"
+    exit 1
+else
+    upd_opt="$1"
+fi
+
 SAPTUNE_SYSCONFIG=/etc/sysconfig/saptune
 CUSTOM_TUNED_CONF=/etc/tuned/saptune/tuned.conf
 
@@ -19,34 +30,6 @@ PARAMETERSTATEDIR=/var/lib/saptune/parameter
 NOTEDIR=/usr/share/saptune/notes
 NOTES2CHANGE_12to15="1984787,2578899 2205917,2684254"
 NOTES2DELETE_15="1557506"
-
-# upd_helper v1tov2pi
-# upd_helper v1tov2pt
-# upd_helper sle12to15pt
-
-if [ "$1" -eq "" ]; then
-    echo "ERROR: missing argument"
-    exit 1
-fi
-case "$1" in
-v1tov2pi)
-    # called from the postinstall script of saptune, if installation was an
-    # update from saptune version 1 to version 2
-    set_sysconfig_version
-    create_tuned_conf
-    ;;
-v1tov2pt)
-    # called from the posttrans script of saptune, if installation was an
-    # update from saptune version 1 to version 2
-    get_back_extra_ASE_BOBJ
-    ;;
-sle12to15pt)
-    # called from the posttrans script of saptune, if installation was an
-    # update from saptune version 2 to version 2
-    change_note_names
-    delete_notes
-    ;;
-esac
 
 set_sysconfig_version() {
     # add or change SAPTUNE_VERSION string in /etc/sysconfig/saptune to "1"
@@ -210,3 +193,23 @@ delete_notes() {
         fi
     done
 }
+
+case "$upd_opt" in
+v1tov2pi)
+    # called from the postinstall script of saptune, if installation was an
+    # update from saptune version 1 to version 2
+    set_sysconfig_version
+    create_tuned_conf
+    ;;
+v1tov2pt)
+    # called from the posttrans script of saptune, if installation was an
+    # update from saptune version 1 to version 2
+    get_back_extra_ASE_BOBJ
+    ;;
+sle12to15pt)
+    # called from the posttrans script of saptune, if installation was an
+    # update from saptune version 2 to version 2
+    change_note_names
+    delete_notes
+    ;;
+esac
