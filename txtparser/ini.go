@@ -161,16 +161,31 @@ func ParseINI(input string) *INIFile {
 			// Skip comments, empty, and irregular lines.
 			continue
 		}
-		// handle tunables with more than one value
-		value := strings.Replace(kov[3], " ", "\t", -1)
-		entry := INIEntry{
-			Section:  currentSection,
-			Key:      kov[1],
-			Operator: Operator(kov[2]),
-			Value:    value,
+		if currentSection == "limits" {
+			for _, limits := range strings.Split(kov[3], ",") {
+				limits = strings.TrimSpace(limits)
+				lim := strings.Fields(limits)
+				entry := INIEntry{
+					Section:  currentSection,
+					Key:      fmt.Sprintf("LIMIT_%s_%s_%s", lim[0], lim[1], lim[2]),
+					Operator: Operator(kov[2]),
+					Value:    limits,
+				}
+				currentEntriesArray = append(currentEntriesArray, entry)
+				currentEntriesMap[entry.Key] = entry
+			}
+		} else {
+			// handle tunables with more than one value
+			value := strings.Replace(kov[3], " ", "\t", -1)
+			entry := INIEntry{
+				Section:  currentSection,
+				Key:      kov[1],
+				Operator: Operator(kov[2]),
+				Value:    value,
+			}
+			currentEntriesArray = append(currentEntriesArray, entry)
+			currentEntriesMap[entry.Key] = entry
 		}
-		currentEntriesArray = append(currentEntriesArray, entry)
-		currentEntriesMap[entry.Key] = entry
 	}
 	if reminder != "" {
 		// save reminder section

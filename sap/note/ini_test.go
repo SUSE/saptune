@@ -206,16 +206,10 @@ func TestAllSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["governor"] != strings.TrimSpace(bval) {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["LIMIT_SOFT"] != "sybase:28571380 " {
+	if optimisedINI.SysctlParams["LIMIT_sybase_hard_memlock"] != "sybase hard memlock 28571380" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["LIMIT_HARD"] != "sybase:28571380 " {
-		t.Fatal(optimisedINI.SysctlParams)
-	}
-	if optimisedINI.SysctlParams["LIMIT_DOMAIN"] != "sybase " {
-		t.Fatal(optimisedINI.SysctlParams)
-	}
-	if optimisedINI.SysctlParams["LIMIT_ITEM"] != "sybase:memlock " {
+	if optimisedINI.SysctlParams["LIMIT_sybase_soft_memlock"] != "sybase soft memlock 28571380" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["ShmFileSystemSizeMB"] != "25605" && optimisedINI.SysctlParams["ShmFileSystemSizeMB"] != "-1" {

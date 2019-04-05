@@ -1,7 +1,6 @@
 package note
 
 import (
-	"fmt"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"os"
@@ -74,43 +73,12 @@ func TestOptBlkVal(t *testing.T) {
 
 //GetLimitsVal
 func TestOptLimitsVal(t *testing.T) {
-	val := OptLimitsVal("LIMIT_HARD", "@dom1:0 @dom2:0 @dom3:0", "32800", "nofile", "@dom1 @dom2 @dom3")
-	if val != "@dom1:32800 @dom2:32800 @dom3:32800 " {
+	val := OptLimitsVal("@sdba soft nofile NA", "@sdba soft nofile 32800")
+	if val != "@sdba soft nofile 32800" {
 		t.Fatal(val)
 	}
-	val = OptLimitsVal("LIMIT_HARD", "@dom1: @dom2: @dom3:", "32800", "nofile", "@dom1 @dom2 @dom3")
-	if val != "@dom1:32800 @dom2:32800 @dom3:32800 " {
-		t.Fatal(val)
-	}
-	val = OptLimitsVal("LIMIT_SOFT", "@dom1:unlimited @dom2:infinity @dom3:-1", "32800", "nofile", "@dom1 @dom2 @dom3")
-	if val != "@dom1:unlimited @dom2:infinity @dom3:-1 " {
-		t.Fatal(val)
-	}
-	val = OptLimitsVal("LIMIT_HARD", "@dom1:0 @dom2:0 @dom3:0", "32800", "memlock", "@dom1 @dom2 @dom3")
-	if val != "@dom1:32800 @dom2:32800 @dom3:32800 " {
-		t.Fatal(val)
-	}
-	calcLimit := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
-	val = OptLimitsVal("LIMIT_SOFT", "@dom1:0 @dom2:0 @dom3:0", "0", "memlock", "@dom1 @dom2 @dom3")
-	if val != fmt.Sprintf("@dom1:%d @dom2:%d @dom3:%d ", calcLimit, calcLimit, calcLimit) {
-		t.Fatal(val, calcLimit)
-	}
-	val = OptLimitsVal("LIMIT_SOFT", "@dom1:67108864 @dom2:67108864 @dom3:67108864", "0", "memlock", "@dom1 @dom2 @dom3")
-	if val != "@dom1:67108864 @dom2:67108864 @dom3:67108864 " {
-		t.Fatal(val, calcLimit)
-	}
-
-	val = OptLimitsVal("LIMIT_ITEM", "", "nofile", "nofile", "@dom1 @dom2 @dom3")
-	if val != "@dom1:nofile @dom2:nofile @dom3:nofile " {
-		t.Fatal(val)
-	}
-	val = OptLimitsVal("LIMIT_ITEM", "0", "memlock", "memlock", "dom5")
-	if val != "dom5:memlock " {
-		t.Fatal(val)
-	}
-
-	val = OptLimitsVal("LIMIT_DOMAIN", "", "@dom1 @dom2 @dom3", "nofile", "@dom1 @dom2 @dom3")
-	if val != "@dom1 @dom2 @dom3 " {
+	val = OptLimitsVal("@sdba soft nofile 75536", "@sdba soft nofile 32800")
+	if val != "@sdba soft nofile 32800" {
 		t.Fatal(val)
 	}
 }

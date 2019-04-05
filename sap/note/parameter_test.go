@@ -1,7 +1,6 @@
 package note
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -116,84 +115,6 @@ func TestAddParameterNoteValues(t *testing.T) {
 	CleanUpParamFile("TEST_PARAMETER")
 }
 
-func TestSaveLimitsParameter(t *testing.T) {
-	tkey := "TEST_LIMIT_PARAMETER"
-	tdom := "TDOMAIN"
-	titem := "TITEM"
-	sval := "TestLimitStartValue"
-	aval := "TestLimitAddValue"
-
-	paramFile := fmt.Sprintf("%s_%s_%s", tkey, titem, tdom)
-
-	SaveLimitsParameter(tkey, tdom, titem, sval, "start", "")
-	val := GetSavedParameterNotes(tkey)
-	if len(val.AllNotes) != 0 {
-		val = GetSavedParameterNotes(paramFile)
-		if len(val.AllNotes) != 0 {
-			t.Fatalf("parameter state file exists. content: '%+v'\n", val)
-		}
-	}
-
-	SaveLimitsParameter(tkey, tdom, titem, aval, "add", "47114711")
-	val = GetSavedParameterNotes(tkey)
-	if len(val.AllNotes) != 0 {
-		val = GetSavedParameterNotes(paramFile)
-		if len(val.AllNotes) != 0 {
-			t.Fatalf("parameter state file exists. content: '%+v'\n", val)
-		}
-	}
-
-	tkey = "LIMIT_HARD"
-	paramFile = fmt.Sprintf("%s_%s_%s", tkey, titem, tdom)
-
-	SaveLimitsParameter(tkey, tdom, titem, sval, "start", "")
-	val = GetSavedParameterNotes(paramFile)
-	if len(val.AllNotes) != 0 {
-		t.Fatalf("parameter state file exists. content: '%+v'\n", val)
-	}
-
-	sval = "TDOMAIN:TestLimitStartValue"
-	sout := "TDOMAIN:TestLimitStartValue "
-	SaveLimitsParameter(tkey, tdom, titem, sval, "start", "")
-	val = GetSavedParameterNotes(paramFile)
-	if len(val.AllNotes) == 0 {
-		t.Fatalf("missing parameter state file '%s'\n", paramFile)
-	}
-	if val.AllNotes[0].NoteID != "start" {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong content in state file '%s': '%+v'\n", paramFile, val)
-	}
-	if val.AllNotes[0].Value != sout {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong content in state file '%s': '%+v'\n", paramFile, val)
-	}
-
-	aval = "TDOMAIN:TestLimitAddValue"
-	aout := "TDOMAIN:TestLimitAddValue "
-	SaveLimitsParameter(tkey, tdom, titem, aval, "add", "47114711")
-	val = GetSavedParameterNotes(paramFile)
-	if len(val.AllNotes) == 0 {
-		t.Fatalf("missing parameter state file '%+v'\n", paramFile)
-	}
-	if val.AllNotes[0].NoteID != "start" && val.AllNotes[1].NoteID != "47114711" {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong content in state file '%s': '%+v'\n", paramFile, val)
-	}
-	if val.AllNotes[0].Value != sout && val.AllNotes[1].Value != aout {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong content in state file '%s': '%+v'\n", paramFile, val)
-	}
-	if IDInParameterList("4711", val.AllNotes) {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong content in state file '%s': '%+v'\n", paramFile, val)
-	}
-	if !IDInParameterList("47114711", val.AllNotes) {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong content in state file '%s': '%+v'\n", paramFile, val)
-	}
-	CleanUpParamFile(paramFile)
-}
-
 func TestGetAllSavedParameters(t *testing.T) {
 	CreateParameterStartValues("TEST_PARAMETER_1", "TestStartValue1")
 	AddParameterNoteValues("TEST_PARAMETER_1", "TestAddValue1", "4711")
@@ -293,7 +214,7 @@ func TestPositionInParameterList(t *testing.T) {
 
 func TestRevertParameter(t *testing.T) {
 	// test with non existing parameter file
-	val := RevertParameter("TEST_PARAMETER_1", "4712")
+	val, _ := RevertParameter("TEST_PARAMETER_1", "4712")
 	if val != "" {
 		CleanUpParamFile("TEST_PARAMETER_1")
 		t.Fatalf("wrong parameter '%s' reverted from parameter file '%s'\n", val, "TEST_PARAMETER_1")
@@ -304,74 +225,25 @@ func TestRevertParameter(t *testing.T) {
 	AddParameterNoteValues("TEST_PARAMETER_1", "TestAddValue2", "4712")
 	AddParameterNoteValues("TEST_PARAMETER_1", "TestAddValue3", "4713")
 	AddParameterNoteValues("TEST_PARAMETER_1", "TestAddValue4", "4714")
-	val = RevertParameter("TEST_PARAMETER_1", "4712")
+	val, _ = RevertParameter("TEST_PARAMETER_1", "4712")
 	if val != "TestAddValue4" {
 		CleanUpParamFile("TEST_PARAMETER_1")
 		t.Fatalf("wrong parameter '%s' reverted for note '%s'\n", val, "4712")
 	}
-	val = RevertParameter("TEST_PARAMETER_1", "4714")
+	val, _ = RevertParameter("TEST_PARAMETER_1", "4714")
 	if val != "TestAddValue3" {
 		CleanUpParamFile("TEST_PARAMETER_1")
 		t.Fatalf("wrong parameter '%s' reverted for note '%s'\n", val, "4714")
 	}
-	val = RevertParameter("TEST_PARAMETER_1", "4711")
+	val, _ = RevertParameter("TEST_PARAMETER_1", "4711")
 	if val != "TestAddValue3" {
 		CleanUpParamFile("TEST_PARAMETER_1")
 		t.Fatalf("wrong parameter '%s' reverted for note '%s'\n", val, "4711")
 	}
-	val = RevertParameter("TEST_PARAMETER_1", "4713")
+	val, _ = RevertParameter("TEST_PARAMETER_1", "4713")
 	if val != "TestStartValue1" {
 		CleanUpParamFile("TEST_PARAMETER_1")
 		t.Fatalf("wrong parameter '%s' reverted for note '%s'\n", val, "4713")
 	}
 	CleanUpParamFile("TEST_PARAMETER_1")
-}
-
-func TestRevertLimitsParameter(t *testing.T) {
-	tkey := "LIMIT_HARD"
-	tdom := "TDOMAIN"
-	titem := "TITEM"
-	sval := "TDOMAIN:TestLimitStartValue1"
-	aval1 := "TDOMAIN:TestLimitAddValue1"
-	aval2 := "TDOMAIN:TestLimitAddValue2"
-	aval3 := "TDOMAIN:TestLimitAddValue3"
-	aval4 := "TDOMAIN:TestLimitAddValue4"
-	paramFile := fmt.Sprintf("%s_%s_%s", tkey, titem, tdom)
-
-	CleanUpParamFile(paramFile)
-
-	SaveLimitsParameter(tkey, tdom, titem, sval, "start", "")
-	SaveLimitsParameter(tkey, tdom, titem, aval1, "add", "4711")
-	SaveLimitsParameter(tkey, tdom, titem, aval2, "add", "4712")
-	SaveLimitsParameter(tkey, tdom, titem, aval3, "add", "4713")
-	SaveLimitsParameter(tkey, tdom, titem, aval4, "add", "4714")
-
-	// test with 'wrong' key, return should be an empty string
-	val := RevertLimitsParameter("LIMIT_TEST_KEY", tdom, titem, "4712")
-	if val != "" {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong parameter '%s' reverted for key 'LIMIT_TEST_KEY' and for note '%s'\n", val, "4712")
-	}
-
-	val = RevertLimitsParameter(tkey, tdom, titem, "4712")
-	if val != "TDOMAIN:TestLimitAddValue4 " {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong parameter '%s' reverted for note '%s'\n", val, "4712")
-	}
-	val = RevertLimitsParameter(tkey, tdom, titem, "4714")
-	if val != "TDOMAIN:TestLimitAddValue3 " {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong parameter '%s' reverted for note '%s'\n", val, "4714")
-	}
-	val = RevertLimitsParameter(tkey, tdom, titem, "4711")
-	if val != "TDOMAIN:TestLimitAddValue3 " {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong parameter '%s' reverted for note '%s'\n", val, "4711")
-	}
-	val = RevertLimitsParameter(tkey, tdom, titem, "4713")
-	if val != "TDOMAIN:TestLimitStartValue1 " {
-		CleanUpParamFile(paramFile)
-		t.Fatalf("wrong parameter '%s' reverted for note '%s'\n", val, "4713")
-	}
-	CleanUpParamFile(paramFile)
 }

@@ -8,10 +8,7 @@
 [limits]
 # Allow Sybase ASE owner to make use of available HugePages.
 # add the DBMS user with memlock permission
-LIMIT_HARD=unlimited
-LIMIT_SOFT=unlimited
-LIMIT_ITEM=memlock
-LIMIT_DOMAIN=""
+LIMITS="<DBMSuser> hard memlock unlimited, <DBMSuser> soft memlock unlimited"
 
 [sysctl]
 # If the server is a heavily used application server, e.g. a Database, it would
