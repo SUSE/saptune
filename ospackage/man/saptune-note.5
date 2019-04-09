@@ -36,7 +36,7 @@ The following section definitions are available and used in the saptune SAP Note
 This section is used to display version, description and last change date of the underlying Note during saptune option 'list'.
 .br
 Syntax:
-# <prefix>-NOTE=<noteId> CATEGORY=<category> VERSION=<versionNo> DATE=<release date of used note and related values> NAME="<description of the note>"
+# <prefix>NOTE=<noteId> CATEGORY=<category> VERSION=<versionNo> DATE=<release date of used note and related values> NAME="<description of the note>"
 
 .SH "[sysctl]"
 The section "[sysctl]" can be used to modify kernel parameters. The parameters available are those listed under /proc/sys/. 
@@ -239,7 +239,7 @@ This defines whether pagecache limit feature should be enabled or not. It is a y
 Consider to enable pagecache limit feature if your SAP workloads cause frequent and excessive swapping activities.
 It is recommended to leave pagecache limit disabled if the system has low or no swap space.
 .TP
-.BI PAGECACHE_LIMIT_IGNORE_DIRTY= INT
+.BI vm.pagecache_limit_ignore_dirty= INT
 Whether or not to ignore dirty memory when enforcing the pagecache limit.
 .br
 If set to 0, dirty memory will be freed (written onto disk) when enforcing the pagecache limit.

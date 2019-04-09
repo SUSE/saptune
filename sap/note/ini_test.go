@@ -3,6 +3,7 @@ package note
 import (
 	"fmt"
 	"github.com/SUSE/saptune/txtparser"
+	"github.com/SUSE/saptune/system"
 	"os"
 	"path"
 	"runtime"
@@ -276,7 +277,7 @@ func TestPageCacheSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["ENABLE_PAGECACHE_LIMIT"] != "yes" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["PAGECACHE_LIMIT_IGNORE_DIRTY"] != "1" {
+	if optimisedINI.SysctlParams[system.SysctlPagecacheLimitIgnoreDirty] != "1" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["OVERRIDE_PAGECACHE_LIMIT_MB"] != "641" {

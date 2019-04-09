@@ -721,7 +721,7 @@ func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 		} else {
 			val = "yes"
 		}
-	case "PAGECACHE_LIMIT_IGNORE_DIRTY":
+	case system.SysctlPagecacheLimitIgnoreDirty:
 		val = strconv.Itoa(current.VMPagecacheLimitIgnoreDirty)
 	case "OVERRIDE_PAGECACHE_LIMIT_MB":
 		if current.VMPagecacheLimitMB == 0 {
@@ -746,9 +746,9 @@ func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 			system.WarningLog("wrong selection for ENABLE_PAGECACHE_LIMIT. Now set to default 'no'")
 			val = "no"
 		}
-	case "PAGECACHE_LIMIT_IGNORE_DIRTY":
+	case system.SysctlPagecacheLimitIgnoreDirty:
 		if val != "2" && val != "1" && val != "0" {
-			system.WarningLog("wrong selection for PAGECACHE_LIMIT_IGNORE_DIRTY. Now set to default '1'")
+			system.WarningLog("wrong selection for %s. Now set to default '1'", system.SysctlPagecacheLimitIgnoreDirty)
 			val = "1"
 		}
 		cur.VMPagecacheLimitIgnoreDirty, _ = strconv.Atoi(val)

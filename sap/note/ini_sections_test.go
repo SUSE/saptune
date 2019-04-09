@@ -434,7 +434,7 @@ func TestGetPagecacheVal(t *testing.T) {
 	}
 
 	prepare = LinuxPagingImprovements{PagingConfig: PCTestBaseConf}
-	val = GetPagecacheVal("PAGECACHE_LIMIT_IGNORE_DIRTY", &prepare)
+	val = GetPagecacheVal(system.SysctlPagecacheLimitIgnoreDirty, &prepare)
 	if val != strconv.Itoa(prepare.VMPagecacheLimitIgnoreDirty) {
 		t.Fatal(val)
 	}
@@ -475,28 +475,28 @@ func TestOptPagecacheVal(t *testing.T) {
 	if val != "no" {
 		t.Fatal(val)
 	}
-	val = OptPagecacheVal("PAGECACHE_LIMIT_IGNORE_DIRTY", "2", &prepare)
+	val = OptPagecacheVal(system.SysctlPagecacheLimitIgnoreDirty, "2", &prepare)
 	if val != "2" {
 		t.Fatal(val)
 	}
 	if val != strconv.Itoa(prepare.VMPagecacheLimitIgnoreDirty) {
 		t.Fatal(val, prepare.VMPagecacheLimitIgnoreDirty)
 	}
-	val = OptPagecacheVal("PAGECACHE_LIMIT_IGNORE_DIRTY", "1", &prepare)
+	val = OptPagecacheVal(system.SysctlPagecacheLimitIgnoreDirty, "1", &prepare)
 	if val != "1" {
 		t.Fatal(val)
 	}
 	if val != strconv.Itoa(prepare.VMPagecacheLimitIgnoreDirty) {
 		t.Fatal(val, prepare.VMPagecacheLimitIgnoreDirty)
 	}
-	val = OptPagecacheVal("PAGECACHE_LIMIT_IGNORE_DIRTY", "0", &prepare)
+	val = OptPagecacheVal(system.SysctlPagecacheLimitIgnoreDirty, "0", &prepare)
 	if val != "0" {
 		t.Fatal(val)
 	}
 	if val != strconv.Itoa(prepare.VMPagecacheLimitIgnoreDirty) {
 		t.Fatal(val, prepare.VMPagecacheLimitIgnoreDirty)
 	}
-	val = OptPagecacheVal("PAGECACHE_LIMIT_IGNORE_DIRTY", "unknown", &prepare)
+	val = OptPagecacheVal(system.SysctlPagecacheLimitIgnoreDirty, "unknown", &prepare)
 	if val != "1" {
 		t.Fatal(val)
 	}

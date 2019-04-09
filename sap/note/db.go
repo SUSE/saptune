@@ -54,7 +54,7 @@ func (paging LinuxPagingImprovements) Optimise() (Note, error) {
 	if !inputEnable {
 		newPaging.VMPagecacheLimitMB = 0
 	}
-	newPaging.VMPagecacheLimitIgnoreDirty = conf.GetInt("PAGECACHE_LIMIT_IGNORE_DIRTY", 1)
+	newPaging.VMPagecacheLimitIgnoreDirty = conf.GetInt(system.SysctlPagecacheLimitIgnoreDirty, 1)
 	return newPaging, err
 }
 
