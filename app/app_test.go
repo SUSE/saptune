@@ -126,6 +126,13 @@ func TestReadConfig(t *testing.T) {
 		fmt.Println(len(tuneApp.TuneForNotes))
 		t.Fatal(tuneApp)
 	}
+	// Read from non existing file
+	tuneApp = InitialiseApp("", "", AllTestNotes, AllTestSolutions)
+	if len(tuneApp.TuneForSolutions) != 0 || len(tuneApp.TuneForNotes) != 0 {
+		fmt.Printf("'%v'", tuneApp.TuneForSolutions[0])
+		fmt.Println(len(tuneApp.TuneForNotes))
+		t.Fatal(tuneApp)
+	}
 }
 
 func TestGetSortedSolutionNotes(t *testing.T) {
@@ -194,6 +201,11 @@ func TestOptimiseNoteOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1001", "1002"}, []string{})
+	// change expected value from "optimised1" back to "optimised2"
+	// we do no longer apply a note again, which was already applied before
+	// but the check was moved to main.go (NoteAction) to suppress
+	// misleading messages for the customer
+	// so function 'TuneNote' will work as before.
 	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
@@ -253,6 +265,8 @@ func TestOptimiseSolutionOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
+	// change expected value from "optimised1" back to "optimised2", as
+	// the check for already applied notes has moved
 	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
@@ -270,6 +284,8 @@ func TestOptimiseSolutionOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12"})
+	// change expected value from "optimised2" back to "optimised1", as
+	// the check for already applied notes has moved
 	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.RevertSolution("sol12"); err != nil {
 		t.Fatal(err)
@@ -318,7 +334,7 @@ func TestOverlappingSolutions(t *testing.T) {
 	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 	VerifyConfig(t, tuneApp, []string{}, []string{})
 
-	// Optimise sol1, sol2, sol12, and then revert sol12
+	// Optimise sol2, sol1, sol12, and then revert sol12
 	if _, err := tuneApp.TuneSolution("sol2"); err != nil {
 		t.Fatal(err)
 	}
@@ -333,12 +349,16 @@ func TestOverlappingSolutions(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12", "sol2"})
+	// change expected value from "optimised1" back to "optimised2", as
+	// the check for already applied notes has moved
 	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
 	// Reverting sol12 should not affect anything
+	// change expected value from "optimised1" back to "optimised2", as
+	// the check for already applied notes has moved
 	VerifyFileContent(t, SampleParamFile, "optimised2")
 }
 
@@ -406,11 +426,11 @@ func TestVerifyNoteAndSolutions(t *testing.T) {
 	if notes, comparisons, err := tuneApp.VerifySolution("sol1"); err != nil || len(notes) != 1 || len(comparisons) != 1 || notes[0] != "1001" {
 		t.Fatal(notes, comparisons, err)
 	}
-	if conforming, comparisons, err := tuneApp.VerifyNote("1002"); err != nil || len(comparisons) == 0 || !conforming {
+	if conforming, comparisons, _, err := tuneApp.VerifyNote("1002"); err != nil || len(comparisons) == 0 || !conforming {
 		t.Fatal(conforming, comparisons, err)
 	}
 	// neither sol1 nor "1001" is conformed
-	if conforming, comparisons, err := tuneApp.VerifyNote("1001"); err != nil || len(comparisons) == 0 || conforming {
+	if conforming, comparisons, _, err := tuneApp.VerifyNote("1001"); err != nil || len(comparisons) == 0 || conforming {
 		t.Fatal(conforming, comparisons, err)
 	}
 	if notes, comparisons, err := tuneApp.VerifySolution("sol12"); err != nil || len(notes) != 1 || len(comparisons) != 2 || notes[0] != "1001" {

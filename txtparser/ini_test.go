@@ -2,9 +2,17 @@ package txtparser
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
+	"path"
 	"reflect"
 	"testing"
 )
+
+var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1410736")
+var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "TCP/IP: setting keepalive interval", "", "4", "14.12.2017 ")
+var category = "NET"
+var fileVersion = "4"
 
 var iniExample = `
 # comment
@@ -20,6 +28,9 @@ india_julia < 4	dddd
 
 [Section D]
 lima > 5	eeeee
+
+[Section E]
+mike.november+oscar_papa-quebeck > 6	ffffff
 `
 
 // iniExample parsed and serialised into JSON
@@ -50,6 +61,11 @@ var iniJSON = `
 		"Key": "lima",
 		"Operator": "\u003e",
 		"Value": "5\teeeee"
+	}, {
+		"Section": "Section E",
+		"Key": "mike.november+oscar_papa-quebeck",
+		"Operator": "\u003e",
+		"Value": "6\tffffff"
 	}],
 	"KeyValue": {
 		"Section A": {
@@ -88,6 +104,14 @@ var iniJSON = `
 				"Operator": "\u003e",
 				"Value": "5\teeeee"
 			}
+		},
+		"Section E": {
+			"mike.november+oscar_papa-quebeck": {
+				"Section": "Section E",
+				"Key": "mike.november+oscar_papa-quebeck",
+				"Operator": "\u003e",
+				"Value": "6\tffffff"
+			}
 		}
 	}
 }`
@@ -102,5 +126,26 @@ func TestParseINI(t *testing.T) {
 	//t.Log(string(b), err)
 	if !reflect.DeepEqual(*actualINI, expectedINI) {
 		t.Fatalf("\n%+v\n%+v\n", *actualINI, expectedINI)
+	}
+}
+
+func TestGetINIFileDescriptiveName(t *testing.T) {
+	str := GetINIFileDescriptiveName(fileName)
+	if str != descName {
+		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, descName)
+	}
+}
+
+func TestGetINIFileCategory(t *testing.T) {
+	str := GetINIFileCategory(fileName)
+	if str != category {
+		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, category)
+	}
+}
+
+func TestGetINIFileVersion(t *testing.T) {
+	str := GetINIFileVersion(fileName)
+	if str != fileVersion {
+		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, category)
 	}
 }

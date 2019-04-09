@@ -2,6 +2,7 @@ package sap
 
 import (
 	"fmt"
+	//"github.com/SUSE/saptune/system"
 	"log"
 )
 
@@ -13,10 +14,12 @@ func PrintErrors(errors []error) error {
 			hasNil = true
 		} else {
 			log.Printf("%v", err)
+			//txt := fmt.Sprintf("%v", err)
+			//system.ErrorLog(txt)
 		}
 	}
 	if hasNil {
 		return nil
 	}
-	return fmt.Errorf("The tuning procedure failed entirely.")
+	return fmt.Errorf("the tuning procedure failed entirely")
 }

@@ -1,3 +1,5 @@
+package note
+
 /*
 SAP notes tune one or more parameters at a time.
 
@@ -6,13 +8,13 @@ in calculating an optimised value, and apply all parameters.
 
 A system can be tuned for more than one note at a time.
 */
-package note
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/SUSE/saptune/system"
-	"log"
+	"github.com/SUSE/saptune/txtparser"
+	"os"
 	"path"
 	"reflect"
 	"sort"
@@ -20,10 +22,10 @@ import (
 	"strings"
 )
 
-/*
-An SAP note consisting of a series of tunable parameters that can be applied and reverted.
-Parameter is immutable. Internal state changes can only be made to copies.
-*/
+// Note defines the structure and actions for a SAP Note
+// An SAP note consisting of a series of tunable parameters that can be
+// applied and reverted.
+// Parameter is immutable. Internal state changes can only be made to copies.
 type Note interface {
 	Initialise() (Note, error) // Inspect all tuning parameters and return.
 	Optimise() (Note, error)   // (Re)calculate all parameters, but do not apply.
@@ -31,41 +33,78 @@ type Note interface {
 	Name() string              // The original note name.
 }
 
-type TuningOptions map[string]Note // Collection of tuning options from SAP notes and 3rd party vendors.
+// TuningOptions is the collection of tuning options from SAP notes and
+// 3rd party vendors.
+type TuningOptions map[string]Note
 
-// Return all built-in tunable SAP notes together with those defined by 3rd party vendors.
-func GetTuningOptions(thirdPartyTuningDir string) TuningOptions {
-	ret := TuningOptions{
-		"2205917":       HANARecommendedOSSettings{},
-		"1275776":       PrepareForSAPEnvironments{},
-		"1984787":       AfterInstallation{},
-		"2161991":       VmwareGuestIOElevator{},
-		"SUSE-GUIDE-01": SUSESysOptimisation{},
-		"SUSE-GUIDE-02": SUSENetCPUOptimisation{},
+// Note2Convert checks, if there is a note in an older saptune format to revert
+// support revert from older saptune versions
+func Note2Convert(noteID string) string {
+	fileName := fmt.Sprintf("/var/lib/saptune/saved_state/%s_n2c", noteID)
+	if _, err := os.Stat(fileName); err == nil {
+		noteID = fmt.Sprintf("%s_n2c", noteID)
 	}
-	if system.IsPagecacheAvailable() {
-		ret["1557506"] = LinuxPagingImprovements{}
+	return noteID
+}
+
+// GetTuningOptions returns all built-in tunable SAP notes together with those
+// defined by 3rd party vendors.
+func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOptions {
+	ret := TuningOptions{}
+	// Collect those defined by saptune
+	_, files, err := system.ListDir(saptuneTuningDir)
+	if err != nil {
+		// Not a fatal error
+		system.WarningLog("GetTuningOptions: failed to read saptune tuning definitions - %v", err)
+	}
+	for _, fileName := range files {
+		ret[fileName] = INISettings{
+			ConfFilePath:    path.Join(saptuneTuningDir, fileName),
+			ID:              fileName,
+			DescriptiveName: "",
+		}
 	}
 
 	// Collect those defined by 3rd party
-	_, files, err := system.ListDir(thirdPartyTuningDir)
+	_, files, err = system.ListDir(thirdPartyTuningDir)
 	if err != nil {
 		// Not a fatal error
-		log.Printf("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
+		system.WarningLog("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
 	}
 	for _, fileName := range files {
-		// By convention, the portion before dash makes up the ID.
-		idName := strings.SplitN(fileName, "-", 2)
-		if len(idName) != 2 {
-			log.Printf("GetTuningOptions: skip bad file name \"%s\"", fileName)
+		// ignore left over files (BOBJ and ASE definition files) from
+		// the migration of saptune version 1 to saptune version 2
+		if fileName == "SAP_BOBJ-SAP_Business_OBJects.conf" || fileName == "SAP_ASE-SAP_Adaptive_Server_Enterprise.conf" {
+			system.WarningLog("GetTuningOptions: skip old note definition \"%s\" from saptune version 1.", fileName)
+			system.WarningLog("For more information refer to the man page saptune-migrate(7)")
 			continue
 		}
-		id := idName[0]
-		// Just for the cosmetics, remove suffix .conf from description
-		name := strings.TrimSuffix(idName[1], ".conf")
+		id := ""
+		// get the description of the note from the header inside the file
+		name := txtparser.GetINIFileDescriptiveName(path.Join(thirdPartyTuningDir, fileName))
+		if name == "" {
+			// no header found in the vendor file
+			// fall back to the old style vendor file names
+			// support of old style vendor file names for compatibility reasons
+			system.WarningLog("GetTuningOptions: no header information found in file \"%s\"", fileName)
+			system.WarningLog("falling back to old style vendor file names")
+			// By convention, the portion before dash makes up the ID.
+			idName := strings.SplitN(fileName, "-", 2)
+			if len(idName) != 2 {
+				system.WarningLog("GetTuningOptions: skip bad file name \"%s\"", fileName)
+				continue
+			}
+			id = idName[0]
+			// Just for the cosmetics, remove suffix .conf from description
+			name = strings.TrimSuffix(idName[1], ".conf")
+		} else {
+			// description found in header of the file
+			// let name empty, to get the right information during 'note list'
+			id = strings.TrimSuffix(fileName, ".conf")
+		}
 		// Do not allow vendor to override built-in
 		if _, exists := ret[id]; exists {
-			log.Printf("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
+			system.WarningLog("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
 			continue
 		}
 		ret[id] = INISettings{
@@ -77,7 +116,7 @@ func GetTuningOptions(thirdPartyTuningDir string) TuningOptions {
 	return ret
 }
 
-// Return all tuning option IDs, sorted in ascending order.
+// GetSortedIDs returns all tuning option IDs, sorted in ascending order.
 func (opts *TuningOptions) GetSortedIDs() (ret []string) {
 	ret = make([]string, 0, len(*opts))
 	for id := range *opts {
@@ -87,8 +126,9 @@ func (opts *TuningOptions) GetSortedIDs() (ret []string) {
 	return
 }
 
-// Record the actual value versus expected value for a note field. The field name has to be the actual name in Go struct.
-type NoteFieldComparison struct {
+// FieldComparison records the actual value versus expected value for
+// a note field. The field name has to be the actual name in Go struct.
+type FieldComparison struct {
 	ReflectFieldName               string // Structure field name
 	ReflectMapKey                  string // If structure field is a map, this is the map key
 	ActualValue, ExpectedValue     interface{}
@@ -96,15 +136,18 @@ type NoteFieldComparison struct {
 	MatchExpectation               bool
 }
 
-// Compare JSON representation of two values and see if they match.
+// CompareJSValue compares JSON representation of two values and see
+// if they match.
 func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 	v1JSBytes, err := json.Marshal(v1)
 	if err != nil {
-		log.Panicf("CompareJSValue: failed to serialise \"%+v\" - %v", v1, err)
+		system.ErrorLog("CompareJSValue: failed to serialise \"%+v\" - %v", v1, err)
+		panic(err)
 	}
 	v2JSBytes, err := json.Marshal(v2)
 	if err != nil {
-		log.Panicf("CompareJSValue: failed to serialise \"%+v\" - %v", v2, err)
+		system.ErrorLog("CompareJSValue: failed to serialise \"%+v\" - %v", v2, err)
+		panic(err)
 	}
 	v1JS, err = strconv.Unquote(string(v1JSBytes))
 	if err != nil {
@@ -118,15 +161,16 @@ func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 	return
 }
 
-// Compare the content of two notes and return differences in their fields in a human-readable text.
-func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]NoteFieldComparison) {
-	comparisons = make(map[string]NoteFieldComparison)
+// CompareNoteFields compares the content of two notes and return differences
+// in their fields in a human-readable text.
+func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]FieldComparison, valApplyList []string) {
+	comparisons = make(map[string]FieldComparison)
 	allMatch = true
 	// Compare all fields
 	refActualNote := reflect.ValueOf(actualNote)
 	refExpectedNote := reflect.ValueOf(expectedNote)
 	for i := 0; i < refActualNote.NumField(); i++ {
-		var fieldComparison NoteFieldComparison
+		var fieldComparison FieldComparison
 		// Retrieve actualField value from actual and expected note
 		fieldName := reflect.TypeOf(actualNote).Field(i).Name
 		actualField := refActualNote.Field(i)
@@ -137,8 +181,12 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 			for _, key := range actualField.MapKeys() {
 				actualValue := actualField.MapIndex(key).Interface()
 				expectedValue := expectedMap.MapIndex(key).Interface()
+
 				actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue)
-				fieldComparison = NoteFieldComparison{
+				if strings.Split(key.String(), ":")[0] == "rpm" {
+					match = system.CmpRpmVers(actualValue.(string), expectedValue.(string))
+				}
+				fieldComparison = FieldComparison{
 					ReflectFieldName: fieldName,
 					ReflectMapKey:    key.String(),
 					ActualValue:      actualValue,
@@ -148,6 +196,9 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					MatchExpectation: match,
 				}
 				comparisons[fmt.Sprintf("%s[%s]", fieldName, key.String())] = fieldComparison
+				if !fieldComparison.MatchExpectation && fieldComparison.ReflectFieldName == "SysctlParams" {
+					valApplyList = append(valApplyList, fieldComparison.ReflectMapKey)
+				}
 				if !fieldComparison.MatchExpectation {
 					allMatch = false
 				}
@@ -157,7 +208,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 			actualValue := refActualNote.Field(i).Interface()
 			expectedValue := refExpectedNote.Field(i).Interface()
 			actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue)
-			fieldComparison = NoteFieldComparison{
+			fieldComparison = FieldComparison{
 				ReflectFieldName: fieldName,
 				ActualValue:      actualValue,
 				ExpectedValue:    expectedValue,

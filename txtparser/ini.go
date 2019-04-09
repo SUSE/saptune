@@ -1,6 +1,8 @@
 package txtparser
 
 import (
+	"fmt"
+	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"
@@ -8,17 +10,22 @@ import (
 	"strings"
 )
 
+// Operator definitions
 const (
-	OperatorLessThan = "<"
-	OperatorMoreThan = ">"
-	OperatorEqual    = "="
+	OperatorLessThan      = "<"
+	OperatorLessThanEqual = "<="
+	OperatorMoreThan      = ">"
+	OperatorMoreThanEqual = ">="
+	OperatorEqual         = "="
 )
 
-type Operator string // The comparison or assignment operator used in an INI file entry
+// Operator is the comparison or assignment operator used in an INI file entry
+type Operator string
 
-var RegexKeyOperatorValue = regexp.MustCompile(`([\w._-]+)\s*([<=>])\s*(.*)`) // Break up a line into key, operator, value.
+// RegexKeyOperatorValue breaks up a line into key, operator, value.
+var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`)
 
-// A single key-value pair in INI file.
+// INIEntry contains a single key-value pair in INI file.
 type INIEntry struct {
 	Section  string
 	Key      string
@@ -26,12 +33,59 @@ type INIEntry struct {
 	Value    string
 }
 
-// All key-value pairs of an INI file.
+// INIFile contains all key-value pairs of an INI file.
 type INIFile struct {
 	AllValues []INIEntry
 	KeyValue  map[string]map[string]INIEntry
 }
 
+// GetINIFileDescriptiveName return the descriptive name of the Note
+func GetINIFileDescriptiveName(fileName string) string {
+	var re = regexp.MustCompile(`# .*NOTE=.*VERSION=(\d*)\s*DATE=(.*)\s*NAME="([^"]*)"`)
+	rval := ""
+	content, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return ""
+	}
+	matches := re.FindStringSubmatch(string(content))
+	if len(matches) != 0 {
+		rval = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", matches[3], "", matches[1], matches[2])
+	}
+	return rval
+}
+
+// GetINIFileCategory return the category the Note belongs to
+func GetINIFileCategory(fileName string) string {
+	var re = regexp.MustCompile(`# SAP-NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
+	rval := ""
+	content, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return ""
+	}
+	matches := re.FindStringSubmatch(string(content))
+	if len(matches) != 0 {
+		rval = fmt.Sprintf("%s", matches[1])
+	}
+	return rval
+}
+
+// GetINIFileVersion return the version of the Note used to setup the Note
+// configuration file
+func GetINIFileVersion(fileName string) string {
+	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
+	rval := ""
+	content, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return ""
+	}
+	matches := re.FindStringSubmatch(string(content))
+	if len(matches) != 0 {
+		rval = fmt.Sprintf("%s", matches[1])
+	}
+	return rval
+}
+
+// ParseINIFile read the content of the configuration file
 func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
 	content, err := ioutil.ReadFile(fileName)
 	if os.IsNotExist(err) && autoCreate {
@@ -50,12 +104,14 @@ func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
 	return ParseINI(string(content)), nil
 }
 
+// ParseINI parse the content of the configuration file
 func ParseINI(input string) *INIFile {
 	ret := &INIFile{
 		AllValues: make([]INIEntry, 0, 64),
 		KeyValue:  make(map[string]map[string]INIEntry),
 	}
 
+	reminder := ""
 	currentSection := ""
 	currentEntriesArray := make([]INIEntry, 0, 8)
 	currentEntriesMap := make(map[string]INIEntry)
@@ -64,14 +120,6 @@ func ParseINI(input string) *INIFile {
 		if len(line) == 0 {
 			continue
 		}
-		if strings.HasPrefix(line, "#") {
-			// Skip comments. Need to be done before
-			// 'break apart the line into key, operator, value'
-			// to support comments like # something (default = 60)
-			// without side effects
-			continue
-		}
-
 		if line[0] == '[' {
 			// Save previous section
 			if currentSection != "" {
@@ -84,8 +132,31 @@ func ParseINI(input string) *INIFile {
 			currentEntriesMap = make(map[string]INIEntry)
 			continue
 		}
+		if strings.HasPrefix(line, "#") {
+			// Skip comments. Need to be done before
+			// 'break apart the line into key, operator, value'
+			// to support comments like # something (default = 60)
+			// without side effects
+			if currentSection == "reminder" {
+				reminder = reminder + line + "\n"
+			}
+			continue
+		}
 		// Break apart a line into key, operator, value.
-		kov := RegexKeyOperatorValue.FindStringSubmatch(line)
+		kov := make([]string, 0)
+		if currentSection == "rpm" {
+			fields := strings.Fields(line)
+			if fields[1] == "all" || fields[1] == system.GetOsVers() {
+				kov = []string{"rpm", "rpm:" + fields[0], fields[1], fields[2]}
+			} else {
+				kov = nil
+			}
+		} else {
+			kov = RegexKeyOperatorValue.FindStringSubmatch(line)
+			if currentSection == "grub" {
+				kov[1] = "grub:" + kov[1]
+			}
+		}
 		if kov == nil {
 			// Skip comments, empty, and irregular lines.
 			continue
@@ -101,6 +172,28 @@ func ParseINI(input string) *INIFile {
 		currentEntriesArray = append(currentEntriesArray, entry)
 		currentEntriesMap[entry.Key] = entry
 	}
+	if reminder != "" {
+		// save reminder section
+		// Save previous section
+		if currentSection != "" {
+			ret.KeyValue[currentSection] = currentEntriesMap
+			ret.AllValues = append(ret.AllValues, currentEntriesArray...)
+		}
+		// Start the reminder section
+		currentEntriesArray = make([]INIEntry, 0, 8)
+		currentEntriesMap = make(map[string]INIEntry)
+		currentSection = "reminder"
+
+		entry := INIEntry{
+			Section:  "reminder",
+			Key:      "reminder",
+			Operator: "",
+			Value:    reminder,
+		}
+		currentEntriesArray = append(currentEntriesArray, entry)
+		currentEntriesMap[entry.Key] = entry
+	}
+
 	// Save last section
 	if currentSection != "" {
 		ret.KeyValue[currentSection] = currentEntriesMap

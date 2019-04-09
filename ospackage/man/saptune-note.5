@@ -1,0 +1,260 @@
+.\"/* 
+.\" * Copyright (c) 2018-2019 SUSE LLC.
+.\" * All rights reserved
+.\" * Authors: Angela Briel
+.\" *
+.\" * This program is free software; you can redistribute it and/or
+.\" * modify it under the terms of the GNU General Public License
+.\" * as published by the Free Software Foundation; either version 2
+.\" * of the License, or (at your option) any later version.
+.\" *
+.\" * This program is distributed in the hope that it will be useful,
+.\" * but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" * GNU General Public License for more details.
+.\" */
+.\" 
+
+.TH "saptune-note" "5" "March 2019" "" "saptune note file format description"
+.SH NAME
+saptune\-note - saptune note definition files
+.SH DESCRIPTION
+This man page documents the format of the saptune note definition files.
+.br
+The saptune note definitions will be searched in \fI/usr/share/saptune/notes\fR for the saptune SAP Note definitions or \fI/etc/saptune/override\fR for customer specific changes to the saptune SAP Note definitions or \fI/etc/saptune/extra\fR for vendor or customer specific tuning definitions.
+.br
+The \fBnote definition\fR files use the INI file format.
+.br
+A comment line starts with #.
+.br
+Lines starting with '[' indicate the begin of a new section.
+.SH SECTIONS
+A section starts with a '[section_name]' keyword in the first line, followed by lines with options and comments.
+
+The following section definitions are available and used in the saptune SAP Note definition files. Each of these sections can be used in a vendor or customer specific tuning definition placed in \fI/etc/saptune/extra\fR.
+.SH "[version]"
+This section is used to display version, description and last change date of the underlying Note during saptune option 'list'.
+.br
+Syntax:
+# <prefix>-NOTE=<noteId> CATEGORY=<category> VERSION=<versionNo> DATE=<release date of used note and related values> NAME="<description of the note>"
+
+.SH "[sysctl]"
+The section "[sysctl]" can be used to modify kernel parameters. The parameters available are those listed under /proc/sys/. 
+.br
+Please write the section keyword '[sysctl]' in the first line and add the desired tunables in 'sysctl.conf' syntax.
+.TP
+.BI sysctl.parameter = <value>
+.SH "[block]"
+The section "[block]" can contain the following options:
+.TP
+.BI IO_SCHEDULER= STRING
+The default I/O scheduler for SLES is CFQ. It offers satisfactory performance for wide range of I/O task, however choosing an alternative scheduler may potentially yield better latency characteristics and throughput. 
+"noop" is an alternative scheduler, in comparison to CFQ it may offer more consistent performance, lower computation overhead, and potentially higher throughput.
+For most SAP environments (RAID, storage arrays, virtualizaton) 'noop' is the better choice.
+When set, all block devices on the system will be switched to the chosen scheduler.
+.br
+Valid values can be found in \fI/sys/block/<device>/queue/scheduler\fR.
+.TP
+.BI NRREQ= INT
+IO nr_requests
+When set, the number of requests for all block devices on the system will be switched to the chosen value
+.SH "[limits]"
+The section "[limits]" is dealing with ulimit settings for user login sessions in the pam_limits module. The settings are done in the file \fI/etc/security/limits.conf\fR. For more information and a description of the syntax and the needed fileds please look at limits.conf(5).
+.br
+This section has to contain the following options:
+.TP
+.BI LIMIT_HARD= INT
+the hard resource limits. Beside integer values the values \fBunlimited\fR, \fBinfinity\fR and \fB\-1 are supported.
+.TP
+.BI LIMIT_SOFT= INT
+the soft resource limits. Beside integer values the values \fBunlimited\fR, \fBinfinity\fR and \fB\-1 are supported.
+.TP
+.BI LIMIT_ITEM= STRING
+At the moment we support settings for 
+.RS 8
+\fBmemlock\fR
+.RS 4
+maximum locked-in-memory address space (KB) e.g. for user \fBsybase\fR. If \fILIMIT_HARD\fR and/or \fILIMIT_SOFT\fR are set to \fB0\fR, the limits will be calculated as (MainMemSize in KB  - 10%)
+.RE
+.RE
+.RS 8
+\fBnofile\fR 
+.RS 4
+Maximum number of open files e.g. for SAP application groups \fBsapsys\fR, \fBsdba\fR and \fBdba\fR.
+.RE
+.RE
+.TP
+.BI LIMIT_DOMAIN= STRING
+At the moment we provide settings for the user \fBsybase\fR (memlock) and for the groups \fBsapsys\fR, \fBsdba\fR and \fBdba\fR (nofile).
+.br
+Note: The "@" sign matches a group. 
+.br
+If you want to change specific users, e.g. sidadm, you can simply write 'LIMIT_DOMAIN=sidadm' or 'LIMIT_DOMAIN=@sapsys @sdba @dba sidadm' to add an entry "sidadm - nofile 65536" to the file (with LIMIT_ITEM=nofile and LIMIT_SOFT=65536 or LIMIT_HARD=65536).
+.SH "[vm]"
+The section "[vm]" manipulates \fB/sys/kernel/mm\fR switches. 
+.br
+This section can to contain the following options:
+.TP
+.BI THP= STRING
+This option disables transparent hugepages (applies to Intel-based systems only) by changing \fB/sys/kernel/mm/transparent_hugepage/enabled\fR
+.br
+Possible values are '\fBnever\fR' to disable and '\fBalways\fR' to enable.
+.TP
+.BI KSM= INT
+Kernel Samepage Merging (KSM). KSM allows for an application to register with the kernel so as to have its memory pages merged with other processes that also register to have their pages merged. For KVM the KSM mechanism allows for guest virtual machines to share pages with each other. In todays environment where many of the guest operating systems like XEN, KVM are similar and are running on same host machine, this can result in significant memory savings, the default value is set to 0.
+.br
+ATTENTION: /usr/share/saptune/note/SUSE-GUIDE-01 will change it to 1, if
+activated after note 2205917 or solution HANA
+.SH "[mem]"
+The section "[mem]" manipulates the size of TMPFS (\fB/dev/shm\fR).
+
+With the STD implementation, the SAP Extended Memory is no longer stored in the TMPFS (under /dev/shm). However, the TMPFS is required by the Virtual Machine Container (VMC). For this reason, we still recommend the same configuration of the TMPFS:
+.br
+75% (RAM + Swap) is still recommended as the size.
+.br
+This section can to contain the following options:
+.TP
+.BI ShmFileSystemSizeMB= INT
+Use ShmFileSystemSizeMB to set an absolute value for your TMPFS.
+.br
+If ShmFileSystemSizeMB is set to a value > 0, the setting for VSZ_TMPFS_PERCENT will be ignored and the size will NOT be calculated.
+.br
+If ShmFileSystemSizeMB is set to '\fB0\fR' the size will be calculated using VSZ_TMPFS_PERCENT
+.TP
+.BI VSZ_TMPFS_PERCENT= INT
+Size of tmpfs mounted on \fI/dev/shm\fR in percent of the virtual memory.
+.br
+Depending on the size of the virtual memory (physical+swap) the value is calculated by (RAM + SWAP) * VSZ_TMPFS_PERCENT/100
+.br
+If VSZ_TMPFS_PERCENT is set to '\fB0\fR', the value is calculated by (RAM + SWAP) * 75/100, as the default is 75.
+.SH "[cpu]"
+The section "[cpu]" manipulates files in \fB/sys/devices/system/cpu/cpu*\fR.
+.br
+This section can to contain the following options:
+.TP
+.BI energy_perf_bias= STRING
+Energy Performance Bias EPB (applies to Intel-based systems only)
+.br
+supported values are: \fBperformance\fR (0), \fBnormal\fR (6) and \fBpowersave\fR (15)
+.br
+The command 'cpupower set -b <value>' is used to set the value, if the system supports Intel's performance bias setting.
+See cpupower(1) and cpupower-set(1) for more information.
+.br
+If system does not support Intel's performance bias setting - '\fBall:none\fR' is used in the column '\fIActual\fR' of the verify table and the \fIfootnote\fR '[1] setting is not supported by the system' is displayed.
+
+When set as 'energy_perf_bias=<performance|normal|powersave> in the Note definition file, the value will be set for \fBall\fR available CPUs.
+.br
+The command '\fBcpupower -c all set -b <value>\fR' or '\fBcpupower -c <cpu> set -b <value>\fR' is used to set the value.
+.TP
+.BI governor
+CPU Frequency/Voltage scaling (applies to Intel-based systems only)
+.br
+The clock frequency and voltage of modern CPUs can scale, in order to save energy when there’s less work to be done. However HANA as a high-performance database benefits from high CPU frequencies.
+.br
+The command 'cpupower frequency-set -g <value>' is used to set the value, if the value is a supported governor listed in \fI/sys/devices/system/cpu/cpu*/cpufreq/scaling_governor\fR'
+See cpupower(1) and cpupower-frequency-set(1) for more information.
+.br
+If the governor settings of all available CPUs are equal, '\fBall:<governor>\fR' is used in the column '\fIActual\fR' of the verify table. If not, each CPU with its assigned governor is listed (e.g. cpu1:powersave cpu2:powersave cpu3:powersave cpu4:powersave cpu5:powersave cpu6:powersave cpu7:powersave cpu0:performance)
+
+When set as 'governor=<performance|powersave> in the Note definition file, the value will be set for \fBall\fR available CPUs.
+.br
+The command '\fBcpupower -c all frequency-set -g <value>\fR' or '\fBcpupower -c <cpu> frequency-set -g <value>\fR' is used to set the value.
+.TP
+.BI force_latency= STRING
+
+.SH "[service]"
+The section "[service]" is dealing with starting and stopping services controlled by systemd.
+.br
+This section can contain the following options:
+.TP
+.BI UuiddSocket= STRING
+This option starts the uuidd.socket service. Only '\fBstart\fR' is a valid value, because the uuidd.socket service is essential for a working SAP environment.
+.TP
+.BI Sysstat= STRING
+This option handels the sysstat service. Valid values are '\fBstart\fR' or '\fBstop\fR'.
+.br
+Please be in mind: A running sysstat service can effect the system performance. But if there are real performance trouble with the SAP system, SAP service normally orders the sysstat reports collected in /var/log/sa.
+.br
+See sar(1), sa2(8), sa1(8) for more information
+.SH "[reminder]"
+The section "[reminder]" contains important information and all settings of a SAP Note, which can not set by saptune. 
+
+This section is displayed at the end of the saptune options 'verify', 'simulate' and 'apply'. It will be highlighted with red colour to get the attention of the customer.
+.SH "[rpm]"
+The section "[rpm]" is checking rpm versions on the system.
+The values from the Note definition files are only checked against the installed rpm versions on the system. No other action is supported.
+.br
+Package dependencies - if needed - are handled by the saptune package installation.
+
+Syntax:
+.br
+<rpm package name> <SLE Version> <rpm package version>
+.br
+Add one line for each SLE version a package should be checked for, even if the package version is the same.
+.br
+The SLE version has to be noted in the same format as the '\fBVERSION=\fR' entry in \fI/etc/os-release\fR.
+
+e.g
+.br
+systemd 12-SP2 228-142.1
+.br
+sapinit-systemd-compat 12 1.0-2.1
+.br
+sapinit-systemd-compat 12-SP1 1.0-2.1
+.br
+util-linux 12-SP1 2.25-22.1
+
+Only the lines where the SLE version is matching the running system OS are checked and displayed during the 'verify' and 'simulate' option.
+.br
+That means, if there is no matching SLE version for the running OS no rpm entries are listed during the 'verify' and 'simulate' operation.
+
+.SH "[grub]"
+The section "[grub]" is checking kernel commandline settings for grub.
+The values from the Note definition files are only checked against \fI/proc/cmdline\fR. Changing the grub configuration is not supported by saptune.
+
+Some of these values are set by saptune during runtime, so changing the grub configuration is possible but not needed.
+
+This section can contain the following options:
+.TP
+.BI intel_idle.max_cstate=1
+and
+.BI processor.max_cstate=1
+Configure C-States for lower latency in Linux (applies to Intel-based systems only) - see energy_perf_bias and governor in section [cpu]
+.TP
+.BI numa_balancing=disable
+Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl]
+.TP
+.BI transparent_hugepage=never
+Disable transparent hugepages - see THP in section [vm]
+.SH "[pagecache]"
+The section "[pagecache]" is dealing with the pagecache limit feature as described in SAP Note 1557506, which is only availabe on SLE12.
+.br
+ATTENTION: The pagecache limit Note will NOT be part of any solution definition by default. As it is essential to configure this feature really carefully, you need to customize the note definition file first to enable the feature and then you can apply the note settings manually. After that, the settings will be applied automatically during each startup of the system.
+.br
+This section can contain the following options:
+.TP
+.BI ENABLE_PAGECACHE_LIMIT= yesno
+This defines whether pagecache limit feature should be enabled or not. It is a yesno value. By default it is set to \fBno\fR
+.br
+Consider to enable pagecache limit feature if your SAP workloads cause frequent and excessive swapping activities.
+It is recommended to leave pagecache limit disabled if the system has low or no swap space.
+.TP
+.BI PAGECACHE_LIMIT_IGNORE_DIRTY= INT
+Whether or not to ignore dirty memory when enforcing the pagecache limit.
+.br
+If set to 0, dirty memory will be freed (written onto disk) when enforcing the pagecache limit.
+.br
+If set to 1 (default), dirty memory will not be freed when enforcing the pagecache limit.
+.br
+If set to 2 - a middle ground, some dirty memory will be freed when enforcing the limit.
+.TP
+.BI OVERRIDE_PAGECACHE_LIMIT_MB= INT
+When pagecache limit feature is enabled, the limit value is usually automatically calculated.
+.br
+However, the value can be overriden if you set this parameter to the desired limit value.
+.br
+To remove the override, set the parameter to empty string.
+.SH "SEE ALSO"
+.LP
+saptune-migrate(7) saptune(8) saptune_v1(8) saptune_v2(8) tuned(8) tuned-adm(8)
+

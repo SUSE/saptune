@@ -59,6 +59,15 @@ func TestState(t *testing.T) {
 	note1 := Note1{Str: "initial value"}
 	note2 := Note2{Int: 1}
 
+	n1file := state.GetPathToNote("1")
+	if n1file != "/tmp/saptune-test/var/lib/saptune/saved_state/1" {
+		t.Fatal(n1file)
+	}
+	n2file := state.GetPathToNote("2")
+	if n2file != "/tmp/saptune-test/var/lib/saptune/saved_state/2" {
+		t.Fatal(n2file)
+	}
+
 	// Store and list
 	if num, err := state.List(); len(num) != 0 || err != nil {
 		t.Fatal(num, err)
@@ -75,6 +84,7 @@ func TestState(t *testing.T) {
 	if num, err := state.List(); err != nil || len(num) != 2 || num[0] != "1" || num[1] != "2" {
 		t.Fatal(num, err)
 	}
+
 	// Retrieve and compare
 	readNote1 := Note1{}
 	readNote2 := Note2{}
@@ -99,5 +109,8 @@ func TestState(t *testing.T) {
 	}
 	if num, err := state.List(); len(num) != 0 || err != nil {
 		t.Fatal(num, err)
+	}
+	if err := state.Retrieve("1", &readNote1); err == nil && readNote1 == note1 {
+		t.Fatal(err, readNote1)
 	}
 }

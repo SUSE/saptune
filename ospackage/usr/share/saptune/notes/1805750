@@ -1,0 +1,44 @@
+# 1805750 - SYB: Usage of HugePages on Linux Systems with Sybase ASE
+# Configuration of HugePages on Linux with SAP Sybase ASE
+# Version 6 from 14.11.2017 in English
+#
+[version]
+# SAP-NOTE=1805750 CATEGORY=SYBASE VERSION=6 DATE=14.11.2017 NAME="SYB: Usage of HugePages on Linux Systems with Sybase ASE"
+
+[limits]
+# Allow Sybase ASE owner to make use of available HugePages.
+# add the DBMS user with memlock permission
+LIMIT_HARD=unlimited
+LIMIT_SOFT=unlimited
+LIMIT_ITEM=memlock
+LIMIT_DOMAIN=""
+
+[sysctl]
+# If the server is a heavily used application server, e.g. a Database, it would
+# benefit significantly by using Huge Pages. 
+# The default size of Huge Page in SLES is 2 MB, enabling Huge Pages would aid 
+# in significant improvements for Memory Intensive Applications/Databases, 
+# HPC Machines, this configuration needs to be done if the Applications support
+# Huge Pages. If the Applications do not support Huge Pages then configuring 
+# Huge Pages would result in wastage of memory as it cannot be used any further
+# by the OS. 
+#
+# Set vm.nr_hugepages high enough so that ASE is able to allocate all its
+# memory at startup as huge pages. Otherwise ASE will not make use of HugePage
+# memory
+# If you change ASE configuration dynamically after it has been booted and ASE
+# allocates another shared memory segment, ASE will attempt to allocate the new
+# segment using huge pages.
+# If enough free HugePages are still available the new segment will get created
+# using HugePages, if not ASE will silently fall back and create a shared memory
+# segment using standard memory pages.
+vm.nr_hugepages=""
+
+# Users who wish to use hugetlb memory via shared memory segment should be a
+# member of a supplementary group and system admin needs to configure that gid
+# into /proc/sys/vm/hugetlb_shm_group. It is possible for same or different
+# applications to use any combination of mmaps and shm* calls, though the mount
+# of filesystem will be required for using mmap calls without MAP_HUGETLB.
+#
+# Add the Sybase groupid, since ASE uses HugePages and shared memory.
+vm.hugetlb_shm_group=""

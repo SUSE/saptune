@@ -6,25 +6,38 @@ import (
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"io"
-	"log"
 	"os"
+	"os/exec"
 	"runtime"
 	"sort"
+	"strconv"
+	"strings"
 	"syscall"
 )
 
+// constant definitions
 const (
 	SapconfService        = "sapconf.service"
 	TunedService          = "tuned.service"
 	TunedProfileName      = "saptune"
-	ExitTunedStopped      = 1
-	ExitTunedWrongProfile = 2
-	ExitNotTuned          = 3
-	// ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
-	ExtraTuningSheets = "/etc/saptune/extra/"
+	NoteTuningSheets      = "/usr/share/saptune/notes/"
+	OverrideTuningSheets  = "/etc/saptune/override/"
+	ExtraTuningSheets     = "/etc/saptune/extra/" // ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
+	exitTunedStopped      = 1
+	exitTunedWrongProfile = 2
+	exitNotTuned          = 3
+	saptuneV1             = "/usr/sbin/saptune_v1"
+	setGreenText          = "\033[32m"
+	setRedText            = "\033[31m"
+	resetTextColor        = "\033[0m"
+	footnote1             = "[1] setting is not supported by the system"
+	footnote2             = "[2] setting is not available on the system"
+	footnote3             = "[3] value is only checked, but NOT set"
 )
 
+// PrintHelpAndExit Print the usage and exit
 func PrintHelpAndExit(exitStatus int) {
 	fmt.Println(`saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
@@ -34,13 +47,19 @@ Tune system according to SAP and SUSE notes:
   saptune note [ apply | simulate | verify | customise | revert ] NoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
-  saptune solution [ apply | simulate | verify | revert ] SolutionName`)
+  saptune solution [ apply | simulate | verify | revert ] SolutionName
+Revert all parameters tuned by the SAP notes or solutions:
+  saptune revert all
+Print current saptune version:
+  saptune version
+Print this message:
+  saptune help`)
 	os.Exit(exitStatus)
 }
 
 // Print the message to stderr and exit 1.
 func errorExit(template string, stuff ...interface{}) {
-	fmt.Fprintf(os.Stderr, template+"\n", stuff...)
+	system.ErrorLog(template+"\n", stuff...)
 	os.Exit(1)
 }
 
@@ -57,32 +76,60 @@ var tuningOptions note.TuningOptions // Collection of tuning options from SAP no
 var solutionSelector = runtime.GOARCH
 
 func main() {
+	// activate logging
+	system.LogInit()
+
+	// get saptune version
+	sconf, err := txtparser.ParseSysconfigFile("/etc/sysconfig/saptune", true)
+	if err != nil {
+		errorExit("Unable to read file '/etc/sysconfig/saptune': %v", err)
+	}
+	saptuneVersion := sconf.GetString("SAPTUNE_VERSION", "")
+
 	if arg1 := cliArg(1); arg1 == "" || arg1 == "help" || arg1 == "--help" {
 		PrintHelpAndExit(0)
+	}
+	if arg1 := cliArg(1); arg1 == "version" || arg1 == "--version" {
+		fmt.Printf("current active saptune version is '%s'\n", saptuneVersion)
+		os.Exit(0)
+	}
+
+	switch saptuneVersion {
+	case "1":
+		cmd := exec.Command(saptuneV1, os.Args[1:]...)
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			errorExit("command '%+s %+v' failed with error '%v'\n", saptuneV1, os.Args, err)
+		} else {
+			os.Exit(0)
+		}
+	case "2":
+		break
+	default:
+		errorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", saptuneVersion)
 	}
 	// All other actions require super user privilege
 	if os.Geteuid() != 0 {
 		errorExit("Please run saptune with root privilege.")
 		return
 	}
-	var saptune_log io.Writer
-	saptune_log, err := os.OpenFile("/var/log/tuned/tuned.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
-	if err != nil {
-		panic(err.Error())
-	}
-	saptune_writer := io.MultiWriter(os.Stderr, saptune_log)
-	log.SetOutput(saptune_writer)
+
 	if system.IsPagecacheAvailable() {
 		solutionSelector = solutionSelector + "_PC"
 	}
 	archSolutions, exist := solution.AllSolutions[solutionSelector]
 	if !exist {
-		errorExit("The system architecture (%s) is not supported.", runtime.GOARCH)
+		errorExit("The system architecture (%s) is not supported.", solutionSelector)
 		return
 	}
 	// Initialise application configuration and tuning procedures
-	tuningOptions = note.GetTuningOptions(ExtraTuningSheets)
+	tuningOptions = note.GetTuningOptions(NoteTuningSheets, ExtraTuningSheets)
 	tuneApp = app.InitialiseApp("", "", tuningOptions, archSolutions)
+
+	checkUpdateLeftOvers()
+
 	switch cliArg(1) {
 	case "daemon":
 		DaemonAction(cliArg(2))
@@ -90,23 +137,67 @@ func main() {
 		NoteAction(cliArg(2), cliArg(3))
 	case "solution":
 		SolutionAction(cliArg(2), cliArg(3))
+	case "revert":
+		RevertAction(cliArg(2))
 	default:
 		PrintHelpAndExit(1)
 	}
 }
 
+// checkUpdateLeftOvers checks for left over files from the migration of
+// saptune version 1 to saptune version 2
+func checkUpdateLeftOvers() {
+	// check for the /etc/tuned/saptune/tuned.conf file created during
+	// the package update from saptune v1 to saptune v2
+	// give a Warning but go ahead tuning the system
+	if system.CheckForPattern("/etc/tuned/saptune/tuned.conf", "#stv1tov2#") {
+		system.WarningLog("found file '/etc/tuned/saptune/tuned.conf' left over from the migration of saptune version 1 to saptune version 2. Please check and remove this file as it may work against the settings of some SAP Notes. For more information refer to the man page saptune-migrate(7)")
+	}
+
+	// check for saved state information in an older, no longer supported
+	// saptune format
+	leftOver, check := tuneApp.State.CheckForOldRevertData()
+	if check {
+		errorExit("found old saved state files '%s' related to applied notes. Seems there were some steps missed during the migration from saptune version 1 to version 2. Please check. Refer to saptune-migrate(7) for more information", strings.Join(leftOver, ", "))
+	} else if len(leftOver) != 0 {
+		system.WarningLog("found old saved state files '%s', but unrelated to applied notes. Seems there are some files left over from the migration of saptune version 1 to saptune version 2. Please check and remove these files. For more information refer to the man page saptune-migrate(7)", strings.Join(leftOver, ", "))
+	}
+	if len(tuneApp.NoteApplyOrder) == 0 && (len(tuneApp.TuneForNotes) != 0 || len(tuneApp.TuneForSolutions) != 0) {
+		errorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'. Seems there were some steps missed during the migration from saptune version 1 to version 2. Please check. Refer to saptune-migrate(7) for more information")
+	}
+}
+
+// RevertAction Revert all notes and solutions
+func RevertAction(actionName string) {
+	if actionName != "all" {
+		PrintHelpAndExit(1)
+	}
+	fmt.Println("Reverting all notes and solutions, this may take some time...")
+	if err := tuneApp.RevertAll(true); err != nil {
+		errorExit("Failed to revert notes: %v", err)
+		//panic(err)
+	}
+	fmt.Println("Parameters tuned by the notes and solutions have been successfully reverted.")
+}
+
+// DaemonAction handles daemon actions like start, stop, status asm.
 func DaemonAction(actionName string) {
 	switch actionName {
 	case "start":
 		fmt.Println("Starting daemon (tuned.service), this may take several seconds...")
 		system.SystemctlDisableStop(SapconfService) // do not error exit on failure
-		if err := system.WriteTunedAdmProfile("saptune"); err != nil {
+		if err := system.TunedAdmProfile("saptune"); err != nil {
 			errorExit("%v", err)
 		}
 		if err := system.SystemctlEnableStart(TunedService); err != nil {
 			errorExit("%v", err)
 		}
-		// tuned then calls `sapconf daemon apply`
+		// Check tuned profile
+		if system.GetTunedAdmProfile() != TunedProfileName {
+			system.ErrorLog("tuned.service profile is incorrect. Please check tuned logs for more information")
+			os.Exit(exitTunedWrongProfile)
+		}
+		// tuned then calls `saptune daemon apply`
 		fmt.Println("Daemon (tuned.service) has been enabled and started.")
 		if len(tuneApp.TuneForSolutions) == 0 && len(tuneApp.TuneForNotes) == 0 {
 			fmt.Println("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
@@ -122,12 +213,12 @@ func DaemonAction(actionName string) {
 			fmt.Println("Daemon (tuned.service) is running.")
 		} else {
 			fmt.Fprintln(os.Stderr, "Daemon (tuned.service) is stopped. If you wish to start the daemon, run `saptune daemon start`.")
-			os.Exit(ExitTunedStopped)
+			os.Exit(exitTunedStopped)
 		}
 		// Check tuned profile
 		if system.GetTunedProfile() != TunedProfileName {
 			fmt.Fprintln(os.Stderr, "tuned.service profile is incorrect. If you wish to correct it, run `saptune daemon start`.")
-			os.Exit(ExitTunedWrongProfile)
+			os.Exit(exitTunedWrongProfile)
 		}
 		// Check for any enabled note/solution
 		if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 {
@@ -140,14 +231,17 @@ func DaemonAction(actionName string) {
 			}
 		} else {
 			fmt.Fprintln(os.Stderr, "Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
-			os.Exit(ExitNotTuned)
+			os.Exit(exitNotTuned)
 		}
 	case "stop":
 		fmt.Println("Stopping daemon (tuned.service), this may take several seconds...")
+		if err := system.TunedAdmOff(); err != nil {
+			errorExit("%v", err)
+		}
 		if err := system.SystemctlDisableStop(TunedService); err != nil {
 			errorExit("%v", err)
 		}
-		// tuned then calls `sapconf daemon revert`
+		// tuned then calls `saptune daemon revert`
 		fmt.Println("Daemon (tuned.service) has been disabled and stopped.")
 		fmt.Println("All tuned parameters have been reverted to default.")
 	case "revert":
@@ -160,47 +254,241 @@ func DaemonAction(actionName string) {
 	}
 }
 
-// Print mismatching fields in the note comparison result.
-func PrintNoteFields(noteID string, comparisons map[string]note.NoteFieldComparison, printComparison bool) {
-	fmt.Printf("%s - %s -\n", noteID, tuningOptions[noteID].Name())
+// PrintNoteFields Print mismatching fields in the note comparison result.
+func PrintNoteFields(header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool) {
+
+	var fmtlen0, fmtlen1, fmtlen2, fmtlen3, fmtlen4 int
+	// initialise
+	compliant := "yes"
+	printHead := ""
+	noteField := ""
+	sortkeys := make([]string, 0, len(noteComparisons))
+	remskeys := make([]string, 0, len(noteComparisons))
+	footnote := make([]string, 3, 3)
+	reminder := make(map[string]string)
+	override := ""
+	comment := ""
 	hasDiff := false
-	for name, comparison := range comparisons {
-		if !comparison.MatchExpectation {
-			hasDiff = true
-			if printComparison {
-				fmt.Printf("\t%s Expected: %s\n", name, comparison.ExpectedValueJS)
-				fmt.Printf("\t%s Actual  : %s\n", name, comparison.ActualValueJS)
-			} else {
-				fmt.Printf("\t%s : %s\n", name, comparison.ExpectedValueJS)
+	format := "\t%s : %s\n"
+
+	if printComparison {
+		// verify
+		fmtlen0 = 16
+		fmtlen1 = 12
+		fmtlen2 = 9
+		fmtlen3 = 9
+		fmtlen4 = 7
+	} else {
+		// simulate
+		fmtlen1 = 12
+		fmtlen2 = 10
+		fmtlen3 = 15
+		fmtlen4 = 9
+	}
+
+	// sort output
+	for noteID, comparisons := range noteComparisons {
+		for _, comparison := range comparisons {
+			if len(comparison.ReflectMapKey) != 0 && comparison.ReflectFieldName != "OverrideParams" {
+				if comparison.ReflectMapKey != "reminder" {
+					sortkeys = append(sortkeys, noteID+"@"+comparison.ReflectMapKey)
+				} else {
+					remskeys = append(remskeys, noteID+"@"+comparison.ReflectMapKey)
+				}
 			}
 		}
 	}
-	if !hasDiff {
-		fmt.Printf("\t(no change)\n")
+	sort.Strings(sortkeys)
+	for _, rem := range remskeys {
+		sortkeys = append(sortkeys, rem)
+	}
+
+	// setup format values
+	for _, skey := range sortkeys {
+		keyFields := strings.Split(skey, "@")
+		noteID := keyFields[0]
+		comparisons := noteComparisons[noteID]
+		for _, comparison := range comparisons {
+			if comparison.ReflectMapKey == "reminder" {
+				continue
+			}
+			if printComparison {
+				// verify
+				if len(noteField) > fmtlen0 {
+					fmtlen0 = len(noteField)
+				}
+				if len(comparison.ReflectMapKey) != 0 {
+					if comparison.ReflectFieldName == "OverrideParams" && len(comparison.ActualValueJS) > fmtlen3 {
+						fmtlen3 = len(comparison.ActualValueJS)
+						continue
+					}
+					if len(comparison.ReflectMapKey) > fmtlen1 {
+						fmtlen1 = len(comparison.ReflectMapKey)
+					}
+					if len(comparison.ExpectedValueJS) > fmtlen2 {
+						fmtlen2 = len(comparison.ExpectedValueJS)
+					}
+					if len(comparison.ActualValueJS) > fmtlen4 {
+						fmtlen4 = len(comparison.ActualValueJS)
+					}
+				}
+				format = "   %-" + strconv.Itoa(fmtlen0) + "s | %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s | %-" + strconv.Itoa(fmtlen3) + "s | %-" + strconv.Itoa(fmtlen4) + "s | %2s\n"
+			} else {
+				// simulate
+				if len(comparison.ReflectMapKey) != 0 {
+					if comparison.ReflectFieldName == "OverrideParams" && len(comparison.ActualValueJS) > fmtlen4 {
+						fmtlen4 = len(comparison.ActualValueJS)
+						continue
+					}
+					if len(comparison.ReflectMapKey) > fmtlen1 {
+						fmtlen1 = len(comparison.ReflectMapKey)
+					}
+					if len(comparison.ActualValueJS) > fmtlen2 {
+						fmtlen2 = len(comparison.ActualValueJS)
+					}
+					if len(comparison.ExpectedValueJS) > fmtlen3 {
+						fmtlen3 = len(comparison.ExpectedValueJS)
+					}
+				}
+				format = "   %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s | %-" + strconv.Itoa(fmtlen3) + "s | %-" + strconv.Itoa(fmtlen4) + "s | %2s\n"
+			}
+		}
+	}
+
+	// print
+	noteID := ""
+	for _, skey := range sortkeys {
+		comment = ""
+		keyFields := strings.Split(skey, "@")
+		key := keyFields[1]
+		printHead = ""
+		if keyFields[0] != noteID {
+			if noteID == "" {
+				printHead = "yes"
+			}
+			noteID = keyFields[0]
+			noteField = fmt.Sprintf("%s, %s", noteID, txtparser.GetINIFileVersion(noteComparisons[noteID]["ConfFilePath"].ActualValue.(string)))
+		}
+
+		comparison := noteComparisons[noteID][fmt.Sprintf("%s[%s]", "SysctlParams", key)]
+		override = strings.Replace(noteComparisons[noteID][fmt.Sprintf("%s[%s]", "OverrideParams", key)].ExpectedValueJS, "\t", " ", -1)
+
+		if comparison.ReflectMapKey == "reminder" {
+			reminder[noteID] = reminder[noteID] + comparison.ExpectedValueJS
+			continue
+		}
+		if !comparison.MatchExpectation {
+			hasDiff = true
+			compliant = "no"
+		} else {
+			compliant = "yes"
+		}
+
+		// prepare footnote
+		switch comparison.ActualValue {
+		case "all:none":
+			compliant = compliant + " [1]"
+			comment = comment + " [1]"
+			footnote[0] = footnote1
+		case "NA":
+			compliant = compliant + " [2]"
+			comment = comment + " [2]"
+			footnote[1] = footnote2
+		}
+		if strings.Contains(comparison.ReflectMapKey, "rpm") || strings.Contains(comparison.ReflectMapKey, "grub") {
+			compliant = compliant + " [3]"
+			comment = comment + " [3]"
+			footnote[2] = footnote3
+		}
+
+		// print table header
+		if printHead != "" {
+			if header != "NONE" {
+				fmt.Printf("%s - %s \n\n", noteID, tuningOptions[noteID].Name())
+			}
+			if printComparison {
+				// verify
+				fmt.Printf(format, "SAPNote, Version", "Parameter", "Expected", "Override", "Actual", "Compliant")
+				for i := 0; i < fmtlen0+fmtlen1+fmtlen2+fmtlen3+fmtlen4+28; i++ {
+					if i == 3+fmtlen0+1 || i == 3+fmtlen0+3+fmtlen1+1 || i == 3+fmtlen0+3+fmtlen1+4+fmtlen2 || i == 3+fmtlen0+3+fmtlen1+4+fmtlen2+2+fmtlen3+1 || i == 3+fmtlen0+3+fmtlen1+4+fmtlen2+2+fmtlen3+3+fmtlen4+1 {
+						fmt.Printf("+")
+					} else {
+						fmt.Printf("-")
+					}
+				}
+				fmt.Printf("\n")
+			} else {
+				// simulate
+				fmt.Printf(format, "Parameter", "Value set", "Value expected", "Override", "Comment")
+				for i := 0; i < fmtlen1+fmtlen2+fmtlen3+fmtlen4+28; i++ {
+					if i == 3+fmtlen1+1 || i == 3+fmtlen1+3+fmtlen2+1 || i == 3+fmtlen1+3+fmtlen2+3+fmtlen3+1 || i == 3+fmtlen1+3+fmtlen2+3+fmtlen3+3+fmtlen4+1 {
+						fmt.Printf("+")
+					} else {
+						fmt.Printf("-")
+					}
+				}
+				fmt.Printf("\n")
+			}
+		}
+
+		// print table body
+		if printComparison {
+			// verify
+			fmt.Printf(format, noteField, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), compliant)
+		} else {
+			// simulate
+			fmt.Printf(format, comparison.ReflectMapKey, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override, comment)
+		}
+	}
+	// print footer
+	if header != "NONE" && !hasDiff {
+		fmt.Printf("\n   (no change)\n")
+	}
+	for _, fn := range footnote {
+		if fn != "" {
+			fmt.Printf("\n %s", fn)
+		}
+	}
+	fmt.Printf("\n\n")
+	for noteID, reminde := range reminder {
+		if reminde != "" {
+			reminderHead := fmt.Sprintf("Attention for SAP Note %s:\nHints or values not yet handled by saptune. So please read carefully, check and set manually, if needed:\n", noteID)
+			fmt.Printf("%s\n", setRedText+reminderHead+reminde+resetTextColor)
+		}
 	}
 }
 
-// Verify that all system parameters do not deviate from any of the enabled solutions/notes.
+// VerifyAllParameters Verify that all system parameters do not deviate from any of the enabled solutions/notes.
 func VerifyAllParameters() {
 	unsatisfiedNotes, comparisons, err := tuneApp.VerifyAll()
 	if err != nil {
 		errorExit("Failed to inspect the current system: %v", err)
 	}
+	PrintNoteFields("NONE", comparisons, true)
 	if len(unsatisfiedNotes) == 0 {
 		fmt.Println("The running system is currently well-tuned according to all of the enabled notes.")
 	} else {
-		for _, unsatisfiedNoteID := range unsatisfiedNotes {
-			PrintNoteFields(unsatisfiedNoteID, comparisons[unsatisfiedNoteID], true)
-		}
 		errorExit("The parameters listed above have deviated from SAP/SUSE recommendations.")
 	}
 }
 
+// NoteAction  Note actions like apply, revert, verify asm.
 func NoteAction(actionName, noteID string) {
 	switch actionName {
 	case "apply":
 		if noteID == "" {
 			PrintHelpAndExit(1)
+		}
+		// Do not apply the note, if it was applied before
+		// Otherwise, the state file (serialised parameters) will be
+		// overwritten, and it will no longer be possible to revert the
+		// note to the state before it was tuned.
+		_, err := os.Stat(tuneApp.State.GetPathToNote(noteID))
+		if err == nil {
+			// state file for note already exists
+			// do not apply the note again
+			system.InfoLog("note '%s' already applied. Nothing to do", noteID)
+			os.Exit(0)
 		}
 		if err := tuneApp.TuneNote(noteID); err != nil {
 			errorExit("Failed to tune for note %s: %v", noteID, err)
@@ -212,19 +500,29 @@ func NoteAction(actionName, noteID string) {
 				"\n    saptune daemon start")
 		}
 	case "list":
-		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):")
+		fmt.Println("\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 		for _, noteID := range tuningOptions.GetSortedIDs() {
-			noteObj := tuningOptions[noteID]
-			format := "\t%s\t%s\n"
-			if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
-				format = "*" + format
-			} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
-				format = "+" + format
-			}
-			if noteID == "Block" {
-				// workaround: internal used note for solution ASE. Do not display
+			if strings.HasSuffix(noteID, "_n2c") {
 				continue
+			}
+			noteObj := tuningOptions[noteID]
+			format := "\t%s\t\t%s\n"
+			if len(noteID) >= 8 {
+				format = "\t%s\t%s\n"
+			}
+			if _, err := os.Stat(fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)); err == nil {
+				format = " O" + format
+			}
+			if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
+				j := app.PositionInNoteApplyOrder(tuneApp.NoteApplyOrder, noteID)
+				if j < 0 { // noteID was reverted manually
+					format = " " + setGreenText + "-" + format + resetTextColor
+				} else {
+					format = " " + setGreenText + "*" + format + resetTextColor
+				}
+			} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
+				format = " " + setGreenText + "+" + format + resetTextColor
 			}
 			fmt.Printf(format, noteID, noteObj.Name())
 		}
@@ -238,10 +536,14 @@ func NoteAction(actionName, noteID string) {
 			VerifyAllParameters()
 		} else {
 			// Check system parameters against the specified note, no matter the note has been tuned for or not.
-			if conforming, comparisons, err := tuneApp.VerifyNote(noteID); err != nil {
+			conforming, comparisons, _, err := tuneApp.VerifyNote(noteID)
+			if err != nil {
 				errorExit("Failed to test the current system against the specified note: %v", err)
-			} else if !conforming {
-				PrintNoteFields(noteID, comparisons, true)
+			}
+			noteComp := make(map[string]map[string]note.FieldComparison)
+			noteComp[noteID] = comparisons
+			PrintNoteFields("HEAD", noteComp, true)
+			if !conforming {
 				errorExit("The parameters listed above have deviated from the specified note.\n")
 			} else {
 				fmt.Println("The system fully conforms to the specified note.")
@@ -252,11 +554,13 @@ func NoteAction(actionName, noteID string) {
 			PrintHelpAndExit(1)
 		}
 		// Run verify and print out all fields of the note
-		if _, comparisons, err := tuneApp.VerifyNote(noteID); err != nil {
+		if _, comparisons, _, err := tuneApp.VerifyNote(noteID); err != nil {
 			errorExit("Failed to test the current system against the specified note: %v", err)
 		} else {
 			fmt.Printf("If you run `saptune note apply %s`, the following changes will be applied to your system:\n", noteID)
-			PrintNoteFields(noteID, comparisons, false)
+			noteComp := make(map[string]map[string]note.FieldComparison)
+			noteComp[noteID] = comparisons
+			PrintNoteFields("HEAD", noteComp, false)
 		}
 	case "customise":
 		if noteID == "" {
@@ -265,17 +569,55 @@ func NoteAction(actionName, noteID string) {
 		if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 			errorExit("%v", err)
 		}
-		fileName := fmt.Sprintf("/etc/sysconfig/saptune-note-%s", noteID)
+		editFileName := ""
+		fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
-			errorExit("Note %s does not require additional customisation input.", noteID)
+			_, files, err := system.ListDir(ExtraTuningSheets)
+			if err == nil {
+				for _, f := range files {
+					if strings.HasPrefix(f, noteID) {
+						fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, f)
+					}
+				}
+			}
+			if _, err := os.Stat(fileName); os.IsNotExist(err) {
+				errorExit("Note %s not found in %s or %s.", noteID, NoteTuningSheets, ExtraTuningSheets)
+			} else if err != nil {
+				errorExit("Failed to read file '%s' - %v", fileName, err)
+			}
 		} else if err != nil {
 			errorExit("Failed to read file '%s' - %v", fileName, err)
+		}
+		ovFileName := fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)
+		if _, err := os.Stat(ovFileName); os.IsNotExist(err) {
+			//copy file
+			src, err := os.Open(fileName)
+			if err != nil {
+				errorExit("Can not open file '%s' - %v", fileName, err)
+			}
+			defer src.Close()
+			dst, err := os.OpenFile(ovFileName, os.O_RDWR|os.O_CREATE, 0644)
+			if err != nil {
+				errorExit("Can not create file '%s' - %v", ovFileName, err)
+			}
+			defer dst.Close()
+			_, err = io.Copy(dst, src)
+			if err != nil {
+				errorExit("Problems while copying '%s' to '%s' - %v", fileName, ovFileName, err)
+			}
+			editFileName = ovFileName
+		} else if err == nil {
+			system.InfoLog("Note override file already exists, using file '%s' as base for editing\n", ovFileName)
+			editFileName = ovFileName
+		} else {
+			errorExit("Failed to read file '%s' - %v", ovFileName, err)
 		}
 		editor := os.Getenv("EDITOR")
 		if editor == "" {
 			editor = "/usr/bin/vim" // launch vim by default
 		}
-		if err := syscall.Exec(editor, []string{editor, fileName}, os.Environ()); err != nil {
+		//if err := syscall.Exec(editor, []string{editor, fileName}, os.Environ()); err != nil {
+		if err := syscall.Exec(editor, []string{editor, editFileName}, os.Environ()); err != nil {
 			errorExit("Failed to start launch editor %s: %v", editor, err)
 		}
 	case "revert":
@@ -292,11 +634,18 @@ func NoteAction(actionName, noteID string) {
 	}
 }
 
+// SolutionAction  Solution actions like apply, revert, verify asm.
 func SolutionAction(actionName, solName string) {
 	switch actionName {
 	case "apply":
 		if solName == "" {
 			PrintHelpAndExit(1)
+		}
+		if len(tuneApp.TuneForSolutions) > 0 {
+			// already one solution applied.
+			// do not apply another solution. Does not make sense
+			system.InfoLog("There is already one solution applied. Applying another solution is NOT supported.")
+			os.Exit(0)
 		}
 		removedAdditionalNotes, err := tuneApp.TuneSolution(solName)
 		if err != nil {
@@ -315,12 +664,22 @@ func SolutionAction(actionName, solName string) {
 				"\n    saptune daemon start")
 		}
 	case "list":
-		fmt.Println("All solutions (* denotes enabled solution):")
+		fmt.Println("\nAll solutions (* denotes enabled solution, O denotes override file exists for solution):")
 		for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
-			format := "\t%s\n"
+			format := "\t%-18s -"
 			if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
-				format = "*" + format
+				format = " " + setGreenText + "*" + format
 			}
+			if len(solution.OverrideSolutions[solutionSelector][solName]) != 0 {
+				//override solution
+				format = " O" + format
+			}
+
+			solNotes := ""
+			for _, noteString := range solution.AllSolutions[solutionSelector][solName] {
+				solNotes = solNotes + " " + noteString
+			}
+			format = format + solNotes + resetTextColor + "\n"
 			fmt.Printf(format, solName)
 		}
 		if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
@@ -337,12 +696,10 @@ func SolutionAction(actionName, solName string) {
 			if err != nil {
 				errorExit("Failed to test the current system against the specified SAP solution: %v", err)
 			}
+			PrintNoteFields("NONE", comparisons, true)
 			if len(unsatisfiedNotes) == 0 {
 				fmt.Println("The system fully conforms to the tuning guidelines of the specified SAP solution.")
 			} else {
-				for _, unsatisfiedNoteID := range unsatisfiedNotes {
-					PrintNoteFields(unsatisfiedNoteID, comparisons[unsatisfiedNoteID], true)
-				}
 				errorExit("The parameters listed above have deviated from the specified SAP solution recommendations.\n")
 			}
 		}
@@ -355,9 +712,7 @@ func SolutionAction(actionName, solName string) {
 			errorExit("Failed to test the current system against the specified note: %v", err)
 		} else {
 			fmt.Printf("If you run `saptune solution apply %s`, the following changes will be applied to your system:\n", solName)
-			for noteID, noteComparison := range comparisons {
-				PrintNoteFields(noteID, noteComparison, false)
-			}
+			PrintNoteFields("NONE", comparisons, false)
 		}
 	case "revert":
 		if solName == "" {

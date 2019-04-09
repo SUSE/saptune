@@ -3,24 +3,28 @@ package app
 import (
 	"encoding/json"
 	"github.com/SUSE/saptune/sap/note"
+	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 )
 
+// SaptuneStateDir defines saptunes saved state directory
 const SaptuneStateDir = "/var/lib/saptune/saved_state"
 
-// Store and manage serialised note states.
+// State stores and manages serialised note states.
 type State struct {
 	StateDirPrefix string
 }
 
-// Return path to the serialised note state file.
+// GetPathToNote returns path to the serialised note state file.
 func (state *State) GetPathToNote(noteID string) string {
 	return path.Join(state.StateDirPrefix, SaptuneStateDir, noteID)
 }
 
-// Create a file under state directory with the object serialised into JSON. Overwrite existing file if there is any.
+// Store creates a file under state directory with the object serialised
+// into JSON. Overwrite existing file if there is any.
 func (state *State) Store(noteID string, obj note.Note, overwriteExisting bool) error {
 	content, err := json.Marshal(obj)
 	if err != nil {
@@ -54,7 +58,8 @@ func (state *State) List() (ret []string, err error) {
 	return
 }
 
-// Deserialise an SAP note into the destination pointer. The destination must be a pointer.
+// Retrieve deserialises a SAP note into the destination pointer.
+// The destination must be a pointer.
 func (state *State) Retrieve(noteID string, dest interface{}) error {
 	content, err := ioutil.ReadFile(state.GetPathToNote(noteID))
 	if err != nil {
@@ -73,4 +78,35 @@ func (state *State) Remove(noteID string) error {
 	} else {
 		return err
 	}
+}
+
+// CheckForOldRevertData checks, if there is saved state information in an older,
+// no longer supported saptune format available
+// return true, if old saved state files are found
+func (state *State) CheckForOldRevertData() (oldUpdFiles []string, check bool) {
+	check = false
+	oldUpdFiles = make([]string, 0, 0)
+	if savedNotes, err := state.List(); err == nil {
+		for _, entry := range savedNotes {
+			fileName := strings.TrimSuffix(entry, "_n2c")
+			if entry != fileName {
+				// there was a saved state file available during
+				// update from version 1 to version 2
+				// check, if the saved state file is already
+				// available (as a leftover from the migration)
+				if _, err := os.Stat(state.GetPathToNote(fileName)); err == nil {
+					// both saved state files exists
+					// (the saved state file of an applied
+					// note and the 'n2c' file from the
+					// update path v1 to v2
+					oldUpdFiles = append(oldUpdFiles, fileName)
+					system.WarningLog("found old saved state file for Note '%s'.", fileName)
+					check = true
+				} else {
+					oldUpdFiles = append(oldUpdFiles, entry)
+				}
+			}
+		}
+	}
+	return
 }

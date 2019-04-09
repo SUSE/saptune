@@ -4,17 +4,17 @@ import (
 	"github.com/SUSE/saptune/sap"
 	"github.com/SUSE/saptune/system"
 	"io/ioutil"
-	"log"
 	"path"
 	"strconv"
 	"strings"
 )
 
-// Change IO elevators on all IO devices
+// BlockDeviceSchedulers changes IO elevators on all IO devices
 type BlockDeviceSchedulers struct {
 	SchedulerChoice map[string]string
 }
 
+// Inspect retrieves the current scheduler from the system
 func (ioe BlockDeviceSchedulers) Inspect() (Parameter, error) {
 	newIOE := BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}
 	// List /sys/block and inspect the IO elevator of each one
@@ -36,6 +36,8 @@ func (ioe BlockDeviceSchedulers) Inspect() (Parameter, error) {
 	}
 	return newIOE, nil
 }
+
+// Optimise gets the expected scheduler value from the configuration
 func (ioe BlockDeviceSchedulers) Optimise(newElevatorName interface{}) (Parameter, error) {
 	newIOE := BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}
 	for k := range ioe.SchedulerChoice {
@@ -43,11 +45,13 @@ func (ioe BlockDeviceSchedulers) Optimise(newElevatorName interface{}) (Paramete
 	}
 	return newIOE, nil
 }
+
+// Apply sets the new scheduler value in the system
 func (ioe BlockDeviceSchedulers) Apply() error {
 	errs := make([]error, 0, 0)
 	for name, elevator := range ioe.SchedulerChoice {
 		if !IsValidScheduler(name, elevator) {
-			log.Printf("'%s' is not a valid scheduler for device '%s', skipping.", elevator, name)
+			system.WarningLog("'%s' is not a valid scheduler for device '%s', skipping.", elevator, name)
 			continue
 		}
 		errs = append(errs, system.SetSysString(path.Join("block", name, "queue", "scheduler"), elevator))
@@ -56,11 +60,12 @@ func (ioe BlockDeviceSchedulers) Apply() error {
 	return err
 }
 
-// Change IO nr_requests on all block devices
+// BlockDeviceNrRequests changes IO nr_requests on all block devices
 type BlockDeviceNrRequests struct {
 	NrRequests map[string]int
 }
 
+// Inspect retrieves the current nr_requests from the system
 func (ior BlockDeviceNrRequests) Inspect() (Parameter, error) {
 	newIOR := BlockDeviceNrRequests{NrRequests: make(map[string]int)}
 	// List /sys/block and inspect the number of requests of each one
@@ -81,6 +86,8 @@ func (ior BlockDeviceNrRequests) Inspect() (Parameter, error) {
 	}
 	return newIOR, nil
 }
+
+// Optimise gets the expected nr_requests value from the configuration
 func (ior BlockDeviceNrRequests) Optimise(newNrRequestValue interface{}) (Parameter, error) {
 	newIOR := BlockDeviceNrRequests{NrRequests: make(map[string]int)}
 	for k := range ior.NrRequests {
@@ -88,11 +95,13 @@ func (ior BlockDeviceNrRequests) Optimise(newNrRequestValue interface{}) (Parame
 	}
 	return newIOR, nil
 }
+
+// Apply sets the new nr_requests value in the system
 func (ior BlockDeviceNrRequests) Apply() error {
 	errs := make([]error, 0, 0)
 	for name, nrreq := range ior.NrRequests {
 		if !IsValidforNrRequests(name, strconv.Itoa(nrreq)) {
-			log.Printf("skipping device '%s', not valid for setting 'number of requests' to '%v'", name, nrreq)
+			system.WarningLog("skipping device '%s', not valid for setting 'number of requests' to '%v'", name, nrreq)
 			continue
 		}
 		errs = append(errs, system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq))
@@ -101,6 +110,7 @@ func (ior BlockDeviceNrRequests) Apply() error {
 	return err
 }
 
+// IsValidScheduler checks, if the scheduler value is supported by the system
 func IsValidScheduler(blockdev, scheduler string) bool {
 	val, err := ioutil.ReadFile(path.Join("/sys/block/", blockdev, "/queue/scheduler"))
 	if err == nil && strings.Contains(string(val), scheduler) {
@@ -108,11 +118,13 @@ func IsValidScheduler(blockdev, scheduler string) bool {
 	}
 	return false
 }
+
+// IsValidforNrRequests checks, if the nr_requests value is supported by the system
 func IsValidforNrRequests(blockdev, nrreq string) bool {
 	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
 	if elev != "" {
 		file := path.Join("block", blockdev, "queue", "nr_requests")
-		if tst_err := system.TestSysString(file, nrreq); tst_err == nil {
+		if tstErr := system.TestSysString(file, nrreq); tstErr == nil {
 			return true
 		}
 	}

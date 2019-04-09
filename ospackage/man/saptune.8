@@ -1,7 +1,7 @@
 .\"/*
+.\" * Copyright (c) 2017-2019 SUSE LLC.
 .\" * All rights reserved
-.\" * Copyright (c) 2017 SUSE LINUX GmbH, Nuernberg, Germany.
-.\" * Authors: Howard Guo
+.\" * Authors: Howard Guo, Angela Briel
 .\" *
 .\" * This program is free software; you can redistribute it and/or
 .\" * modify it under the terms of the GNU General Public License
@@ -14,112 +14,22 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "May 2017" "" "System Optimisation For SAP"
+.TH saptune "8" "March 2019" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions
 
-.SH SYNOPSIS
-\fBsaptune daemon\fP
-[ start | status | stop ]
-
-\fBsaptune note\fP
-[ list | verify ]
-
-\fBsaptune note\fP
-[ apply | simulate | verify | customise | revert ]  NoteID
-
-\fBsaptune solution\fP
-[ list | verify ]
-
-\fBsaptune solution\fP
-[ apply | simulate | verify | revert ] SolutionName
-
 .SH DESCRIPTION
-saptune is a utility program that optimises your system according to recommendations/best practice guides written by SAP and SUSE.
+saptune has been improved to much more better adapt the needs of an SAP environment. So at the moment we will support 2 versions of saptune.
 
-saptune fully integrates with tuned(8), the tuned-profile name associated with this utility is "saptune".
+We now have our good old version 1 of saptune, which is now deprecated and will be removed with the next release. It's available for compatibility reasons and to give the admin the ability to smoothly migrate his SAP system tunings to the new settings demanded by SAP. To get the man page for the version 1 of saptune please use saptune_v1(8).
+To get more information about the migration path from saptune version 1 to saptune version 2 please see saptune-migrate(7)
 
-To support vendor or customer specific tuning values, saptune supports 'drop-in' files residing in /etc/saptune/extra. All files found in /etc/saptune/extra are listed when running '\fBsaptune note list\fR'. All \fBnote options\fR are available for these files except 'saptune note customise'.
-.SS
-.RS 0
-Syntax of the file names:
-<key>-<description>
-.br
-e.g. Vendor-Recommended_OS_Settings
-.br
-or   SAP4711-very_aromatic_tunings
-.RE
-.SS
-.RS 0
-Syntax of the file:
-The content of the 'drop-in' file should be written in a INI file style with sections headed by '[section_name]' keywords. At the moment only the section keyword '[sysctl]' is supported. A comment line starts with #.
-.br
-Please write the section keyword '[sysctl]' in the first line and add the desired tunables in 'sysctl.conf' syntax.
-
-
-.SH DAEMON ACTIONS
-.SS
-.TP
-.B start
-Start tuned(8) daemon, set tuning profile to "saptune", and apply a minimal set of universal optimisations to the system. The daemon will be automatically activated upon system boot.
-.TP
-.B status
-Report the status of tuned(8) daemon and whether it is using the correct profile.
-.TP
-.B stop
-Stop tuned(8) daemon, and revert all optimisations that were previously applied by saptune. The daemon will no longer automatically activate upon boot.
-
-.SH NOTE ACTIONS
-Note denotes either an SAP note, or SUSE recommendation article.
-.SS
-.TP
-.B apply
-Apply optimisation settings specified in the Note. The Note will be automatically activated upon system boot if the daemon is enabled.
-.TP
-.B list
-List all SAP notes and SUSE recommendation articles that saptune is capable of implementing. The marked ones are currently implemented.
-.TP
-.B verify
-If a Note ID is specified, saptune verifies the current running system against the recommendations specified in the Note. If Note ID is not specified, saptune verifies all system parameters against all implemented Notes.
-.TP
-.B simulate
-Show all changes that will be applied to the system if the specified Note is applied.
-.TP
-.B customise
-If the Note uses manual input to calculation optimised parameters, an editor will be launched to allow changing the input.
-.TP
-.B revert
-Revert optimisation settings carried out by the Note, and the Note will no longer be activated automatically upon system boot.
-
-.SH SOLUTION ACTIONS
-A solution is associated with one or more Notes. Activation of a solution will activate all associated Notes.
-.SS
-.TP
-.B apply
-Apply optimisation settings recommended by the SAP solution. These settings will be automatically activated upon system boot if the daemon is enabled.
-.TP
-.B list
-List all SAP solution names that saptune is capable of implementing. The marked ones are currently implemented.
-.TP
-.B simulate
-Show all notes that are associated with the specified SAP solution, and all changes that will be applied once the solution is activiated.
-.TP
-.B verify
-If a solution name is specified, saptune verifies the current running system against the recommended settings of the SAP solution. If solution name is not specified, saptune verifies all system parameters against all implemented solutions.
-.TP
-.B revert
-Revert optimisation settings recommended by the SAP solution, and these settings will no longer be activated automatically upon system boot.
-
-.SH FILES
-.NF
-/etc/sysconfig/saptune
-.br
-/etc/saptune/extra/
+Our new improved saptune version 2 and the new configuration possibilities and syntax are described in saptuen_v2(8).
 
 .SH SEE ALSO
 .NF
-tuned(8) tuned-adm(8)
+saptune-note(5) saptune-migrate(7) saptune_v1(8) saptune_v2(8) tuned(8) tuned-adm(8)
 
 .SH AUTHOR
 .NF
-Howard Guo <hguo@suse.com>
+Soeren Schmidt <soeren.schmidt@suse.com>, Angela Briel <abriel@suse.com>

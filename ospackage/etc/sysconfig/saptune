@@ -18,3 +18,17 @@ TUNE_FOR_SOLUTIONS=""
 # The value is a list of note numbers, separated by spaces.
 # Run "saptune note list" to get a comprehensive list of note numbers.
 TUNE_FOR_NOTES=""
+
+## Type:    string
+## Default: ""
+#
+# When saptune is activated, apply tuning for the notes in exactly the below
+# order
+# The value is a list of note numbers, separated by spaces.
+NOTE_APPLY_ORDER=""
+
+## Type:    string
+## Default: "2"
+#
+# Version of saptune
+SAPTUNE_VERSION="2"
