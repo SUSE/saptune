@@ -4,7 +4,6 @@ import (
 	"github.com/SUSE/saptune/sap"
 	"github.com/SUSE/saptune/system"
 	"io/ioutil"
-	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -52,7 +51,7 @@ func (ioe BlockDeviceSchedulers) Apply() error {
 	errs := make([]error, 0, 0)
 	for name, elevator := range ioe.SchedulerChoice {
 		if !IsValidScheduler(name, elevator) {
-			log.Printf("'%s' is not a valid scheduler for device '%s', skipping.", elevator, name)
+			system.WarningLog("'%s' is not a valid scheduler for device '%s', skipping.", elevator, name)
 			continue
 		}
 		errs = append(errs, system.SetSysString(path.Join("block", name, "queue", "scheduler"), elevator))
@@ -102,7 +101,7 @@ func (ior BlockDeviceNrRequests) Apply() error {
 	errs := make([]error, 0, 0)
 	for name, nrreq := range ior.NrRequests {
 		if !IsValidforNrRequests(name, strconv.Itoa(nrreq)) {
-			log.Printf("skipping device '%s', not valid for setting 'number of requests' to '%v'", name, nrreq)
+			system.WarningLog("skipping device '%s', not valid for setting 'number of requests' to '%v'", name, nrreq)
 			continue
 		}
 		errs = append(errs, system.SetSysInt(path.Join("block", name, "queue", "nr_requests"), nrreq))

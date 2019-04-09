@@ -60,7 +60,8 @@ type SecLimits struct {
 func ParseSecLimitsFile() (*SecLimits, error) {
 	content, err := ioutil.ReadFile("/etc/security/limits.conf")
 	if err != nil {
-		return nil, fmt.Errorf("failed to open limits.conf: %v", err)
+		ErrorLog("failed to open limits.conf: %v", err)
+		return nil, err
 	}
 	return ParseSecLimits(string(content)), nil
 }

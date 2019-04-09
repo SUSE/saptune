@@ -3,8 +3,8 @@ package note
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/SUSE/saptune/system"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 	"strings"
@@ -72,7 +72,7 @@ func CreateParameterStartValues(param, value string) {
 	}
 	pEntries = GetSavedParameterNotes(param)
 	if len(pEntries.AllNotes) == 0 {
-		//log.Printf("Write parameter start value '%s' to file '%s'", value, GetPathToParameter(param))
+		//system.InfoLog("Write parameter start value '%s' to file '%s'", value, GetPathToParameter(param))
 		// file does not exist, create start entry
 		pEntry := ParameterNoteEntry{
 			NoteID: "start",
@@ -81,7 +81,7 @@ func CreateParameterStartValues(param, value string) {
 		pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
 		err := StoreParameter(param, pEntries, true)
 		if err != nil {
-			log.Printf("Failed to store start values for parameter file '%s' for parameter '%s'", GetPathToParameter(param), param)
+			system.WarningLog("Failed to store start values for parameter file '%s' for parameter '%s'", GetPathToParameter(param), param)
 		}
 	}
 }
@@ -93,7 +93,7 @@ func AddParameterNoteValues(param, value, noteID string) {
 	}
 	pEntries = GetSavedParameterNotes(param)
 	if len(pEntries.AllNotes) != 0 && !IDInParameterList(noteID, pEntries.AllNotes) {
-		//log.Printf("Write note '%s' parameter value '%s' to file '%s'", noteID, value, GetPathToParameter(param))
+		//system.InfoLog("Write note '%s' parameter value '%s' to file '%s'", noteID, value, GetPathToParameter(param))
 		// file exis
 		pEntry := ParameterNoteEntry{
 			NoteID: noteID,
@@ -102,7 +102,7 @@ func AddParameterNoteValues(param, value, noteID string) {
 		pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
 		err := StoreParameter(param, pEntries, true)
 		if err != nil {
-			log.Printf("Failed to store note '%s' values for parameter file '%s' for parameter '%s'", noteID, GetPathToParameter(param), param)
+			system.WarningLog("Failed to store note '%s' values for parameter file '%s' for parameter '%s'", noteID, GetPathToParameter(param), param)
 		}
 	}
 }
@@ -240,7 +240,7 @@ func RevertParameter(param string, noteID string) string {
 		//store changes pEntries
 		err := StoreParameter(param, pEntries, true)
 		if err != nil {
-			fmt.Println("Problems during storing new parameter values")
+			system.WarningLog("Problems during storing new parameter values")
 		}
 	}
 	return pvalue
@@ -269,4 +269,15 @@ func CleanUpParamFile(param string) {
 	if _, err := os.Stat(remFileName); err == nil {
 		os.Remove(remFileName)
 	}
+}
+
+// IsLastNoteOfParameter returns true, if there is no parameter state file
+// or false, which means that another note changing the parameter is still
+// applied
+func IsLastNoteOfParameter(param string) bool {
+	chkFileName := GetPathToParameter(param)
+	if _, err := os.Stat(chkFileName); os.IsNotExist(err) {
+		return true
+	}
+	return false
 }

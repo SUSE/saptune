@@ -1,9 +1,7 @@
 package system
 
 import (
-	"fmt"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -12,7 +10,8 @@ import (
 // SystemctlEnable call systemctl enable on thing.
 func SystemctlEnable(thing string) error {
 	if out, err := exec.Command("systemctl", "enable", thing).CombinedOutput(); err != nil {
-		return fmt.Errorf("Failed to call systemctl enable on %s - %v %s", thing, err, string(out))
+		ErrorLog("Failed to call systemctl enable on %s - %v %s", thing, err, string(out))
+		return err
 	}
 	return nil
 }
@@ -20,7 +19,17 @@ func SystemctlEnable(thing string) error {
 // SystemctlDisable call systemctl disable on thing.
 func SystemctlDisable(thing string) error {
 	if out, err := exec.Command("systemctl", "disable", thing).CombinedOutput(); err != nil {
-		return fmt.Errorf("Failed to call systemctl disable on %s - %v %s", thing, err, string(out))
+		ErrorLog("Failed to call systemctl disable on %s - %v %s", thing, err, string(out))
+		return err
+	}
+	return nil
+}
+
+// SystemctlRestart call systemctl restart on thing.
+func SystemctlRestart(thing string) error {
+	if out, err := exec.Command("systemctl", "restart", thing).CombinedOutput(); err != nil {
+		ErrorLog("Failed to call systemctl restart on %s - %v %s", thing, err, string(out))
+		return err
 	}
 	return nil
 }
@@ -28,7 +37,8 @@ func SystemctlDisable(thing string) error {
 // SystemctlStart call systemctl start on thing.
 func SystemctlStart(thing string) error {
 	if out, err := exec.Command("systemctl", "start", thing).CombinedOutput(); err != nil {
-		return fmt.Errorf("Failed to call systemctl start on %s - %v %s", thing, err, string(out))
+		ErrorLog("Failed to call systemctl start on %s - %v %s", thing, err, string(out))
+		return err
 	}
 	return nil
 }
@@ -36,7 +46,8 @@ func SystemctlStart(thing string) error {
 // SystemctlStop call systemctl stop on thing.
 func SystemctlStop(thing string) error {
 	if out, err := exec.Command("systemctl", "stop", thing).CombinedOutput(); err != nil {
-		return fmt.Errorf("Failed to call systemctl stop on %s - %v %s", thing, err, string(out))
+		ErrorLog("Failed to call systemctl stop on %s - %v %s", thing, err, string(out))
+		return err
 	}
 	return nil
 }
@@ -78,7 +89,8 @@ func SystemctlIsRunning(thing string) bool {
 func WriteTunedAdmProfile(profileName string) error {
 	err := ioutil.WriteFile("/etc/tuned/active_profile", []byte(profileName), 0644)
 	if err != nil {
-		return fmt.Errorf("Failed to write tuned profile '%s' to '%s': %v", profileName, "/etc/tuned/active_profile", err)
+		ErrorLog("Failed to write tuned profile '%s' to '%s': %v", profileName, "/etc/tuned/active_profile", err)
+		return err
 	}
 	return nil
 }
@@ -98,7 +110,8 @@ func GetTunedProfile() string {
 // TunedAdmOff calls tuned-adm to switch off the active profile.
 func TunedAdmOff() error {
 	if out, err := exec.Command("tuned-adm", "off").CombinedOutput(); err != nil {
-		return fmt.Errorf("Failed to call tuned-adm to switch off the active profile - %v %s", err, string(out))
+		ErrorLog("Failed to call tuned-adm to switch off the active profile - %v %s", err, string(out))
+		return err
 	}
 	return nil
 }
@@ -108,7 +121,8 @@ func TunedAdmOff() error {
 // changed the behaviour/handling of the file /etc/tuned/active_profile
 func TunedAdmProfile(profileName string) error {
 	if out, err := exec.Command("tuned-adm", "profile", profileName).CombinedOutput(); err != nil {
-		return fmt.Errorf("Failed to call tuned-adm to active profile %s - %v %s", profileName, err, string(out))
+		ErrorLog("Failed to call tuned-adm to active profile %s - %v %s", profileName, err, string(out))
+		return err
 	}
 	return nil
 }
@@ -118,7 +132,7 @@ func TunedAdmProfile(profileName string) error {
 func GetTunedAdmProfile() string {
 	out, err := exec.Command("tuned-adm", "active").CombinedOutput()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to call tuned-adm to get the active profile - %v %s", err, string(out))
+		ErrorLog("Failed to call tuned-adm to get the active profile - %v %s", err, string(out))
 		return ""
 	}
 	re := regexp.MustCompile(`Current active profile: ([\w-]+)`)

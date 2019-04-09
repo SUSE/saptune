@@ -4,7 +4,6 @@ package system
 
 import (
 	"io/ioutil"
-	"log"
 	"strings"
 )
 
@@ -14,7 +13,7 @@ func ParseCmdline(fileName, option string) string {
 	opt := "NA"
 	cmdLine, err := ioutil.ReadFile(fileName)
 	if err != nil {
-		log.Printf("ParseCmdline: failed to read  %s: %v", fileName, err)
+		WarningLog("ParseCmdline: failed to read  %s: %v", fileName, err)
 		return opt
 	}
 	for _, param := range strings.Fields(string(cmdLine)) {

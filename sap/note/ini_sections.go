@@ -6,10 +6,10 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io/ioutil"
-	"log"
 	"math"
 	"os"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -37,11 +37,7 @@ const (
 	// LoginConfDir is the path to systemd's logind configuration directory under /etc.
 	LogindConfDir = "/etc/systemd/logind.conf.d"
 	// LogindSAPConfFile is a configuration file full of SAP-specific settings for logind.
-	LogindSAPConfFile = "sap.conf"
-	// LogindSAAPConfContent is the verbatim content of SAP-specific logind settings file.
-	LogindSAPConfContent = `[Login]
-UserTasksMax=infinity
-`
+	LogindSAPConfFile = "saptune-UserTasksMax.conf"
 )
 
 // GetServiceName returns the systemd service name for supported services
@@ -52,7 +48,7 @@ func GetServiceName(service string) string {
 	case "Sysstat":
 		service = "sysstat"
 	default:
-		log.Printf("skipping unkown service '%s'", service)
+		system.WarningLog("skipping unkown service '%s'", service)
 		service = ""
 	}
 	return service
@@ -73,7 +69,7 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 	allFieldsS := ""
 
 	if len(allFieldsC) != len(allFieldsE) && (operator == txtparser.OperatorEqual || len(allFieldsE) > 1) {
-		log.Printf("wrong number of fields given in the config file for parameter '%s'\n", key)
+		system.WarningLog("wrong number of fields given in the config file for parameter '%s'\n", key)
 		return ""
 	}
 
@@ -341,12 +337,12 @@ func OptVMVal(key, cfgval string) string {
 	switch key {
 	case "THP":
 		if val != "always" && val != "madvise" && val != "never" {
-			log.Print("wrong selection for THP. Now set to 'never' to disable transarent huge pages")
+			system.WarningLog("wrong selection for THP. Now set to 'never' to disable transarent huge pages")
 			val = "never"
 		}
 	case "KSM":
 		if val != "1" && val != "0" {
-			log.Print("wrong selection for KSM. Now set to default value '0'")
+			system.WarningLog("wrong selection for KSM. Now set to default value '0'")
 			val = "0"
 		}
 	}
@@ -411,7 +407,7 @@ func OptCPUVal(key, actval, cfgval string) string {
 		case "powersave":
 			val = "15"
 		default:
-			log.Print("wrong selection for energy_perf_bias. Now set to 'performance'")
+			system.WarningLog("wrong selection for energy_perf_bias. Now set to 'performance'")
 			val = "0"
 		}
 		//ANGI TODO - if actval 'all:6', but cfgval 'cpu0:performance cpu1:normal cpu2:powersave'
@@ -466,7 +462,7 @@ func GetMemVal(key string) string {
 				val = strconv.FormatFloat(percent, 'f', -1, 64)
 			}
 		} else {
-			log.Print("GetMemVal: failed to find /dev/shm mount point")
+			system.WarningLog("GetMemVal: failed to find /dev/shm mount point")
 			val = "-1"
 		}
 	}
@@ -482,7 +478,7 @@ func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
 	var ret string
 
 	if actval == "-1" {
-		log.Print("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
+		system.WarningLog("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
 		size = 0
 	} else if shmsize == "0" {
 		if tmpfspercent == "0" {
@@ -520,7 +516,7 @@ func SetMemVal(key, value string) error {
 				return err
 			}
 		} else {
-			log.Print("SetMemVal: /dev/shm is not a valid mount point, will not adjust its size.")
+			system.WarningLog("SetMemVal: /dev/shm is not a valid mount point, will not adjust its size.")
 		}
 	}
 	return err
@@ -587,7 +583,7 @@ func GetUuiddVal() string {
 func OptUuiddVal(cfgval string) string {
 	sval := strings.ToLower(cfgval)
 	if sval != "start" {
-		log.Print("wrong selection for UuiddSocket. Now set to 'start' to start the uuid daemon")
+		system.WarningLog("wrong selection for UuiddSocket. Now set to 'start' to start the uuid daemon")
 		sval = "start"
 	}
 	return sval
@@ -627,16 +623,16 @@ func OptServiceVal(key, cfgval string) string {
 	switch key {
 	case "UuiddSocket":
 		if sval != "start" {
-			log.Printf("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
+			system.WarningLog("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
 			sval = "start"
 		}
 	case "Sysstat":
 		if sval != "start" && sval != "stop" {
-			log.Printf("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
+			system.WarningLog("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
 			sval = "start"
 		}
 	default:
-		log.Printf("skipping unkown service '%s'", key)
+		system.WarningLog("skipping unkown service '%s'", key)
 		return ""
 	}
 	return sval
@@ -672,14 +668,18 @@ func SetServiceVal(key, value string) error {
 // system settings
 func GetLoginVal(key string) (string, error) {
 	var val string
+	var utmPat = regexp.MustCompile(`UserTasksMax=(.*)`)
 	switch key {
 	case "UserTasksMax":
 		logindContent, err := ioutil.ReadFile(path.Join(LogindConfDir, LogindSAPConfFile))
 		if err != nil && !os.IsNotExist(err) {
 			return "", err
 		}
-		if string(logindContent) == LogindSAPConfContent {
-			val = "infinity"
+		matches := utmPat.FindStringSubmatch(string(logindContent))
+		if len(matches) != 0 {
+			val = matches[1]
+		} else {
+			val = "NA"
 		}
 	}
 	return val, nil
@@ -694,16 +694,43 @@ func OptLoginVal(cfgval string) string {
 func SetLoginVal(key, value string, revert bool) error {
 	switch key {
 	case "UserTasksMax":
-		// Prepare logind config file
-		if err := os.MkdirAll(LogindConfDir, 0755); err != nil {
-			return err
+		if revert && IsLastNoteOfParameter("UserTasksMax") {
+			// revert - remove logind drop-in file
+			os.Remove(path.Join(LogindConfDir, LogindSAPConfFile))
+			// restart systemd-logind.service
+			if err := system.SystemctlRestart("systemd-logind.service"); err != nil {
+				return err
+			}
+			return nil
 		}
-		if err := ioutil.WriteFile(path.Join(LogindConfDir, LogindSAPConfFile), []byte(LogindSAPConfContent), 0644); err != nil {
-			return err
-		}
-		if !revert {
-			log.Print("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
-				"This opens up entire system to fork-bomb style attacks. Please reboot the system for the changes to take effect.")
+		if value != "" && value != "NA" {
+			// revert with value from another former applied note
+			// or
+			// apply - Prepare logind drop-in file
+			// LogindSAPConfContent is the verbatim content of
+			// SAP-specific logind settings file.
+			LogindSAPConfContent := fmt.Sprintf("[Login]\nUserTasksMax=%s\n", value)
+			if err := os.MkdirAll(LogindConfDir, 0755); err != nil {
+				return err
+			}
+			if err := ioutil.WriteFile(path.Join(LogindConfDir, LogindSAPConfFile), []byte(LogindSAPConfContent), 0644); err != nil {
+				return err
+			}
+			// restart systemd-logind.service
+			if err := system.SystemctlRestart("systemd-logind.service"); err != nil {
+				return err
+			}
+			if value == "infinity" {
+				system.WarningLog("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
+					"This opens up entire system to fork-bomb style attacks.")
+			}
+			// set per user
+			for _, userID := range system.GetCurrentLogins() {
+				//oldLimit := system.GetTasksMax(userID)
+				if err := system.SetTasksMax(userID, value); err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
@@ -750,12 +777,12 @@ func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 	switch key {
 	case "ENABLE_PAGECACHE_LIMIT":
 		if val != "yes" && val != "no" {
-			log.Print("wrong selection for ENABLE_PAGECACHE_LIMIT. Now set to default 'no'")
+			system.WarningLog("wrong selection for ENABLE_PAGECACHE_LIMIT. Now set to default 'no'")
 			val = "no"
 		}
 	case "PAGECACHE_LIMIT_IGNORE_DIRTY":
 		if val != "2" && val != "1" && val != "0" {
-			log.Print("wrong selection for PAGECACHE_LIMIT_IGNORE_DIRTY. Now set to default '1'")
+			system.WarningLog("wrong selection for PAGECACHE_LIMIT_IGNORE_DIRTY. Now set to default '1'")
 			val = "1"
 		}
 		cur.VMPagecacheLimitIgnoreDirty, _ = strconv.Atoi(val)

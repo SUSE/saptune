@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -40,19 +39,19 @@ func GetPerfBias() string {
 	cmdArgs := []string{"-c", "all", "info", "-b"}
 
 	if !CmdIsAvailable(cmdName) {
-		log.Printf("command '%s' not found", cmdName)
+		WarningLog("command '%s' not found", cmdName)
 		return "all:none"
 	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil {
-		log.Printf("There was an error running external command 'cpupower -c all info -b': %v, output: %s", err, cmdOut)
+		WarningLog("There was an error running external command 'cpupower -c all info -b': %v, output: %s", err, cmdOut)
 		return "all:none"
 	}
 
 	for k, line := range strings.Split(strings.TrimSpace(string(cmdOut)), "\n") {
 		switch {
 		case line == notSupported:
-			//log.Print(notSupported)
+			//WarningLog(notSupported)
 			return "all:none"
 		case isPBCpu.MatchString(line):
 			str = str + fmt.Sprintf("cpu%d", k/2)
@@ -78,7 +77,7 @@ func SetPerfBias(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "set", "-b", value)
 	cpu := ""
 	if !SupportsPerfBias() {
-		log.Print(notSupported)
+		WarningLog(notSupported)
 		return nil
 	}
 	for k, entry := range strings.Fields(value) {
@@ -91,7 +90,8 @@ func SetPerfBias(value string) error {
 		cmd := exec.Command(cpupowerCmd, "-c", cpu, "set", "-b", fields[1])
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("failed to invoke external command 'cpupower -c %s set -b %s': %v, output: %s", cpu, fields[1], err, out)
+			WarningLog("failed to invoke external command 'cpupower -c %s set -b %s': %v, output: %s", cpu, fields[1], err, out)
+			return err
 		}
 	}
 	return nil
@@ -103,7 +103,7 @@ func SupportsPerfBias() bool {
 	cmdArgs := []string{"info", "-b"}
 
 	if !CmdIsAvailable(cmdName) {
-		log.Printf("command '%s' not found", cmdName)
+		WarningLog("command '%s' not found", cmdName)
 		return false
 	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
@@ -158,7 +158,7 @@ func SetGovernor(value string) error {
 	cmdName := cpupowerCmd
 
 	if !CmdIsAvailable(cmdName) {
-		log.Printf("command '%s' not found", cmdName)
+		WarningLog("command '%s' not found", cmdName)
 		return nil
 	}
 	for k, entry := range strings.Fields(value) {
@@ -171,13 +171,14 @@ func SetGovernor(value string) error {
 			tst = "cpu0"
 		}
 		if !IsValidGovernor(tst, fields[1]) {
-			log.Printf("'%s' is not a valid governor, skipping.", fields[1])
+			WarningLog("'%s' is not a valid governor, skipping.", fields[1])
 			continue
 		}
 		cmd := exec.Command(cpupowerCmd, "-c", cpu, "frequency-set", "-g", fields[1])
 		out, err := cmd.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("failed to invoke external command 'cpupower -c %s frequency-set -g %s': %v, output: %s", cpu, fields[1], err, out)
+			WarningLog("failed to invoke external command 'cpupower -c %s frequency-set -g %s': %v, output: %s", cpu, fields[1], err, out)
+			return err
 		}
 	}
 	return nil
@@ -209,7 +210,7 @@ func GetForceLatency() string {
 		if isCPU.MatchString(entry.Name()) {
 			_, err := ioutil.ReadDir(path.Join(cpuDir, entry.Name(), "cpuidle"))
 			if err != nil {
-				//log.Printf("SetForceLatency: idle settings not supported for '%s'", entry.Name())
+				//WarningLog("SetForceLatency: idle settings not supported for '%s'", entry.Name())
 				continue
 			} else {
 				supported = true
@@ -253,14 +254,15 @@ func SetForceLatency(noteID, value string, revert bool) error {
 
 	dirCont, err := ioutil.ReadDir(cpuDir)
 	if err != nil {
-		return fmt.Errorf("latency settings not supported by the system")
+		WarningLog("latency settings not supported by the system")
+		return err
 	}
 	for _, entry := range dirCont {
 		// cpu0 ... cpuXY
 		if isCPU.MatchString(entry.Name()) {
 			cpudirCont, err := ioutil.ReadDir(path.Join(cpuDir, entry.Name(), "cpuidle"))
 			if err != nil {
-				log.Printf("SetForceLatency: idle settings not supported for '%s'", entry.Name())
+				WarningLog("SetForceLatency: idle settings not supported for '%s'", entry.Name())
 				continue
 			}
 			supported = true
@@ -303,7 +305,7 @@ func SetForceLatency(noteID, value string, revert bool) error {
 		// revert
 		dmaLat := GetdmaLatency()
 		if value != dmaLat {
-			log.Printf("SetForceLatency: reverted value for force latency (%s) differs from /dev/cpu_dma_latency setting (%s).", value, dmaLat)
+			WarningLog("SetForceLatency: reverted value for force latency (%s) differs from /dev/cpu_dma_latency setting (%s).", value, dmaLat)
 		}
 		ioutil.WriteFile(forceLatFile, []byte(value), 0644)
 
@@ -337,11 +339,11 @@ func GetdmaLatency() string {
 	latency := make([]byte, 4)
 	dmaLatency, err := os.OpenFile("/dev/cpu_dma_latency", os.O_RDONLY, 0600)
 	if err != nil {
-		log.Printf("GetForceLatency: failed to open cpu_dma_latency - %v", err)
+		WarningLog("GetForceLatency: failed to open cpu_dma_latency - %v", err)
 	}
 	_, err = dmaLatency.Read(latency)
 	if err != nil {
-		log.Printf("GetForceLatency: reading from '/dev/cpu_dma_latency' failed: %v", err)
+		WarningLog("GetForceLatency: reading from '/dev/cpu_dma_latency' failed: %v", err)
 	}
 	// Close the file handle after the latency value is no longer maintained
 	defer dmaLatency.Close()

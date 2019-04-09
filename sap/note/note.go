@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
-	"log"
 	"os"
 	"path"
 	"reflect"
@@ -56,7 +55,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 	_, files, err := system.ListDir(saptuneTuningDir)
 	if err != nil {
 		// Not a fatal error
-		log.Printf("GetTuningOptions: failed to read saptune tuning definitions - %v", err)
+		system.WarningLog("GetTuningOptions: failed to read saptune tuning definitions - %v", err)
 	}
 	for _, fileName := range files {
 		ret[fileName] = INISettings{
@@ -70,14 +69,14 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 	_, files, err = system.ListDir(thirdPartyTuningDir)
 	if err != nil {
 		// Not a fatal error
-		log.Printf("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
+		system.WarningLog("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
 	}
 	for _, fileName := range files {
 		// ignore left over files (BOBJ and ASE definition files) from
 		// the migration of saptune version 1 to saptune version 2
 		if fileName == "SAP_BOBJ-SAP_Business_OBJects.conf" || fileName == "SAP_ASE-SAP_Adaptive_Server_Enterprise.conf" {
-			log.Printf("GetTuningOptions: skip old note definition \"%s\" from saptune version 1.", fileName)
-			log.Println("For more information refer to the man page saptune-migrate(7)")
+			system.WarningLog("GetTuningOptions: skip old note definition \"%s\" from saptune version 1.", fileName)
+			system.WarningLog("For more information refer to the man page saptune-migrate(7)")
 			continue
 		}
 		id := ""
@@ -87,12 +86,12 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			// no header found in the vendor file
 			// fall back to the old style vendor file names
 			// support of old style vendor file names for compatibility reasons
-			log.Printf("GetTuningOptions: no header information found in file \"%s\"", fileName)
-			log.Println("falling back to old style vendor file names")
+			system.WarningLog("GetTuningOptions: no header information found in file \"%s\"", fileName)
+			system.WarningLog("falling back to old style vendor file names")
 			// By convention, the portion before dash makes up the ID.
 			idName := strings.SplitN(fileName, "-", 2)
 			if len(idName) != 2 {
-				log.Printf("GetTuningOptions: skip bad file name \"%s\"", fileName)
+				system.WarningLog("GetTuningOptions: skip bad file name \"%s\"", fileName)
 				continue
 			}
 			id = idName[0]
@@ -105,7 +104,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		}
 		// Do not allow vendor to override built-in
 		if _, exists := ret[id]; exists {
-			log.Printf("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
+			system.WarningLog("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
 			continue
 		}
 		ret[id] = INISettings{
@@ -142,11 +141,13 @@ type FieldComparison struct {
 func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 	v1JSBytes, err := json.Marshal(v1)
 	if err != nil {
-		log.Panicf("CompareJSValue: failed to serialise \"%+v\" - %v", v1, err)
+		system.ErrorLog("CompareJSValue: failed to serialise \"%+v\" - %v", v1, err)
+		panic(err)
 	}
 	v2JSBytes, err := json.Marshal(v2)
 	if err != nil {
-		log.Panicf("CompareJSValue: failed to serialise \"%+v\" - %v", v2, err)
+		system.ErrorLog("CompareJSValue: failed to serialise \"%+v\" - %v", v2, err)
+		panic(err)
 	}
 	v1JS, err = strconv.Unquote(string(v1JSBytes))
 	if err != nil {
