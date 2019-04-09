@@ -7,7 +7,6 @@ import (
 	"path"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 // OverrideTuningSheets defines saptunes override directory
@@ -166,9 +165,10 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionPagecache:
 			// page cache is special, has it's own config file
 			// so adjust path to pagecache config file, if needed
-			pcPrefix := strings.Split(vend.ConfFilePath, "/usr/share/saptune/notes/1557506")
-			if len(pcPrefix) != 0 {
-				pc = LinuxPagingImprovements{SysconfigPrefix: strings.Join(pcPrefix, "")}
+			if override {
+				pc = LinuxPagingImprovements{PagingConfig: path.Join(OverrideTuningSheets, vend.ID)}
+			} else {
+				pc = LinuxPagingImprovements{PagingConfig: vend.ConfFilePath}
 			}
 			vend.SysctlParams[param.Key] = GetPagecacheVal(param.Key, &pc)
 		default:
@@ -245,7 +245,6 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = param.Value
 			continue
 		case INISectionPagecache:
-			//vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc, ini.KeyValue)
 			vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc)
 		default:
 			system.WarningLog("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)

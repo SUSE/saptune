@@ -10,6 +10,8 @@ import (
 	"testing"
 )
 
+var PCTestBaseConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/note/1557506")
+
 func TestGetServiceName(t *testing.T) {
 	val := GetServiceName("UuiddSocket")
 	if val != "uuidd.socket" {
@@ -419,7 +421,7 @@ func TestOptLoginVal(t *testing.T) {
 // SetLoginVal
 
 func TestGetPagecacheVal(t *testing.T) {
-	prepare := LinuxPagingImprovements{SysconfigPrefix: OSPackageInGOPATH}
+	prepare := LinuxPagingImprovements{PagingConfig: PCTestBaseConf}
 	val := GetPagecacheVal("ENABLE_PAGECACHE_LIMIT", &prepare)
 	if val != "yes" && val != "no" {
 		t.Fatal(val)
@@ -431,13 +433,13 @@ func TestGetPagecacheVal(t *testing.T) {
 		t.Fatal(val)
 	}
 
-	prepare = LinuxPagingImprovements{SysconfigPrefix: OSPackageInGOPATH}
+	prepare = LinuxPagingImprovements{PagingConfig: PCTestBaseConf}
 	val = GetPagecacheVal("PAGECACHE_LIMIT_IGNORE_DIRTY", &prepare)
 	if val != strconv.Itoa(prepare.VMPagecacheLimitIgnoreDirty) {
 		t.Fatal(val)
 	}
 
-	prepare = LinuxPagingImprovements{SysconfigPrefix: OSPackageInGOPATH}
+	prepare = LinuxPagingImprovements{PagingConfig: PCTestBaseConf}
 	val = GetPagecacheVal("OVERRIDE_PAGECACHE_LIMIT_MB", &prepare)
 	if prepare.VMPagecacheLimitMB == 0 && val != "" {
 		t.Fatal(val)
@@ -446,7 +448,7 @@ func TestGetPagecacheVal(t *testing.T) {
 		t.Fatal(val)
 	}
 
-	prepare = LinuxPagingImprovements{SysconfigPrefix: OSPackageInGOPATH}
+	prepare = LinuxPagingImprovements{PagingConfig: PCTestBaseConf}
 	val = GetPagecacheVal("UNKOWN", &prepare)
 	if val != "" {
 		t.Fatal(val)
@@ -454,7 +456,7 @@ func TestGetPagecacheVal(t *testing.T) {
 }
 
 func TestOptPagecacheVal(t *testing.T) {
-	initPrepare, _ := LinuxPagingImprovements{SysconfigPrefix: OSPackageInGOPATH, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
+	initPrepare, _ := LinuxPagingImprovements{PagingConfig: PCTestBaseConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
 	prepare := initPrepare.(LinuxPagingImprovements)
 
 	val := OptPagecacheVal("UNKNOWN", "unknown", &prepare)
@@ -502,8 +504,8 @@ func TestOptPagecacheVal(t *testing.T) {
 		t.Fatal(val, prepare.VMPagecacheLimitIgnoreDirty)
 	}
 
-	PCTestConf := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest1")
-	initPrepare, _ = LinuxPagingImprovements{SysconfigPrefix: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
+	PCTestConf := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest1.ini")
+	initPrepare, _ = LinuxPagingImprovements{PagingConfig: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
 	prepare = initPrepare.(LinuxPagingImprovements)
 	val = OptPagecacheVal("OVERRIDE_PAGECACHE_LIMIT_MB", "unknown", &prepare)
 	if val != "" || prepare.VMPagecacheLimitMB > 0 {
@@ -511,8 +513,8 @@ func TestOptPagecacheVal(t *testing.T) {
 	}
 
 	calc := system.GetMainMemSizeMB() * 2 / 100
-	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest2")
-	initPrepare, _ = LinuxPagingImprovements{SysconfigPrefix: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
+	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest2.ini")
+	initPrepare, _ = LinuxPagingImprovements{PagingConfig: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
 	prepare = initPrepare.(LinuxPagingImprovements)
 	val = OptPagecacheVal("OVERRIDE_PAGECACHE_LIMIT_MB", "unknown", &prepare)
 	if val == "" || val == "0" {
@@ -525,16 +527,16 @@ func TestOptPagecacheVal(t *testing.T) {
 		t.Fatal(val, calc)
 	}
 
-	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest3")
-	initPrepare, _ = LinuxPagingImprovements{SysconfigPrefix: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
+	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest3.ini")
+	initPrepare, _ = LinuxPagingImprovements{PagingConfig: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
 	prepare = initPrepare.(LinuxPagingImprovements)
 	val = OptPagecacheVal("OVERRIDE_PAGECACHE_LIMIT_MB", "unknown", &prepare)
 	if val != "" || prepare.VMPagecacheLimitMB > 0 {
 		t.Fatal(val, prepare.VMPagecacheLimitMB)
 	}
 
-	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest4")
-	initPrepare, _ = LinuxPagingImprovements{SysconfigPrefix: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
+	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest4.ini")
+	initPrepare, _ = LinuxPagingImprovements{PagingConfig: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
 	prepare = initPrepare.(LinuxPagingImprovements)
 	val = OptPagecacheVal("OVERRIDE_PAGECACHE_LIMIT_MB", "unknown", &prepare)
 	if val == "" || val == "0" {
@@ -547,16 +549,16 @@ func TestOptPagecacheVal(t *testing.T) {
 		t.Fatal(val, calc)
 	}
 
-	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest5")
-	initPrepare, _ = LinuxPagingImprovements{SysconfigPrefix: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
+	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest5.ini")
+	initPrepare, _ = LinuxPagingImprovements{PagingConfig: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
 	prepare = initPrepare.(LinuxPagingImprovements)
 	val = OptPagecacheVal("OVERRIDE_PAGECACHE_LIMIT_MB", "unknown", &prepare)
 	if val != "" || prepare.VMPagecacheLimitMB > 0 {
 		t.Fatal(val, prepare.VMPagecacheLimitMB)
 	}
 
-	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest6")
-	initPrepare, _ = LinuxPagingImprovements{SysconfigPrefix: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
+	PCTestConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest6.ini")
+	initPrepare, _ = LinuxPagingImprovements{PagingConfig: PCTestConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}.Initialise()
 	prepare = initPrepare.(LinuxPagingImprovements)
 	val = OptPagecacheVal("OVERRIDE_PAGECACHE_LIMIT_MB", "unknown", &prepare)
 	if val == "" || val == "0" {
@@ -572,7 +574,7 @@ func TestOptPagecacheVal(t *testing.T) {
 }
 
 func TestSetPagecacheVal(t *testing.T) {
-	prepare := LinuxPagingImprovements{SysconfigPrefix: OSPackageInGOPATH, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}
+	prepare := LinuxPagingImprovements{PagingConfig: PCTestBaseConf, VMPagecacheLimitMB: 0, VMPagecacheLimitIgnoreDirty: 0, UseAlgorithmForHANA: true}
 	val := SetPagecacheVal("UNKNOWN", &prepare)
 	if val != nil {
 		t.Fatal(val)

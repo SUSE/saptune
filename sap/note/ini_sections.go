@@ -708,7 +708,7 @@ func SetLoginVal(key, value string, revert bool) error {
 // system settings
 func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 	val := ""
-	currentPagecache, err := LinuxPagingImprovements{SysconfigPrefix: cur.SysconfigPrefix}.Initialise()
+	currentPagecache, err := LinuxPagingImprovements{PagingConfig: cur.PagingConfig}.Initialise()
 	if err != nil {
 		return ""
 	}
@@ -754,6 +754,10 @@ func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 		cur.VMPagecacheLimitIgnoreDirty, _ = strconv.Atoi(val)
 	case "OVERRIDE_PAGECACHE_LIMIT_MB":
 		opt, _ := cur.Optimise()
+		if opt == nil {
+			system.ErrorLog("page cache optimise had problems reading the Note definition file '%s'. Please check", cur.PagingConfig)
+			return ""
+		}
 		optval := opt.(LinuxPagingImprovements).VMPagecacheLimitMB
 		if optval != 0 {
 			cur.VMPagecacheLimitMB = optval

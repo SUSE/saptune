@@ -8,10 +8,11 @@ import (
 
 func TestLinuxPagingImprovements(t *testing.T) {
 
-	if _, err := os.Stat(path.Join(OSPackageInGOPATH, "usr/share/saptune/notes/1557506")); os.IsNotExist(err) {
-		t.Skip("file usr/share/saptune/notes/1557506 not available")
+	PCTestBaseConf := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1557506")
+	if _, err := os.Stat(PCTestBaseConf); os.IsNotExist(err) {
+		t.Skipf("file %s not available", PCTestBaseConf)
 	}
-	prepare := LinuxPagingImprovements{SysconfigPrefix: OSPackageInGOPATH}
+	prepare := LinuxPagingImprovements{PagingConfig: PCTestBaseConf}
 	if prepare.Name() == "" {
 		t.Fatal(prepare.Name())
 	}

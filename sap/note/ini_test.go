@@ -252,7 +252,7 @@ func TestAllSettings(t *testing.T) {
 
 func TestPageCacheSettings(t *testing.T) {
 	cleanUp()
-	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest6/usr/share/saptune/notes/1557506")
+	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest6.ini")
 	ini := INISettings{ConfFilePath: iniPath}
 
 	if ini.Name() == "" {

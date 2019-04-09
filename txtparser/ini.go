@@ -56,7 +56,7 @@ func GetINIFileDescriptiveName(fileName string) string {
 
 // GetINIFileCategory return the category the Note belongs to
 func GetINIFileCategory(fileName string) string {
-	var re = regexp.MustCompile(`# SAP-NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
+	var re = regexp.MustCompile(`# .*NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
 	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -72,7 +72,7 @@ func GetINIFileCategory(fileName string) string {
 // GetINIFileVersion return the version of the Note used to setup the Note
 // configuration file
 func GetINIFileVersion(fileName string) string {
-	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
+	var re = regexp.MustCompile(`# .*NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
 	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {

@@ -4,13 +4,12 @@ import (
 	"github.com/SUSE/saptune/sap"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
-	"path"
 )
 
 // LinuxPagingImprovements defines SAP Note 1557506
 // 1557506 - Linux paging improvements
 type LinuxPagingImprovements struct {
-	SysconfigPrefix string // Used by test cases to specify alternative sysconfig location
+	PagingConfig string // configuration file for page cache, used by test cases and during optimise
 
 	VMPagecacheLimitMB          uint64
 	VMPagecacheLimitIgnoreDirty int
@@ -27,7 +26,7 @@ func (paging LinuxPagingImprovements) Initialise() (Note, error) {
 	vmPagecach, _ := system.GetSysctlUint64(system.SysctlPagecacheLimitMB)
 	vmIgnoreDirty, _ := system.GetSysctlInt(system.SysctlPagecacheLimitIgnoreDirty)
 	return LinuxPagingImprovements{
-		SysconfigPrefix:             paging.SysconfigPrefix,
+		PagingConfig:                paging.PagingConfig,
 		VMPagecacheLimitMB:          vmPagecach,
 		VMPagecacheLimitIgnoreDirty: vmIgnoreDirty,
 		UseAlgorithmForHANA:         true,
@@ -38,7 +37,7 @@ func (paging LinuxPagingImprovements) Initialise() (Note, error) {
 // or calculates new values
 func (paging LinuxPagingImprovements) Optimise() (Note, error) {
 	newPaging := paging
-	conf, err := txtparser.ParseSysconfigFile(path.Join(newPaging.SysconfigPrefix, "/usr/share/saptune/notes/1557506"), false)
+	conf, err := txtparser.ParseSysconfigFile(newPaging.PagingConfig, false)
 	if err != nil {
 		return nil, err
 	}
