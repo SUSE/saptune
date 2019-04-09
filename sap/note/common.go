@@ -35,7 +35,7 @@ type PrepareForSAPEnvironments struct {
 }
 
 func (prepare PrepareForSAPEnvironments) Name() string {
-	return "Linux: Preparing SLES for SAP environments"
+	return "Linux: Preparing SLES for SAP environments (SAP note updated - saptune version 1 does not match anymore. Migrate to saptune version 2 instead)"
 }
 func (prepare PrepareForSAPEnvironments) Initialise() (Note, error) {
 	newPrepare := prepare

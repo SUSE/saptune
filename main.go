@@ -80,6 +80,10 @@ func main() {
 		errorExit("The system architecture (%s) is not supported.", runtime.GOARCH)
 		return
 	}
+	// Print out the deprecation message
+	log.Println("ATTENTION: This is verson 1 of saptune which is deprecated.")
+	log.Println("           Please migrate to saptune version 2.")
+	log.Println("           Refere to saptune-migrate(7) for more information")
 	// Initialise application configuration and tuning procedures
 	tuningOptions = note.GetTuningOptions(ExtraTuningSheets)
 	tuneApp = app.InitialiseApp("", "", tuningOptions, archSolutions)
@@ -212,7 +216,7 @@ func NoteAction(actionName, noteID string) {
 				"\n    saptune daemon start")
 		}
 	case "list":
-		fmt.Println("All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):")
+		fmt.Println("\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 		for _, noteID := range tuningOptions.GetSortedIDs() {
 			noteObj := tuningOptions[noteID]
@@ -302,7 +306,7 @@ func SolutionAction(actionName, solName string) {
 		if err != nil {
 			errorExit("Failed to tune for solution %s: %v", solName, err)
 		}
-		fmt.Println("All tuning options for the SAP solution have been applied successfully.")
+		fmt.Println("\nAll tuning options for the SAP solution have been applied successfully.")
 		if len(removedAdditionalNotes) > 0 {
 			fmt.Println("The following previously-enabled notes are now tuned by the SAP solution:")
 			for _, noteNumber := range removedAdditionalNotes {
@@ -315,7 +319,7 @@ func SolutionAction(actionName, solName string) {
 				"\n    saptune daemon start")
 		}
 	case "list":
-		fmt.Println("All solutions (* denotes enabled solution):")
+		fmt.Println("\nAll solutions (* denotes enabled solution):")
 		for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 			format := "\t%s\n"
 			if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {

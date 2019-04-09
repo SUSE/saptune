@@ -26,7 +26,7 @@ type SUSESysOptimisation struct {
 
 func (st SUSESysOptimisation) Name() string {
 	// Do not mention SLES 11 here
-	return "SLES 12 OS Tuning & Optimization Guide – Part 1"
+	return "SLES 12 OS Tuning & Optimization Guide – Part 1 (deprecated since not an official SAP recommendation)"
 }
 func (st SUSESysOptimisation) Initialise() (Note, error) {
 	newST := st
@@ -40,7 +40,7 @@ func (st SUSESysOptimisation) Initialise() (Note, error) {
 
 	newST.VMDirtyBackgroundRatio, _ = system.GetSysctlUint64(system.SysctlDirtyBackgroundRatio)
 	newBlkSchedulers, err := newST.BlockDeviceSchedulers.Inspect()
-	if err != nil {
+	if err == nil {
 		newST.BlockDeviceSchedulers = newBlkSchedulers.(param.BlockDeviceSchedulers)
 	}
 	return newST, nil
@@ -124,7 +124,7 @@ type SUSENetCPUOptimisation struct {
 
 func (st SUSENetCPUOptimisation) Name() string {
 	// Do not mention SLES 11 here
-	return "SLES 12: Network, CPU Tuning and Optimization – Part 2"
+	return "SLES 12: Network, CPU Tuning and Optimization – Part 2 (deprecated since not an official SAP recommendation)"
 }
 func (st SUSENetCPUOptimisation) Initialise() (Note, error) {
 	newST := st
