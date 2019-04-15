@@ -25,14 +25,18 @@ ENABLE_PAGECACHE_LIMIT=no
 # pagecache limit.
 # If set to 2 - a middle ground, some dirty memory will be freed when enforcing
 # the limit.
-PAGECACHE_LIMIT_IGNORE_DIRTY=1
+vm.pagecache_limit_ignore_dirty=1
 
 ## Type:    integer
 ## Default: ""
 #
-# When pagecache limit feature is enabled, the limit value is usually 
-# automatically calculated.
-# However, the value can be overriden if you set this parameter to the desired
-# limit value.
-# To remove the override, set the parameter to empty string.
-OVERRIDE_PAGECACHE_LIMIT_MB=
+# When pagecache limit feature is enabled, this parameter defines how to set
+# the pagecache limit
+# The limit value can be calculated automatically or the value can be overriden
+# if you set this parameter to the desired limit value.
+#
+# To calculate the limit, set the parameter to 0.
+# Or set the parameter to the desired limit value.
+# An empty string will be treated as 0. To disable pagecache limit use the
+# variable ENABLE_PAGECACHE_LIMIT above
+OVERRIDE_PAGECACHE_LIMIT_MB=0

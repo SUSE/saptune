@@ -5,14 +5,16 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"path"
+	"regexp"
 	"strconv"
-	"strings"
 )
 
 // OverrideTuningSheets defines saptunes override directory
 const OverrideTuningSheets = "/etc/saptune/override/"
 
 var pc = LinuxPagingImprovements{}
+var isLimitSoft = regexp.MustCompile(`LIMIT_.*_soft_memlock`)
+var isLimitHard = regexp.MustCompile(`LIMIT_.*_hard_memlock`)
 
 // Tuning options composed by a third party vendor.
 
@@ -105,7 +107,20 @@ func (vend INISettings) Initialise() (Note, error) {
 	vend.OverrideParams = make(map[string]string)
 	for _, param := range ini.AllValues {
 		if override && len(ow.KeyValue[param.Section]) != 0 {
-			if ow.KeyValue[param.Section][param.Key].Value == "" && ow.KeyValue[param.Section][param.Key].Key != "" {
+			if vend.ID == "1805750" {
+				// as note 1805750 does not set a limits
+				// domain, but the customer should be able to
+				// set the correct domain using an override
+				// file we need to rewrite param.Key and
+				// param.Value to get a correct behaviour
+				for owkey, owparam := range ow.KeyValue[param.Section] {
+					if (isLimitSoft.MatchString(param.Key) && isLimitSoft.MatchString(owkey)) || (isLimitHard.MatchString(param.Key) && isLimitHard.MatchString(owkey)) {
+						param.Key = owkey
+						param.Value = owparam.Value
+					}
+				}
+			}
+			if ow.KeyValue[param.Section][param.Key].Value == "" && param.Section != INISectionPagecache && (ow.KeyValue[param.Section][param.Key].Key != "" || (param.Section == INISectionLimits && ow.KeyValue[param.Section][param.Key].Key == "")) {
 				// disable parameter setting in override file
 				vend.OverrideParams[param.Key] = "untouched"
 			}
@@ -127,7 +142,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], _ = GetBlkVal(param.Key)
 		case INISectionLimits:
-			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Key, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value)
+			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Value)
 		case INISectionUuidd:
 			vend.SysctlParams[param.Key] = GetUuiddVal()
 		case INISectionService:
@@ -150,9 +165,10 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionPagecache:
 			// page cache is special, has it's own config file
 			// so adjust path to pagecache config file, if needed
-			pcPrefix := strings.Split(vend.ConfFilePath, "/usr/share/saptune/notes/1557506")
-			if len(pcPrefix) != 0 {
-				pc = LinuxPagingImprovements{SysconfigPrefix: strings.Join(pcPrefix, "")}
+			if override {
+				pc.PagingConfig = path.Join(OverrideTuningSheets, vend.ID)
+			} else {
+				pc.PagingConfig = vend.ConfFilePath
 			}
 			vend.SysctlParams[param.Key] = GetPagecacheVal(param.Key, &pc)
 		default:
@@ -162,11 +178,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		// do not write parameter values to the saved state file during
 		// a pure 'verify' action
 		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
-			if param.Section == INISectionLimits {
-				SaveLimitsParameter(param.Key, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, vend.SysctlParams[param.Key], "start", "")
-			} else {
-				CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
-			}
+			CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
 		}
 	}
 	return vend, nil
@@ -182,6 +194,18 @@ func (vend INISettings) Optimise() (Note, error) {
 
 	for _, param := range ini.AllValues {
 		// Compare current values against INI's definition
+		if len(vend.OverrideParams) != 0 && vend.ID == "1805750" {
+			// as note 1805750 does not set a limits domain, but
+			// the customer should be able to set the correct
+			// domain using an override file we need to rewrite
+			// param.Key and param.Value to get a correct behaviour
+			for owkey, owval := range vend.OverrideParams {
+				if (isLimitSoft.MatchString(param.Key) && isLimitSoft.MatchString(owkey)) || (isLimitHard.MatchString(param.Key) && isLimitHard.MatchString(owkey)) {
+					param.Key = owkey
+					param.Value = owval
+				}
+			}
+		}
 		if len(vend.OverrideParams[param.Key]) != 0 {
 			// use value from override file instead of the value
 			// from the sap note (ConfFile)
@@ -200,7 +224,7 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionBlock:
 			vend.SysctlParams[param.Key] = OptBlkVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionLimits:
-			vend.SysctlParams[param.Key] = OptLimitsVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value)
+			vend.SysctlParams[param.Key] = OptLimitsVal(vend.SysctlParams[param.Key], param.Value)
 		case INISectionUuidd:
 			vend.SysctlParams[param.Key] = OptUuiddVal(param.Value)
 		case INISectionService:
@@ -221,7 +245,6 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = param.Value
 			continue
 		case INISectionPagecache:
-			//vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc, ini.KeyValue)
 			vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc)
 		default:
 			system.WarningLog("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
@@ -230,11 +253,7 @@ func (vend INISettings) Optimise() (Note, error) {
 		// do not write parameter values to the saved state file during
 		// a pure 'verify' action
 		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
-			if param.Section == INISectionLimits {
-				SaveLimitsParameter(param.Key, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, vend.SysctlParams[param.Key], "add", vend.ID)
-			} else {
-				AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
-			}
+			AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
 		}
 	}
 	return vend, nil
@@ -245,6 +264,7 @@ func (vend INISettings) Optimise() (Note, error) {
 func (vend INISettings) Apply() error {
 	errs := make([]error, 0, 0)
 	revertValues := false
+	pvendID := vend.ID
 
 	if len(vend.ValuesToApply) == 0 {
 		// nothing to apply
@@ -261,6 +281,19 @@ func (vend INISettings) Apply() error {
 
 	//for key, value := range vend.SysctlParams {
 	for _, param := range ini.AllValues {
+		if len(vend.OverrideParams) != 0 && vend.ID == "1805750" {
+			// as note 1805750 does not set a limits domain, but
+			// the customer should be able to set the correct
+			// domain using an override file we need to rewrite
+			// param.Key and param.Value to get a correct behaviour
+			for owkey, owval := range vend.OverrideParams {
+				if (isLimitSoft.MatchString(param.Key) && isLimitSoft.MatchString(owkey)) || (isLimitHard.MatchString(param.Key) && isLimitHard.MatchString(owkey)) {
+					param.Key = owkey
+					param.Value = owval
+				}
+			}
+		}
+
 		switch param.Section {
 		case INISectionRpm, INISectionGrub, INISectionReminder:
 			// These parameters are only checked, but not applied.
@@ -275,15 +308,15 @@ func (vend INISettings) Apply() error {
 		if revertValues && vend.SysctlParams[param.Key] != "" {
 			// revert parameter value
 			pvalue := ""
-			if param.Section == INISectionLimits {
-				pvalue = RevertLimitsParameter(param.Key, ini.KeyValue["limits"]["LIMIT_DOMAIN"].Value, ini.KeyValue["limits"]["LIMIT_ITEM"].Value, vend.ID)
-			} else {
-				pvalue = RevertParameter(param.Key, vend.ID)
+			pvalue, pvendID = RevertParameter(param.Key, vend.ID)
+			if pvendID == "" {
+				pvendID = vend.ID
 			}
 			if pvalue != "" {
 				vend.SysctlParams[param.Key] = pvalue
 			}
 		}
+
 		switch param.Section {
 		case INISectionSysctl:
 			// Apply sysctl parameters
@@ -317,7 +350,7 @@ func (vend INISettings) Apply() error {
 		case INISectionBlock:
 			errs = append(errs, SetBlkVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionLimits:
-			errs = append(errs, SetLimitsVal(param.Key, vend.SysctlParams[param.Key], ini.KeyValue["limits"]["LIMIT_ITEM"].Value))
+			errs = append(errs, SetLimitsVal(param.Key, pvendID, vend.SysctlParams[param.Key], revertValues))
 		case INISectionUuidd:
 			errs = append(errs, SetUuiddVal(vend.SysctlParams[param.Key]))
 		case INISectionService:
@@ -329,6 +362,14 @@ func (vend INISettings) Apply() error {
 		case INISectionCPU:
 			errs = append(errs, SetCPUVal(param.Key, vend.SysctlParams[param.Key], revertValues, vend.ID))
 		case INISectionPagecache:
+			if revertValues {
+				switch param.Key {
+				case system.SysctlPagecacheLimitIgnoreDirty:
+					pc.VMPagecacheLimitIgnoreDirty, _ = strconv.Atoi(vend.SysctlParams[param.Key])
+				case "OVERRIDE_PAGECACHE_LIMIT_MB":
+					pc.VMPagecacheLimitMB, _ = strconv.ParseUint(vend.SysctlParams[param.Key], 10, 64)
+				}
+			}
 			errs = append(errs, SetPagecacheVal(param.Key, &pc))
 		default:
 			system.WarningLog("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)

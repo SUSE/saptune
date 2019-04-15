@@ -2,12 +2,10 @@ package note
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 )
 
 // ParameterNoteEntry stores the parameter values set by a Note
@@ -107,37 +105,6 @@ func AddParameterNoteValues(param, value, noteID string) {
 	}
 }
 
-// SaveLimitsParameter creates or modifies parameter state files for the
-// limit parameter
-func SaveLimitsParameter(key, domain, item, value, action, id string) {
-	if key != "LIMIT_HARD" && key != "LIMIT_SOFT" {
-		return
-	}
-	for _, dom := range strings.Fields(domain) {
-		for _, entry := range strings.Fields(value) {
-			fields := strings.Split(entry, ":")
-			if fields[0] != dom {
-				continue
-			}
-			// parameter saved state file name
-			// type_item_domain
-			saveParam := fmt.Sprintf("%s_%s_%s", key, item, dom)
-			val := ""
-			if len(fields) > 1 {
-				val = fmt.Sprintf("%s:%s ", dom, fields[1])
-			} else {
-				val = fmt.Sprintf("%s: ", dom)
-			}
-			switch action {
-			case "start":
-				CreateParameterStartValues(saveParam, val)
-			case "add":
-				AddParameterNoteValues(saveParam, val, id)
-			}
-		}
-	}
-}
-
 // GetSavedParameterNotes reads content of stored paramter states.
 // Return the content as ParameterNotes
 func GetSavedParameterNotes(param string) ParameterNotes {
@@ -202,24 +169,27 @@ func PositionInParameterList(noteID string, list []ParameterNoteEntry) int {
 // RevertParameter reverts parameter values and removes noteID reference
 // from the parameter file
 // return value of parameter, if needed to change, empty string else
-func RevertParameter(param string, noteID string) string {
+func RevertParameter(param, noteID string) (string, string) {
 	pvalue := ""
+	pnoteID := ""
 	pEntries := ParameterNotes{
 		AllNotes: make([]ParameterNoteEntry, 0, 64),
 	}
 	// read values from the parameter state file
 	pEntries = GetSavedParameterNotes(param)
 	if len(pEntries.AllNotes) == 0 {
-		return pvalue
+		return pvalue, pnoteID
 	}
 	lastNote := pEntries.AllNotes[len(pEntries.AllNotes)-1]
 	pvalue = lastNote.Value
+	pnoteID = lastNote.NoteID
 	if lastNote.NoteID == noteID {
 		// if the requested noteID is the last one in AllNotes
 		// remove this entry and set the parameter value to the 'next to last'
 		pEntries.AllNotes = pEntries.AllNotes[:len(pEntries.AllNotes)-1]
 		next2lastNote := pEntries.AllNotes[len(pEntries.AllNotes)-1]
 		pvalue = next2lastNote.Value
+		pnoteID = next2lastNote.NoteID
 	} else {
 		// if the requested noteID is NOT the last one in AllNotes
 		// remove this entry but do not set a new parameter value
@@ -243,24 +213,7 @@ func RevertParameter(param string, noteID string) string {
 			system.WarningLog("Problems during storing new parameter values")
 		}
 	}
-	return pvalue
-}
-
-// RevertLimitsParameter retrieves the stored values from the parameter state
-// files for the limit parameter
-func RevertLimitsParameter(key, domain, item, id string) string {
-	if key != "LIMIT_HARD" && key != "LIMIT_SOFT" {
-		return ""
-	}
-	pvalue := ""
-	for _, dom := range strings.Fields(domain) {
-		// parameter saved state file name
-		// type_item_domain
-		saveParam := fmt.Sprintf("%s_%s_%s", key, item, dom)
-		pv := RevertParameter(saveParam, id)
-		pvalue = pvalue + pv
-	}
-	return pvalue
+	return pvalue, pnoteID
 }
 
 // CleanUpParamFile removes the parameter state file

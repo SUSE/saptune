@@ -3,6 +3,7 @@ package note
 import (
 	"fmt"
 	"github.com/SUSE/saptune/txtparser"
+	"github.com/SUSE/saptune/system"
 	"os"
 	"path"
 	"runtime"
@@ -206,16 +207,10 @@ func TestAllSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["governor"] != strings.TrimSpace(bval) {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["LIMIT_SOFT"] != "sybase:28571380 " {
+	if optimisedINI.SysctlParams["LIMIT_sybase_hard_memlock"] != "sybase hard memlock 28571380" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["LIMIT_HARD"] != "sybase:28571380 " {
-		t.Fatal(optimisedINI.SysctlParams)
-	}
-	if optimisedINI.SysctlParams["LIMIT_DOMAIN"] != "sybase " {
-		t.Fatal(optimisedINI.SysctlParams)
-	}
-	if optimisedINI.SysctlParams["LIMIT_ITEM"] != "sybase:memlock " {
+	if optimisedINI.SysctlParams["LIMIT_sybase_soft_memlock"] != "sybase soft memlock 28571380" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["ShmFileSystemSizeMB"] != "25605" && optimisedINI.SysctlParams["ShmFileSystemSizeMB"] != "-1" {
@@ -258,7 +253,7 @@ func TestAllSettings(t *testing.T) {
 
 func TestPageCacheSettings(t *testing.T) {
 	cleanUp()
-	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest6/usr/share/saptune/notes/1557506")
+	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/pcTest6.ini")
 	ini := INISettings{ConfFilePath: iniPath}
 
 	if ini.Name() == "" {
@@ -282,7 +277,7 @@ func TestPageCacheSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["ENABLE_PAGECACHE_LIMIT"] != "yes" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["PAGECACHE_LIMIT_IGNORE_DIRTY"] != "1" {
+	if optimisedINI.SysctlParams[system.SysctlPagecacheLimitIgnoreDirty] != "1" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["OVERRIDE_PAGECACHE_LIMIT_MB"] != "641" {

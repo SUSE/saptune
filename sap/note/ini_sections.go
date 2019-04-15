@@ -210,106 +210,72 @@ func SetBlkVal(key, value string) error {
 
 // GetLimitsVal initialise the security limit structure with the current
 // system settings
-func GetLimitsVal(key, item, domain string) (string, error) {
+func GetLimitsVal(value string) (string, error) {
+	lim := strings.Fields(value)
+	// dom=[0], type=[1], item=[2], value=[3]
+	// no check, that the syntax/order of the entry in the config file is
+	// a valid limits entry
+
 	// Find out current limits
 	limit := ""
-	secLimits, err := system.ParseSecLimitsFile()
+	// /etc/security/limits.d/saptune-<domain>-<item>-<type>.conf
+	dropInFile := fmt.Sprintf("/etc/security/limits.d/saptune-%s-%s-%s.conf", lim[0], lim[2], lim[1])
+	secLimits, err := system.ParseSecLimitsFile(dropInFile)
 	if err != nil {
+		//ANGI TODO - check, if other files in /etc/security/limits.d contain a value for the touple "<domain>-<item>-<type>"
 		return "", err
 	}
-
-	for _, dom := range strings.Fields(domain) {
-		lim := ""
-
-		switch key {
-		case "LIMIT_HARD":
-			lim, _ := secLimits.Get(dom, "hard", item)
-			limit = limit + fmt.Sprintf("%s:%s ", dom, lim)
-		case "LIMIT_SOFT":
-			lim, _ := secLimits.Get(dom, "soft", item)
-			limit = limit + fmt.Sprintf("%s:%s ", dom, lim)
-		case "LIMIT_ITEM":
-			_, isset := secLimits.Get(dom, "hard", item)
-			if isset {
-				lim = item
-			} else {
-				lim = ""
-			}
-			limit = limit + fmt.Sprintf("%s:%s ", dom, lim)
-		case "LIMIT_DOMAIN":
-			_, isset := secLimits.Get(dom, "hard", item)
-			if isset {
-				lim = dom
-			} else {
-				lim = ""
-			}
-			limit = limit + fmt.Sprintf("%s ", lim)
-		}
+	lim[3], _ = secLimits.Get(lim[0], lim[1], lim[2])
+	if lim[3] == "" {
+		lim[3] = "NA"
 	}
+	// current limit found
+	limit = strings.Join(lim, " ")
 	return limit, nil
 }
 
 // OptLimitsVal optimises the security limit structure with the settings
 // from the configuration file or with a calculation
-func OptLimitsVal(key, actval, cfgval, item, domain string) string {
-	limit := cfgval
-	lim := ""
+func OptLimitsVal(actval, cfgval string) string {
+	lim := strings.Fields(cfgval)
 
-	for _, dom := range strings.Fields(domain) {
-		if key == "LIMIT_HARD" || key == "LIMIT_SOFT" {
-			for _, entry := range strings.Fields(actval) {
-				fields := strings.Split(entry, ":")
-				if fields[0] != dom {
-					continue
-				}
-				switch fields[1] {
-				case "unlimited", "infinity", "-1":
-					limit = fields[1]
-				default:
-					limit = cfgval
-					if item == "memlock" && cfgval == "0" {
-						limact, _ := strconv.Atoi(fields[1])
-						//calculate limit (RAM in KB - 10%)
-						memlock := system.GetMainMemSizeMB()*1024 - (system.GetMainMemSizeMB() * 1024 * 10 / 100)
-						limit = strconv.Itoa(param.MaxI(limact, int(memlock)))
-					}
-				}
-			}
-			lim = lim + fmt.Sprintf("%s:%s ", dom, limit)
-		}
-		if key == "LIMIT_ITEM" {
-			lim = lim + fmt.Sprintf("%s:%s ", dom, item)
-		}
-		if key == "LIMIT_DOMAIN" {
-			lim = lim + fmt.Sprintf("%s ", dom)
-		}
+	//ANGI - check, if we will preserve 'unlimited' or if we set value from config
+	actlim := strings.Fields(actval)
+	if actlim[3] == "unlimited" || actlim[3] == "infinity" || actlim[3] == "-1" {
+		lim[3] = actlim[3]
 	}
-	return lim
+
+	return strings.Join(lim, " ")
 }
 
 // SetLimitsVal applies the settings to the system
-func SetLimitsVal(key, value, item string) error {
-	if key != "LIMIT_HARD" && key != "LIMIT_SOFT" {
+func SetLimitsVal(key, noteID, value string, revert bool) error {
+	lim := strings.Fields(value)
+	// dom=[0], type=[1], item=[2], value=[3]
+
+	// /etc/security/limits.d/saptune-<domain>-<item>-<type>.conf
+	dropInFile := fmt.Sprintf("/etc/security/limits.d/saptune-%s-%s-%s.conf", lim[0], lim[2], lim[1])
+
+	if revert && IsLastNoteOfParameter(key) {
+		// revert - remove limits drop-in file
+		os.Remove(dropInFile)
 		return nil
 	}
-	secLimits, err := system.ParseSecLimitsFile()
+
+	secLimits, err := system.ParseSecLimitsFile(dropInFile)
 	if err != nil {
 		return err
 	}
 
-	for _, entry := range strings.Fields(value) {
-		fields := strings.Split(entry, ":")
-		switch key {
-		case "LIMIT_HARD":
-			secLimits.Set(fields[0], "hard", item, fields[1])
-		case "LIMIT_SOFT":
-			secLimits.Set(fields[0], "soft", item, fields[1])
-		default:
-			return nil
-		}
-	}
+	if lim[3] != "" && lim[3] != "NA" {
+		// revert with value from another former applied note
+		// or
+		// apply - Prepare limits drop-in file
+		secLimits.Set(lim[0], lim[1], lim[2], lim[3])
 
-	err = secLimits.Apply()
+		//err = secLimits.Apply()
+		err = secLimits.ApplyDropIn(lim, noteID)
+	}
 	return err
 }
 
@@ -742,7 +708,7 @@ func SetLoginVal(key, value string, revert bool) error {
 // system settings
 func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 	val := ""
-	currentPagecache, err := LinuxPagingImprovements{SysconfigPrefix: cur.SysconfigPrefix}.Initialise()
+	currentPagecache, err := LinuxPagingImprovements{PagingConfig: cur.PagingConfig}.Initialise()
 	if err != nil {
 		return ""
 	}
@@ -755,7 +721,7 @@ func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 		} else {
 			val = "yes"
 		}
-	case "PAGECACHE_LIMIT_IGNORE_DIRTY":
+	case system.SysctlPagecacheLimitIgnoreDirty:
 		val = strconv.Itoa(current.VMPagecacheLimitIgnoreDirty)
 	case "OVERRIDE_PAGECACHE_LIMIT_MB":
 		if current.VMPagecacheLimitMB == 0 {
@@ -780,14 +746,18 @@ func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 			system.WarningLog("wrong selection for ENABLE_PAGECACHE_LIMIT. Now set to default 'no'")
 			val = "no"
 		}
-	case "PAGECACHE_LIMIT_IGNORE_DIRTY":
+	case system.SysctlPagecacheLimitIgnoreDirty:
 		if val != "2" && val != "1" && val != "0" {
-			system.WarningLog("wrong selection for PAGECACHE_LIMIT_IGNORE_DIRTY. Now set to default '1'")
+			system.WarningLog("wrong selection for %s. Now set to default '1'", system.SysctlPagecacheLimitIgnoreDirty)
 			val = "1"
 		}
 		cur.VMPagecacheLimitIgnoreDirty, _ = strconv.Atoi(val)
 	case "OVERRIDE_PAGECACHE_LIMIT_MB":
 		opt, _ := cur.Optimise()
+		if opt == nil {
+			system.ErrorLog("page cache optimise had problems reading the Note definition file '%s'. Please check", cur.PagingConfig)
+			return ""
+		}
 		optval := opt.(LinuxPagingImprovements).VMPagecacheLimitMB
 		if optval != 0 {
 			cur.VMPagecacheLimitMB = optval

@@ -56,7 +56,7 @@ func GetINIFileDescriptiveName(fileName string) string {
 
 // GetINIFileCategory return the category the Note belongs to
 func GetINIFileCategory(fileName string) string {
-	var re = regexp.MustCompile(`# SAP-NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
+	var re = regexp.MustCompile(`# .*NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
 	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -72,7 +72,7 @@ func GetINIFileCategory(fileName string) string {
 // GetINIFileVersion return the version of the Note used to setup the Note
 // configuration file
 func GetINIFileVersion(fileName string) string {
-	var re = regexp.MustCompile(`# SAP-NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
+	var re = regexp.MustCompile(`# .*NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
 	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -161,16 +161,31 @@ func ParseINI(input string) *INIFile {
 			// Skip comments, empty, and irregular lines.
 			continue
 		}
-		// handle tunables with more than one value
-		value := strings.Replace(kov[3], " ", "\t", -1)
-		entry := INIEntry{
-			Section:  currentSection,
-			Key:      kov[1],
-			Operator: Operator(kov[2]),
-			Value:    value,
+		if currentSection == "limits" {
+			for _, limits := range strings.Split(kov[3], ",") {
+				limits = strings.TrimSpace(limits)
+				lim := strings.Fields(limits)
+				entry := INIEntry{
+					Section:  currentSection,
+					Key:      fmt.Sprintf("LIMIT_%s_%s_%s", lim[0], lim[1], lim[2]),
+					Operator: Operator(kov[2]),
+					Value:    limits,
+				}
+				currentEntriesArray = append(currentEntriesArray, entry)
+				currentEntriesMap[entry.Key] = entry
+			}
+		} else {
+			// handle tunables with more than one value
+			value := strings.Replace(kov[3], " ", "\t", -1)
+			entry := INIEntry{
+				Section:  currentSection,
+				Key:      kov[1],
+				Operator: Operator(kov[2]),
+				Value:    value,
+			}
+			currentEntriesArray = append(currentEntriesArray, entry)
+			currentEntriesMap[entry.Key] = entry
 		}
-		currentEntriesArray = append(currentEntriesArray, entry)
-		currentEntriesMap[entry.Key] = entry
 	}
 	if reminder != "" {
 		// save reminder section
