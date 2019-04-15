@@ -120,7 +120,7 @@ func (vend INISettings) Initialise() (Note, error) {
 					}
 				}
 			}
-			if ow.KeyValue[param.Section][param.Key].Value == "" && (ow.KeyValue[param.Section][param.Key].Key != "" || (param.Section == "limits" && ow.KeyValue[param.Section][param.Key].Key == "")) {
+			if ow.KeyValue[param.Section][param.Key].Value == "" && param.Section != INISectionPagecache && (ow.KeyValue[param.Section][param.Key].Key != "" || (param.Section == INISectionLimits && ow.KeyValue[param.Section][param.Key].Key == "")) {
 				// disable parameter setting in override file
 				vend.OverrideParams[param.Key] = "untouched"
 			}
@@ -166,9 +166,9 @@ func (vend INISettings) Initialise() (Note, error) {
 			// page cache is special, has it's own config file
 			// so adjust path to pagecache config file, if needed
 			if override {
-				pc = LinuxPagingImprovements{PagingConfig: path.Join(OverrideTuningSheets, vend.ID)}
+				pc.PagingConfig = path.Join(OverrideTuningSheets, vend.ID)
 			} else {
-				pc = LinuxPagingImprovements{PagingConfig: vend.ConfFilePath}
+				pc.PagingConfig = vend.ConfFilePath
 			}
 			vend.SysctlParams[param.Key] = GetPagecacheVal(param.Key, &pc)
 		default:
@@ -316,6 +316,7 @@ func (vend INISettings) Apply() error {
 				vend.SysctlParams[param.Key] = pvalue
 			}
 		}
+
 		switch param.Section {
 		case INISectionSysctl:
 			// Apply sysctl parameters
@@ -361,6 +362,14 @@ func (vend INISettings) Apply() error {
 		case INISectionCPU:
 			errs = append(errs, SetCPUVal(param.Key, vend.SysctlParams[param.Key], revertValues, vend.ID))
 		case INISectionPagecache:
+			if revertValues {
+				switch param.Key {
+				case system.SysctlPagecacheLimitIgnoreDirty:
+					pc.VMPagecacheLimitIgnoreDirty, _ = strconv.Atoi(vend.SysctlParams[param.Key])
+				case "OVERRIDE_PAGECACHE_LIMIT_MB":
+					pc.VMPagecacheLimitMB, _ = strconv.ParseUint(vend.SysctlParams[param.Key], 10, 64)
+				}
+			}
 			errs = append(errs, SetPagecacheVal(param.Key, &pc))
 		default:
 			system.WarningLog("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)

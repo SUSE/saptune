@@ -184,18 +184,17 @@ func (app *App) TuneNote(noteID string) error {
 		return fmt.Errorf("Failed to save current state of note %s - %v", noteID, err)
 	}
 
-	if conforming {
-		// Do not apply the Note, if the system already complies with
-		// the requirements.
-		return nil
-	}
-
 	optimised, err := currentState.Optimise()
 	if err != nil {
 		return fmt.Errorf("Failed to calculate optimised parameters for note %s - %v", noteID, err)
 	}
 	if len(valApplyList) != 0 {
 		optimised = optimised.(note.INISettings).SetValuesToApply(valApplyList)
+	}
+	if conforming {
+		// Do not apply the Note, if the system already complies with
+		// the requirements.
+		return nil
 	}
 	if err := optimised.Apply(); err != nil {
 		return fmt.Errorf("Failed to apply note %s - %v", noteID, err)
