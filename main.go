@@ -465,6 +465,7 @@ func VerifyAllParameters() {
 		errorExit("Failed to inspect the current system: %v", err)
 	}
 	PrintNoteFields("NONE", comparisons, true)
+	tuneApp.PrintNoteApplyOrder()
 	if len(unsatisfiedNotes) == 0 {
 		fmt.Println("The running system is currently well-tuned according to all of the enabled notes.")
 	} else {
@@ -515,7 +516,7 @@ func NoteAction(actionName, noteID string) {
 				format = " O" + format
 			}
 			if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
-				j := app.PositionInNoteApplyOrder(tuneApp.NoteApplyOrder, noteID)
+				j := tuneApp.PositionInNoteApplyOrder(noteID)
 				if j < 0 { // noteID was reverted manually
 					format = " " + setGreenText + "-" + format + resetTextColor
 				} else {
@@ -526,8 +527,9 @@ func NoteAction(actionName, noteID string) {
 			}
 			fmt.Printf(format, noteID, noteObj.Name())
 		}
+		tuneApp.PrintNoteApplyOrder()
 		if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
-			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
+			fmt.Println("Remember: if you wish to automatically activate the solution's tuning options after a reboot," +
 				"you must instruct saptune to configure \"tuned\" daemon by running:" +
 				"\n    saptune daemon start")
 		}
@@ -543,6 +545,7 @@ func NoteAction(actionName, noteID string) {
 			noteComp := make(map[string]map[string]note.FieldComparison)
 			noteComp[noteID] = comparisons
 			PrintNoteFields("HEAD", noteComp, true)
+			tuneApp.PrintNoteApplyOrder()
 			if !conforming {
 				errorExit("The parameters listed above have deviated from the specified note.\n")
 			} else {

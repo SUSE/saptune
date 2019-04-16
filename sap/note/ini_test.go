@@ -2,8 +2,8 @@ package note
 
 import (
 	"fmt"
-	"github.com/SUSE/saptune/txtparser"
 	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"os"
 	"path"
 	"runtime"
