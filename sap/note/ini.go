@@ -143,8 +143,6 @@ func (vend INISettings) Initialise() (Note, error) {
 			vend.SysctlParams[param.Key], _ = GetBlkVal(param.Key)
 		case INISectionLimits:
 			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Value)
-		case INISectionUuidd:
-			vend.SysctlParams[param.Key] = GetUuiddVal()
 		case INISectionService:
 			vend.SysctlParams[param.Key] = GetServiceVal(param.Key)
 		case INISectionLogin:
@@ -225,8 +223,6 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = OptBlkVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionLimits:
 			vend.SysctlParams[param.Key] = OptLimitsVal(vend.SysctlParams[param.Key], param.Value)
-		case INISectionUuidd:
-			vend.SysctlParams[param.Key] = OptUuiddVal(param.Value)
 		case INISectionService:
 			vend.SysctlParams[param.Key] = OptServiceVal(param.Key, param.Value)
 		case INISectionLogin:
@@ -351,8 +347,6 @@ func (vend INISettings) Apply() error {
 			errs = append(errs, SetBlkVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionLimits:
 			errs = append(errs, SetLimitsVal(param.Key, pvendID, vend.SysctlParams[param.Key], revertValues))
-		case INISectionUuidd:
-			errs = append(errs, SetUuiddVal(vend.SysctlParams[param.Key]))
 		case INISectionService:
 			errs = append(errs, SetServiceVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionLogin:

@@ -1,8 +1,10 @@
 package system
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -63,4 +65,34 @@ func CheckForPattern(file, pattern string) bool {
 	}
 	//check whether content contains substring pattern
 	return strings.Contains(string(content), pattern)
+}
+
+// GetServiceName returns the systemd service name for supported services
+func GetServiceName(service string) string {
+	serviceName := ""
+	cmdName := "/usr/bin/systemctl"
+	cmdArgs := []string{"list-unit-files"}
+	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	if err != nil {
+		WarningLog("There was an error running external command %s: %v, output: %s", cmdArgs, err, cmdOut)
+		return serviceName
+	}
+	for _, line := range strings.Split(string(cmdOut), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) == 0 {
+			continue
+		}
+		if strings.TrimSpace(fields[0]) == service {
+			serviceName = service
+			break
+		}
+		if strings.TrimSpace(fields[0]) == fmt.Sprintf("%s.service", service) {
+			serviceName = fmt.Sprintf("%s.service", service)
+			break
+		}
+	}
+	if serviceName == "" {
+		WarningLog("skipping unkown service '%s'", service)
+	}
+	return serviceName
 }

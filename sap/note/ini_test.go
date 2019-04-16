@@ -131,9 +131,9 @@ func TestVendorSettings(t *testing.T) {
 
 func TestAllSettings(t *testing.T) {
 	cleanUp()
-	testString := []string{"vm.nr_hugepages", "THP", "KSM", "Sysstat"}
+	testString := []string{"vm.nr_hugepages", "THP", "KSM", "sysstat"}
 	if runtime.GOARCH == "ppc64le" {
-		testString = []string{"KSM", "Sysstat"}
+		testString = []string{"KSM", "sysstat"}
 	}
 	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_all_test.ini")
 	ini := INISettings{ConfFilePath: iniPath}
@@ -219,13 +219,13 @@ func TestAllSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["VSZ_TMPFS_PERCENT"] != "60" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["Sysstat"] != "stop" {
+	if optimisedINI.SysctlParams["sysstat"] != "stop" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["UuiddSocket"] != "start" {
+	if optimisedINI.SysctlParams["uuidd.socket"] != "start" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["UnkownService"] != "" {
+	if optimisedINI.SysctlParams["UnkownService"] != "stop" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["grub:transparent_hugepage"] != "never" {

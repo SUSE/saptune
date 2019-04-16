@@ -22,7 +22,6 @@ const (
 	INISectionCPU       = "cpu"
 	INISectionMEM       = "mem"
 	INISectionBlock     = "block"
-	INISectionUuidd     = "uuidd"
 	INISectionService   = "service"
 	INISectionLimits    = "limits"
 	INISectionLogin     = "login"
@@ -39,20 +38,6 @@ const (
 	// LogindSAPConfFile is a configuration file full of SAP-specific settings for logind.
 	LogindSAPConfFile = "saptune-UserTasksMax.conf"
 )
-
-// GetServiceName returns the systemd service name for supported services
-func GetServiceName(service string) string {
-	switch service {
-	case "UuiddSocket":
-		service = "uuidd.socket"
-	case "Sysstat":
-		service = "sysstat"
-	default:
-		system.WarningLog("skipping unkown service '%s'", service)
-		service = ""
-	}
-	return service
-}
 
 // section handling
 // section [sysctl]
@@ -530,49 +515,15 @@ func SetGrubVal(value string) error {
 	return nil
 }
 
-// section [uuidd]
-
-// GetUuiddVal initialise the uuidd socket service structure with the current
-// system settings
-func GetUuiddVal() string {
-	var val string
-	if system.SystemctlIsRunning("uuidd.socket") {
-		val = "start"
-	} else {
-		val = "stop"
-	}
-	return val
-}
-
-// OptUuiddVal optimises the uuidd socket service structure with the settings
-// from the configuration file
-func OptUuiddVal(cfgval string) string {
-	sval := strings.ToLower(cfgval)
-	if sval != "start" {
-		system.WarningLog("wrong selection for UuiddSocket. Now set to 'start' to start the uuid daemon")
-		sval = "start"
-	}
-	return sval
-}
-
-// SetUuiddVal applies the settings to the system
-func SetUuiddVal(value string) error {
-	var err error
-	if !system.SystemctlIsRunning("uuidd.socket") {
-		err = system.SystemctlStart("uuidd.socket")
-	}
-	return err
-}
-
 // section [service]
 
 // GetServiceVal initialise the systemd service structure with the current
 // system settings
 func GetServiceVal(key string) string {
 	var val string
-	service := GetServiceName(key)
+	service := system.GetServiceName(key)
 	if service == "" {
-		return ""
+		return "NA"
 	}
 	if system.SystemctlIsRunning(service) {
 		val = "start"
@@ -586,20 +537,17 @@ func GetServiceVal(key string) string {
 // from the configuration file
 func OptServiceVal(key, cfgval string) string {
 	sval := strings.ToLower(cfgval)
-	switch key {
-	case "UuiddSocket":
-		if sval != "start" {
-			system.WarningLog("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
-			sval = "start"
-		}
-	case "Sysstat":
-		if sval != "start" && sval != "stop" {
-			system.WarningLog("wrong selection for '%s'. Now set to 'start' to start the service\n", key)
-			sval = "start"
-		}
-	default:
-		system.WarningLog("skipping unkown service '%s'", key)
-		return ""
+	service := system.GetServiceName(key)
+
+	if service == "uuidd.socket" && sval != "start" {
+		// for uuidd.socket we only support 'start' (bsc#1100107)
+		system.WarningLog("wrong selection '%s' for '%s'. Now set to 'start' to start the service\n", sval, service)
+		sval = "start"
+	}
+
+	if sval != "start" && sval != "stop" {
+		system.WarningLog("wrong selection '%s' for '%s'. Now set to 'start' to start the service\n", sval, service)
+		sval = "start"
 	}
 	return sval
 }
@@ -607,7 +555,7 @@ func OptServiceVal(key, cfgval string) string {
 // SetServiceVal applies the settings to the system
 func SetServiceVal(key, value string) error {
 	var err error
-	service := GetServiceName(key)
+	service := system.GetServiceName(key)
 	if service == "" {
 		return nil
 	}

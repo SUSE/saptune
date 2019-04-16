@@ -18,8 +18,8 @@ UserTasksMax=infinity
 
 [service]
 # start the related services
-UuiddSocket=start
-Sysstat=start
+uuidd.socket=start
+sysstat.service=start
 
 [block]
 # The default I/O scheduler for SLES is CFQ. It offers satisfactory performance
