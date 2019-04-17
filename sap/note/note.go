@@ -52,11 +52,7 @@ func Note2Convert(noteID string) string {
 func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOptions {
 	ret := TuningOptions{}
 	// Collect those defined by saptune
-	_, files, err := system.ListDir(saptuneTuningDir)
-	if err != nil {
-		// Not a fatal error
-		system.WarningLog("GetTuningOptions: failed to read saptune tuning definitions - %v", err)
-	}
+	_, files := system.ListDir(saptuneTuningDir, "saptune tuning definitions")
 	for _, fileName := range files {
 		ret[fileName] = INISettings{
 			ConfFilePath:    path.Join(saptuneTuningDir, fileName),
@@ -66,11 +62,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 	}
 
 	// Collect those defined by 3rd party
-	_, files, err = system.ListDir(thirdPartyTuningDir)
-	if err != nil {
-		// Not a fatal error
-		system.WarningLog("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
-	}
+	_, files = system.ListDir(thirdPartyTuningDir, "3rd party tuning definitions")
 	for _, fileName := range files {
 		// ignore left over files (BOBJ and ASE definition files) from
 		// the migration of saptune version 1 to saptune version 2

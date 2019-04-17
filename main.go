@@ -575,12 +575,10 @@ func NoteAction(actionName, noteID string) {
 		editFileName := ""
 		fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
-			_, files, err := system.ListDir(ExtraTuningSheets)
-			if err == nil {
-				for _, f := range files {
-					if strings.HasPrefix(f, noteID) {
-						fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, f)
-					}
+			_, files := system.ListDir(ExtraTuningSheets, "")
+			for _, f := range files {
+				if strings.HasPrefix(f, noteID) {
+					fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, f)
 				}
 			}
 			if _, err := os.Stat(fileName); os.IsNotExist(err) {

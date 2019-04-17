@@ -221,10 +221,7 @@ func TestListDir(t *testing.T) {
 	} else if err := file.Close(); err != nil {
 		t.Fatal(err)
 	}
-	dirs, files, err := ListDir(tmpDir)
-	if err != nil {
-		t.Fatal(err)
-	}
+	dirs, files := ListDir(tmpDir, "")
 	if !reflect.DeepEqual(dirs, []string{"aDir"}) {
 		t.Fatal(dirs)
 	}
