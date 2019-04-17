@@ -79,6 +79,12 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			system.WarningLog("For more information refer to the man page saptune-migrate(7)")
 			continue
 		}
+		if !strings.HasSuffix(fileName, ".conf") {
+			// skip filenames without .conf suffix
+			system.WarningLog("skip file \"%s\", wrong filename syntax, missing '.conf' suffix", fileName)
+			continue
+		}
+
 		id := ""
 		// get the description of the note from the header inside the file
 		name := txtparser.GetINIFileDescriptiveName(path.Join(thirdPartyTuningDir, fileName))

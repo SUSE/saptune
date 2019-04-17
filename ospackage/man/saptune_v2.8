@@ -26,7 +26,7 @@ saptune \- Comprehensive system optimisation management for SAP solutions (Versi
 [ list | verify ]
 
 \fBsaptune note\fP
-[ apply | simulate | verify | customise | revert ]  NoteID
+[ apply | simulate | verify | customise | create | revert ]  NoteID
 
 \fBsaptune solution\fP
 [ list | verify ]
@@ -135,6 +135,11 @@ If a Note definition contains a '\fB[reminder]\fR' section, this section will be
 .B customise
 This allows to customize the values of the saptune Note definitions. The Note definition file will be copied from \fI/usr/share/saptune/notes\fR or \fI/etc/saptune/extra\fR to the override location at \fI/etc/saptune/override\fR, if the file does not exist already. After that an editor will be launched to allow changing the Note definitions.
 The editor is defined by the \fBEDITOR\fR environment variable. If not set editor defaults to /usr/bin/vim.
+.TP
+.B create
+This allows to create own Note definition files in \fI/etc/saptune/extra\fR. The Note definition file will be created from a template file into the location \fI/etc/saptune/extra\fR, if the file does not exist already. After that an editor will be launched to allow changing the Note definitions.
+The editor is defined by the \fBEDITOR\fR environment variable. If not set editor defaults to /usr/bin/vim.
+You need to choose an unique NoteID for this operation. Use '\fIsaptune note list\fR' to find the already used NoteIDs.
 .TP
 .B revert
 Revert optimisation settings carried out by the Note, and the Note will no longer be activated automatically upon system boot.

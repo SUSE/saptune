@@ -44,7 +44,7 @@ Daemon control:
   saptune daemon [ start | status | stop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify ]
-  saptune note [ apply | simulate | verify | customise | revert ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | revert ] NoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
   saptune solution [ apply | simulate | verify | revert ] SolutionName
@@ -621,6 +621,45 @@ func NoteAction(actionName, noteID string) {
 		}
 		//if err := syscall.Exec(editor, []string{editor, fileName}, os.Environ()); err != nil {
 		if err := syscall.Exec(editor, []string{editor, editFileName}, os.Environ()); err != nil {
+			errorExit("Failed to start launch editor %s: %v", editor, err)
+		}
+	case "create":
+		if noteID == "" {
+			PrintHelpAndExit(1)
+		}
+		if _, err := tuneApp.GetNoteByID(noteID); err == nil {
+			errorExit("Note '%s' already exists. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, noteID)
+		}
+		fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
+		if _, err := os.Stat(fileName); err == nil {
+			errorExit("Note '%s' already exists in %s. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, NoteTuningSheets, noteID)
+		}
+		extraFileName := fmt.Sprintf("%s%s.conf", ExtraTuningSheets, noteID)
+		if _, err := os.Stat(extraFileName); err == nil {
+			errorExit("Note '%s' already exists in %s. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, ExtraTuningSheets, noteID)
+		}
+		templateFile := "/usr/share/saptune/NoteTemplate.conf"
+		//if _, err := os.Stat(extraFileName); os.IsNotExist(err) {
+		//copy template file
+		src, err := os.Open(templateFile)
+		if err != nil {
+			errorExit("Can not open file '%s' - %v", templateFile, err)
+		}
+		defer src.Close()
+		dst, err := os.OpenFile(extraFileName, os.O_RDWR|os.O_CREATE, 0644)
+		if err != nil {
+			errorExit("Can not create file '%s' - %v", extraFileName, err)
+		}
+		defer dst.Close()
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			errorExit("Problems while copying '%s' to '%s' - %v", templateFile, extraFileName, err)
+		}
+		editor := os.Getenv("EDITOR")
+		if editor == "" {
+			editor = "/usr/bin/vim" // launch vim by default
+		}
+		if err := syscall.Exec(editor, []string{editor, extraFileName}, os.Environ()); err != nil {
 			errorExit("Failed to start launch editor %s: %v", editor, err)
 		}
 	case "revert":
