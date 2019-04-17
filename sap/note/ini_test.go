@@ -219,13 +219,13 @@ func TestAllSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["VSZ_TMPFS_PERCENT"] != "60" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["sysstat"] != "stop" {
+	if optimisedINI.SysctlParams["sysstat"] != "stop" && optimisedINI.SysctlParams["sysstat"] != "NA" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["uuidd.socket"] != "start" {
+	if optimisedINI.SysctlParams["uuidd.socket"] != "start" && optimisedINI.SysctlParams["uuidd.socket"] != "NA" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
-	if optimisedINI.SysctlParams["UnkownService"] != "stop" {
+	if optimisedINI.SysctlParams["UnkownService"] != "NA" {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["grub:transparent_hugepage"] != "never" {

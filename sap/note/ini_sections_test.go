@@ -14,15 +14,15 @@ var PCTestBaseConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptun
 
 func TestGetServiceName(t *testing.T) {
 	val := system.GetServiceName("uuidd.socket")
-	if val != "uuidd.socket" {
+	if val != "uuidd.socket" && val != "" {
 		t.Fatal(val)
 	}
 	val = system.GetServiceName("sysstat")
-	if val != "sysstat.service" {
+	if val != "sysstat.service" && val != "" {
 		t.Fatal(val)
 	}
 	val = system.GetServiceName("sysstat.service")
-	if val != "sysstat.service" {
+	if val != "sysstat.service" && val != "" {
 		t.Fatal(val)
 	}
 	val = system.GetServiceName("UnkownService")
@@ -320,38 +320,38 @@ func TestGetServiceVal(t *testing.T) {
 		t.Fatal(val)
 	}
 	val = GetServiceVal("uuidd.socket")
-	if val != "start" && val != "stop" && val != "" {
+	if val != "start" && val != "stop" && val != "NA" {
 		t.Fatal(val)
 	}
 }
 
 func TestOptServiceVal(t *testing.T) {
 	val := OptServiceVal("UnkownService", "start")
-	if val != "start" {
+	if val != "NA" {
 		t.Fatal(val)
 	}
 	val = OptServiceVal("uuidd.socket", "start")
-	if val != "start" {
+	if val != "start" && val != "NA" {
 		t.Fatal(val)
 	}
 	val = OptServiceVal("uuidd.socket", "stop")
-	if val != "start" {
+	if val != "start" && val != "NA" {
 		t.Fatal(val)
 	}
 	val = OptServiceVal("uuidd.socket", "unknown")
-	if val != "start" {
+	if val != "start" && val != "NA" {
 		t.Fatal(val)
 	}
 	val = OptServiceVal("sysstat", "start")
-	if val != "start" {
+	if val != "start" && val != "NA" {
 		t.Fatal(val)
 	}
 	val = OptServiceVal("sysstat.service", "stop")
-	if val != "stop" {
+	if val != "stop" && val != "NA" {
 		t.Fatal(val)
 	}
 	val = OptServiceVal("sysstat", "unknown")
-	if val != "start" {
+	if val != "start" && val != "NA" {
 		t.Fatal(val)
 	}
 }

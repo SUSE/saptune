@@ -538,7 +538,9 @@ func GetServiceVal(key string) string {
 func OptServiceVal(key, cfgval string) string {
 	sval := strings.ToLower(cfgval)
 	service := system.GetServiceName(key)
-
+	if service == "" {
+		return "NA"
+	}
 	if service == "uuidd.socket" && sval != "start" {
 		// for uuidd.socket we only support 'start' (bsc#1100107)
 		system.WarningLog("wrong selection '%s' for '%s'. Now set to 'start' to start the service\n", sval, service)
