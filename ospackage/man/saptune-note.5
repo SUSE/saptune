@@ -165,15 +165,18 @@ The command '\fBcpupower -c all frequency-set -g <value>\fR' or '\fBcpupower -c 
 .SH "[service]"
 The section "[service]" is dealing with starting and stopping services controlled by systemd.
 .br
-This section can contain the following options:
+The syntax for the entries are:
 .TP
-.BI UuiddSocket= STRING
-This option starts the uuidd.socket service. Only '\fBstart\fR' is a valid value, because the uuidd.socket service is essential for a working SAP environment.
-.TP
-.BI Sysstat= STRING
-This option handels the sysstat service. Valid values are '\fBstart\fR' or '\fBstop\fR'.
+.BI <servicename>=<start|stop>
+Valid services are those listed by the command '\fIsystemctl list-unit-files\fR'.
 .br
-Please be in mind: A running sysstat service can effect the system performance. But if there are real performance trouble with the SAP system, SAP service normally orders the sysstat reports collected in /var/log/sa.
+Valid values are '\fBstart\fR' or '\fBstop\fR'.
+.TP
+.BI Exceptions\ and\ Warnings:
+.TP
+For the service \fBuuidd.socket\fR only '\fBstart\fR' is a valid value, because the uuidd.socket service is essential for a working SAP environment.
+.TP
+Concerning \fBsysstat.service\fR please be in mind: A running sysstat service can effect the system performance. But if there are real performance trouble with the SAP system, SAP service normally orders the sysstat reports collected in /var/log/sa.
 .br
 See sar(1), sa2(8), sa1(8) for more information
 .SH "[reminder]"

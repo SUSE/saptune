@@ -44,7 +44,7 @@ Daemon control:
   saptune daemon [ start | status | stop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify ]
-  saptune note [ apply | simulate | verify | customise | revert ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | revert ] NoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
   saptune solution [ apply | simulate | verify | revert ] SolutionName
@@ -465,6 +465,7 @@ func VerifyAllParameters() {
 		errorExit("Failed to inspect the current system: %v", err)
 	}
 	PrintNoteFields("NONE", comparisons, true)
+	tuneApp.PrintNoteApplyOrder()
 	if len(unsatisfiedNotes) == 0 {
 		fmt.Println("The running system is currently well-tuned according to all of the enabled notes.")
 	} else {
@@ -515,7 +516,7 @@ func NoteAction(actionName, noteID string) {
 				format = " O" + format
 			}
 			if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
-				j := app.PositionInNoteApplyOrder(tuneApp.NoteApplyOrder, noteID)
+				j := tuneApp.PositionInNoteApplyOrder(noteID)
 				if j < 0 { // noteID was reverted manually
 					format = " " + setGreenText + "-" + format + resetTextColor
 				} else {
@@ -526,8 +527,9 @@ func NoteAction(actionName, noteID string) {
 			}
 			fmt.Printf(format, noteID, noteObj.Name())
 		}
+		tuneApp.PrintNoteApplyOrder()
 		if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
-			fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
+			fmt.Println("Remember: if you wish to automatically activate the solution's tuning options after a reboot," +
 				"you must instruct saptune to configure \"tuned\" daemon by running:" +
 				"\n    saptune daemon start")
 		}
@@ -543,6 +545,7 @@ func NoteAction(actionName, noteID string) {
 			noteComp := make(map[string]map[string]note.FieldComparison)
 			noteComp[noteID] = comparisons
 			PrintNoteFields("HEAD", noteComp, true)
+			tuneApp.PrintNoteApplyOrder()
 			if !conforming {
 				errorExit("The parameters listed above have deviated from the specified note.\n")
 			} else {
@@ -572,12 +575,10 @@ func NoteAction(actionName, noteID string) {
 		editFileName := ""
 		fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
-			_, files, err := system.ListDir(ExtraTuningSheets)
-			if err == nil {
-				for _, f := range files {
-					if strings.HasPrefix(f, noteID) {
-						fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, f)
-					}
+			_, files := system.ListDir(ExtraTuningSheets, "")
+			for _, f := range files {
+				if strings.HasPrefix(f, noteID) {
+					fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, f)
 				}
 			}
 			if _, err := os.Stat(fileName); os.IsNotExist(err) {
@@ -618,6 +619,45 @@ func NoteAction(actionName, noteID string) {
 		}
 		//if err := syscall.Exec(editor, []string{editor, fileName}, os.Environ()); err != nil {
 		if err := syscall.Exec(editor, []string{editor, editFileName}, os.Environ()); err != nil {
+			errorExit("Failed to start launch editor %s: %v", editor, err)
+		}
+	case "create":
+		if noteID == "" {
+			PrintHelpAndExit(1)
+		}
+		if _, err := tuneApp.GetNoteByID(noteID); err == nil {
+			errorExit("Note '%s' already exists. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, noteID)
+		}
+		fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
+		if _, err := os.Stat(fileName); err == nil {
+			errorExit("Note '%s' already exists in %s. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, NoteTuningSheets, noteID)
+		}
+		extraFileName := fmt.Sprintf("%s%s.conf", ExtraTuningSheets, noteID)
+		if _, err := os.Stat(extraFileName); err == nil {
+			errorExit("Note '%s' already exists in %s. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, ExtraTuningSheets, noteID)
+		}
+		templateFile := "/usr/share/saptune/NoteTemplate.conf"
+		//if _, err := os.Stat(extraFileName); os.IsNotExist(err) {
+		//copy template file
+		src, err := os.Open(templateFile)
+		if err != nil {
+			errorExit("Can not open file '%s' - %v", templateFile, err)
+		}
+		defer src.Close()
+		dst, err := os.OpenFile(extraFileName, os.O_RDWR|os.O_CREATE, 0644)
+		if err != nil {
+			errorExit("Can not create file '%s' - %v", extraFileName, err)
+		}
+		defer dst.Close()
+		_, err = io.Copy(dst, src)
+		if err != nil {
+			errorExit("Problems while copying '%s' to '%s' - %v", templateFile, extraFileName, err)
+		}
+		editor := os.Getenv("EDITOR")
+		if editor == "" {
+			editor = "/usr/bin/vim" // launch vim by default
+		}
+		if err := syscall.Exec(editor, []string{editor, extraFileName}, os.Environ()); err != nil {
 			errorExit("Failed to start launch editor %s: %v", editor, err)
 		}
 	case "revert":

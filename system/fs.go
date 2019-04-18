@@ -122,10 +122,11 @@ func RemountSHM(newSizeMB uint64) error {
 }
 
 // ListDir list directory content.
-func ListDir(dirPath string) (dirNames, fileNames []string, err error) {
+func ListDir(dirPath, logMsg string) (dirNames, fileNames []string) {
 	entries, err := ioutil.ReadDir(dirPath)
-	if err != nil {
-		return
+	if err != nil && logMsg != "" {
+		// Not a fatal error
+		WarningLog("failed to read %s - %v", logMsg, err)
 	}
 	dirNames = make([]string, 0, 0)
 	fileNames = make([]string, 0, 0)

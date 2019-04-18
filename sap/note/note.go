@@ -52,11 +52,7 @@ func Note2Convert(noteID string) string {
 func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOptions {
 	ret := TuningOptions{}
 	// Collect those defined by saptune
-	_, files, err := system.ListDir(saptuneTuningDir)
-	if err != nil {
-		// Not a fatal error
-		system.WarningLog("GetTuningOptions: failed to read saptune tuning definitions - %v", err)
-	}
+	_, files := system.ListDir(saptuneTuningDir, "saptune tuning definitions")
 	for _, fileName := range files {
 		ret[fileName] = INISettings{
 			ConfFilePath:    path.Join(saptuneTuningDir, fileName),
@@ -66,11 +62,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 	}
 
 	// Collect those defined by 3rd party
-	_, files, err = system.ListDir(thirdPartyTuningDir)
-	if err != nil {
-		// Not a fatal error
-		system.WarningLog("GetTuningOptions: failed to read 3rd party tuning definitions - %v", err)
-	}
+	_, files = system.ListDir(thirdPartyTuningDir, "3rd party tuning definitions")
 	for _, fileName := range files {
 		// ignore left over files (BOBJ and ASE definition files) from
 		// the migration of saptune version 1 to saptune version 2
@@ -79,6 +71,12 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			system.WarningLog("For more information refer to the man page saptune-migrate(7)")
 			continue
 		}
+		if !strings.HasSuffix(fileName, ".conf") {
+			// skip filenames without .conf suffix
+			system.WarningLog("skip file \"%s\", wrong filename syntax, missing '.conf' suffix", fileName)
+			continue
+		}
+
 		id := ""
 		// get the description of the note from the header inside the file
 		name := txtparser.GetINIFileDescriptiveName(path.Join(thirdPartyTuningDir, fileName))
