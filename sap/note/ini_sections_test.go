@@ -1,6 +1,7 @@
 package note
 
 import (
+	"github.com/SUSE/saptune/sap/param"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"os"
@@ -49,28 +50,29 @@ func TestOptSysctlVal(t *testing.T) {
 
 //GetBlkVal
 func TestOptBlkVal(t *testing.T) {
-	val := OptBlkVal("IO_SCHEDULER", "sda@cfq", "noop")
-	if val != "sda@noop" {
+	tblck := param.BlockDeviceQueue{param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}}
+	val := OptBlkVal("IO_SCHEDULER_sda", "noop", &tblck)
+	if val != "noop" {
 		t.Fatal(val)
 	}
-	val = OptBlkVal("IO_SCHEDULER", "sda@cfq", "NoOP")
-	if val != "sda@noop" {
+	val = OptBlkVal("IO_SCHEDULER_sdb", "NoOP", &tblck)
+	if val != "noop" {
 		t.Fatal(val)
 	}
-	val = OptBlkVal("IO_SCHEDULER", "sda@cfq sdb@cfq sdc@none", "noop")
-	if val != "sda@noop sdb@noop sdc@noop" {
+	val = OptBlkVal("IO_SCHEDULER_sdc", "cfq", &tblck)
+	if val != "cfq" {
 		t.Fatal(val)
 	}
-	val = OptBlkVal("NRREQ", "sda@128", "512")
-	if val != "sda@512" {
+	val = OptBlkVal("NRREQ_sda", "512", &tblck)
+	if val != "512" {
 		t.Fatal(val)
 	}
-	val = OptBlkVal("NRREQ", "sda@128", "0")
-	if val != "sda@1024" {
+	val = OptBlkVal("NRREQ_sdb", "0", &tblck)
+	if val != "1024" {
 		t.Fatal(val)
 	}
-	val = OptBlkVal("NRREQ", "sda@128 sdb@512 sdc@1024", "512")
-	if val != "sda@512 sdb@512 sdc@512" {
+	val = OptBlkVal("NRREQ_sdc", "128", &tblck)
+	if val != "128" {
 		t.Fatal(val)
 	}
 }

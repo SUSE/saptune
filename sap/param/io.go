@@ -1,6 +1,7 @@
 package param
 
 import (
+	"fmt"
 	"github.com/SUSE/saptune/sap"
 	"github.com/SUSE/saptune/system"
 	"io/ioutil"
@@ -8,6 +9,13 @@ import (
 	"strconv"
 	"strings"
 )
+
+// BlockDeviceQueue is the data structure for block devices
+// for schedulers and IO nr_request changes
+type BlockDeviceQueue struct {
+	BlockDeviceSchedulers
+	BlockDeviceNrRequests
+}
 
 // BlockDeviceSchedulers changes IO elevators on all IO devices
 type BlockDeviceSchedulers struct {
@@ -113,8 +121,14 @@ func (ior BlockDeviceNrRequests) Apply() error {
 // IsValidScheduler checks, if the scheduler value is supported by the system
 func IsValidScheduler(blockdev, scheduler string) bool {
 	val, err := ioutil.ReadFile(path.Join("/sys/block/", blockdev, "/queue/scheduler"))
-	if err == nil && strings.Contains(string(val), scheduler) {
-		return true
+	actsched := fmt.Sprintf("[%s]", scheduler)
+	if err == nil {
+		for _, s := range strings.Split(string(val), " ") {
+			s = strings.TrimSpace(s)
+			if s == scheduler || s == actsched {
+				return true
+			}
+		}
 	}
 	return false
 }

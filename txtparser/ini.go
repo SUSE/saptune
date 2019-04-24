@@ -174,6 +174,18 @@ func ParseINI(input string) *INIFile {
 				currentEntriesArray = append(currentEntriesArray, entry)
 				currentEntriesMap[entry.Key] = entry
 			}
+		} else if currentSection == "block" {
+			_, sysDevs := system.ListDir("/sys/block", "the available block devices of the system")
+			for _, bdev := range sysDevs {
+				entry := INIEntry{
+					Section:  currentSection,
+					Key:      fmt.Sprintf("%s_%s", kov[1], bdev),
+					Operator: Operator(kov[2]),
+					Value:    kov[3],
+				}
+				currentEntriesArray = append(currentEntriesArray, entry)
+				currentEntriesMap[entry.Key] = entry
+			}
 		} else {
 			// handle tunables with more than one value
 			value := strings.Replace(kov[3], " ", "\t", -1)
