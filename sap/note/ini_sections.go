@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -90,100 +89,76 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 
 // section [block]
 
-// BlockDeviceQueue defines block device structures
-type BlockDeviceQueue struct {
-	BlockDeviceSchedulers param.BlockDeviceSchedulers
-	BlockDeviceNrRequests param.BlockDeviceNrRequests
-}
+var isSched = regexp.MustCompile(`^IO_SCHEDULER_\w+$`)
+var isNrreq = regexp.MustCompile(`^NRREQ_\w+$`)
 
 // GetBlkVal initialise the block device structure with the current
 // system settings
-func GetBlkVal(key string) (string, error) {
+func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, error) {
 	newQueue := make(map[string]string)
 	newReq := make(map[string]int)
 	retVal := ""
-	switch key {
-	case "IO_SCHEDULER":
-		newIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
+
+	switch {
+	case isSched.MatchString(key):
+		newIOQ, err := cur.BlockDeviceSchedulers.Inspect()
 		if err != nil {
 			return "", err
 		}
 		newQueue = newIOQ.(param.BlockDeviceSchedulers).SchedulerChoice
-		for k, v := range newQueue {
-			retVal = retVal + fmt.Sprintf("%s@%s ", k, v)
-		}
-	case "NRREQ":
-		newNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
+		retVal = newQueue[strings.TrimPrefix(key, "IO_SCHEDULER_")]
+		cur.BlockDeviceSchedulers = newIOQ.(param.BlockDeviceSchedulers)
+	case isNrreq.MatchString(key):
+		newNrR, err := cur.BlockDeviceNrRequests.Inspect()
 		if err != nil {
 			return "", err
 		}
 		newReq = newNrR.(param.BlockDeviceNrRequests).NrRequests
-		for k, v := range newReq {
-			retVal = retVal + fmt.Sprintf("%s@%s ", k, strconv.Itoa(v))
-		}
+		retVal = strconv.Itoa(newReq[strings.TrimPrefix(key, "NRREQ_")])
+		cur.BlockDeviceNrRequests = newNrR.(param.BlockDeviceNrRequests)
 	}
-	fields := strings.Fields(retVal)
-	sort.Strings(fields)
-	retVal = strings.Join(fields, " ")
 	return retVal, nil
 }
 
 // OptBlkVal optimises the block device structure with the settings
 // from the configuration file
-func OptBlkVal(key, actval, cfgval string) string {
+func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue) string {
 	sval := cfgval
-	val := actval
-	retVal := ""
-	switch key {
-	case "IO_SCHEDULER":
+	switch {
+	case isSched.MatchString(key):
 		sval = strings.ToLower(cfgval)
-	case "NRREQ":
+		opt, _ := cur.BlockDeviceSchedulers.Optimise(sval)
+		cur.BlockDeviceSchedulers = opt.(param.BlockDeviceSchedulers)
+	case isNrreq.MatchString(key):
 		if sval == "0" {
 			sval = "1024"
 		}
+		ival, _ := strconv.Atoi(sval)
+		opt, _ := cur.BlockDeviceNrRequests.Optimise(ival)
+		cur.BlockDeviceNrRequests = opt.(param.BlockDeviceNrRequests)
 	}
-	for _, entry := range strings.Fields(val) {
-		fields := strings.Split(entry, "@")
-		if retVal == "" {
-			retVal = retVal + fmt.Sprintf("%s@%s", fields[0], sval)
-		} else {
-			retVal = retVal + " " + fmt.Sprintf("%s@%s", fields[0], sval)
-		}
-	}
-	return retVal
+	return sval
 }
 
 // SetBlkVal applies the settings to the system
-func SetBlkVal(key, value string) error {
+func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) error {
 	var err error
 
-	switch key {
-	case "IO_SCHEDULER":
-		setIOQ, err := BlockDeviceQueue{}.BlockDeviceSchedulers.Inspect()
+	switch {
+	case isSched.MatchString(key):
+		if revert {
+			cur.BlockDeviceSchedulers.SchedulerChoice[strings.TrimPrefix(key, "IO_SCHEDULER_")] = value
+		}
+		err = cur.BlockDeviceSchedulers.Apply()
 		if err != nil {
 			return err
 		}
-
-		for _, entry := range strings.Fields(value) {
-			fields := strings.Split(entry, "@")
-			setIOQ.(param.BlockDeviceSchedulers).SchedulerChoice[fields[0]] = fields[1]
+	case isNrreq.MatchString(key):
+		if revert {
+			ival, _ := strconv.Atoi(value)
+			cur.BlockDeviceNrRequests.NrRequests[strings.TrimPrefix(key, "NRREQ_")] = ival
 		}
-		err = setIOQ.(param.BlockDeviceSchedulers).Apply()
-		if err != nil {
-			return err
-		}
-	case "NRREQ":
-		setNrR, err := BlockDeviceQueue{}.BlockDeviceNrRequests.Inspect()
-		if err != nil {
-			return err
-		}
-
-		for _, entry := range strings.Fields(value) {
-			fields := strings.Split(entry, "@")
-			NrR, _ := strconv.Atoi(fields[1])
-			setNrR.(param.BlockDeviceNrRequests).NrRequests[fields[0]] = NrR
-		}
-		err = setNrR.(param.BlockDeviceNrRequests).Apply()
+		err = cur.BlockDeviceNrRequests.Apply()
 		if err != nil {
 			return err
 		}
@@ -614,10 +589,8 @@ func SetLoginVal(key, value string, revert bool) error {
 			// revert - remove logind drop-in file
 			os.Remove(path.Join(LogindConfDir, LogindSAPConfFile))
 			// restart systemd-logind.service
-			if err := system.SystemctlRestart("systemd-logind.service"); err != nil {
-				return err
-			}
-			return nil
+			err := system.SystemctlRestart("systemd-logind.service")
+			return err
 		}
 		if value != "" && value != "NA" {
 			// revert with value from another former applied note

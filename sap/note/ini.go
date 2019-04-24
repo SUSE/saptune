@@ -2,6 +2,7 @@ package note
 
 import (
 	"github.com/SUSE/saptune/sap"
+	"github.com/SUSE/saptune/sap/param"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"path"
@@ -13,6 +14,7 @@ import (
 const OverrideTuningSheets = "/etc/saptune/override/"
 
 var pc = LinuxPagingImprovements{}
+var blck = param.BlockDeviceQueue{param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}}
 var isLimitSoft = regexp.MustCompile(`LIMIT_.*_soft_memlock`)
 var isLimitHard = regexp.MustCompile(`LIMIT_.*_hard_memlock`)
 
@@ -140,7 +142,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = GetVMVal(param.Key)
 		case INISectionBlock:
-			vend.SysctlParams[param.Key], _ = GetBlkVal(param.Key)
+			vend.SysctlParams[param.Key], _ = GetBlkVal(param.Key, &blck)
 		case INISectionLimits:
 			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Value)
 		case INISectionService:
@@ -220,7 +222,7 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
 		case INISectionBlock:
-			vend.SysctlParams[param.Key] = OptBlkVal(param.Key, vend.SysctlParams[param.Key], param.Value)
+			vend.SysctlParams[param.Key] = OptBlkVal(param.Key, param.Value, &blck)
 		case INISectionLimits:
 			vend.SysctlParams[param.Key] = OptLimitsVal(vend.SysctlParams[param.Key], param.Value)
 		case INISectionService:
@@ -344,7 +346,7 @@ func (vend INISettings) Apply() error {
 		case INISectionVM:
 			errs = append(errs, SetVMVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionBlock:
-			errs = append(errs, SetBlkVal(param.Key, vend.SysctlParams[param.Key]))
+			errs = append(errs, SetBlkVal(param.Key, vend.SysctlParams[param.Key], &blck, revertValues))
 		case INISectionLimits:
 			errs = append(errs, SetLimitsVal(param.Key, pvendID, vend.SysctlParams[param.Key], revertValues))
 		case INISectionService:
