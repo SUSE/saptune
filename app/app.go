@@ -359,9 +359,6 @@ func (app *App) RevertAll(permanent bool) error {
 	otherNotes, err := app.State.List()
 	if err == nil {
 		for _, otherNoteID := range otherNotes {
-			if strings.HasSuffix(otherNoteID, "_n2c") {
-				continue
-			}
 			if err := app.RevertNote(otherNoteID, permanent); err != nil {
 				allErrs = append(allErrs, err)
 			}

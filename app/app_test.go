@@ -122,14 +122,14 @@ func TestReadConfig(t *testing.T) {
 	// Read the default config should not yield anything
 	tuneApp := InitialiseApp(OSPackageInGOPATH, "", AllTestNotes, AllTestSolutions)
 	if len(tuneApp.TuneForSolutions) != 0 || len(tuneApp.TuneForNotes) != 0 {
-		fmt.Printf("'%v'", tuneApp.TuneForSolutions[0])
+		fmt.Println(len(tuneApp.TuneForSolutions))
 		fmt.Println(len(tuneApp.TuneForNotes))
 		t.Fatal(tuneApp)
 	}
 	// Read from non existing file
 	tuneApp = InitialiseApp("", "", AllTestNotes, AllTestSolutions)
 	if len(tuneApp.TuneForSolutions) != 0 || len(tuneApp.TuneForNotes) != 0 {
-		fmt.Printf("'%v'", tuneApp.TuneForSolutions[0])
+		fmt.Println(len(tuneApp.TuneForSolutions))
 		fmt.Println(len(tuneApp.TuneForNotes))
 		t.Fatal(tuneApp)
 	}

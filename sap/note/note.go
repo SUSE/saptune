@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
-	"os"
 	"path"
 	"reflect"
 	"sort"
@@ -36,16 +35,6 @@ type Note interface {
 // TuningOptions is the collection of tuning options from SAP notes and
 // 3rd party vendors.
 type TuningOptions map[string]Note
-
-// Note2Convert checks, if there is a note in an older saptune format to revert
-// support revert from older saptune versions
-func Note2Convert(noteID string) string {
-	fileName := fmt.Sprintf("/var/lib/saptune/saved_state/%s_n2c", noteID)
-	if _, err := os.Stat(fileName); err == nil {
-		noteID = fmt.Sprintf("%s_n2c", noteID)
-	}
-	return noteID
-}
 
 // GetTuningOptions returns all built-in tunable SAP notes together with those
 // defined by 3rd party vendors.

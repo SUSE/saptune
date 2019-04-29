@@ -154,14 +154,7 @@ func checkUpdateLeftOvers() {
 		system.WarningLog("found file '/etc/tuned/saptune/tuned.conf' left over from the migration of saptune version 1 to saptune version 2. Please check and remove this file as it may work against the settings of some SAP Notes. For more information refer to the man page saptune-migrate(7)")
 	}
 
-	// check for saved state information in an older, no longer supported
-	// saptune format
-	leftOver, check := tuneApp.State.CheckForOldRevertData()
-	if check {
-		errorExit("found old saved state files '%s' related to applied notes. Seems there were some steps missed during the migration from saptune version 1 to version 2. Please check. Refer to saptune-migrate(7) for more information", strings.Join(leftOver, ", "))
-	} else if len(leftOver) != 0 {
-		system.WarningLog("found old saved state files '%s', but unrelated to applied notes. Seems there are some files left over from the migration of saptune version 1 to saptune version 2. Please check and remove these files. For more information refer to the man page saptune-migrate(7)", strings.Join(leftOver, ", "))
-	}
+	// check if old solution or notes are applied
 	if len(tuneApp.NoteApplyOrder) == 0 && (len(tuneApp.TuneForNotes) != 0 || len(tuneApp.TuneForSolutions) != 0) {
 		errorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'. Seems there were some steps missed during the migration from saptune version 1 to version 2. Please check. Refer to saptune-migrate(7) for more information")
 	}
@@ -504,9 +497,6 @@ func NoteAction(actionName, noteID string) {
 		fmt.Println("\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 		for _, noteID := range tuningOptions.GetSortedIDs() {
-			if strings.HasSuffix(noteID, "_n2c") {
-				continue
-			}
 			noteObj := tuningOptions[noteID]
 			format := "\t%s\t\t%s\n"
 			if len(noteID) >= 8 {
