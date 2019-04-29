@@ -292,11 +292,17 @@ func SetVMVal(key, value string) error {
 
 // GetCPUVal initialise the cpu performance structure with the current
 // system settings
-func GetCPUVal(key string) string {
+func GetCPUVal(key string) (string, string, string) {
 	var val string
+	cpuStateDiffer := false
+	flsVal := ""
+	info := ""
 	switch key {
 	case "force_latency":
-		val = system.GetForceLatency()
+		val, flsVal, cpuStateDiffer = system.GetFLInfo()
+		if cpuStateDiffer {
+			info = "hasDiffs"
+		}
 	case "energy_perf_bias":
 		// cpupower -c all info  -b
 		val = system.GetPerfBias()
@@ -309,7 +315,7 @@ func GetCPUVal(key string) string {
 			val = val + fmt.Sprintf("%s:%s ", k, v)
 		}
 	}
-	return strings.TrimSpace(val)
+	return strings.TrimSpace(val), flsVal, info
 }
 
 // OptCPUVal optimises the cpu performance structure with the settings
@@ -350,17 +356,24 @@ func OptCPUVal(key, actval, cfgval string) string {
 			rval = rval + fmt.Sprintf("%s:%s ", fields[0], val)
 		}
 	}
-	sval = strings.TrimSpace(rval)
-	return sval
+	return strings.TrimSpace(rval)
 }
 
 // SetCPUVal applies the settings to the system
-func SetCPUVal(key, value string, revert bool, noteID string) error {
+func SetCPUVal(key, value, noteID, savedStates string, revert bool) error {
 	var err error
 	switch key {
 	case "force_latency":
-		//iVal, _ := strconv.Atoi(value)
-		err = system.SetForceLatency(noteID, value, revert)
+		err = system.SetForceLatency(value, savedStates, revert)
+		if !revert {
+			// the cpu state values of the note need to be stored
+			// after they are set. Special for 'force_latency'
+			// as we set and handle 2 different sort of values
+			// the 'force_latency' value and the related
+			// cpu state values
+			_, flstates, _ = system.GetFLInfo()
+			AddParameterNoteValues("fl_states", flstates, noteID)
+		}
 	case "energy_perf_bias":
 		err = system.SetPerfBias(value)
 	case "governor":
@@ -585,7 +598,7 @@ func OptLoginVal(cfgval string) string {
 func SetLoginVal(key, value string, revert bool) error {
 	switch key {
 	case "UserTasksMax":
-		if revert && IsLastNoteOfParameter("UserTasksMax") {
+		if revert && IsLastNoteOfParameter(key) {
 			// revert - remove logind drop-in file
 			os.Remove(path.Join(LogindConfDir, LogindSAPConfFile))
 			// restart systemd-logind.service

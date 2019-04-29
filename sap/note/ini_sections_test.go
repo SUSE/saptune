@@ -132,15 +132,15 @@ func TestOptVMVal(t *testing.T) {
 //SetVMVal
 
 func TestGetCPUVal(t *testing.T) {
-	val := GetCPUVal("force_latency")
+	val, _, _ := GetCPUVal("force_latency")
 	if val != "all:none" {
 		t.Logf("force_latency supported: '%s'\n", val)
 	}
-	val = GetCPUVal("energy_perf_bias")
+	val, _, _ = GetCPUVal("energy_perf_bias")
 	if val != "all:none" {
 		t.Logf("energy_perf_bias supported: '%s'\n", val)
 	}
-	val = GetCPUVal("governor")
+	val, _, _ = GetCPUVal("governor")
 	if val != "all:none" && val != "" {
 		t.Logf("governor supported: '%s'\n", val)
 	}

@@ -35,6 +35,7 @@ const (
 	footnote1             = "[1] setting is not supported by the system"
 	footnote2             = "[2] setting is not available on the system"
 	footnote3             = "[3] value is only checked, but NOT set"
+	footnote4             = "[4] cpu idle state settings differ"
 )
 
 // PrintHelpAndExit Print the usage and exit
@@ -257,7 +258,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.F
 	noteField := ""
 	sortkeys := make([]string, 0, len(noteComparisons))
 	remskeys := make([]string, 0, len(noteComparisons))
-	footnote := make([]string, 3, 3)
+	footnote := make([]string, 4, 4)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -282,6 +283,10 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.F
 	// sort output
 	for noteID, comparisons := range noteComparisons {
 		for _, comparison := range comparisons {
+			if comparison.ReflectFieldName == "Inform" {
+				// skip inform map to avoid double entries in verify table
+				continue
+			}
 			if len(comparison.ReflectMapKey) != 0 && comparison.ReflectFieldName != "OverrideParams" {
 				if comparison.ReflectMapKey != "reminder" {
 					sortkeys = append(sortkeys, noteID+"§"+comparison.ReflectMapKey)
@@ -392,6 +397,14 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.F
 			compliant = compliant + " [3]"
 			comment = comment + " [3]"
 			footnote[2] = footnote3
+		}
+
+		// check inform map for special settings
+		// ANGI: future - check for 'nil', if using noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string) in general
+		if comparison.ReflectMapKey == "force_latency" && noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string) == "hasDiffs" {
+			compliant = "no [4]"
+			comment = comment + " [4]"
+			footnote[3] = footnote4
 		}
 
 		// print table header

@@ -128,6 +128,7 @@ and then please double check your input and /etc/sysconfig/saptune`, name)
 // If the note is not yet covered by one of the enabled solutions,
 // the note number will be added into the list of additional notes.
 func (app *App) TuneNote(noteID string) error {
+	forceApply := false
 	aNote, err := app.GetNoteByID(noteID)
 	if err != nil {
 		return err
@@ -177,6 +178,8 @@ func (app *App) TuneNote(noteID string) error {
 					addkey = "vm.dirty_background_bytes"
 				case "vm.dirty_ratio":
 					addkey = "vm.dirty_bytes"
+				case "force_latency":
+					forceApply = true
 				}
 				if addkey != "" {
 					//currentState.(note.INISettings).SysctlParams[addkey], _ = system.GetSysctlString(addkey)
@@ -199,7 +202,7 @@ func (app *App) TuneNote(noteID string) error {
 		optimised = optimised.(note.INISettings).SetValuesToApply(valApplyList)
 	}
 
-	if conforming {
+	if conforming && !forceApply {
 		// Do not apply the Note, if the system already complies with
 		// the requirements.
 		return nil

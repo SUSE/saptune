@@ -4,7 +4,6 @@ package system
 
 import (
 	"encoding/binary"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -18,7 +17,6 @@ import (
 //constant definition
 const (
 	notSupported = "System does not support Intel's performance bias setting"
-	forceLatDir  = "/var/lib/saptune/force_latency"
 	cpuDir       = "/sys/devices/system/cpu"
 	cpuDirSys    = "devices/system/cpu"
 	cpupowerCmd  = "/usr/bin/cpupower"
@@ -26,7 +24,6 @@ const (
 
 var isCPU = regexp.MustCompile(`^cpu\d+$`)
 var isState = regexp.MustCompile(`^state\d+$`)
-var forceLatFile = path.Join(forceLatDir, "/sap_force_latency")
 
 // GetPerfBias retrieve CPU performance configuration from the system
 func GetPerfBias() string {
@@ -193,64 +190,89 @@ func IsValidGovernor(cpu, gov string) bool {
 	return false
 }
 
-// GetForceLatency retrieve CPU latency configuration from the system
-func GetForceLatency() string {
-	flval := ""
+// GetFLInfo retrieve CPU latency configuration from the system and returns
+// the current latency,
+// the latency states of all CPUs to save latency states for 'revert',
+// if cpu states differ
+// return lat, savedStates, cpuStateDiffer
+func GetFLInfo() (string, string, bool) {
+	lat := 0
+	maxlat := 0
 	supported := false
+	savedStates := ""
+	stateDisabled := false
+	cpuStateDiffer := false
+	cpuStateMap := make(map[string]string)
 
-	// first check, if idle settings are supported by the system
-	// on VMs it's not supported
-
-	dirCont, err := ioutil.ReadDir(cpuDir)
-	if err != nil {
-		return "all:none"
-	}
-	for _, entry := range dirCont {
-		// cpu0 ... cpuXY
-		if isCPU.MatchString(entry.Name()) {
-			_, err := ioutil.ReadDir(path.Join(cpuDir, entry.Name(), "cpuidle"))
-			if err != nil {
-				//WarningLog("SetForceLatency: idle settings not supported for '%s'", entry.Name())
-				continue
-			} else {
+	// read /sys/devices/system/cpu
+	if dirCont, err := ioutil.ReadDir(cpuDir); err == nil {
+		for _, entry := range dirCont {
+			// cpu0 ... cpuXY
+			if isCPU.MatchString(entry.Name()) {
+				// read /sys/devices/system/cpu/cpu*/cpuidle
+				cpudirCont, err := ioutil.ReadDir(path.Join(cpuDir, entry.Name(), "cpuidle"))
+				if err != nil {
+					// idle settings not supported for entry.Name()
+					continue
+				}
 				supported = true
+				for _, centry := range cpudirCont {
+					// state0 ... stateXY
+					if isState.MatchString(centry.Name()) {
+						// read /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
+						state, _ := GetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"))
+						// save latency states for 'revert'
+						// savedStates = "cpu1:state0:0 cpu1:state1:0"
+						savedStates = savedStates + " " + entry.Name() + ":" + centry.Name() + ":" + state
+						cpuStateMap[entry.Name()] = cpuStateMap[entry.Name()] + " " + state
+						// read /sys/devices/system/cpu/cpu*/cpuidle/state*/latency
+						lattmp, _ := GetSysInt(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "latency"))
+						if lattmp > maxlat {
+							maxlat = lattmp
+						}
+						if state == "1" {
+							stateDisabled = true
+						} else {
+							lat = lattmp
+						}
+					}
+				}
 			}
 		}
 	}
-	if !supported {
-		return "all:none"
+	// check, if all cpus have the same state settings
+	oldcpuState := ""
+	for _, cpuState := range cpuStateMap {
+		if oldcpuState == "" {
+			oldcpuState = cpuState
+		}
+		if oldcpuState != cpuState {
+			cpuStateDiffer = true
+			break
+		}
+	}
+	if !stateDisabled {
+		// start value for force latency, if no states are disabled
+		lat = maxlat
 	}
 
-	val, err := ioutil.ReadFile(forceLatFile)
-	if err != nil {
-		// file 'sap_force_latency' not found, so no sap_force_latency set before
-		// use /dev/cpu_dma_latency instead
-		flval = GetdmaLatency()
-	} else {
-		flval = string(val)
+	rval := strconv.Itoa(lat)
+	if !supported {
+		savedStates = "all:none"
+		rval = "all:none"
 	}
-	return flval
+	return rval, savedStates, cpuStateDiffer
 }
 
 // SetForceLatency set CPU latency configuration to the system
-func SetForceLatency(noteID, value string, revert bool) error {
-	oldLat := ""
-	oldLatStates := make(map[string]string)
-	savedStateFile := noteID + "_saved_fl_states"
+func SetForceLatency(value, savedStates string, revert bool) error {
+	oldState := ""
 
 	if value == "all:none" {
 		return fmt.Errorf("latency settings not supported by the system")
 	}
 
-	supported := false
 	flval, _ := strconv.Atoi(value) // decimal value for force latency
-	if revert {
-		// read saved latency states from /var/lib/saptune/force_latency/<NoteId>_saved_fl_states
-		content, err := ioutil.ReadFile(path.Join(forceLatDir, savedStateFile))
-		if err == nil {
-			json.Unmarshal(content, &oldLatStates)
-		}
-	}
 
 	dirCont, err := ioutil.ReadDir(cpuDir)
 	if err != nil {
@@ -262,10 +284,9 @@ func SetForceLatency(noteID, value string, revert bool) error {
 		if isCPU.MatchString(entry.Name()) {
 			cpudirCont, err := ioutil.ReadDir(path.Join(cpuDir, entry.Name(), "cpuidle"))
 			if err != nil {
-				WarningLog("SetForceLatency: idle settings not supported for '%s'", entry.Name())
+				WarningLog("idle settings not supported for '%s'", entry.Name())
 				continue
 			}
-			supported = true
 			for _, centry := range cpudirCont {
 				// state0 ... stateXY
 				if isState.MatchString(centry.Name()) {
@@ -274,60 +295,30 @@ func SetForceLatency(noteID, value string, revert bool) error {
 					// write /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
 					if revert {
 						// revert
-						if oldLatStates[entry.Name()] != "" {
-							oldLatFields := strings.Split(oldLatStates[entry.Name()], ":")
-							if oldLatFields[0] == centry.Name() {
-								oldLat = oldLatFields[1]
+						for _, ole := range strings.Fields(savedStates) {
+							FLFields := strings.Split(ole, ":")
+							if FLFields[0] == entry.Name() && FLFields[1] == centry.Name() {
+								oldState = FLFields[2]
 							}
 						}
-						if oldLat != "" {
-							err = SetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"), oldLat)
-							// clear old latency value for next cpu/state cycle
-							oldLat = ""
+						if oldState != "" {
+							err = SetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"), oldState)
+							// clear latency value for next cpu/state cycle
+							oldState = ""
 						}
 					} else {
 						// apply
-						if lat > flval {
-							// save old latency states for 'revert'
-							// oldLatStates["cpu1"] = "state0:0"
-							oldLat, _ = GetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"))
-							oldLatStates[entry.Name()] = centry.Name() + ":" + oldLat
+						oldState, _ = GetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"))
+						// save old latency states for 'revert'
+						if lat >= flval {
 							// set new latency states
 							err = SetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"), "1")
+						} else if oldState == "1" {
+							err = SetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"), "0")
 						}
 					}
 				}
 			}
-		}
-	}
-
-	if revert {
-		// revert
-		dmaLat := GetdmaLatency()
-		if value != dmaLat {
-			WarningLog("SetForceLatency: reverted value for force latency (%s) differs from /dev/cpu_dma_latency setting (%s).", value, dmaLat)
-		}
-		ioutil.WriteFile(forceLatFile, []byte(value), 0644)
-
-		// remove saved latency states
-		_, err := os.Stat(path.Join(forceLatDir, savedStateFile))
-		if os.IsNotExist(err) {
-			err = nil
-		} else if err == nil {
-			os.Remove(path.Join(forceLatDir, savedStateFile))
-		}
-	} else {
-		// apply
-		if supported {
-			if err = os.MkdirAll(forceLatDir, 0755); err != nil {
-				return err
-			}
-			ioutil.WriteFile(forceLatFile, []byte(value), 0644)
-			content, err := json.Marshal(oldLatStates)
-			if err != nil {
-				return err
-			}
-			ioutil.WriteFile(path.Join(forceLatDir, savedStateFile), content, 0644)
 		}
 	}
 

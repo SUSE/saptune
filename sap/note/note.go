@@ -125,7 +125,7 @@ type FieldComparison struct {
 
 // CompareJSValue compares JSON representation of two values and see
 // if they match.
-func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
+func CompareJSValue(v1, v2 interface{}, op string) (v1JS, v2JS string, match bool) {
 	v1JSBytes, err := json.Marshal(v1)
 	if err != nil {
 		system.ErrorLog("CompareJSValue: failed to serialise \"%+v\" - %v", v1, err)
@@ -144,13 +144,26 @@ func CompareJSValue(v1, v2 interface{}) (v1JS, v2JS string, match bool) {
 	if err != nil {
 		v2JS = string(v2JSBytes)
 	}
-	match = v1JS == v2JS
+
+	switch op {
+	case "", "==":
+		match = v1JS == v2JS
+	case ">=":
+		v1JSi, _ := strconv.Atoi(v1JS)
+		v2JSi, _ := strconv.Atoi(v2JS)
+		match = v1JSi >= v2JSi
+	case "<=":
+		v1JSi, _ := strconv.Atoi(v1JS)
+		v2JSi, _ := strconv.Atoi(v2JS)
+		match = v1JSi <= v2JSi
+	}
 	return
 }
 
 // CompareNoteFields compares the content of two notes and return differences
 // in their fields in a human-readable text.
 func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]FieldComparison, valApplyList []string) {
+	op := ""
 	comparisons = make(map[string]FieldComparison)
 	allMatch = true
 	// Compare all fields
@@ -169,7 +182,10 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 				actualValue := actualField.MapIndex(key).Interface()
 				expectedValue := expectedMap.MapIndex(key).Interface()
 
-				actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue)
+				if key.String() == "force_latency" && actualValue.(string) != "all:none" {
+					op = "<="
+				}
+				actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue, op)
 				if strings.Split(key.String(), ":")[0] == "rpm" {
 					match = system.CmpRpmVers(actualValue.(string), expectedValue.(string))
 				}
@@ -185,6 +201,8 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 				comparisons[fmt.Sprintf("%s[%s]", fieldName, key.String())] = fieldComparison
 				if !fieldComparison.MatchExpectation && fieldComparison.ReflectFieldName == "SysctlParams" {
 					valApplyList = append(valApplyList, fieldComparison.ReflectMapKey)
+				} else if key.String() == "force_latency" && fieldComparison.ReflectFieldName == "SysctlParams" {
+					valApplyList = append(valApplyList, fieldComparison.ReflectMapKey)
 				}
 				if !fieldComparison.MatchExpectation {
 					allMatch = false
@@ -194,7 +212,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 			// Compare ordinary field value
 			actualValue := refActualNote.Field(i).Interface()
 			expectedValue := refExpectedNote.Field(i).Interface()
-			actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue)
+			actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue, op)
 			fieldComparison = FieldComparison{
 				ReflectFieldName: fieldName,
 				ActualValue:      actualValue,

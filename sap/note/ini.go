@@ -17,6 +17,7 @@ var pc = LinuxPagingImprovements{}
 var blck = param.BlockDeviceQueue{param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}}
 var isLimitSoft = regexp.MustCompile(`LIMIT_.*_soft_memlock`)
 var isLimitHard = regexp.MustCompile(`LIMIT_.*_hard_memlock`)
+var flstates = ""
 
 // Tuning options composed by a third party vendor.
 
@@ -80,6 +81,7 @@ type INISettings struct {
 	SysctlParams    map[string]string // Sysctl parameter values from the computer system
 	ValuesToApply   map[string]string // values to apply
 	OverrideParams  map[string]string // parameter values from the override file
+	Inform          map[string]string // special information for parameter values
 }
 
 // Name returns the name of the related SAP Note or en empty string
@@ -107,6 +109,7 @@ func (vend INISettings) Initialise() (Note, error) {
 	// Read current parameter values
 	vend.SysctlParams = make(map[string]string)
 	vend.OverrideParams = make(map[string]string)
+	vend.Inform = make(map[string]string)
 	for _, param := range ini.AllValues {
 		if override && len(ow.KeyValue[param.Section]) != 0 {
 			if vend.ID == "1805750" {
@@ -152,7 +155,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionMEM:
 			vend.SysctlParams[param.Key] = GetMemVal(param.Key)
 		case INISectionCPU:
-			vend.SysctlParams[param.Key] = GetCPUVal(param.Key)
+			vend.SysctlParams[param.Key], flstates, vend.Inform[param.Key] = GetCPUVal(param.Key)
 		case INISectionRpm:
 			vend.SysctlParams[param.Key] = GetRpmVal(param.Key)
 			continue
@@ -179,6 +182,9 @@ func (vend INISettings) Initialise() (Note, error) {
 		// a pure 'verify' action
 		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
 			CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
+			if param.Key == "force_latency" {
+				CreateParameterStartValues("fl_states", flstates)
+			}
 		}
 	}
 	return vend, nil
@@ -313,6 +319,9 @@ func (vend INISettings) Apply() error {
 			if pvalue != "" {
 				vend.SysctlParams[param.Key] = pvalue
 			}
+			if param.Key == "force_latency" {
+				flstates, _ = RevertParameter("fl_states", vend.ID)
+			}
 		}
 
 		switch param.Section {
@@ -356,7 +365,7 @@ func (vend INISettings) Apply() error {
 		case INISectionMEM:
 			errs = append(errs, SetMemVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionCPU:
-			errs = append(errs, SetCPUVal(param.Key, vend.SysctlParams[param.Key], revertValues, vend.ID))
+			errs = append(errs, SetCPUVal(param.Key, vend.SysctlParams[param.Key], vend.ID, flstates, revertValues))
 		case INISectionPagecache:
 			if revertValues {
 				switch param.Key {
