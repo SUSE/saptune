@@ -3,11 +3,9 @@ package app
 import (
 	"encoding/json"
 	"github.com/SUSE/saptune/sap/note"
-	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 )
 
 // SaptuneStateDir defines saptunes saved state directory
@@ -78,35 +76,4 @@ func (state *State) Remove(noteID string) error {
 	} else {
 		return err
 	}
-}
-
-// CheckForOldRevertData checks, if there is saved state information in an older,
-// no longer supported saptune format available
-// return true, if old saved state files are found
-func (state *State) CheckForOldRevertData() (oldUpdFiles []string, check bool) {
-	check = false
-	oldUpdFiles = make([]string, 0, 0)
-	if savedNotes, err := state.List(); err == nil {
-		for _, entry := range savedNotes {
-			fileName := strings.TrimSuffix(entry, "_n2c")
-			if entry != fileName {
-				// there was a saved state file available during
-				// update from version 1 to version 2
-				// check, if the saved state file is already
-				// available (as a leftover from the migration)
-				if _, err := os.Stat(state.GetPathToNote(fileName)); err == nil {
-					// both saved state files exists
-					// (the saved state file of an applied
-					// note and the 'n2c' file from the
-					// update path v1 to v2
-					oldUpdFiles = append(oldUpdFiles, fileName)
-					system.WarningLog("found old saved state file for Note '%s'.", fileName)
-					check = true
-				} else {
-					oldUpdFiles = append(oldUpdFiles, entry)
-				}
-			}
-		}
-	}
-	return
 }

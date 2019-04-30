@@ -35,6 +35,7 @@ const (
 	footnote1             = "[1] setting is not supported by the system"
 	footnote2             = "[2] setting is not available on the system"
 	footnote3             = "[3] value is only checked, but NOT set"
+	footnote4             = "[4] cpu idle state settings differ"
 )
 
 // PrintHelpAndExit Print the usage and exit
@@ -154,14 +155,7 @@ func checkUpdateLeftOvers() {
 		system.WarningLog("found file '/etc/tuned/saptune/tuned.conf' left over from the migration of saptune version 1 to saptune version 2. Please check and remove this file as it may work against the settings of some SAP Notes. For more information refer to the man page saptune-migrate(7)")
 	}
 
-	// check for saved state information in an older, no longer supported
-	// saptune format
-	leftOver, check := tuneApp.State.CheckForOldRevertData()
-	if check {
-		errorExit("found old saved state files '%s' related to applied notes. Seems there were some steps missed during the migration from saptune version 1 to version 2. Please check. Refer to saptune-migrate(7) for more information", strings.Join(leftOver, ", "))
-	} else if len(leftOver) != 0 {
-		system.WarningLog("found old saved state files '%s', but unrelated to applied notes. Seems there are some files left over from the migration of saptune version 1 to saptune version 2. Please check and remove these files. For more information refer to the man page saptune-migrate(7)", strings.Join(leftOver, ", "))
-	}
+	// check if old solution or notes are applied
 	if len(tuneApp.NoteApplyOrder) == 0 && (len(tuneApp.TuneForNotes) != 0 || len(tuneApp.TuneForSolutions) != 0) {
 		errorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'. Seems there were some steps missed during the migration from saptune version 1 to version 2. Please check. Refer to saptune-migrate(7) for more information")
 	}
@@ -264,7 +258,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.F
 	noteField := ""
 	sortkeys := make([]string, 0, len(noteComparisons))
 	remskeys := make([]string, 0, len(noteComparisons))
-	footnote := make([]string, 3, 3)
+	footnote := make([]string, 4, 4)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -289,6 +283,10 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.F
 	// sort output
 	for noteID, comparisons := range noteComparisons {
 		for _, comparison := range comparisons {
+			if comparison.ReflectFieldName == "Inform" {
+				// skip inform map to avoid double entries in verify table
+				continue
+			}
 			if len(comparison.ReflectMapKey) != 0 && comparison.ReflectFieldName != "OverrideParams" {
 				if comparison.ReflectMapKey != "reminder" {
 					sortkeys = append(sortkeys, noteID+"§"+comparison.ReflectMapKey)
@@ -401,6 +399,14 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.F
 			footnote[2] = footnote3
 		}
 
+		// check inform map for special settings
+		// ANGI: future - check for 'nil', if using noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string) in general
+		if comparison.ReflectMapKey == "force_latency" && noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string) == "hasDiffs" {
+			compliant = "no [4]"
+			comment = comment + " [4]"
+			footnote[3] = footnote4
+		}
+
 		// print table header
 		if printHead != "" {
 			if header != "NONE" {
@@ -504,9 +510,6 @@ func NoteAction(actionName, noteID string) {
 		fmt.Println("\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note):")
 		solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 		for _, noteID := range tuningOptions.GetSortedIDs() {
-			if strings.HasSuffix(noteID, "_n2c") {
-				continue
-			}
 			noteObj := tuningOptions[noteID]
 			format := "\t%s\t\t%s\n"
 			if len(noteID) >= 8 {

@@ -43,7 +43,7 @@ func IDInParameterList(noteID string, list []ParameterNoteEntry) bool {
 	return false
 }
 
-// ListParams lists all stored paramter states. Return paramter names
+// ListParams lists all stored parameter states. Return parameter names
 func ListParams() (ret []string, err error) {
 	if err = os.MkdirAll(SaptuneParameterStateDir, 0755); err != nil {
 		return
@@ -105,7 +105,7 @@ func AddParameterNoteValues(param, value, noteID string) {
 	}
 }
 
-// GetSavedParameterNotes reads content of stored paramter states.
+// GetSavedParameterNotes reads content of stored parameter states.
 // Return the content as ParameterNotes
 func GetSavedParameterNotes(param string) ParameterNotes {
 	pEntries := ParameterNotes{
@@ -168,7 +168,7 @@ func PositionInParameterList(noteID string, list []ParameterNoteEntry) int {
 
 // RevertParameter reverts parameter values and removes noteID reference
 // from the parameter file
-// return value of parameter, if needed to change, empty string else
+// return value of parameter and related noteID
 func RevertParameter(param, noteID string) (string, string) {
 	pvalue := ""
 	pnoteID := ""

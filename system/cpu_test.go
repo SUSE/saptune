@@ -76,8 +76,8 @@ func TestGetdmaLatency(t *testing.T) {
 	}
 }
 
-func TestGetForceLatency(t *testing.T) {
-	value := GetForceLatency()
+func TestGetFLInfo(t *testing.T) {
+	value, _, _ := GetFLInfo()
 	if value == "all:none" {
 		t.Log("system does not support force_latency settings")
 	} else {
