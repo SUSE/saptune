@@ -244,7 +244,11 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionLogin:
 			vend.SysctlParams[param.Key] = OptLoginVal(param.Value)
 		case INISectionMEM:
-			vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["mem"]["ShmFileSystemSizeMB"].Value, ini.KeyValue["mem"]["VSZ_TMPFS_PERCENT"].Value)
+			if vend.OverrideParams["VSZ_TMPFS_PERCENT"] == "untouched" || vend.OverrideParams["VSZ_TMPFS_PERCENT"] == "" {
+				vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["mem"]["VSZ_TMPFS_PERCENT"].Value)
+			} else {
+				vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value, vend.OverrideParams["VSZ_TMPFS_PERCENT"])
+			}
 		case INISectionCPU:
 			vend.SysctlParams[param.Key] = OptCPUVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionRpm:

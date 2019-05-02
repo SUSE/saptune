@@ -408,34 +408,29 @@ func GetMemVal(key string) string {
 
 // OptMemVal optimises the shared memory structure with the settings
 // from the configuration file or with a calculation
-func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
-	// shmsize       value of ShmFileSystemSizeMB from config file
-	// tmpfspercent  value of VSZ_TMPFS_PERCENT from config file
+func OptMemVal(key, actval, cfgval, tmpfspercent string) string {
+	// tmpfspercent value of VSZ_TMPFS_PERCENT from config or override file
 	var size uint64
 	var ret string
 
-	if actval == "-1" {
-		system.WarningLog("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
-		size = 0
-	} else if shmsize == "0" {
-		if tmpfspercent == "0" {
-			// Calculate optimal SHM size (TotalMemSizeMB*75/100) (SAP-Note 941735)
-			size = uint64(system.GetTotalMemSizeMB()) * 75 / 100
-		} else {
-			// Calculate optimal SHM size (TotalMemSizeMB*VSZ_TMPFS_PERCENT/100)
-			val, _ := strconv.ParseUint(tmpfspercent, 10, 64)
-			size = uint64(system.GetTotalMemSizeMB()) * val / 100
-		}
-	} else {
-		size, _ = strconv.ParseUint(shmsize, 10, 64)
-	}
 	switch key {
 	case "VSZ_TMPFS_PERCENT":
 		ret = cfgval
 	case "ShmFileSystemSizeMB":
-		if size == 0 {
+		if actval == "-1" {
+			system.WarningLog("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
 			ret = "-1"
+		} else if cfgval != "0" {
+			ret = cfgval
 		} else {
+			if tmpfspercent == "0" {
+				// Calculate optimal SHM size (TotalMemSizeMB*75/100) (SAP-Note 941735)
+				size = uint64(system.GetTotalMemSizeMB()) * 75 / 100
+			} else {
+				// Calculate optimal SHM size (TotalMemSizeMB*VSZ_TMPFS_PERCENT/100)
+				val, _ := strconv.ParseUint(tmpfspercent, 10, 64)
+				size = uint64(system.GetTotalMemSizeMB()) * val / 100
+			}
 			ret = strconv.FormatUint(size, 10)
 		}
 	}
