@@ -177,6 +177,10 @@ func ParseINI(input string) *INIFile {
 		} else if currentSection == "block" {
 			_, sysDevs := system.ListDir("/sys/block", "the available block devices of the system")
 			for _, bdev := range sysDevs {
+				if strings.Contains(bdev, "dm-") {
+					// skip unsupported devices
+					continue
+				}
 				entry := INIEntry{
 					Section:  currentSection,
 					Key:      fmt.Sprintf("%s_%s", kov[1], bdev),

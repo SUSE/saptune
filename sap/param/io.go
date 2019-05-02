@@ -31,6 +31,10 @@ func (ioe BlockDeviceSchedulers) Inspect() (Parameter, error) {
 		return nil, err
 	}
 	for _, entry := range dirContent {
+		if strings.Contains(entry.Name(), "dm-") {
+			// skip unsupported devices
+			continue
+		}
 		/*
 			Remember: GetSysChoice does not accept the leading /sys/.
 			The file "scheduler" may look like "[noop] deadline cfq", in which case the choice will be read successfully.
