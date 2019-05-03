@@ -410,7 +410,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.F
 		// print table header
 		if printHead != "" {
 			if header != "NONE" {
-				fmt.Printf("%s - %s \n\n", noteID, tuningOptions[noteID].Name())
+				fmt.Printf("\n%s - %s \n\n", noteID, tuningOptions[noteID].Name())
 			}
 			if printComparison {
 				// verify
