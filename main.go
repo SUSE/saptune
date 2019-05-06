@@ -410,7 +410,7 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.F
 		// print table header
 		if printHead != "" {
 			if header != "NONE" {
-				fmt.Printf("%s - %s \n\n", noteID, tuningOptions[noteID].Name())
+				fmt.Printf("\n%s - %s \n\n", noteID, tuningOptions[noteID].Name())
 			}
 			if printComparison {
 				// verify
@@ -466,16 +466,20 @@ func PrintNoteFields(header string, noteComparisons map[string]map[string]note.F
 
 // VerifyAllParameters Verify that all system parameters do not deviate from any of the enabled solutions/notes.
 func VerifyAllParameters() {
-	unsatisfiedNotes, comparisons, err := tuneApp.VerifyAll()
-	if err != nil {
-		errorExit("Failed to inspect the current system: %v", err)
-	}
-	PrintNoteFields("NONE", comparisons, true)
-	tuneApp.PrintNoteApplyOrder()
-	if len(unsatisfiedNotes) == 0 {
-		fmt.Println("The running system is currently well-tuned according to all of the enabled notes.")
+	if len(tuneApp.NoteApplyOrder) == 0 {
+		fmt.Println("No notes or solutions enabled, nothing to verify.")
 	} else {
-		errorExit("The parameters listed above have deviated from SAP/SUSE recommendations.")
+		unsatisfiedNotes, comparisons, err := tuneApp.VerifyAll()
+		if err != nil {
+			errorExit("Failed to inspect the current system: %v", err)
+		}
+		PrintNoteFields("NONE", comparisons, true)
+		tuneApp.PrintNoteApplyOrder()
+		if len(unsatisfiedNotes) == 0 {
+			fmt.Println("The running system is currently well-tuned according to all of the enabled notes.")
+		} else {
+			errorExit("The parameters listed above have deviated from SAP/SUSE recommendations.")
+		}
 	}
 }
 

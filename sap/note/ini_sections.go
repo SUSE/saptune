@@ -171,70 +171,68 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 // GetLimitsVal initialise the security limit structure with the current
 // system settings
 func GetLimitsVal(value string) (string, error) {
-	lim := strings.Fields(value)
-	// dom=[0], type=[1], item=[2], value=[3]
-	// no check, that the syntax/order of the entry in the config file is
-	// a valid limits entry
-
 	// Find out current limits
-	limit := ""
-	// /etc/security/limits.d/saptune-<domain>-<item>-<type>.conf
-	dropInFile := fmt.Sprintf("/etc/security/limits.d/saptune-%s-%s-%s.conf", lim[0], lim[2], lim[1])
-	secLimits, err := system.ParseSecLimitsFile(dropInFile)
-	if err != nil {
-		//ANGI TODO - check, if other files in /etc/security/limits.d contain a value for the touple "<domain>-<item>-<type>"
-		return "", err
+	limit := value
+	if limit != "" && limit != "NA" {
+		lim := strings.Fields(limit)
+		// dom=[0], type=[1], item=[2], value=[3]
+		// no check, that the syntax/order of the entry in the config file is
+		// a valid limits entry
+
+		// /etc/security/limits.d/saptune-<domain>-<item>-<type>.conf
+		dropInFile := fmt.Sprintf("/etc/security/limits.d/saptune-%s-%s-%s.conf", lim[0], lim[2], lim[1])
+		secLimits, err := system.ParseSecLimitsFile(dropInFile)
+		if err != nil {
+			//ANGI TODO - check, if other files in /etc/security/limits.d contain a value for the touple "<domain>-<item>-<type>"
+			return "", err
+		}
+		lim[3], _ = secLimits.Get(lim[0], lim[1], lim[2])
+		if lim[3] == "" {
+			lim[3] = "NA"
+		}
+		// current limit found
+		limit = strings.Join(lim, " ")
 	}
-	lim[3], _ = secLimits.Get(lim[0], lim[1], lim[2])
-	if lim[3] == "" {
-		lim[3] = "NA"
-	}
-	// current limit found
-	limit = strings.Join(lim, " ")
 	return limit, nil
 }
 
 // OptLimitsVal optimises the security limit structure with the settings
 // from the configuration file or with a calculation
 func OptLimitsVal(actval, cfgval string) string {
-	lim := strings.Fields(cfgval)
-
-	//ANGI - check, if we will preserve 'unlimited' or if we set value from config
-	actlim := strings.Fields(actval)
-	if actlim[3] == "unlimited" || actlim[3] == "infinity" || actlim[3] == "-1" {
-		lim[3] = actlim[3]
-	}
-
-	return strings.Join(lim, " ")
+	return cfgval
 }
 
 // SetLimitsVal applies the settings to the system
 func SetLimitsVal(key, noteID, value string, revert bool) error {
-	lim := strings.Fields(value)
-	// dom=[0], type=[1], item=[2], value=[3]
+	var err error
+	limit := value
+	if limit != "" && limit != "NA" {
+		lim := strings.Fields(limit)
+		// dom=[0], type=[1], item=[2], value=[3]
 
-	// /etc/security/limits.d/saptune-<domain>-<item>-<type>.conf
-	dropInFile := fmt.Sprintf("/etc/security/limits.d/saptune-%s-%s-%s.conf", lim[0], lim[2], lim[1])
+		// /etc/security/limits.d/saptune-<domain>-<item>-<type>.conf
+		dropInFile := fmt.Sprintf("/etc/security/limits.d/saptune-%s-%s-%s.conf", lim[0], lim[2], lim[1])
 
-	if revert && IsLastNoteOfParameter(key) {
-		// revert - remove limits drop-in file
-		os.Remove(dropInFile)
-		return nil
-	}
+		if revert && IsLastNoteOfParameter(key) {
+			// revert - remove limits drop-in file
+			os.Remove(dropInFile)
+			return nil
+		}
 
-	secLimits, err := system.ParseSecLimitsFile(dropInFile)
-	if err != nil {
-		return err
-	}
+		secLimits, err := system.ParseSecLimitsFile(dropInFile)
+		if err != nil {
+			return err
+		}
 
-	if lim[3] != "" && lim[3] != "NA" {
-		// revert with value from another former applied note
-		// or
-		// apply - Prepare limits drop-in file
-		secLimits.Set(lim[0], lim[1], lim[2], lim[3])
+		if lim[3] != "" && lim[3] != "NA" {
+			// revert with value from another former applied note
+			// or
+			// apply - Prepare limits drop-in file
+			secLimits.Set(lim[0], lim[1], lim[2], lim[3])
 
-		//err = secLimits.Apply()
-		err = secLimits.ApplyDropIn(lim, noteID)
+			//err = secLimits.Apply()
+			err = secLimits.ApplyDropIn(lim, noteID)
+		}
 	}
 	return err
 }
@@ -410,34 +408,29 @@ func GetMemVal(key string) string {
 
 // OptMemVal optimises the shared memory structure with the settings
 // from the configuration file or with a calculation
-func OptMemVal(key, actval, cfgval, shmsize, tmpfspercent string) string {
-	// shmsize       value of ShmFileSystemSizeMB from config file
-	// tmpfspercent  value of VSZ_TMPFS_PERCENT from config file
+func OptMemVal(key, actval, cfgval, tmpfspercent string) string {
+	// tmpfspercent value of VSZ_TMPFS_PERCENT from config or override file
 	var size uint64
 	var ret string
 
-	if actval == "-1" {
-		system.WarningLog("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
-		size = 0
-	} else if shmsize == "0" {
-		if tmpfspercent == "0" {
-			// Calculate optimal SHM size (TotalMemSizeMB*75/100) (SAP-Note 941735)
-			size = uint64(system.GetTotalMemSizeMB()) * 75 / 100
-		} else {
-			// Calculate optimal SHM size (TotalMemSizeMB*VSZ_TMPFS_PERCENT/100)
-			val, _ := strconv.ParseUint(tmpfspercent, 10, 64)
-			size = uint64(system.GetTotalMemSizeMB()) * val / 100
-		}
-	} else {
-		size, _ = strconv.ParseUint(shmsize, 10, 64)
-	}
 	switch key {
 	case "VSZ_TMPFS_PERCENT":
 		ret = cfgval
 	case "ShmFileSystemSizeMB":
-		if size == 0 {
+		if actval == "-1" {
+			system.WarningLog("OptMemVal: /dev/shm is not a valid mount point, will not calculate its optimal size.")
 			ret = "-1"
+		} else if cfgval != "0" {
+			ret = cfgval
 		} else {
+			if tmpfspercent == "0" {
+				// Calculate optimal SHM size (TotalMemSizeMB*75/100) (SAP-Note 941735)
+				size = uint64(system.GetTotalMemSizeMB()) * 75 / 100
+			} else {
+				// Calculate optimal SHM size (TotalMemSizeMB*VSZ_TMPFS_PERCENT/100)
+				val, _ := strconv.ParseUint(tmpfspercent, 10, 64)
+				size = uint64(system.GetTotalMemSizeMB()) * val / 100
+			}
 			ret = strconv.FormatUint(size, 10)
 		}
 	}

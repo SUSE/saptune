@@ -210,11 +210,11 @@ func TestGetMemVal(t *testing.T) {
 }
 
 func TestOptMemVal(t *testing.T) {
-	val := OptMemVal("VSZ_TMPFS_PERCENT", "47", "80", "0", "80")
+	val := OptMemVal("VSZ_TMPFS_PERCENT", "47", "80", "80")
 	if val != "80" {
 		t.Fatal(val)
 	}
-	val = OptMemVal("VSZ_TMPFS_PERCENT", "-1", "75", "0", "75")
+	val = OptMemVal("VSZ_TMPFS_PERCENT", "-1", "75", "75")
 	if val != "75" {
 		t.Fatal(val)
 	}
@@ -222,47 +222,47 @@ func TestOptMemVal(t *testing.T) {
 	size75 := uint64(system.GetTotalMemSizeMB()) * 75 / 100
 	size80 := uint64(system.GetTotalMemSizeMB()) * 80 / 100
 
-	val = OptMemVal("ShmFileSystemSizeMB", "16043", "0", "0", "80")
+	val = OptMemVal("ShmFileSystemSizeMB", "16043", "0", "80")
 	if val != strconv.FormatUint(size80, 10) {
 		t.Fatal(val)
 	}
-	val = OptMemVal("ShmFileSystemSizeMB", "-1", "0", "0", "80")
+	val = OptMemVal("ShmFileSystemSizeMB", "-1", "0", "80")
 	if val != "-1" {
 		t.Fatal(val)
 	}
 
-	val = OptMemVal("ShmFileSystemSizeMB", "16043", "0", "0", "0")
+	val = OptMemVal("ShmFileSystemSizeMB", "16043", "0", "0")
 	if val != strconv.FormatUint(size75, 10) {
 		t.Fatal(val)
 	}
-	val = OptMemVal("ShmFileSystemSizeMB", "-1", "0", "0", "0")
+	val = OptMemVal("ShmFileSystemSizeMB", "-1", "0", "0")
 	if val != "-1" {
 		t.Fatal(val)
 	}
 
-	val = OptMemVal("ShmFileSystemSizeMB", "16043", "25605", "25605", "80")
+	val = OptMemVal("ShmFileSystemSizeMB", "16043", "25605", "80")
 	if val != "25605" {
 		t.Fatal(val)
 	}
-	val = OptMemVal("ShmFileSystemSizeMB", "-1", "25605", "25605", "80")
+	val = OptMemVal("ShmFileSystemSizeMB", "-1", "25605", "80")
 	if val != "-1" {
 		t.Fatal(val)
 	}
 
-	val = OptMemVal("ShmFileSystemSizeMB", "16043", "25605", "25605", "0")
+	val = OptMemVal("ShmFileSystemSizeMB", "16043", "25605", "0")
 	if val != "25605" {
 		t.Fatal(val)
 	}
-	val = OptMemVal("ShmFileSystemSizeMB", "-1", "25605", "25605", "0")
+	val = OptMemVal("ShmFileSystemSizeMB", "-1", "25605", "0")
 	if val != "-1" {
 		t.Fatal(val)
 	}
 
-	val = OptMemVal("UNKOWN_PARAMETER", "16043", "0", "0", "0")
+	val = OptMemVal("UNKOWN_PARAMETER", "16043", "0", "0")
 	if val != "" {
 		t.Fatal(val)
 	}
-	val = OptMemVal("UNKOWN_PARAMETER", "-1", "0", "0", "0")
+	val = OptMemVal("UNKOWN_PARAMETER", "-1", "0", "0")
 	if val != "" {
 		t.Fatal(val)
 	}

@@ -165,9 +165,19 @@ func ParseINI(input string) *INIFile {
 			for _, limits := range strings.Split(kov[3], ",") {
 				limits = strings.TrimSpace(limits)
 				lim := strings.Fields(limits)
+				key := ""
+				if len(lim) == 0 {
+					// empty LIMITS parameter means
+					// override file is setting all limits to 'untouched'
+					// or a wrong limits entry in an 'extra' file
+					key = fmt.Sprintf("%s_NA", kov[1])
+					limits = "NA"
+				} else {
+					key = fmt.Sprintf("LIMIT_%s_%s_%s", lim[0], lim[1], lim[2])
+				}
 				entry := INIEntry{
 					Section:  currentSection,
-					Key:      fmt.Sprintf("LIMIT_%s_%s_%s", lim[0], lim[1], lim[2]),
+					Key:      key,
 					Operator: Operator(kov[2]),
 					Value:    limits,
 				}
@@ -177,6 +187,10 @@ func ParseINI(input string) *INIFile {
 		} else if currentSection == "block" {
 			_, sysDevs := system.ListDir("/sys/block", "the available block devices of the system")
 			for _, bdev := range sysDevs {
+				if strings.Contains(bdev, "dm-") {
+					// skip unsupported devices
+					continue
+				}
 				entry := INIEntry{
 					Section:  currentSection,
 					Key:      fmt.Sprintf("%s_%s", kov[1], bdev),

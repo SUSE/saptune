@@ -8,6 +8,7 @@ import (
 	"path"
 	"regexp"
 	"strconv"
+	"strings"
 )
 
 // OverrideTuningSheets defines saptunes override directory
@@ -112,6 +113,13 @@ func (vend INISettings) Initialise() (Note, error) {
 	vend.Inform = make(map[string]string)
 	for _, param := range ini.AllValues {
 		if override && len(ow.KeyValue[param.Section]) != 0 {
+			chkKey := param.Key
+			if param.Section == "service" {
+				cKey := strings.TrimSuffix(chkKey, ".service")
+				if _, ok := ow.KeyValue[param.Section][cKey]; ok {
+					chkKey = cKey
+				}
+			}
 			if vend.ID == "1805750" {
 				// as note 1805750 does not set a limits
 				// domain, but the customer should be able to
@@ -125,16 +133,16 @@ func (vend INISettings) Initialise() (Note, error) {
 					}
 				}
 			}
-			if ow.KeyValue[param.Section][param.Key].Value == "" && param.Section != INISectionPagecache && (ow.KeyValue[param.Section][param.Key].Key != "" || (param.Section == INISectionLimits && ow.KeyValue[param.Section][param.Key].Key == "")) {
+			if ow.KeyValue[param.Section][chkKey].Value == "" && param.Section != INISectionPagecache && (ow.KeyValue[param.Section][chkKey].Key != "" || (param.Section == INISectionLimits && ow.KeyValue[param.Section][chkKey].Key == "")) {
 				// disable parameter setting in override file
 				vend.OverrideParams[param.Key] = "untouched"
 			}
-			if ow.KeyValue[param.Section][param.Key].Value != "" {
-				vend.OverrideParams[param.Key] = ow.KeyValue[param.Section][param.Key].Value
-				if ow.KeyValue[param.Section][param.Key].Operator != param.Operator {
+			if ow.KeyValue[param.Section][chkKey].Value != "" {
+				vend.OverrideParams[param.Key] = ow.KeyValue[param.Section][chkKey].Value
+				if ow.KeyValue[param.Section][chkKey].Operator != param.Operator {
 					// operator from override file will
 					// replace the operator from our note file
-					param.Operator = ow.KeyValue[param.Section][param.Key].Operator
+					param.Operator = ow.KeyValue[param.Section][chkKey].Operator
 				}
 			}
 		}
@@ -236,7 +244,11 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionLogin:
 			vend.SysctlParams[param.Key] = OptLoginVal(param.Value)
 		case INISectionMEM:
-			vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["mem"]["ShmFileSystemSizeMB"].Value, ini.KeyValue["mem"]["VSZ_TMPFS_PERCENT"].Value)
+			if vend.OverrideParams["VSZ_TMPFS_PERCENT"] == "untouched" || vend.OverrideParams["VSZ_TMPFS_PERCENT"] == "" {
+				vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value, ini.KeyValue["mem"]["VSZ_TMPFS_PERCENT"].Value)
+			} else {
+				vend.SysctlParams[param.Key] = OptMemVal(param.Key, vend.SysctlParams[param.Key], param.Value, vend.OverrideParams["VSZ_TMPFS_PERCENT"])
+			}
 		case INISectionCPU:
 			vend.SysctlParams[param.Key] = OptCPUVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionRpm:
