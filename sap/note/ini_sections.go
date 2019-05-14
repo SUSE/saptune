@@ -358,19 +358,21 @@ func OptCPUVal(key, actval, cfgval string) string {
 }
 
 // SetCPUVal applies the settings to the system
-func SetCPUVal(key, value, noteID, savedStates string, revert bool) error {
+func SetCPUVal(key, value, noteID, savedStates, oval string, revert bool) error {
 	var err error
 	switch key {
 	case "force_latency":
-		err = system.SetForceLatency(value, savedStates, revert)
-		if !revert {
-			// the cpu state values of the note need to be stored
-			// after they are set. Special for 'force_latency'
-			// as we set and handle 2 different sort of values
-			// the 'force_latency' value and the related
-			// cpu state values
-			_, flstates, _ = system.GetFLInfo()
-			AddParameterNoteValues("fl_states", flstates, noteID)
+		if oval != "untouched" {
+			err = system.SetForceLatency(value, savedStates, revert)
+			if !revert {
+				// the cpu state values of the note need to be stored
+				// after they are set. Special for 'force_latency'
+				// as we set and handle 2 different sort of values
+				// the 'force_latency' value and the related
+				// cpu state values
+				_, flstates, _ = system.GetFLInfo()
+				AddParameterNoteValues("fl_states", flstates, noteID)
+			}
 		}
 	case "energy_perf_bias":
 		err = system.SetPerfBias(value)
