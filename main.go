@@ -32,7 +32,8 @@ const (
 	setGreenText          = "\033[32m"
 	setRedText            = "\033[31m"
 	resetTextColor        = "\033[0m"
-	footnote1             = "[1] setting is not supported by the system"
+	footnote1X86          = "[1] setting is not supported by the system"
+	footnote1IBM          = "[1] setting is not relevant for the system"
 	footnote2             = "[2] setting is not available on the system"
 	footnote3             = "[3] value is only checked, but NOT set"
 	footnote4             = "[4] cpu idle state settings differ"
@@ -74,9 +75,13 @@ func cliArg(i int) string {
 
 var tuneApp *app.App                 // application configuration and tuning states
 var tuningOptions note.TuningOptions // Collection of tuning options from SAP notes and 3rd party vendors.
+var footnote1 = footnote1X86         // set 'unsupported' footnote regarding the architecture
 var solutionSelector = runtime.GOARCH
 
 func main() {
+	if runtime.GOARCH == "ppc64le" {
+		footnote1 = footnote1IBM
+	}
 	// activate logging
 	system.LogInit()
 
