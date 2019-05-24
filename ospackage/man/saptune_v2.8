@@ -28,7 +28,7 @@ ATTENTION: If you still use version \fB1\fP of saptune please refer to man page 
 [ list | verify ]
 
 \fBsaptune note\fP
-[ apply | simulate | verify | customise | create | revert ]  NoteID
+[ apply | simulate | verify | customise | create | revert | show ]  NoteID
 
 \fBsaptune solution\fP
 [ list | verify ]
@@ -162,6 +162,9 @@ You need to choose an unique NoteID for this operation. Use '\fIsaptune note lis
 .TP
 .B revert
 Revert optimisation settings carried out by the Note, and the Note will no longer be activated automatically upon system boot.
+.TP
+.B show
+Print content of Note definition file to stdout
 
 .SH SOLUTION ACTIONS
 A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.

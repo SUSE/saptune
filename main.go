@@ -8,6 +8,7 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"reflect"
@@ -47,7 +48,7 @@ Daemon control:
   saptune daemon [ start | status | stop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify ]
-  saptune note [ apply | simulate | verify | customise | create | revert ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | revert | show ] NoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
   saptune solution [ apply | simulate | verify | revert ] SolutionName
@@ -688,6 +689,34 @@ func NoteAction(actionName, noteID string) {
 		if err := syscall.Exec(editor, []string{editor, extraFileName}, os.Environ()); err != nil {
 			errorExit("Failed to start launch editor %s: %v", editor, err)
 		}
+	case "show":
+		if noteID == "" {
+			PrintHelpAndExit(1)
+		}
+		if _, err := tuneApp.GetNoteByID(noteID); err != nil {
+			errorExit("%v", err)
+		}
+		fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
+		if _, err := os.Stat(fileName); os.IsNotExist(err) {
+			_, files := system.ListDir(ExtraTuningSheets, "")
+			for _, f := range files {
+				if strings.HasPrefix(f, noteID) {
+					fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, f)
+				}
+			}
+			if _, err := os.Stat(fileName); os.IsNotExist(err) {
+				errorExit("Note %s not found in %s or %s.", noteID, NoteTuningSheets, ExtraTuningSheets)
+			} else if err != nil {
+				errorExit("Failed to read file '%s' - %v", fileName, err)
+			}
+		} else if err != nil {
+			errorExit("Failed to read file '%s' - %v", fileName, err)
+		}
+		cont, err := ioutil.ReadFile(fileName)
+		if err != nil {
+			errorExit("Failed to read file '%s' - %v", fileName, err)
+		}
+		fmt.Printf("\nContent of Note %s:\n%s\n", noteID, string(cont))
 	case "revert":
 		if noteID == "" {
 			PrintHelpAndExit(1)
