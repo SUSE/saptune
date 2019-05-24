@@ -17,7 +17,7 @@
 UserTasksMax=infinity
 
 [vm]
-# Disable transparent hugepages (THP, applies to Intel-based systems only)
+# Disable transparent hugepages (THP)
 # changes /sys/kernel/mm/transparent_hugepage/enabled
 # 'never' to disable, 'always' to enable
 # SAP Note 2131662, 2031375
