@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"reflect"
 	"runtime"
 	"sort"
 	"strconv"
@@ -61,8 +62,20 @@ Print this message:
 
 // Print the message to stderr and exit 1.
 func errorExit(template string, stuff ...interface{}) {
+	exState := 1
+	fieldType := ""
+	field := len(stuff) - 1
+	if field >= 0 {
+		fieldType = reflect.TypeOf(stuff[field]).String()
+	}
+	if fieldType == "*exec.ExitError" {
+		// get return code of failed command, if available
+		if exitError, ok := stuff[field].(*exec.ExitError); ok {
+			exState = exitError.Sys().(syscall.WaitStatus).ExitStatus()
+		}
+	}
 	system.ErrorLog(template+"\n", stuff...)
-	os.Exit(1)
+	os.Exit(exState)
 }
 
 // Return the i-th command line parameter, or empty string if it is not specified.
@@ -82,13 +95,12 @@ func main() {
 	if runtime.GOARCH == "ppc64le" {
 		footnote1 = footnote1IBM
 	}
-	// activate logging
-	system.LogInit()
 
 	// get saptune version
 	sconf, err := txtparser.ParseSysconfigFile("/etc/sysconfig/saptune", true)
 	if err != nil {
-		errorExit("Unable to read file '/etc/sysconfig/saptune': %v", err)
+		fmt.Fprintf(os.Stderr, "Error: Unable to read file '/etc/sysconfig/saptune': %v\n", err)
+		os.Exit(1)
 	}
 	saptuneVersion := sconf.GetString("SAPTUNE_VERSION", "")
 
@@ -99,6 +111,15 @@ func main() {
 		fmt.Printf("current active saptune version is '%s'\n", saptuneVersion)
 		os.Exit(0)
 	}
+
+	// All other actions require super user privilege
+	if os.Geteuid() != 0 {
+		fmt.Fprintf(os.Stderr, "Please run saptune with root privilege.\n")
+		os.Exit(1)
+	}
+
+	// activate logging
+	system.LogInit()
 
 	switch saptuneVersion {
 	case "1":
@@ -115,11 +136,6 @@ func main() {
 		break
 	default:
 		errorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", saptuneVersion)
-	}
-	// All other actions require super user privilege
-	if os.Geteuid() != 0 {
-		errorExit("Please run saptune with root privilege.")
-		return
 	}
 
 	if system.IsPagecacheAvailable() {
