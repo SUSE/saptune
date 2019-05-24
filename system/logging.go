@@ -3,10 +3,12 @@ package system
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -14,6 +16,7 @@ var infoLogger *log.Logger    // Info logger
 var debugLogger *log.Logger   // Debug logger
 var errorLogger *log.Logger   // Error logger
 var warningLogger *log.Logger // Warning logger
+var debugSwitch string        // Switch Debug on or off
 
 // calledFrom returns the name and the line number of the calling source file
 func calledFrom() string {
@@ -28,7 +31,7 @@ func calledFrom() string {
 
 // DebugLog sents text to the DebugLogWriter
 func DebugLog(txt string, stuff ...interface{}) {
-	if debugLogger != nil {
+	if debugLogger != nil && debugSwitch == "1" {
 		debugLogger.Printf(calledFrom()+txt+"\n", stuff...)
 		fmt.Fprintf(os.Stderr, "DEBUG: "+txt+"\n", stuff...)
 	}
@@ -88,4 +91,27 @@ func LogInit() {
 	infoLogger = log.New(saptuneLog, logTimeFormat+"INFO     saptune.", 0)
 	warningLogger = log.New(saptuneLog, logTimeFormat+"WARNING  saptune.", 0)
 	errorLogger = log.New(saptuneLog, logTimeFormat+"ERROR    saptune.", 0)
+
+	debugSwitch = GetDebug()
+}
+
+// GetDebug checks, if DEBUG is set in /etc/sysconfig/saptune
+func GetDebug() string {
+	ret := ""
+	cont, err := ioutil.ReadFile("/etc/sysconfig/saptune")
+	if err == nil {
+		for _, line := range strings.Split(string(cont), "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "#") {
+				continue
+			}
+			if match := strings.IndexRune(line, '='); match != -1 {
+				if strings.TrimSpace(line[0:match]) == "DEBUG" {
+					ret = strings.Trim(strings.TrimSpace(line[match+1:]), `"`)
+					break
+				}
+			}
+		}
+	}
+	return ret
 }
