@@ -732,7 +732,7 @@ func SolutionAction(actionName, solName string) {
 				"\n    saptune daemon start")
 		}
 	case "list":
-		fmt.Println("\nAll solutions (* denotes enabled solution, O denotes override file exists for solution):")
+		fmt.Println("\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, D denotes deprecated solutions):")
 		for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 			format := "\t%-18s -"
 			if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
@@ -746,6 +746,9 @@ func SolutionAction(actionName, solName string) {
 			solNotes := ""
 			for _, noteString := range solution.AllSolutions[solutionSelector][solName] {
 				solNotes = solNotes + " " + noteString
+			}
+			if _, ok := solution.DeprecSolutions[solutionSelector][solName]; ok {
+				format = " D" + format
 			}
 			format = format + solNotes + resetTextColor + "\n"
 			fmt.Printf(format, solName)

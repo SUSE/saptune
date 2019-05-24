@@ -19,6 +19,7 @@ import (
 const (
 	SolutionSheet         = "/usr/share/saptune/solutions"
 	OverrideSolutionSheet = "/etc/saptune/override/solutions"
+	DeprecSolutionSheet   = "/usr/share/saptune/solsdeprecated"
 	NoteTuningSheets      = "/usr/share/saptune/notes/"
 	ArchX86               = "amd64"      // ArchX86 is the GOARCH value for x86 platform.
 	ArchPPC64LE           = "ppc64le"    // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform.
@@ -39,6 +40,9 @@ var AllSolutions = GetSolutionDefintion(SolutionSheet)
 // OverrideSolutions contains a list of all available override solutions with
 // their related SAP Notes for all supported architectures
 var OverrideSolutions = GetOverrideSolution(OverrideSolutionSheet, NoteTuningSheets)
+
+// DeprecSolutions contains a list of all solutions witch are deprecated
+var DeprecSolutions = GetDeprecatedSolution(DeprecSolutionSheet)
 
 // GetSolutionDefintion reads solution definition from file
 // build same structure for AllSolutions as before
@@ -156,6 +160,60 @@ func GetOverrideSolution(fileName, noteFiles string) map[string]map[string]Solut
 			}
 		}
 		sol[param.Key] = strings.Split(param.Value, "\t")
+	}
+	switch currentArch {
+	case "ArchPPC64LE":
+		if system.IsPagecacheAvailable() {
+			sols[ArchPPC64LEPC] = sol
+		}
+		sols[ArchPPC64LE] = sol
+	case "ArchX86":
+		if system.IsPagecacheAvailable() {
+			sols[ArchX86PC] = sol
+		}
+		sols[ArchX86] = sol
+	}
+	return sols
+}
+
+// GetDeprecatedSolution reads solution deprecated definition from file
+func GetDeprecatedSolution(fileName string) map[string]map[string]string {
+	sols := make(map[string]map[string]string)
+	sol := make(map[string]string)
+	currentArch := ""
+	arch := ""
+	pcarch := ""
+	// looking for deprecated solution file
+	content, err := txtparser.ParseINIFile(fileName, false)
+	if err != nil {
+		return sols
+	}
+
+	for _, param := range content.AllValues {
+		if param.Section == "reminder" {
+			continue
+		}
+		if param.Section != currentArch {
+			// start a new arch
+			if currentArch != "" {
+				// save previous arch settings
+				if system.IsPagecacheAvailable() {
+					sols[pcarch] = sol
+				}
+				sols[arch] = sol
+			}
+			currentArch = param.Section
+			sol = make(map[string]string)
+			switch currentArch {
+			case "ArchPPC64LE":
+				arch = "ppc64le"
+				pcarch = "ppc64le_PC"
+			case "ArchX86":
+				arch = "amd64"
+				pcarch = "amd64_PC"
+			}
+		}
+		sol[param.Key] = param.Value
 	}
 	switch currentArch {
 	case "ArchPPC64LE":

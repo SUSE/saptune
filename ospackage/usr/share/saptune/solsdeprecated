@@ -1,0 +1,5 @@
+[ArchX86]
+MAXDB = deprecated
+
+[ArchPPC64LE]
+MAXDB = deprecated
