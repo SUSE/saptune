@@ -185,6 +185,7 @@ func ParseINI(input string) *INIFile {
 				currentEntriesMap[entry.Key] = entry
 			}
 		} else if currentSection == "block" {
+			system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
 			_, sysDevs := system.ListDir("/sys/block", "the available block devices of the system")
 			for _, bdev := range sysDevs {
 				if strings.Contains(bdev, "dm-") {

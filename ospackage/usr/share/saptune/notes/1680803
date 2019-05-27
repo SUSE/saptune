@@ -33,7 +33,7 @@ IO_SCHEDULER=noop
 NRREQ=1024
 
 [vm]
-# Disable transparent hugepages (THP, applies to Intel-based systems only)
+# Disable transparent hugepages (THP)
 # changes /sys/kernel/mm/transparent_hugepage/enabled
 # 'never' to disable, 'always' to enable
 THP=never

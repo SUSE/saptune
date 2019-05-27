@@ -1,0 +1,389 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*
+
+"""
+sapconf2saptune migrates a sapconf configuration to a saptune v2 configuration file by
+
+    - inspecting a given sapconf sysconfig file (/etc/sysconfig/sapconf)
+    - inspecting a given sapconf tuned.conf file
+    - Adding all what is done by the sapconf RPM installation
+
+On stdout the resulting saptune configuration is printed which is suitable for an extra file, 
+on stderr important messages.
+
+Example:
+
+sapconf2saptune /etc/sysconfig/sapconf /usr/lib/tuned/sapconf/tuned.conf > /etc/saptune/extra/sapconf-migration\ file.conf  
+
+by soeren.schmidt@suse.com
+"""
+
+import datetime
+import os
+import re
+import signal
+import socket
+import sys
+
+
+VERSION = '1.5'
+GLOBAL_ERROR = 0
+
+# -------------------------------------------------------
+# These are common functions used throughout the program.
+# -------------------------------------------------------
+
+def signal_handler(signal, frame):
+    """
+    Terminate on signal.
+    """
+    sys.exit(1)
+
+def help_and_exit(exitcode=0):
+    """
+    Prints help to stdout and exits.
+    """
+    name = sys.argv[0].rpartition('/')[2]
+    error('''Usage: %s [PROFILE]
+       %s SAPCONF_SYCONFIG TUNED_CONFIG
+       %s -h|--help
+
+v%s
+
+Translates a sapconf configuration into a saptune extra file.
+See man page for details.
+
+    PROFILE            sapconf profile to use
+    SAPCONF_SYCONFIG   sapconf sysconfig file (/etc/sysconfig/sapconf)
+    TUNED_CONFIG       sapconf tuned.conf file (/usr/lib/tuned/<profile>/tuned.conf)
+    -h|--help          this help\n\n''' % (name, name, name, VERSION), exitcode)
+
+def write(text):
+    """
+    Prints text on stdout.
+    """
+    sys.stdout.write(text)
+
+def error(text, exitcode=1):
+    """
+    Prints text on stderr and exits with exitcode.
+    """
+    sys.stderr.write(text)
+    sys.exit(exitcode)
+ 
+def write_err(text):
+    """
+    Prints prefixed error text on stderr.
+    """ 
+    sys.stderr.write('[ERROR] %s\n' % text)
+
+def write_warn(text):
+    """
+    Prints prefixed warning text on stderr.
+    """
+    sys.stderr.write('[WARN ] %s\n' % text)
+
+def write_info(text):
+    """
+    Prints prefixed warning text on stderr.
+    """
+    sys.stderr.write('[INFO ] %s\n' % text)        
+
+def load_sysconfig_file(filename):
+    """
+    Loads sysconfig style file and returns a dictionary with the parameter-value pairs.
+    """
+    assignment = re.compile('^\s*[A-Z_0-9]{1,}\s*=')
+    content = {}
+    
+    try:
+        with open(filename, 'r') as f:
+            for line in f:
+                if assignment.match(line):
+                    name, value = line.split('=', 2)
+                    content[name.strip()] = value.strip('\n" ')
+        return content, None
+    except Exception as err:
+        return None, str(err)
+
+def load_tunedconf_file(filename):
+    """
+    Load tuned.conf file and return a dictionary with the parameter-value pairs.
+    """
+    section = re.compile('^\s*\[[a-z]{1,}\]')
+    assignment = re.compile('^\s*[0-9A-Za-z_.-]{1,}\s*=')
+
+    id = ''    
+    content = {}
+    
+    try:
+        with open(filename, 'r') as f:
+            for line in f:
+                if section.match(line):
+                    id = line.strip('\n')
+                if assignment.match(line):
+                    name, value = line.split('=', 2)
+                    name = '%s:%s' % (id.strip(), name.strip())
+                    content[name] = value.strip('\n" ')
+        return content, None
+    except Exception as err:
+        return None, str(err)
+
+def convert_sysconfig(filename, sapconf):
+    """
+    Reads sapconf sysconfig file, translates the variables into a saptune configuration and updates the
+    sapconf dictionary.
+
+    Translation rules:
+
+        sapconf variable                            saptune section
+        ----------------------------------------    --------------------------------------------------------------------
+        DIRTY_BG_BYTES                              [sysctl]:vm.dirty_background_bytes
+        DIRTY_BYTES                                 [sysctl]:vm.dirty_bytes
+        KSM=0                                       [vm]:KSM
+        LIMIT_n="<domain> <type> <item> <value>"    [limits]:LIMIT="<domain> <type> <item> <value>, ..."
+        MAX_MAP_COUNT                               [sysctl]:vm.max_map_count
+        NUMA_BALANCING                              [sysctl]:kernel.numa_balancing                                                                                                                                                                                        
+        SHMALL                                      [sysctl]:kernel.shmall
+        SHMMAX                                      [sysctl]:kernel.shmmax
+        SHMMNI                                      [sysctl]:kernel.shmmni
+        TCP_SLOW_START                              [sysctl]:net.ipv4.tcp_slow_start_after_idle
+        THP                                         [vm]:THP
+        VSZ_TMPFS_PERCENT                           [mem]:VSZ_TMPFS_PERCENT
+        ENABLE_PAGECACHE_LIMIT                      (determines if PAGECACHE_LIMIT_MB is used or not)                      
+        PAGECACHE_LIMIT_MB                          [sysctl]:vm.pagecache_limit_mb
+        PAGECACHE_LIMIT_IGNORE_DIRTY                [sysctl]:vm.pagecache_limit_ignore_dirty
+        SEMMSL SEMMNS SEMOPM SEMMNI                 [sysctl]:kernel.sem = SEMMSL SEMMNS SEMOPM SEMMNI
+    """
+
+    simple_translation = {'DIRTY_BG_BYTES': '[sysctl]:vm.dirty_background_bytes:int',
+                          'DIRTY_BYTES': '[sysctl]:vm.dirty_bytes:int',
+                          'KSM': '[vm]:KSM:int',
+                          'MAX_MAP_COUNT': '[sysctl]:vm.max_map_count:int',
+                          'NUMA_BALANCING': '[sysctl]:kernel.numa_balancing:int',
+                          'SHMALL': '[sysctl]:kernel.shmall:int',
+                          'SHMMAX': '[sysctl]:kernel.shmmax:int',
+                          'SHMMNI': '[sysctl]:kernel.shmmni:int',
+                          'TCP_SLOW_START': '[sysctl]:net.ipv4.tcp_slow_start_after_idle:int',
+                          'THP': '[vm]:THP:str',
+                          'PAGECACHE_LIMIT_IGNORE_DIRTY': '[sysctl]:vm.pagecache_limit_ignore_dirty:int',
+                          'PAGECACHE_LIMIT_MB': '[sysctl]:vm.pagecache_limit_mb:int',
+                          'VSZ_TMPFS_PERCENT': '[mem]:VSZ_TMPFS_PERCENT:int'}
+
+    limits = []
+    semaphores = {'SEMMSL': 0, 'SEMMNS': 0, 'SEMOPM': 0, 'SEMMNI': 0}
+    semaphores_found = False
+    pagecache_limit = False
+
+    # Read the sysconfig file.
+    config, err = load_sysconfig_file(filename)
+    if err:
+        error('Error reading %s: %s\n' % (filename, err))
+
+    if not config:
+        write_warn('%s: No variables found! Sure this is a valid sapconf sysconfig file?' % filename)
+        return
+
+    # Go thru each parameter and convert.
+    for param, value in config.items():
+        
+        # First go thru "special" translations.
+        if param.startswith('LIMIT_'):    
+            limits.append(value)
+            continue
+        if param in ['SEMMSL', 'SEMMNS', 'SEMOPM', 'SEMMNI']:    
+            semaphores_found = True
+            semaphores[param] = int(value)
+            continue
+        if param == 'ENABLE_PAGECACHE_LIMIT':
+            pagecache_limit = True if value == 'yes' else False
+            continue
+            
+        # Now the normal translations.
+        if param not in simple_translation.keys():
+            write_warn('%s: Variable %s unknown! Ignored.' % (filename, param))
+            continue
+        section, new_param, datatype = simple_translation[param].split(':')   
+        datatype = eval(datatype)  # convert name of the datatype into datatype itself
+        if section not in sapconf.keys():
+            sapconf[section] = {}
+        try:
+            sapconf[section][new_param] = (datatype)(value)
+        except Exception as err:
+            write_err('%s: Cannot convert: %s = %s: %s' % (filename, param, value, err))
+
+    # Pagecache limit has to be enabled to have the limit set.
+    if not pagecache_limit:
+        try:
+            del(sapconf['[sysctl]']['vm.pagecache_limit_mb'])
+        except:
+            pass
+
+    # Put limits altogether into the configuration.
+    if '[limits]' not in sapconf.keys():
+        sapconf['[limits]'] = {'LIMIT': '%s' % ', '.join(limits)}
+    else:  # needed if LIMITS already exist (in the future)
+        sapconf['[limits]']['LIMIT'] = '%s, %s' % (sapconf['[limits]']['LIMIT'], ', '.join(sapconf['[limits]']['LIMIT']))
+
+    # Put kernel semaphores together.
+    if semaphores_found:
+        if '[sysctl]' not in sapconf.keys():
+            sapconf['[sysctl]'] = {'kernel.sem': ''}
+        sapconf['[sysctl]']['kernel.sem'] = '%s %s %s %s' % (semaphores['SEMMSL'], semaphores['SEMMNS'], semaphores['SEMOPM'], semaphores['SEMMNI'])
+
+    # Add ShmFileSystemSizeMB = 0 if VSZ_TMPFS_PERCENT is used.
+    if '[mem]' in sapconf  and 'VSZ_TMPFS_PERCENT' in sapconf['[mem]']:
+        sapconf['[mem]']['ShmFileSystemSizeMB'] = 0
+
+def convert_tunedconf(filename, sapconf):
+    """
+    Reads sapconf tuned.conf file, translates it into a saptune configuration and updates the
+    sapconf dictionary.
+
+    Translation rules:
+
+        tuned setting               saptune section
+        -----------------------     --------------------------------------------------
+        [cpu]:governor              [cpu]:governor
+        [cpu]:energy_perf_bias      [cpu]:energy_perf_bias
+        [cpu]:min_perf_pct          (removed)
+        [cpu]:force_latency         [cpu]:force_latency
+        [disk]:elevator             [block]:IO_SCHEDULER
+    """
+
+    ignore_list = ['[main]:summary', '[script]:script']
+    translation = {'[cpu]:governor': '[cpu]:governor:str',
+                   '[cpu]:energy_perf_bias': '[cpu]:energy_perf_bias:str',
+                   '[cpu]:min_perf_pct:int': None,
+                   '[cpu]:force_latency': '[cpu]:force_latency:int',
+                   '[disk]:elevator': '[block]:IO_SCHEDULER:str'}
+
+    # Read the tuned.conf file.
+    config, err = load_tunedconf_file(filename)
+    if err:
+        error('Error reading %s: %s\n' % (filename, err))
+
+    if not config:
+        write_warn('%s: No parameters found! Sure this is a valid tuned.conf file?' % filename)
+        return 
+    
+    for param, value in config.items():
+        if param in ignore_list:
+            continue
+        
+        if param in translation.keys():
+            if translation[param]:
+                section, new_param, datatype = translation[param].split(':') 
+                datatype = eval(datatype)  # convert name of the datatype into datatype itself  
+                if section not in sapconf.keys():
+                    sapconf[section] = {}
+                
+                try:
+                    sapconf[section][new_param] = (datatype)(value)
+                except Exception as err:
+                    write_err('%s: Cannot convert: %s = %s: %s' % (filename, param, value, err))
+            else:
+                write_warn('%s: Parameter %s is not supported in saptune v2! Not migrated.' % (filename, param))
+            continue
+        
+        write_warn('%s: Unsupported entry found! It will not get migrated: %s = %s' % (filename, param, value ))
+
+def write_saptune_config(sapconf, sapconf_sysconfig_file, sapconf_tunedconf_file):
+    """
+    Writes sapconf configuration on stdout in the right format
+    for saptune v2.
+    """
+ 
+    # A small header...
+    write('# saptune v2 drop-in of sapconf configuration\n#\n# Created by %s v%s\n#\n' % (sys.argv[0].rpartition('/')[2], VERSION))
+    write('# Host: %s\n# Date: %s\n#\n' % (socket.getfqdn(), datetime.datetime.now()))
+    write('# Used configurations: "%s" "%s"\n' % (sapconf_sysconfig_file, sapconf_tunedconf_file))
+    write('\n[version]\n# SAP-NOTE=sapconf CATEGORY=SUSE VERSION=0 DATE=%s NAME="Configuration drop-in of sapconf configuration"\n' % datetime.datetime.now().strftime("%d.%m.%Y"))
+
+    # ...and the configuration.
+    for section in sapconf.keys():
+        write('\n%s\n' % section)
+        for param, value in sapconf[section].items():
+            qutoation_mark = '"' if type(value) == str else '' 
+            write('%s = %s%s%s\n' %(param, qutoation_mark, value, qutoation_mark)) 
+
+
+# --------------------------
+# The main function finally.
+# --------------------------
+
+def main():
+
+    sapconf = {}    # for our converted configuration
+
+    # Disable stdout buffering to prevent errors together with redirection.
+    # http://stackoverflow.com/questions/3515757/
+    #    python-print-statements-being-buffered-with-output-redirection
+    sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)
+
+    # Prevent "IOError: [Errno 32] Broken pipe" using the pipe.
+    # http://coding.derkeiler.com/Archive/Python/comp.lang.python/2004-06/3823.html
+    signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
+    # Clean termination on ^C.
+    signal.signal(signal.SIGINT, signal_handler)
+    
+    # Check parameters.
+    sapconf_profile, sapconf_sysconfig_file, sapconf_tunedconf_file = None, None, None
+    if len(sys.argv) == 1:  # We try to detect the used sapconf profile.
+        try:
+            with open('/etc/tuned/active_profile', 'r') as f:
+                sapconf_profile = f.read().strip()        
+        except Exception as err:
+            error('Cannot determine the current sapconf profile: %s\n' % err, 1)
+        write_info('Detected current sapconf profile: %s' % sapconf_profile)
+
+    elif len(sys.argv) == 2:    # Either help is wanted or a sapconf profile was specified.
+        if sys.argv[1] in ['-h', '--help']:
+            help_and_exit(1)
+        else:
+            sapconf_profile = sys.argv[1]
+
+    elif len(sys.argv) == 3:    # The configuration files have been stated.
+        sapconf_sysconfig_file, sapconf_tunedconf_file = sys.argv[1], sys.argv[2]
+        
+    else:
+        help_and_exit(1)
+
+    # If we've been called with a profile, check if it is valid and determine the configuration files.
+    if sapconf_profile:
+        if sapconf_profile not in ['sapconf', 'sap-hana', 'sap-netweaver', 'sap-ase', 'sap-bobj']:
+            error('The tuned profile \"%s\" is not a sapconf profile.\n' % sapconf_profile, 1)
+        sapconf_sysconfig_file = '/etc/sysconfig/sapconf'
+        sapconf_tunedconf_file = '/etc/tuned/%s/tuned.conf' % sapconf_profile if os.path.exists('/etc/tuned/%s' % sapconf_profile) else '/usr/lib/tuned/%s/tuned.conf' % sapconf_profile
+        write_info('Used configuration files: "%s" and "%s"' % (sapconf_sysconfig_file, sapconf_tunedconf_file))
+        
+    # Convert sapconf sysconfig file.
+    convert_sysconfig(sapconf_sysconfig_file, sapconf)
+
+    # Convert sapconf tuned.conf file.
+    convert_tunedconf(sapconf_tunedconf_file, sapconf)
+
+    # Adding some parameters that are handled by sapconf rpm package.
+    for section in ['[login]', '[service]', '[rpm]']:
+        if section not in sapconf.keys():
+            sapconf[section] = {}
+    sapconf['[login]']['UserTasksMax'] = 'infinity'
+    sapconf['[service]']['uuidd.socket'] = 'start'
+    sapconf['[service]']['sysstat.service'] = 'start'
+    # The [rpm] entries do not have a equal sign, which is not supported
+    # by the code at the moment. Since the requirement for this systemd
+    # version (SP2) is very old and should be fulfilled by sapconf/saptune
+    # rpm dependency anyway, we ignore it.
+    #sapconf['[rpm]']['systemd'] = '12-SP2 228-142.1'
+
+    # Print saptune configuration to stdout.
+    write_saptune_config(sapconf, sapconf_sysconfig_file, sapconf_tunedconf_file)
+
+    # Bye.
+    sys.exit(GLOBAL_ERROR)
+        
+
+if __name__ == '__main__':
+    main()
+

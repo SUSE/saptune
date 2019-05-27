@@ -17,32 +17,9 @@ net.core.somaxconn = 4096
 # log, the size of the SYN backlog should be set to a reasonably high value.
 net.ipv4.tcp_max_syn_backlog = 8192
 
-# This setting allows HANA to reuse a client port immediately after the
-# connection has been closed, even though the connection is still in TIME_WAIT
-# state. A precondition for it to take effect is that TCP timestamps are
-# enabled, i.e. net.ipv4.tcp_timestamps = 1, which is the default on most
-# modern systems. Please note that this setting must not be applied if the HANA
-# node needs to communicate with hosts behind a NAT firewall. Moreover, it must
-# not be applied if not all hosts that use a TCP connection to communicate with
-# the HANA node have TCP timestamps enabled. Otherwise you might encounter TCP
-# connection issues after applying this configuration parameter.
-net.ipv4.tcp_tw_reuse = 1
-
-# This setting reduces the time a connection spends in the TIME_WAIT state.
-# One precondition for it to take effect is that TCP timestamps are enabled,
-# i.e. net.ipv4.tcp_timestamps = 1, which is the default on most modern systems.
-# Please note that this setting must not be applied if the HANA node has to
-# communicate with hosts behind a NAT firewall. Moreover, it must not be
-# applied if not all hosts that use a TCP connection to communicate with the
-# HANA node have TCP timestamps enabled. Otherwise you might encounter TCP
-# connection issues after applying this configuration parameter.
-net.ipv4.tcp_tw_recycle = 1
-
 # This setting adds the timestamp field to the TCP header.
 # It should already be active on most modern systems and is a prerequisite for
 # net.ipv4.tcp_tw_reuse and net.ipv4.tcp_tw_recycle.
-# ATTENTION: SUSE-GUIDE-02 will set the value back to 0, if applied after 
-# note 2382421 or solution HANA
 net.ipv4.tcp_timestamps = 1
 
 # net.ipv4.tcp_slow_start_after_idle
@@ -81,7 +58,7 @@ net.ipv4.tcp_window_scaling = 1
 net.ipv4.tcp_syn_retries = 8
 
 [reminder]
-# SAP HANA Parameters - all '.ini' file changes - not supported by saptune
+# SAP HANA Parameters - all '.ini' file changes - not handled by saptune
 #
 # As HANA uses a considerable number of connections for the internal
 # communication, it makes sense to have as many client ports available as
@@ -135,4 +112,27 @@ net.ipv4.tcp_syn_retries = 8
 # To ensure complete functionality it must be ensured that the wmem_max and
 # rmem_max values are at least the same as the respective maximum value of the
 # parameters net.ipv4.tcp_wmem and net.ipv4.tcp_rmem.
+#
+# net.ipv4.tcp_tw_reuse
+# This setting allows HANA to reuse a client port immediately after the
+# connection has been closed, even though the connection is still in TIME_WAIT
+# state. A precondition for it to take effect is that TCP timestamps are
+# enabled, i.e. net.ipv4.tcp_timestamps = 1, which is the default on most
+# modern systems. Please note that this setting must not be applied if the HANA
+# node needs to communicate with hosts behind a NAT firewall. Moreover, it must
+# not be applied if not all hosts that use a TCP connection to communicate with
+# the HANA node have TCP timestamps enabled. Otherwise you might encounter TCP
+# connection issues after applying this configuration parameter.
+#net.ipv4.tcp_tw_reuse = 1
+#
+# net.ipv4.tcp_tw_recycle
+# This setting reduces the time a connection spends in the TIME_WAIT state.
+# One precondition for it to take effect is that TCP timestamps are enabled,
+# i.e. net.ipv4.tcp_timestamps = 1, which is the default on most modern systems.
+# Please note that this setting must not be applied if the HANA node has to
+# communicate with hosts behind a NAT firewall. Moreover, it must not be
+# applied if not all hosts that use a TCP connection to communicate with the
+# HANA node have TCP timestamps enabled. Otherwise you might encounter TCP
+# connection issues after applying this configuration parameter.
+#net.ipv4.tcp_tw_recycle = 1
 #

@@ -6,7 +6,7 @@
 # SAP-NOTE=2684254 CATEGORY=HANA VERSION=5 DATE=03.01.2019 NAME="SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15"
 
 [vm]
-# Disable transparent hugepages (THP, applies to Intel-based systems only)
+# Disable transparent hugepages (THP)
 # changes /sys/kernel/mm/transparent_hugepage/enabled
 # 'never' to disable, 'always' to enable
 # SAP Note 2131662, 2031375
@@ -40,8 +40,24 @@ energy_perf_bias=performance
 # cpupower frequency-set -g performance
 governor=performance
 
-# force latency
-# input is a decimal (not a hexadecimal) number
+# force latency (applies to Intel-based systems only)
+# configure C-States for lower latency
+#
+# input is a string, which is internally treated as a decimal (not a
+# hexadecimal) integer number representing a maximum response time in
+# microseconds.
+# It is used to establish a latency upper limit by limiting the use of C-States
+# (CPU idle or CPU latency states) to only those with an exit latency smaller
+# than the value set here. That means only those states that require less than
+# the requested number of microseconds to wake up are enabled, all the other
+# C-States are disabled.
+#
+# ATTENTION: not idling *at all* increases power consumption significantly and
+# reduces the life span of the machine because of wear and tear. So do not use
+# a too strict latency setting. Prefere a "light sleep", because the impact on
+# power consumption and life of the CPUs is less severe.
+# But don't forget: The deeper the idle state, the larger is the exit latency.
+#
 force_latency=70
 
 [sysctl]
@@ -90,7 +106,7 @@ numa_balancing=disable
 transparent_hugepage=never
 
 [reminder]
-# IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not supported by saptune!
+# IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!
 
 # Intel Cluster-On-Die (COD) / sub-NUMA clustering technology
 # HANA is not supported neither on Intel Cluster-On-Die (COD) technology nor on sub-NUMA clustering technology.

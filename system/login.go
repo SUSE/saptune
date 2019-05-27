@@ -15,17 +15,19 @@ func GetCurrentLogins() []string {
 		WarningLog("command '%s' not found", cmdName)
 		return uID
 	}
-	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-	if err != nil {
-		WarningLog("failed to invoke external command '%s %v': %v, output: %s", cmdName, cmdArgs, err, string(cmdOut))
-		return uID
-	}
-	for _, logins := range strings.Split(string(cmdOut), "\n") {
-		if logins == "" {
-			continue
+	if IsSystemRunning() {
+		cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+		if err != nil {
+			WarningLog("failed to invoke external command '%s %v': %v, output: %s", cmdName, cmdArgs, err, string(cmdOut))
+			return uID
 		}
-		user := strings.Split(strings.TrimSpace(logins), " ")
-		uID = append(uID, user[0])
+		for _, logins := range strings.Split(string(cmdOut), "\n") {
+			if logins == "" {
+				continue
+			}
+			user := strings.Split(strings.TrimSpace(logins), " ")
+			uID = append(uID, user[0])
+		}
 	}
 	return uID
 }

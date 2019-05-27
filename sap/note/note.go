@@ -184,6 +184,8 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 
 				if key.String() == "force_latency" && actualValue.(string) != "all:none" {
 					op = "<="
+				} else {
+					op = ""
 				}
 				actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue, op)
 				if strings.Split(key.String(), ":")[0] == "rpm" {

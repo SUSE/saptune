@@ -27,27 +27,33 @@ func SystemctlDisable(thing string) error {
 
 // SystemctlRestart call systemctl restart on thing.
 func SystemctlRestart(thing string) error {
-	if out, err := exec.Command("systemctl", "restart", thing).CombinedOutput(); err != nil {
-		ErrorLog("Failed to call systemctl restart on %s - %v %s", thing, err, string(out))
-		return err
+	if IsSystemRunning() {
+		if out, err := exec.Command("systemctl", "restart", thing).CombinedOutput(); err != nil {
+			ErrorLog("Failed to call systemctl restart on %s - %v %s", thing, err, string(out))
+			return err
+		}
 	}
 	return nil
 }
 
 // SystemctlStart call systemctl start on thing.
 func SystemctlStart(thing string) error {
-	if out, err := exec.Command("systemctl", "start", thing).CombinedOutput(); err != nil {
-		ErrorLog("Failed to call systemctl start on %s - %v %s", thing, err, string(out))
-		return err
+	if IsSystemRunning() {
+		if out, err := exec.Command("systemctl", "start", thing).CombinedOutput(); err != nil {
+			ErrorLog("Failed to call systemctl start on %s - %v %s", thing, err, string(out))
+			return err
+		}
 	}
 	return nil
 }
 
 // SystemctlStop call systemctl stop on thing.
 func SystemctlStop(thing string) error {
-	if out, err := exec.Command("systemctl", "stop", thing).CombinedOutput(); err != nil {
-		ErrorLog("Failed to call systemctl stop on %s - %v %s", thing, err, string(out))
-		return err
+	if IsSystemRunning() {
+		if out, err := exec.Command("systemctl", "stop", thing).CombinedOutput(); err != nil {
+			ErrorLog("Failed to call systemctl stop on %s - %v %s", thing, err, string(out))
+			return err
+		}
 	}
 	return nil
 }
@@ -82,6 +88,23 @@ func SystemctlIsRunning(thing string) bool {
 		return true
 	}
 	return false
+}
+
+// IsSystemRunning returns true, if 'is-system-running' reports 'running'
+// or 'starting'. In all other cases it returns false, which means: do not
+// call 'start' or 'restart' to prevent 'Transaction is destructive' messages
+func IsSystemRunning() bool {
+	match := false
+	out, err := exec.Command("/usr/bin/systemctl", "is-system-running").CombinedOutput()
+	DebugLog("IsSystemRunning - /usr/bin/systemctl is-system-running : '%+v %s'", err, string(out))
+	for _, line := range strings.Split(string(out), "\n") {
+		if strings.TrimSpace(line) == "starting" || strings.TrimSpace(line) == "running" {
+			DebugLog("IsSystemRunning - system is starting/running, match true")
+			match = true
+			break
+		}
+	}
+	return match
 }
 
 // WriteTunedAdmProfile write new profile to tuned, used instead of sometimes

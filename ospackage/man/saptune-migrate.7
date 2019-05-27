@@ -15,7 +15,7 @@
 .\" */
 .\"
 
-.TH "saptune-migrate" "7" "March 2019" "" "migration from saptune version 1 to saptune version 2"
+.TH "saptune-migrate" "7" "May 2019" "" "migration from saptune version 1 to saptune version 2"
 .SH NAME
 saptune\-migration \- migration of saptune version 1 to saptune version 2
 
@@ -27,27 +27,26 @@ As there are too many logical and structural changes between the saptune version
 see below the needed steps. And refer to the blog post <add here the link> for more information.
 
 .SH ACTIONS 
-The following steps need to perform during a migration from a running and configured saptune version 1 to saptune version 2
+The following steps need to be performed during a migration from a running and configured saptune version 1 to saptune version 2. A more detailed guide can be found below in the \fBEXAMPLE\fP section.
 
+.IP \[bu] 2
+check the old, in the future no longer used configuration files \fB/etc/sysconfig/saptune-note-*\fP for customer specific changes
 .IP \[bu]
-check the old, in the future no longer used configuration files \fI/etc/sysconfig/saptune-note-*\fR for customer specific changes
-
+check the new Note definition files in \fB/usr/share/saptune/\fP to see if there is a need to transfer the old customization to the new Note definitions and how to do this transition
 .IP \[bu]
-check the new note configuration files in \fB/usr/share/saptune/\fR to see if there is a need to transfer the old customization to the new note definitions and how to do this transition
+Create override files for notes in \fB/etc/saptune/override\fP if needed
 .IP \[bu]
-Create override files for notes in \fB/etc/saptune/override\fR if needed
+check for \fB/etc/tuned/saptune/tuned.conf\fP.
 .IP \[bu]
-check for \fI/etc/tuned/saptune/tuned.conf\fR.
+check \fB/etc/saptune/extras\fP, if the settings needed any longer
 .IP \[bu]
-check \fB/etc/saptune/extras\fR, if the settings needed any longer
+use the command '\fBsaptune note revert <note id>\fP' or '\fBsaptune solution revert <solution name>\fP' to revert all setting properly and to clean the configuration
 .IP \[bu]
-use the command '\fIsaptune note revert <note id>\fR' or '\fIsaptune solution revert <solution name>\fR' to revert all setting properly and to clean the configuration
+check and remove all files listed in the section \fBFILES to remove after the migration\fP
 .IP \[bu]
-check and remove all files listed in the section "FILES to remove after the migration"
+change saptune version in file \fB/etc/sysconfig/saptune\fP from '1' to '\fB2\fP'
 .IP \[bu]
-change saptune version in file \fI/etc/sysconfig/saptune\fR from '1' to '\fB2\fR'
-.IP \[bu]
-use the command '\fIsaptune solution apply <solution name>\fR' and/or '\fIsaptune note apply <note id>\fR' to get back you tuning for the SAP workload
+use the command '\fBsaptune solution apply <solution name>\fP' and/or '\fBsaptune note apply <note id>\fP' to get back you tuning for the SAP workload
 .IP \[bu]
 check again the configuration for left overs
 
@@ -64,6 +63,316 @@ and the directory
 .BI /etc/tuned/saptune
 .PP
 .BI /etc/sysconfig/saptune-note-*
+
+.SH SOLUTIONS
+
+The following solutions are shipped:
+.TS
+tab(:) box;
+c | l | l
+l | l | l.
+SOLUTION:Version 1:Version 2
+_
+BOBJ:T{
+1275776* 1557506** 1984787 SAP_BOBJ
+T}:T{
+941735 1771258 1984787 SAP_BOBJ
+T}
+HANA:T{
+1275776* 1557506** 1984787 2205917
+T}:T{
+941735 1771258 1980196 1984787 2205917 2382421 2534844
+T}
+MAXDB:T{
+1275776* 1557506** 1984787
+T}:T{
+941735 1771258 1984787
+T}
+NETWEAVER:T{
+1275776* 1557506** 1984787
+T}:T{
+941735 1771258 1984787
+T}
+NETWEAVER+HANA:T{
+-
+T}:T{
+941735 1771258 1980196 1984787 2205917 2382421 2534844
+T}
+S4HANA-APP+DB:T{
+-
+T}:T{
+941735 1771258 1980196 1984787 2205917 2382421 2534844
+T}
+S4HANA-APPSERVER:T{
+1275776* 1557506** 1984787
+T}:T{
+941735 1771258 1984787
+T}
+S4HANA-DBSERVER:T{
+1275776* 1557506** 1984787 2205917
+T}:T{
+941735 1771258 1980196 1984787 2205917 2382421 2534844
+T}
+SAP-ASE:T{
+1275776* 1557506** 1984787 2205917 SAP_ASE
+T}:T{
+941735 1410736 1680803 1771258 1984787
+T}
+.TE
+
+*   SAP Note \fB1275776\fP has been rewritten and removed in version 2.
+.HP 4
+** SAP Note \fB1557506\fP has been removed from the solutions in version 1 because it always has to be configured!
+.PP
+Note: In version 1 the solutions BOBJ and SAP-ASE have not been available on ppc64 little-endian.
+
+For details about the SAP Notes see section \fBSAP NOTES\fP.
+
+.SH SAP NOTES
+
+The following notes are shipped:
+.TS
+tab(:) box;
+c | l | l | c
+l | l | l | l
+l | l | l | l
+l | l | l | l
+l | l s s
+l | l l l
+l | l l l
+l | l l l
+l | l l l
+l | l l l
+l | l l l
+l | l l l
+l | l l l
+l | l l l
+l | l | l | l.
+note:v1:v2:comment
+_
+941735:no:yes:T{
+newly introduced in version 2
+T}
+_
+1275776:yes*:no:T{
+The SAP Note has been rewritten and does not contain any settings recommendation anymore.
+.br
+The note is still part of version 1 with the former recommendations.
+.br
+It has been removed in version 2.
+T}
+:
+:T{
+The parameters are now covered by the following notes
+T}
+
+:kernel.sem:->:SAP_BOBJ (new default)
+:kernel.shmall:->:941735 (now fixed value)
+:kernel.shmmax:->:T{
+941735 and SAP_BOBJ (new default)
+T}
+:T{
+nofile for @sapsys, @sdba, @dba
+T}:->:1771258 (new default)
+:vm.max_map_count:->:1980196 (same default)
+:VSZ_TMPFS_PERCENT:->:941735 (same default)
+:SHM_COUNT_REF_VALUE:->:T{
+2534844(as kernel.shmmni with new default)
+T}
+
+_
+1410736:no:yes:T{
+newly introduced in version 2
+T}
+_
+1557506:yes:yes:T{
+In version 2 only the HANA formula is used.
+.br
+Pagecache limit is \fBnot\fP available in SLES 15!
+T}
+_
+1680803:no:yes:T{
+newly introduced in version 2
+T}
+_
+1771258:no:yes:T{
+newly introduced in version 2
+T}
+_
+1805750:no:yes:T{
+newly introduced in version 2
+T}
+_
+1980196:no:yes:T{
+newly introduced in version 2
+T}
+_
+1984787:yes**:yes:T{
+In version 1 UserDefaultTasksMax was set by a drop-in file on installation.
+.br
+In version 2 DefaultUserTaskMax is set/removed at note apply. A reboot is not necessary anymore.
+T}
+_
+2161991:yes**:yes:T{
+same defaults between version 1 and 2
+T}
+_
+2205917:yes*:yes:T{
+In version 1 the configuration was partially hard coded and partially done by tuned (always enabled regardless if note was active or not!)
+.br
+In version 2 this done by saptune itself.
+T}
+_
+2382421:no:yes:T{
+newly introduced in version 2
+T}
+_
+2534844:no:yes:T{
+newly introduced in version 2
+T}
+_
+SAP_ASE:yes:no:T{
+Has been replaced by \fB1680803\fP in version 2. The same defaults, but 1680803 also covers
+.br
+net.ipv4.tcp_keepalive_intvl and
+.br
+net.ipv4.tcp_keepalive_time.
+T}
+_
+SAP_BOBJ:yes:yes:T{
+no changes between version 1 and 2
+T}
+_
+SUSE-GUIDE-01:yes:no:T{
+deprecated since not an official SAP recommendation
+T}
+_
+SUSE-GUIDE-02:yes:no:T{
+deprecated since not an official SAP recommendation
+T}
+.TE
+
+*  Configuration was partially hard coded in version 1.
+.br
+** Configuration was fully hard coded in version 1.
+
+In version 1 part of configuration was hard coded or configurable via /etc/sysconfig/saptune-note-*, /etc/saptune/extra/{SAP_BOBJ-SAP_Business_OBJects.conf,SAP_ASE-SAP_Adaptive_Server_Enterprise.conf} and /etc/tuned/saptune/tuned.conf.
+
+Due to tuned CPU tuning (see SAP Note 2205917) was always active.
+
+In version 2 everything can be configured via an override file in /etc/saptune/override/.
+
+For details and defaults read the configuration in the corresponding Note definition files in /usr/share/saptune/notes/.
+
+Package requirements are always realized by dependency requirements to the saptune package.
+
+.SH EXAMPLE
+
+Scenario 1 - saptune version 1 is running with the default setting
+
+.SS Prerequisites:
+
+.IP \[bu] 2
+The files /etc/sysconfig/saptune-note-* have \fBNOT\fP been altered
+.IP \[bu]
+The files /etc/saptune/extra/SAP_BOBJ-SAP_Business_OBJects.conf and /etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf have \fBNOT\fP been altered
+.IP \[bu]
+There are \fBNO\fP additional files in /etc/saptune/extra/ except SAP_BOBJ-SAP_Business_OBJects.conf and SAP_ASE-SAP_Adaptive_Server_Enterprise.conf.
+.IP \[bu]
+There is \fBNO\fP manually created /etc/tuned/saptune/tuned.conf (the upgrade might have created this file. Check the comment in the file.)
+.IP \[bu]
+The variable \fISAPTUNE_VERSION\fP in /etc/sysconfig/saptune is set to \fB1\fP.
+.IP \[bu]
+The tuned profile 'saptune' is selected.
+
+.SS Planning:
+Before you start the migration, get yourself familiar with the version 2.
+.br
+Please read the man pages of saptune_v2(8) and saptune-note(5).
+
+Solutions of version 2 can encompass more SAP Notes than in version 1.
+.br
+Please check section \fBSOLUTIONS\fP for details. You might want to deselect some SAP Notes, change or disable parameters.
+
+SAP Notes are more comprehensive in version 2.
+.br
+Please check section \fBSAP NOTES\fP for details. You might want to change or disable parameters.
+
+Some SAP Notes have been removed in version 2.
+.br
+Please check section \fBSAP NOTES\fP for details. You might want to add your own configuration file.
+
+In version 1 multiple solutions can be applied. In saptune version 2 only one solution can be applied at the same time.
+
+If you had multiple solutions in the past, choose the most suitable one and add additional notes.
+
+Version 1 has changed system parameters only when the current value was lower.
+
+Version 2 will set the parameter always to the configured value, no matter the current value.
+
+.SS Migration steps:
+.nr step 1 1
+.IP \n[step]. 4
+Note the configured solutions and notes and plan the future solution and notes.
+    saptune solution list
+    saptune note list
+.IP \n+[step].
+Revert all solutions and additional applied notes:
+    saptune solution revert <solution>
+    saptune note revert <note>
+.IP \n+[step].
+Open /etc/sysconfig/saptune with an editor
+
+The variables TUNE_FOR_SOLUTIONS,
+              TUNE_FOR_NOTES and
+              NOTE_APPLY_ORDER
+ have to be empty.
+ (If this is not the case, check step 2 again.)
+
+Change SAPTUNE_VERSION from "1" to "2"
+.IP \n+[step].
+Delete /etc/tuned/saptune/ (Verify, that it was created by the saptune update!).
+    rm -rf /etc/tuned/saptune/
+.IP \n+[step].
+Delete the configuration files SAP_BOBJ-SAP_Business_OBJects.conf and SAP_ASE-SAP_Adaptive_Server_Enterprise.conf .
+.nf
+    rm /etc/saptune/extra/SAP_BOBJ-SAP_Business_OBJects.conf
+    rm /etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf
+.fi
+
+(( Delete obsolete save state files.  rm /var/lib/saptune/saved_state/* ))
+.IP \n+[step].
+Restart tuned.
+    systemctl restart tuned
+.IP \n+[step].
+Check the log file /var/log/tuned/tuned.log for any errors.
+.IP \n+[step].
+Create override files if necessary.
+Please leave only parameters in the override file, you wish to change or to disable.
+    saptune note customise <note>
+.IP \n+[step].
+Create extra files for if necessary.
+.IP \n+[step].
+Apply the solutions and notes you need.
+    saptune solution apply <solution>
+    saptune note apply <note>
+.IP \n+[step].
+Clean up the system, to avoid confusion.
+
+Delete old configuration files.
+    rm /etc/sysconfig/saptune-note-*
+
+Delete /etc/systemd/logind.conf.d/sap.conf.
+Be aware that the file also is used by sapconf and is only created on package installation!
+    rm /etc/systemd/logind.conf.d/sap.conf
+
+Remove 'nofile' entries for @sapsys, @sdba and @dba in /etc/security/limits.conf.
+This is handled by individual files in /etc/security/limits.d/ now.
+
+Remove any entries in /etc/sysctl.conf or files in /etc/sysctl.d/*.conf which are handled by saptune.
+Consider moving SAP-related settings from there to a saptune extra file.
+.IP \n+[step].
+Please verify, that any configuration management system or scripts which configure saptune are adjusted accordingly.
 
 .SH SEE ALSO
 .NF

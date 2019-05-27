@@ -8,8 +8,10 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"reflect"
 	"runtime"
 	"sort"
 	"strconv"
@@ -32,7 +34,8 @@ const (
 	setGreenText          = "\033[32m"
 	setRedText            = "\033[31m"
 	resetTextColor        = "\033[0m"
-	footnote1             = "[1] setting is not supported by the system"
+	footnote1X86          = "[1] setting is not supported by the system"
+	footnote1IBM          = "[1] setting is not relevant for the system"
 	footnote2             = "[2] setting is not available on the system"
 	footnote3             = "[3] value is only checked, but NOT set"
 	footnote4             = "[4] cpu idle state settings differ"
@@ -45,7 +48,7 @@ Daemon control:
   saptune daemon [ start | status | stop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify ]
-  saptune note [ apply | simulate | verify | customise | create | revert ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | revert | show ] NoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify ]
   saptune solution [ apply | simulate | verify | revert ] SolutionName
@@ -60,8 +63,20 @@ Print this message:
 
 // Print the message to stderr and exit 1.
 func errorExit(template string, stuff ...interface{}) {
+	exState := 1
+	fieldType := ""
+	field := len(stuff) - 1
+	if field >= 0 {
+		fieldType = reflect.TypeOf(stuff[field]).String()
+	}
+	if fieldType == "*exec.ExitError" {
+		// get return code of failed command, if available
+		if exitError, ok := stuff[field].(*exec.ExitError); ok {
+			exState = exitError.Sys().(syscall.WaitStatus).ExitStatus()
+		}
+	}
 	system.ErrorLog(template+"\n", stuff...)
-	os.Exit(1)
+	os.Exit(exState)
 }
 
 // Return the i-th command line parameter, or empty string if it is not specified.
@@ -74,16 +89,19 @@ func cliArg(i int) string {
 
 var tuneApp *app.App                 // application configuration and tuning states
 var tuningOptions note.TuningOptions // Collection of tuning options from SAP notes and 3rd party vendors.
+var footnote1 = footnote1X86         // set 'unsupported' footnote regarding the architecture
 var solutionSelector = runtime.GOARCH
 
 func main() {
-	// activate logging
-	system.LogInit()
+	if runtime.GOARCH == "ppc64le" {
+		footnote1 = footnote1IBM
+	}
 
 	// get saptune version
 	sconf, err := txtparser.ParseSysconfigFile("/etc/sysconfig/saptune", true)
 	if err != nil {
-		errorExit("Unable to read file '/etc/sysconfig/saptune': %v", err)
+		fmt.Fprintf(os.Stderr, "Error: Unable to read file '/etc/sysconfig/saptune': %v\n", err)
+		os.Exit(1)
 	}
 	saptuneVersion := sconf.GetString("SAPTUNE_VERSION", "")
 
@@ -94,6 +112,15 @@ func main() {
 		fmt.Printf("current active saptune version is '%s'\n", saptuneVersion)
 		os.Exit(0)
 	}
+
+	// All other actions require super user privilege
+	if os.Geteuid() != 0 {
+		fmt.Fprintf(os.Stderr, "Please run saptune with root privilege.\n")
+		os.Exit(1)
+	}
+
+	// activate logging
+	system.LogInit()
 
 	switch saptuneVersion {
 	case "1":
@@ -110,11 +137,6 @@ func main() {
 		break
 	default:
 		errorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", saptuneVersion)
-	}
-	// All other actions require super user privilege
-	if os.Geteuid() != 0 {
-		errorExit("Please run saptune with root privilege.")
-		return
 	}
 
 	if system.IsPagecacheAvailable() {
@@ -667,6 +689,34 @@ func NoteAction(actionName, noteID string) {
 		if err := syscall.Exec(editor, []string{editor, extraFileName}, os.Environ()); err != nil {
 			errorExit("Failed to start launch editor %s: %v", editor, err)
 		}
+	case "show":
+		if noteID == "" {
+			PrintHelpAndExit(1)
+		}
+		if _, err := tuneApp.GetNoteByID(noteID); err != nil {
+			errorExit("%v", err)
+		}
+		fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
+		if _, err := os.Stat(fileName); os.IsNotExist(err) {
+			_, files := system.ListDir(ExtraTuningSheets, "")
+			for _, f := range files {
+				if strings.HasPrefix(f, noteID) {
+					fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, f)
+				}
+			}
+			if _, err := os.Stat(fileName); os.IsNotExist(err) {
+				errorExit("Note %s not found in %s or %s.", noteID, NoteTuningSheets, ExtraTuningSheets)
+			} else if err != nil {
+				errorExit("Failed to read file '%s' - %v", fileName, err)
+			}
+		} else if err != nil {
+			errorExit("Failed to read file '%s' - %v", fileName, err)
+		}
+		cont, err := ioutil.ReadFile(fileName)
+		if err != nil {
+			errorExit("Failed to read file '%s' - %v", fileName, err)
+		}
+		fmt.Printf("\nContent of Note %s:\n%s\n", noteID, string(cont))
 	case "revert":
 		if noteID == "" {
 			PrintHelpAndExit(1)
@@ -711,7 +761,7 @@ func SolutionAction(actionName, solName string) {
 				"\n    saptune daemon start")
 		}
 	case "list":
-		fmt.Println("\nAll solutions (* denotes enabled solution, O denotes override file exists for solution):")
+		fmt.Println("\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, D denotes deprecated solutions):")
 		for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 			format := "\t%-18s -"
 			if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
@@ -725,6 +775,9 @@ func SolutionAction(actionName, solName string) {
 			solNotes := ""
 			for _, noteString := range solution.AllSolutions[solutionSelector][solName] {
 				solNotes = solNotes + " " + noteString
+			}
+			if _, ok := solution.DeprecSolutions[solutionSelector][solName]; ok {
+				format = " D" + format
 			}
 			format = format + solNotes + resetTextColor + "\n"
 			fmt.Printf(format, solName)
