@@ -75,6 +75,9 @@ func ParseSecLimits(input string) *SecLimits {
 			// Line is a comment
 			leadingComments = append(leadingComments, line)
 		} else if fields := consecutiveSpaces.Split(line, -1); len(fields) == 4 || len(fields) == 3 {
+			// It's possible that /etc/security/limits.conf contains lines with an empty
+			// 'value' entry. In this case only 3 entries (domain, type and item) are available,
+			// which is sufficient to define an unique limits entry.
 			val := ""
 			if len(fields) == 4 {
 				val = fields[3]
@@ -92,6 +95,8 @@ func ParseSecLimits(input string) *SecLimits {
 			leadingComments = make([]string, 0, 0)
 		} else {
 			// Consider other lines (such as blank lines) as comments
+			// Even if it's possible to define lines which only contains domain and type as entries,
+			// these lines are skipped (treated as comments) by saptune as they do not define an unique limits entry.
 			// seems that strings.Split(input, "\n") adds an additional new line to the split result, which should not end up in the resulting SecLimits structure
 			if lineNo < (noOfLines - 1) {
 				leadingComments = append(leadingComments, line)
