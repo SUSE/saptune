@@ -67,28 +67,48 @@ func ParseSecLimitsFile() (*SecLimits, error) {
 func ParseSecLimits(input string) *SecLimits {
 	limits := &SecLimits{Entries: make([]*SecLimitsEntry, 0, 0)}
 	leadingComments := make([]string, 0, 0)
-	for _, line := range strings.Split(input, "\n") {
+	splitInput := strings.Split(input, "\n")
+	noOfLines := len(splitInput)
+	for lineNo, line := range splitInput {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "#") {
 			// Line is a comment
 			leadingComments = append(leadingComments, line)
-		} else if fields := consecutiveSpaces.Split(line, -1); len(fields) == 4 {
+		} else if fields := consecutiveSpaces.Split(line, -1); len(fields) == 4 || len(fields) == 3 {
+			// It's possible that /etc/security/limits.conf contains lines with an empty
+			// 'value' entry. In this case only 3 entries (domain, type and item) are available,
+			// which is sufficient to define an unique limits entry.
+			val := ""
+			if len(fields) == 4 {
+				val = fields[3]
+			}
 			// Line is an entry
 			entry := &SecLimitsEntry{
 				LeadingComments: leadingComments,
 				Domain:          fields[0],
 				Type:            fields[1],
 				Item:            fields[2],
-				Value:           fields[3],
+				Value:           val,
 			}
 			limits.Entries = append(limits.Entries, entry)
 			// Get ready for the next entry by clearing comments
 			leadingComments = make([]string, 0, 0)
 		} else {
 			// Consider other lines (such as blank lines) as comments
-			leadingComments = append(leadingComments, line)
+			// Even if it's possible to define lines which only contains domain and type as entries,
+			// these lines are skipped (treated as comments) by saptune as they do not define an unique limits entry.
+			// seems that strings.Split(input, "\n") adds an additional new line to the split result, which should not end up in the resulting SecLimits structure
+			if lineNo < (noOfLines - 1) {
+				leadingComments = append(leadingComments, line)
+			}
 		}
 	}
+	// add the comment section. Needed, if the file only contains
+	// comments, but no entries to not loose this comments
+	entry := &SecLimitsEntry{
+		LeadingComments: leadingComments,
+	}
+	limits.Entries = append(limits.Entries, entry)
 	return limits
 }
 
@@ -113,6 +133,9 @@ func (limits *SecLimits) GetOr0(domain, typeName, item string) SecurityLimitInt 
 
 // Set value for an entry. If the entry does not yet exist, it is created.
 func (limits *SecLimits) Set(domain, typeName, item, value string) {
+	if value == "0" {
+		value = ""
+	}
 	for _, entry := range limits.Entries {
 		if entry.Domain == domain && entry.Type == typeName && entry.Item == item {
 			entry.Value = value
@@ -136,7 +159,10 @@ func (limits *SecLimits) ToText() string {
 			ret.WriteString(strings.Join(entry.LeadingComments, "\n"))
 			ret.WriteRune('\n')
 		}
-		ret.WriteString(fmt.Sprintf("%s %s %s %s\n", entry.Domain, entry.Type, entry.Item, entry.Value))
+		// prevent useless empty lines
+		if entry.Domain != "" && entry.Type != "" && entry.Item != "" && entry.Value != "" {
+			ret.WriteString(fmt.Sprintf("%s %s %s %s\n", entry.Domain, entry.Type, entry.Item, entry.Value))
+		}
 	}
 	return ret.String()
 }
