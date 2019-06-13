@@ -75,7 +75,7 @@ func errorExit(template string, stuff ...interface{}) {
 			exState = exitError.Sys().(syscall.WaitStatus).ExitStatus()
 		}
 	}
-	system.ErrorLog(template+"\n", stuff...)
+	_ = system.ErrorLog(template+"\n", stuff...)
 	os.Exit(exState)
 }
 
@@ -210,7 +210,7 @@ func DaemonAction(actionName string) {
 		}
 		// Check tuned profile
 		if system.GetTunedAdmProfile() != TunedProfileName {
-			system.ErrorLog("tuned.service profile is incorrect. Please check tuned logs for more information")
+			_ = system.ErrorLog("tuned.service profile is incorrect. Please check tuned logs for more information")
 			os.Exit(exitTunedWrongProfile)
 		}
 		// tuned then calls `saptune daemon apply`

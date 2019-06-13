@@ -32,8 +32,7 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 	var iCurrentValue int64
 	iExpectedValue, err := strconv.ParseInt(expectedValue, 10, 64)
 	if err != nil {
-		system.ErrorLog("Expected value \"%s\" should be but is not an integer", expectedValue)
-		return "", err
+		return "", system.ErrorLog("%+v - Expected value \"%s\" should be but is not an integer", err, expectedValue)
 	}
 	if currentValue == "" {
 		switch operator {
@@ -49,8 +48,7 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 	} else {
 		iCurrentValue, err = strconv.ParseInt(currentValue, 10, 64)
 		if err != nil {
-			system.ErrorLog("Current value \"%s\" should be but is not an integer", currentValue)
-			return "", err
+			return "", system.ErrorLog("%+v - Current value \"%s\" should be but is not an integer", err, currentValue)
 		}
 		switch operator {
 		case txtparser.OperatorLessThan:
@@ -128,6 +126,7 @@ func (vend INISettings) Initialise() (Note, error) {
 				// param.Value to get a correct behaviour
 				for owkey, owparam := range ow.KeyValue[param.Section] {
 					if (isLimitSoft.MatchString(param.Key) && isLimitSoft.MatchString(owkey)) || (isLimitHard.MatchString(param.Key) && isLimitHard.MatchString(owkey)) {
+						chkKey = owkey
 						param.Key = owkey
 						param.Value = owparam.Value
 					}

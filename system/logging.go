@@ -54,11 +54,12 @@ func WarningLog(txt string, stuff ...interface{}) {
 }
 
 // ErrorLog sents text to the ErrorLogWriter
-func ErrorLog(txt string, stuff ...interface{}) {
+func ErrorLog(txt string, stuff ...interface{}) error {
 	if errorLogger != nil {
 		errorLogger.Printf(calledFrom()+txt+"\n", stuff...)
 		fmt.Fprintf(os.Stderr, "ERROR: "+txt+"\n", stuff...)
 	}
+	return fmt.Errorf(txt+"\n", stuff...)
 }
 
 // LogInit initialise the different log writer saptune will use

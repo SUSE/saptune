@@ -128,12 +128,12 @@ type FieldComparison struct {
 func CompareJSValue(v1, v2 interface{}, op string) (v1JS, v2JS string, match bool) {
 	v1JSBytes, err := json.Marshal(v1)
 	if err != nil {
-		system.ErrorLog("CompareJSValue: failed to serialise \"%+v\" - %v", v1, err)
+		_ = system.ErrorLog("CompareJSValue: failed to serialise \"%+v\" - %v", v1, err)
 		panic(err)
 	}
 	v2JSBytes, err := json.Marshal(v2)
 	if err != nil {
-		system.ErrorLog("CompareJSValue: failed to serialise \"%+v\" - %v", v2, err)
+		_ = system.ErrorLog("CompareJSValue: failed to serialise \"%+v\" - %v", v2, err)
 		panic(err)
 	}
 	v1JS, err = strconv.Unquote(string(v1JSBytes))

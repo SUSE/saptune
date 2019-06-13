@@ -690,7 +690,7 @@ func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 	case "OVERRIDE_PAGECACHE_LIMIT_MB":
 		opt, _ := cur.Optimise()
 		if opt == nil {
-			system.ErrorLog("page cache optimise had problems reading the Note definition file '%s'. Please check", cur.PagingConfig)
+			_ = system.ErrorLog("page cache optimise had problems reading the Note definition file '%s'. Please check", cur.PagingConfig)
 			return ""
 		}
 		optval := opt.(LinuxPagingImprovements).VMPagecacheLimitMB

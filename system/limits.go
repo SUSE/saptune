@@ -63,8 +63,7 @@ func ParseSecLimitsFile(fileName string) (*SecLimits, error) {
 	if err != nil {
 		content, err = ioutil.ReadFile(limitsConfFile)
 		if err != nil {
-			ErrorLog("failed to open limits config file: %v", err)
-			return nil, err
+			return nil, ErrorLog("failed to open limits config file: %v", err)
 		}
 	}
 	return ParseSecLimits(string(content)), nil
