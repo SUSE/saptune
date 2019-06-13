@@ -163,71 +163,78 @@ func CompareJSValue(v1, v2 interface{}, op string) (v1JS, v2JS string, match boo
 // CompareNoteFields compares the content of two notes and return differences
 // in their fields in a human-readable text.
 func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]FieldComparison, valApplyList []string) {
-	op := ""
 	comparisons = make(map[string]FieldComparison)
 	allMatch = true
 	// Compare all fields
 	refActualNote := reflect.ValueOf(actualNote)
 	refExpectedNote := reflect.ValueOf(expectedNote)
 	for i := 0; i < refActualNote.NumField(); i++ {
-		var fieldComparison FieldComparison
 		// Retrieve actualField value from actual and expected note
 		fieldName := reflect.TypeOf(actualNote).Field(i).Name
-		actualField := refActualNote.Field(i)
 		// Compare map value or actualField value
-		if actualField.Type().Kind() == reflect.Map {
+		if refActualNote.Field(i).Type().Kind() == reflect.Map {
 			// Compare map values
+			actualMap := refActualNote.Field(i)
 			expectedMap := refExpectedNote.Field(i)
-			for _, key := range actualField.MapKeys() {
-				actualValue := actualField.MapIndex(key).Interface()
+			for _, key := range actualMap.MapKeys() {
+				actualValue := actualMap.MapIndex(key).Interface()
 				expectedValue := expectedMap.MapIndex(key).Interface()
-
-				if key.String() == "force_latency" && actualValue.(string) != "all:none" {
-					op = "<="
-				} else {
-					op = ""
+				ckey := fmt.Sprintf("%s[%s]", fieldName, key.String())
+				comparisons[ckey] = cmpMapValue(fieldName, key, actualValue, expectedValue)
+				if !comparisons[ckey].MatchExpectation && comparisons[ckey].ReflectFieldName == "SysctlParams" {
+					valApplyList = append(valApplyList, comparisons[ckey].ReflectMapKey)
+				} else if key.String() == "force_latency" && comparisons[ckey].ReflectFieldName == "SysctlParams" {
+					valApplyList = append(valApplyList, comparisons[ckey].ReflectMapKey)
 				}
-				actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue, op)
-				if strings.Split(key.String(), ":")[0] == "rpm" {
-					match = system.CmpRpmVers(actualValue.(string), expectedValue.(string))
-				}
-				fieldComparison = FieldComparison{
-					ReflectFieldName: fieldName,
-					ReflectMapKey:    key.String(),
-					ActualValue:      actualValue,
-					ExpectedValue:    expectedValue,
-					ActualValueJS:    actualValueJS,
-					ExpectedValueJS:  expectedValueJS,
-					MatchExpectation: match,
-				}
-				comparisons[fmt.Sprintf("%s[%s]", fieldName, key.String())] = fieldComparison
-				if !fieldComparison.MatchExpectation && fieldComparison.ReflectFieldName == "SysctlParams" {
-					valApplyList = append(valApplyList, fieldComparison.ReflectMapKey)
-				} else if key.String() == "force_latency" && fieldComparison.ReflectFieldName == "SysctlParams" {
-					valApplyList = append(valApplyList, fieldComparison.ReflectMapKey)
-				}
-				if !fieldComparison.MatchExpectation {
+				if !comparisons[ckey].MatchExpectation {
 					allMatch = false
 				}
 			}
 		} else {
 			// Compare ordinary field value
-			actualValue := refActualNote.Field(i).Interface()
-			expectedValue := refExpectedNote.Field(i).Interface()
-			actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue, op)
-			fieldComparison = FieldComparison{
-				ReflectFieldName: fieldName,
-				ActualValue:      actualValue,
-				ExpectedValue:    expectedValue,
-				ActualValueJS:    actualValueJS,
-				ExpectedValueJS:  expectedValueJS,
-				MatchExpectation: match,
-			}
-			comparisons[fieldName] = fieldComparison
-			if !fieldComparison.MatchExpectation {
+			comparisons[fieldName] = cmpFieldValue(i, fieldName, refActualNote, refExpectedNote)
+			if !comparisons[fieldName].MatchExpectation {
 				allMatch = false
 			}
 		}
 	}
 	return
+}
+
+// cmpMapValue compares map values
+func cmpMapValue(fieldName string, key reflect.Value, actVal, expVal interface{}) FieldComparison {
+	op := ""
+	if key.String() == "force_latency" && actVal.(string) != "all:none" {
+		op = "<="
+	}
+	actualValueJS, expectedValueJS, match := CompareJSValue(actVal, expVal, op)
+	if strings.Split(key.String(), ":")[0] == "rpm" {
+		match = system.CmpRpmVers(actVal.(string), expVal.(string))
+	}
+	fieldComparison := FieldComparison{
+		ReflectFieldName: fieldName,
+		ReflectMapKey:    key.String(),
+		ActualValue:      actVal,
+		ExpectedValue:    expVal,
+		ActualValueJS:    actualValueJS,
+		ExpectedValueJS:  expectedValueJS,
+		MatchExpectation: match,
+	}
+	return fieldComparison
+}
+
+// cmpFieldValue compares ordinary field value
+func cmpFieldValue(fNo int, fieldName string, actNote, expNote reflect.Value) FieldComparison {
+	actualValue := actNote.Field(fNo).Interface()
+	expectedValue := expNote.Field(fNo).Interface()
+	actualValueJS, expectedValueJS, match := CompareJSValue(actualValue, expectedValue, "")
+	fieldComparison := FieldComparison{
+		ReflectFieldName: fieldName,
+		ActualValue:      actualValue,
+		ExpectedValue:    expectedValue,
+		ActualValueJS:    actualValueJS,
+		ExpectedValueJS:  expectedValueJS,
+		MatchExpectation: match,
+	}
+	return fieldComparison
 }

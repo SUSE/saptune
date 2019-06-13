@@ -334,6 +334,7 @@ func SetForceLatency(value, savedStates, info string, revert bool) error {
 }
 
 // CheckCPUState checks, if all cpus have the same state settings
+// returns true, if the cpu states differ
 func CheckCPUState(csMap map[string]string) bool {
 	ret := false
 	oldcpuState := ""

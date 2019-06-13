@@ -3,12 +3,10 @@ package system
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 )
 
@@ -63,13 +61,14 @@ func ErrorLog(txt string, stuff ...interface{}) error {
 }
 
 // LogInit initialise the different log writer saptune will use
-func LogInit() {
+func LogInit(logFile, debug string) {
 	var saptuneLog io.Writer
 	//define log format
 	logTimeFormat := time.Now().Format("2006-01-02 15:04:05.000 ")
 
 	//create log file with desired read/write permissions
-	saptuneLog, err := os.OpenFile("/var/log/tuned/tuned.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+	//saptuneLog, err := os.OpenFile("/var/log/tuned/tuned.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+	saptuneLog, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -93,26 +92,5 @@ func LogInit() {
 	warningLogger = log.New(saptuneLog, logTimeFormat+"WARNING  saptune.", 0)
 	errorLogger = log.New(saptuneLog, logTimeFormat+"ERROR    saptune.", 0)
 
-	debugSwitch = GetDebug()
-}
-
-// GetDebug checks, if DEBUG is set in /etc/sysconfig/saptune
-func GetDebug() string {
-	ret := ""
-	cont, err := ioutil.ReadFile("/etc/sysconfig/saptune")
-	if err == nil {
-		for _, line := range strings.Split(string(cont), "\n") {
-			line = strings.TrimSpace(line)
-			if strings.HasPrefix(line, "#") {
-				continue
-			}
-			if match := strings.IndexRune(line, '='); match != -1 {
-				if strings.TrimSpace(line[0:match]) == "DEBUG" {
-					ret = strings.Trim(strings.TrimSpace(line[match+1:]), `"`)
-					break
-				}
-			}
-		}
-	}
-	return ret
+	debugSwitch = debug
 }
