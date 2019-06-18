@@ -128,6 +128,7 @@ func main() {
 	switch saptuneVersion {
 	case "1":
 		cmd := exec.Command(saptuneV1, os.Args[1:]...)
+		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
@@ -223,7 +224,7 @@ func DaemonAction(actionName string) {
 	}
 }
 
-// DaemonActionStart starts the tuned service 
+// DaemonActionStart starts the tuned service
 func DaemonActionStart() {
 	fmt.Println("Starting daemon (tuned.service), this may take several seconds...")
 	system.SystemctlDisableStop(SapconfService) // do not error exit on failure
@@ -275,6 +276,7 @@ func DaemonActionStatus() {
 	}
 }
 
+// DaemonActionStop stops the tuned service
 func DaemonActionStop() {
 	fmt.Println("Stopping daemon (tuned.service), this may take several seconds...")
 	if err := system.TunedAdmOff(); err != nil {
