@@ -199,6 +199,7 @@ func GetLimitsVal(value string) (string, error) {
 // OptLimitsVal optimises the security limit structure with the settings
 // from the configuration file or with a calculation
 func OptLimitsVal(actval, cfgval string) string {
+	cfgval = strings.Join(strings.Fields(strings.TrimSpace(cfgval)), " ")
 	return cfgval
 }
 
