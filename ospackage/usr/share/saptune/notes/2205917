@@ -1,9 +1,9 @@
 # 2205917 - SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12
 # Description:    HANA DB settings
-# Version 50 from 10.09.2018 in English
+# Version 57 from 23.04.2019 in English
 
 [version]
-# SAP-NOTE=2205917 CATEGORY=HANA VERSION=42 DATE=02.03.2018 NAME="SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12"
+# SAP-NOTE=2205917 CATEGORY=HANA VERSION=57 DATE=23.04.2019 NAME="SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12"
 
 [login]
 # /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf UserTasksMax setting
@@ -116,7 +116,8 @@ glibc 12-SP2 2.22-51.6
 systemd 12-SP2 228-142.1
 sapinit-systemd-compat 12 1.0-2.1
 sapinit-systemd-compat 12-SP1 1.0-2.1
-libopenssl1_0_0 12-SP4 1.0.2n-3.3.1
+libopenssl1_0_0 12-SP4 1.0.2p-3.3.1
+libssh2-1 12-SP4 1.4.3-20.3.1
 
 [grub]
 # /etc/default/grub GRUB_CMDLINE_LINUX_DEFAULT
