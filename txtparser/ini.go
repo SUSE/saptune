@@ -138,7 +138,13 @@ func ParseINI(input string) *INIFile {
 		} else {
 			kov = RegexKeyOperatorValue.FindStringSubmatch(line)
 			if currentSection == "grub" {
-				kov[1] = "grub:" + kov[1]
+				if len(kov) == 0 {
+					// seams to be a single option and not
+					// a key=value pair
+					kov = []string{line, "grub:" + line, "=", line}
+				} else {
+					kov[1] = "grub:" + kov[1]
+				}
 			}
 		}
 		if kov == nil {
