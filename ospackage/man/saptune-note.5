@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "May 2019" "" "saptune note file format description"
+.TH "saptune-note" "5" "June 2019" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB2\fP
 .SH DESCRIPTION
@@ -39,12 +39,30 @@ version, block, cpu, grub, limits, login, mem, pagecache, reminder, rpm, service
 See detailed description below:
 \" section version - Mandatory
 .SH "[version]"
-This section is a mandatory section and is used to display version, description and last change date of the underlying Note during saptune option 'list'.
+This section is a mandatory section and is used to display version, description and last change date of the underlying Note during saptune action 'list'.
 
 Syntax:
 .br
 .nf
 .B # <prefix>NOTE=<noteId> CATEGORY=<category> VERSION=<versionNo> DATE=<release date of used note and related values> NAME="<description of the note>"
+
+Example:
+.br
+# VIP-NOTE=vip1 CATEGORY=VIP VERSION=5 DATE=16.04.2019 NAME="VIP: this is VIP Note 1, which contains Very Important Parameters"
+
+All fields are separated by spaces. But please do not use spaces around the equal operator (=) of the fields. And please do not change the order of the fields.
+
+The <noteId> must be a text string without spaces, which will be used as the unique identifier of this Note definition. It will be displayed during the action 'saptune note list' and used for all other actions, where the NoteID is needed as parameter.
+
+The CATEGORY is for future use. So we do not have defined CATEGORIES at the moment. It must be a text string without spaces.
+
+VERSION is a number that should indicate how many changes are done for this Note definition in the past. Only digits are allowed.
+
+DATE is the date of the last changes.
+
+NAME is the description of the Note, which will be displayed during the action 'saptune note list'
+.br
+Attention: The note description from the field NAME must be placed in double quotes even if there are no spaces used inside the description.
 \" section block
 .SH "[block]"
 The section "[block]" can contain the following options:
@@ -66,7 +84,7 @@ When set, the number of requests for \fBall\fP block devices on the system will 
 .SH "[cpu]"
 The section "[cpu]" manipulates files in \fI/sys/devices/system/cpu/cpu*\fP.
 .br
-This section can contain the following options:
+This section can only contain the following options:
 .TP
 .BI energy_perf_bias= STRING
 Energy Performance Bias EPB (applies to Intel-based systems only)

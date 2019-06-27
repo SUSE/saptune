@@ -116,7 +116,6 @@ glibc 12-SP2 2.22-51.6
 systemd 12-SP2 228-142.1
 sapinit-systemd-compat 12 1.0-2.1
 sapinit-systemd-compat 12-SP1 1.0-2.1
-libopenssl1_0_0 12-SP4 1.0.2p-3.3.1
 libssh2-1 12-SP4 1.4.3-20.3.1
 
 [grub]
