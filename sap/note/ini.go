@@ -32,8 +32,7 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 	var iCurrentValue int64
 	iExpectedValue, err := strconv.ParseInt(expectedValue, 10, 64)
 	if err != nil {
-		system.ErrorLog("Expected value \"%s\" should be but is not an integer", expectedValue)
-		return "", err
+		return "", system.ErrorLog("%+v - Expected value \"%s\" should be but is not an integer", err, expectedValue)
 	}
 	if currentValue == "" {
 		switch operator {
@@ -49,8 +48,7 @@ func CalculateOptimumValue(operator txtparser.Operator, currentValue string, exp
 	} else {
 		iCurrentValue, err = strconv.ParseInt(currentValue, 10, 64)
 		if err != nil {
-			system.ErrorLog("Current value \"%s\" should be but is not an integer", currentValue)
-			return "", err
+			return "", system.ErrorLog("%+v - Current value \"%s\" should be but is not an integer", err, currentValue)
 		}
 		switch operator {
 		case txtparser.OperatorLessThan:
@@ -113,38 +111,7 @@ func (vend INISettings) Initialise() (Note, error) {
 	vend.Inform = make(map[string]string)
 	for _, param := range ini.AllValues {
 		if override && len(ow.KeyValue[param.Section]) != 0 {
-			chkKey := param.Key
-			if param.Section == "service" {
-				cKey := strings.TrimSuffix(chkKey, ".service")
-				if _, ok := ow.KeyValue[param.Section][cKey]; ok {
-					chkKey = cKey
-				}
-			}
-			if vend.ID == "1805750" {
-				// as note 1805750 does not set a limits
-				// domain, but the customer should be able to
-				// set the correct domain using an override
-				// file we need to rewrite param.Key and
-				// param.Value to get a correct behaviour
-				for owkey, owparam := range ow.KeyValue[param.Section] {
-					if (isLimitSoft.MatchString(param.Key) && isLimitSoft.MatchString(owkey)) || (isLimitHard.MatchString(param.Key) && isLimitHard.MatchString(owkey)) {
-						param.Key = owkey
-						param.Value = owparam.Value
-					}
-				}
-			}
-			if ow.KeyValue[param.Section][chkKey].Value == "" && param.Section != INISectionPagecache && (ow.KeyValue[param.Section][chkKey].Key != "" || (param.Section == INISectionLimits && ow.KeyValue[param.Section][chkKey].Key == "")) {
-				// disable parameter setting in override file
-				vend.OverrideParams[param.Key] = "untouched"
-			}
-			if ow.KeyValue[param.Section][chkKey].Value != "" {
-				vend.OverrideParams[param.Key] = ow.KeyValue[param.Section][chkKey].Value
-				if ow.KeyValue[param.Section][chkKey].Operator != param.Operator {
-					// operator from override file will
-					// replace the operator from our note file
-					param.Operator = ow.KeyValue[param.Section][chkKey].Operator
-				}
-			}
+			param.Key, param.Value, param.Operator = vend.handleInitOverride(param.Key, param.Value, param.Section, param.Operator, ow)
 		}
 
 		switch param.Section {
@@ -186,14 +153,8 @@ func (vend INISettings) Initialise() (Note, error) {
 			system.WarningLog("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
-		// do not write parameter values to the saved state file during
-		// a pure 'verify' action
-		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
-			CreateParameterStartValues(param.Key, vend.SysctlParams[param.Key])
-			if param.Key == "force_latency" {
-				CreateParameterStartValues("fl_states", flstates)
-			}
-		}
+		// create parameter saved state file, if NOT in 'verify'
+		vend.createParamSavedStates(param.Key, flstates)
 	}
 	return vend, nil
 }
@@ -213,12 +174,7 @@ func (vend INISettings) Optimise() (Note, error) {
 			// the customer should be able to set the correct
 			// domain using an override file we need to rewrite
 			// param.Key and param.Value to get a correct behaviour
-			for owkey, owval := range vend.OverrideParams {
-				if (isLimitSoft.MatchString(param.Key) && isLimitSoft.MatchString(owkey)) || (isLimitHard.MatchString(param.Key) && isLimitHard.MatchString(owkey)) {
-					param.Key = owkey
-					param.Value = owval
-				}
-			}
+			param.Key, param.Value = vend.handleID1805750(param.Key, param.Value)
 		}
 		if len(vend.OverrideParams[param.Key]) != 0 {
 			// use value from override file instead of the value
@@ -266,11 +222,8 @@ func (vend INISettings) Optimise() (Note, error) {
 			system.WarningLog("3rdPartyTuningOption %s: skip unknown section %s", vend.ConfFilePath, param.Section)
 			continue
 		}
-		// do not write parameter values to the saved state file during
-		// a pure 'verify' action
-		if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[param.Key] != "" {
-			AddParameterNoteValues(param.Key, vend.SysctlParams[param.Key], vend.ID)
-		}
+		// add values to parameter saved state file, if NOT in 'verify'
+		vend.addParamSavedStates(param.Key)
 	}
 	return vend, nil
 }
@@ -302,12 +255,7 @@ func (vend INISettings) Apply() error {
 			// the customer should be able to set the correct
 			// domain using an override file we need to rewrite
 			// param.Key and param.Value to get a correct behaviour
-			for owkey, owval := range vend.OverrideParams {
-				if (isLimitSoft.MatchString(param.Key) && isLimitSoft.MatchString(owkey)) || (isLimitHard.MatchString(param.Key) && isLimitHard.MatchString(owkey)) {
-					param.Key = owkey
-					param.Value = owval
-				}
-			}
+			param.Key, param.Value = vend.handleID1805750(param.Key, param.Value)
 		}
 
 		switch param.Section {
@@ -323,17 +271,7 @@ func (vend INISettings) Apply() error {
 
 		if revertValues && vend.SysctlParams[param.Key] != "" {
 			// revert parameter value
-			pvalue := ""
-			pvalue, pvendID = RevertParameter(param.Key, vend.ID)
-			if pvendID == "" {
-				pvendID = vend.ID
-			}
-			if pvalue != "" {
-				vend.SysctlParams[param.Key] = pvalue
-			}
-			if param.Key == "force_latency" {
-				flstates, _ = RevertParameter("fl_states", vend.ID)
-			}
+			pvendID, flstates = vend.setRevertParamValues(param.Key)
 		}
 
 		switch param.Section {
@@ -345,25 +283,8 @@ func (vend INISettings) Apply() error {
 			// vm.dirty_background_ratio is set to 0 and vice versa
 			// if vm.dirty_bytes is set to a value != 0,
 			// vm.dirty_ratio is set to 0 and vice versa
-			cpart := "" //counterpart parameter
-			switch param.Key {
-			case "vm.dirty_background_bytes":
-				cpart = "vm.dirty_background_ratio"
-			case "vm.dirty_bytes":
-				cpart = "vm.dirty_ratio"
-			case "vm.dirty_background_ratio":
-				cpart = "vm.dirty_background_bytes"
-			case "vm.dirty_ratio":
-				cpart = "vm.dirty_bytes"
-			}
-			// in case of revert of a vm.dirty parameter
-			// check, if the saved counterpart value is != 0
-			// then revert this value
-			if revertValues && cpart != "" && vend.SysctlParams[cpart] != "0" {
-				errs = append(errs, system.SetSysctlString(cpart, vend.SysctlParams[cpart]))
-			} else {
-				errs = append(errs, system.SetSysctlString(param.Key, vend.SysctlParams[param.Key]))
-			}
+			key, val := vend.getCounterPart(param.Key, revertValues)
+			errs = append(errs, system.SetSysctlString(key, val))
 		case INISectionVM:
 			errs = append(errs, SetVMVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionBlock:
@@ -404,4 +325,126 @@ func (vend INISettings) SetValuesToApply(values []string) Note {
 		vend.ValuesToApply[v] = v
 	}
 	return vend
+}
+
+// getCounterPart gets the counterpart parameters of the vm.dirty parameters
+func (vend INISettings) getCounterPart(key string, revert bool) (string, string) {
+	// for the vm.dirty parameters take the counterpart
+	// parameters into account (only during revert)
+	// if vm.dirty_background_bytes is set to a value != 0,
+	// vm.dirty_background_ratio is set to 0 and vice versa
+	// if vm.dirty_bytes is set to a value != 0,
+	// vm.dirty_ratio is set to 0 and vice versa
+	rkey := key
+	rval := vend.SysctlParams[key]
+	cpart := "" //counterpart parameter
+	switch key {
+	case "vm.dirty_background_bytes":
+		cpart = "vm.dirty_background_ratio"
+	case "vm.dirty_bytes":
+		cpart = "vm.dirty_ratio"
+	case "vm.dirty_background_ratio":
+		cpart = "vm.dirty_background_bytes"
+	case "vm.dirty_ratio":
+		cpart = "vm.dirty_bytes"
+	}
+	// in case of revert of a vm.dirty parameter
+	// check, if the saved counterpart value is != 0
+	// then revert this value
+	if revert && cpart != "" && vend.SysctlParams[cpart] != "0" {
+		rkey = cpart
+		rval = vend.SysctlParams[cpart]
+	}
+	return rkey, rval
+}
+
+// setRevertParamValues sets the parameter values for revert
+func (vend INISettings) setRevertParamValues(key string) (string, string) {
+	// revert parameter value
+	flstates := ""
+	pvalue, pvendID := RevertParameter(key, vend.ID)
+	if pvendID == "" {
+		pvendID = vend.ID
+	}
+	if pvalue != "" {
+		vend.SysctlParams[key] = pvalue
+	}
+	if key == "force_latency" {
+		flstates, _ = RevertParameter("fl_states", vend.ID)
+	}
+	return pvendID, flstates
+}
+
+// createParamSavedStates creates the parameter saved state file
+func (vend INISettings) createParamSavedStates(key, flstates string) {
+	// do not write parameter values to the saved state file during
+	// a pure 'verify' action
+	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "" {
+		CreateParameterStartValues(key, vend.SysctlParams[key])
+		if key == "force_latency" {
+			CreateParameterStartValues("fl_states", flstates)
+		}
+	}
+}
+
+// addParamSavedStates adds values to the parameter saved state file
+func (vend INISettings) addParamSavedStates(key string) {
+	// do not write parameter values to the saved state file during
+	// a pure 'verify' action
+	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "" {
+		AddParameterNoteValues(key, vend.SysctlParams[key], vend.ID)
+	}
+}
+
+// handleID1805750 handles the special case of SAP Note 1805750
+func (vend INISettings) handleID1805750(key, val string) (string, string) {
+	// as note 1805750 does not set a limits domain, but
+	// the customer should be able to set the correct
+	// domain using an override file we need to rewrite
+	// param.Key and param.Value to get a correct behaviour
+	for owkey, owval := range vend.OverrideParams {
+		if (isLimitSoft.MatchString(key) && isLimitSoft.MatchString(owkey)) || (isLimitHard.MatchString(key) && isLimitHard.MatchString(owkey)) {
+			key = owkey
+			val = owval
+		}
+	}
+	return key, val
+}
+
+// handleInitOverride handles the override parameter settings
+func (vend INISettings) handleInitOverride(key, val, section string, op txtparser.Operator, over *txtparser.INIFile) (string, string, txtparser.Operator) {
+	chkKey := key
+	if section == "service" {
+		cKey := strings.TrimSuffix(chkKey, ".service")
+		if _, ok := over.KeyValue[section][cKey]; ok {
+			chkKey = cKey
+		}
+	}
+	if vend.ID == "1805750" {
+		// as note 1805750 does not set a limits
+		// domain, but the customer should be able to
+		// set the correct domain using an override
+		// file we need to rewrite param.Key and
+		// param.Value to get a correct behaviour
+		for owkey, owparam := range over.KeyValue[section] {
+			if (isLimitSoft.MatchString(key) && isLimitSoft.MatchString(owkey)) || (isLimitHard.MatchString(key) && isLimitHard.MatchString(owkey)) {
+				chkKey = owkey
+				key = owkey
+				val = owparam.Value
+			}
+		}
+	}
+	if over.KeyValue[section][chkKey].Value == "" && section != INISectionPagecache && (over.KeyValue[section][chkKey].Key != "" || (section == INISectionLimits && over.KeyValue[section][chkKey].Key == "")) {
+		// disable parameter setting in override file
+		vend.OverrideParams[chkKey] = "untouched"
+	}
+	if over.KeyValue[section][chkKey].Value != "" {
+		vend.OverrideParams[chkKey] = over.KeyValue[section][chkKey].Value
+		if over.KeyValue[section][chkKey].Operator != op {
+			// operator from override file will
+			// replace the operator from our note file
+			op = over.KeyValue[section][chkKey].Operator
+		}
+	}
+	return key, val, op
 }

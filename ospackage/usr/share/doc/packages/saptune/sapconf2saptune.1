@@ -1,0 +1,104 @@
+
+.TH sapconf2saptune 1 "March 2019" "1.0" "sapconf configuration conversion"
+
+.SH NAME
+sapconf2saptune \- converts a sapconf configuration into a saptune v2 configuration
+.SH SYNOPSIS
+.B sapconf2saptune \fB 
+[ 
+.IR PROFILE
+]
+
+.B sapconf2saptune \fB 
+.IR SAPCONF_SYCONFIG
+.IR TUNED_CONFIG
+
+.B sapconf2saptune\fB 
+-h|--help
+.SH DESCRIPTION
+The tool sapconf2saptune converts a sapconf configuration into a drop-in file for saptune v2 to aid a move from sapconf to saptune.
+
+The tool expects either the sapconf sysconfig file as first and the sapconf tuned.conf as second parameter or the sapconf profile.
+Without any parameters sapconf2saptune tries to determine the sapoconf profile by reading '/etc/tuned/active_profile'.
+
+The generated saptune configuration is printed on stdout. 
+To use it, redirect the output to a file which has to be placed into '/etc/saptune/extra/' (See EXAMPLES below).
+The new configuration should be visible by 'saptune note list' and is ready to use. 
+
+During conversion the tool is writing information, warning and error messages to stderr. This is the case for:
+
+    \(bu Problems reading the configuration files.
+    \(bu Possible wrong configuration files.
+    \(bu Unknown variables or options. This indicates manual added configurations typically.
+    \(bu Data type conversion issues. This would indicate a broken sapconf/tuned configuration.
+    \(bu Parameters not supported by saptune. This is the case for min_perf_pct.  
+
+.TP 
+.B PROFILE \fB               
+The saponf profile to convert. 
+.TP
+.B SAPCONF_SYCONFIG \fB  
+Path to the sapconf sysconfig file, usually /etc/sysconfig/sapconf.
+.TP
+.B TUNED_CONFIG \fB
+Path to the tuned.conf file of a sapconf proifle. Usually this is /usr/lib/tuned/<profile>/tuned.conf or /etc/tuned/<profile>/tuned.conf.
+.TP
+.B -h|--help \fB
+Displays some help information.
+
+.SH IMPORTANT
+Please notice:
+.IP \[bu] 2
+A current sapconf has to be used!  If this is not the case, update first!
+.IP \[bu]
+The sapconf configuration has to be correct! Please verify /etc/sysconfig/sapconf and the used tuned.conf. Also check the logs of sapconf (/var/log/sapconf.log) and tuned (/var/log/tuned/). Keep in mind that there can be an override file '/etc/tuned/<profile>/tuned.conf!
+.IP \[bu]
+Double-check your sapconf configuration and the converted result. sapconf2saptune is a simple conversion tool and does
+    \(bu no checks for multiple parameters,
+    \(bu no checks for the sanity of values,
+    \(bu no checks to detect any misconfguration,
+    \(bu not convert manual added parameters.
+.IP \[bu]
+Read the info, warn and error messages printed on stderr during conversion.
+.IP \[bu]
+min_perf_pct is not supported by saptune and is not moved.  
+.IP \[bu]
+Use the generated configuration as the only note for saptune! Combine them with others 
+.B *ONLY IF YOU KNOW WHAT YOU ARE DOING*\fB
+!
+.SH EXIT STATUS
+On success, 0 is returned, 1 otherwise. The error messages on stderr should tell the cause.
+.SH EXAMPLE
+To convert a configuration on SLES 15 (no tuned overwrite configuration):
+
+.RS 
+.B sapconf2saptune /etc/sysconfig/sapconf /usr/lib/tuned/sapconf/tuned.conf
+.RE
+
+To convert a configuration (sap-hana profile) on SLES 12 (no tuned overwrite configuration):
+
+.RS 
+.B sapconf2saptune /etc/sysconfig/sapconf /usr/lib/tuned/sap-hana/tuned.conf
+.RE
+
+Convert and write the configuration to an extra file for saptune.
+
+.RS 
+.B sapconf2saptune /etc/sysconfig/sapconf /usr/lib/tuned/sap-hana/tuned.conf > /etc/saptune/extra/sapconf.conf
+.RE
+.SH FILES
+.TP
+.B /etc/sysconfig/sapconf \fB
+Main configuration file for sapconf.
+.TP
+.B /usr/lib/tuned/<profile>/tuned.conf, /etc/tuned/<profile>/tuned.conf \fB
+The tuned configuration. Either the default configuration ('/usr/lib/tuned') or the overwrite file ('/etc/tuned/') is used!
+.TP
+.B /etc/tuned/active_profile \fB
+Current tuned profile. Used by sapconf2saptune to determine the used sapconf profile.
+.SH SEE ALSO
+sapconf(8), sapconf(5), sapconf(7), saptune(8)
+.SH BUGS
+No known bugs.
+.SH AUTHOR
+Sören Schmidt <soeren.schmidt@suse.com>

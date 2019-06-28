@@ -1,7 +1,7 @@
 .\"/*
 .\" * Copyright (c) 2017-2019 SUSE LLC.
 .\" * All rights reserved
-.\" * Authors: Howard Guo, Angela Briel
+.\" * Authors: Soeren Schmidt, Angela Briel
 .\" *
 .\" * This program is free software; you can redistribute it and/or
 .\" * modify it under the terms of the GNU General Public License
@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "May 2019" "" "System Optimisation For SAP"
+.TH saptune "8" "June 2019" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 2\fP)
 
@@ -154,6 +154,18 @@ If a Note definition contains a '\fB[reminder]\fP' section, this section will be
 .B customise
 This allows to customize the values of the saptune Note definitions. The Note definition file will be copied from \fI/usr/share/saptune/notes\fP or \fI/etc/saptune/extra\fP to the override location at \fI/etc/saptune/override\fP, if the file does not exist already. After that an editor will be launched to allow changing the Note definitions.
 The editor is defined by the \fBEDITOR\fP environment variable. If not set editor defaults to /usr/bin/vim.
+
+You can only change the value from already available parameters of the note. But you are not able to add new parameters.
+
+If you want to use new parameters to tune the system, please create your own custom Note definition file in \fI/etc/saptune/extra\fP.
+
+You can prevent a parameter from being changed by leaving the parameter value in the override file empty. The parameter will be marked as 'untouched' in the override column of the verify table.
+
+The values from the override files will take precedence over the values from \fI/usr/share/saptune/notes\fP or \fI/etc/saptune/extra\fP. In such case you will not lose your customized Notes between saptune or vendor updates.
+.br
+The saptune options 'list', 'verify' and 'simulate' will mark the existence of an override file and the contained values.
+
+When creating an override file for an already applied SAP Note definition, please do a 'revert all' and then apply the Notes again, to get the changes take effect.
 .TP
 .B create
 This allows to create own Note definition files in \fI/etc/saptune/extra\fP. The Note definition file will be created from a template file into the location \fI/etc/saptune/extra\fP, if the file does not exist already. After that an editor will be launched to allow changing the Note definitions.
@@ -178,7 +190,11 @@ It's not possible to combine solutions, there can only be\fBone\fP solution enab
 Apply optimisation settings recommended by the SAP solution. These settings will be automatically activated upon system boot if the daemon is enabled.
 .TP
 .B list
-List all SAP solution names that saptune is capable of implementing. The marked ones are currently implemented.
+List all SAP solution names that saptune is capable of implementing.
+.br
+The currently implemented solution is marked with '\fB*\fP' and is highlighted with green color. A deprecated solution is marked with '\fBD\fP'.
+.br
+If an \fBoverride\fP file exists for a solution, the solution is marked with '\fBO\fP'.
 .TP
 .B simulate
 Show all notes that are associated with the specified SAP solution, and all changes that will be applied once the solution is activated.
@@ -207,7 +223,7 @@ Will display the syntax of saptune
 .SH VENDOR SUPPORT
 To support vendor or customer specific tuning values, saptune supports 'drop-in' files residing in \fI/etc/saptune/extra\fP. All files found in \fI/etc/saptune/extra\fP are listed when running '\fBsaptune note list\fP'. All \fBnote options\fP are available for these files.
 
-We simplify the file name syntax for these vendor files. But the old file names still valid and supported.
+We simplified the file name syntax for these vendor files. But the old file names are still valid and supported.
 .br
 Related to this we add 'header' support (see description of section [version] in saptune-note(5)) for the vendor files as already available for the Note definition files in /usr/share/saptune/notes to get a proper description during saptune option 'list'
 
@@ -263,16 +279,6 @@ the saptune Note definition override location.
 If you need to customize the Note definitions found in \fI/usr/share/saptune/notes\fP or \fI/etc/saptune/extra\fP, you can copy them to \fI/etc/saptune/override\fP and modify them as you need. Please stay with the original name of the Note definition (the NoteID) and do \fBNOT\fP rename it.
 
 Or use '\fBsaptune note customize NoteID\fP' to do the job for you.
-
-You can only change the value from already available parameters of the note. But you are not able to add new parameters. If you want to use new parameters to tune the system, please create your own custom Note definition file in \fI/etc/saptune/extra\fP.
-
-You can prevent a parameter from being changed by leaving the parameter value in the override file empty. The parameter will be marked as 'untouched' in the override column of the verify table.
-
-The values from the override files will take precedence over the values from \fI/usr/share/saptune/notes\fP or \fI/etc/saptune/extra\fP. In such case you will not lose your customized Notes between saptune or vendor updates.
-.br
-The saptune options 'list', 'verify' and 'simulate' will mark the existence of an override file and the contained values.
-
-When creating an override file for an already applied SAP Note definition, please do a 'revert all' and then apply the Notes again, to get the changes take effect.
 .RE
 .PP
 \fI/usr/share/saptune/solutions\fP
@@ -310,4 +316,4 @@ saptune-note(5) saptune-migrate(7) saptune(8) saptune_v1(8) tuned(8) tuned-adm(8
 
 .SH AUTHOR
 .NF
-Howard Guo <hguo@suse.com>, Angela Briel <abriel@suse.com>
+Soeren Schmidt <soeren.schmidt@suse.com>, Angela Briel <abriel@suse.com>

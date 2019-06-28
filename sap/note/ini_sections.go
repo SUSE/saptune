@@ -199,6 +199,7 @@ func GetLimitsVal(value string) (string, error) {
 // OptLimitsVal optimises the security limit structure with the settings
 // from the configuration file or with a calculation
 func OptLimitsVal(actval, cfgval string) string {
+	cfgval = strings.Join(strings.Fields(strings.TrimSpace(cfgval)), " ")
 	return cfgval
 }
 
@@ -690,7 +691,7 @@ func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 	case "OVERRIDE_PAGECACHE_LIMIT_MB":
 		opt, _ := cur.Optimise()
 		if opt == nil {
-			system.ErrorLog("page cache optimise had problems reading the Note definition file '%s'. Please check", cur.PagingConfig)
+			_ = system.ErrorLog("page cache optimise had problems reading the Note definition file '%s'. Please check", cur.PagingConfig)
 			return ""
 		}
 		optval := opt.(LinuxPagingImprovements).VMPagecacheLimitMB

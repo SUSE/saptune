@@ -2,9 +2,11 @@ package system
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path"
 	"regexp"
 	"strings"
 )
@@ -95,4 +97,34 @@ func GetServiceName(service string) string {
 		WarningLog("skipping unkown service '%s'", service)
 	}
 	return serviceName
+}
+
+// ReadConfigFile read content of config file
+func ReadConfigFile(fileName string, autoCreate bool) ([]byte, error) {
+	content, err := ioutil.ReadFile(fileName)
+	if os.IsNotExist(err) && autoCreate {
+		content = []byte{}
+		err = os.MkdirAll(path.Dir(fileName), 0755)
+		if err == nil {
+			err = ioutil.WriteFile(fileName, []byte{}, 0644)
+		}
+	}
+	return content, err
+}
+
+// CopyFile from source to destination
+func CopyFile(srcFile, destFile string) error {
+	var src, dst *os.File
+	var err error
+	if src, err = os.Open(srcFile); err == nil {
+		defer src.Close()
+		if dst, err = os.OpenFile(destFile, os.O_RDWR|os.O_CREATE, 0644); err == nil {
+			defer dst.Close()
+			if _, err = io.Copy(dst, src); err == nil {
+				// flush file content from  memory to disk
+				err = dst.Sync()
+			}
+		}
+	}
+	return err
 }

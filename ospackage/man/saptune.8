@@ -1,7 +1,7 @@
 .\"/*
 .\" * Copyright (c) 2017-2019 SUSE LLC.
 .\" * All rights reserved
-.\" * Authors: Howard Guo, Angela Briel
+.\" * Authors: Soeren Schmidt, Angela Briel
 .\" *
 .\" * This program is free software; you can redistribute it and/or
 .\" * modify it under the terms of the GNU General Public License
@@ -14,14 +14,17 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "May 2019" "" "System Optimisation For SAP"
+.TH saptune "8" "June 2019" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions
 
 .SH DESCRIPTION
 saptune has been improved to much more better adapt the needs of an SAP environment. So at the moment we will support 2 versions of saptune.
 
-We now have our good old version 1 of saptune, which is now deprecated and will be removed with the next release. It's available for compatibility reasons and to give the admin the ability to smoothly migrate his SAP system tunings to the new settings demanded by SAP. To get the man page for the version 1 of saptune please use saptune_v1(8).
+We now have our good old version 1 of saptune, which is now deprecated and will be removed with SLE15SP2, but will be kept in SLE12. It's available for compatibility reasons and to give the admin the ability to smoothly migrate his SAP system tunings to the new settings demanded by SAP. saptune version 1 will ONLY get bug fixing, but NO new notes, parameters or value changes.
+.br
+To get the man page for the version 1 of saptune please use saptune_v1(8).
+.br
 To get more information about the migration path from saptune version 1 to saptune version 2 please see saptune-migrate(7)
 
 Our new improved saptune version 2 and the new configuration possibilities and syntax are described in saptune_v2(8).

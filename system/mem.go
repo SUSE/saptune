@@ -63,7 +63,7 @@ func GetTotalMemSizePages() uint64 {
 func GetSemaphoreLimits() (msl, mns, opm, mni uint64) {
 	field, err := GetSysctlString("kernel.sem")
 	if err != nil {
-		fmt.Errorf("failed to read kernel.sem values")
+		_ = fmt.Errorf("failed to read kernel.sem values")
 	}
 	fields := consecutiveSpaces.Split(field, -1)
 	if len(fields) < 4 {

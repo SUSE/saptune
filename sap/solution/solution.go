@@ -55,7 +55,7 @@ func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
 	pcarch := ""
 	content, err := txtparser.ParseINIFile(fileName, false)
 	if err != nil {
-		system.ErrorLog("Failed to read solution definition from file '%s'", fileName)
+		_ = system.ErrorLog("Failed to read solution definition from file '%s'", fileName)
 		return sols
 	}
 

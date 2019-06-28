@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
 	"io/ioutil"
-	"os"
-	"path"
 	"regexp"
 	"strings"
 )
@@ -24,6 +22,9 @@ type Operator string
 
 // RegexKeyOperatorValue breaks up a line into key, operator, value.
 var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`)
+
+// counter to control the [block] section detected warning
+var blckCnt = 0
 
 // INIEntry contains a single key-value pair in INI file.
 type INIEntry struct {
@@ -54,25 +55,18 @@ func GetINIFileDescriptiveName(fileName string) string {
 	return rval
 }
 
-// GetINIFileCategory return the category the Note belongs to
-func GetINIFileCategory(fileName string) string {
-	var re = regexp.MustCompile(`# .*NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
-	rval := ""
-	content, err := ioutil.ReadFile(fileName)
-	if err != nil {
+// GetINIFileVersionSectionEntry returns the field 'entryName' from the version
+// section of the Note configuration file
+func GetINIFileVersionSectionEntry(fileName, entryName string) string {
+	var re = regexp.MustCompile(`# .*NOTE=.*TEST=(\d*)\s*DATE=.*"`)
+	switch entryName {
+	case "version":
+		re = regexp.MustCompile(`# .*NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
+	case "category":
+		re = regexp.MustCompile(`# .*NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
+	default:
 		return ""
 	}
-	matches := re.FindStringSubmatch(string(content))
-	if len(matches) != 0 {
-		rval = fmt.Sprintf("%s", matches[1])
-	}
-	return rval
-}
-
-// GetINIFileVersion return the version of the Note used to setup the Note
-// configuration file
-func GetINIFileVersion(fileName string) string {
-	var re = regexp.MustCompile(`# .*NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
 	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -87,18 +81,8 @@ func GetINIFileVersion(fileName string) string {
 
 // ParseINIFile read the content of the configuration file
 func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
-	content, err := ioutil.ReadFile(fileName)
-	if os.IsNotExist(err) && autoCreate {
-		err = os.MkdirAll(path.Dir(fileName), 0755)
-		if err != nil {
-			return nil, err
-		}
-		err = ioutil.WriteFile(fileName, []byte{}, 0644)
-		content = []byte{}
-		if err != nil {
-			return nil, err
-		}
-	} else if err != nil {
+	content, err := system.ReadConfigFile(fileName, autoCreate)
+	if err != nil {
 		return nil, err
 	}
 	return ParseINI(string(content)), nil
@@ -154,7 +138,13 @@ func ParseINI(input string) *INIFile {
 		} else {
 			kov = RegexKeyOperatorValue.FindStringSubmatch(line)
 			if currentSection == "grub" {
-				kov[1] = "grub:" + kov[1]
+				if len(kov) == 0 {
+					// seams to be a single option and not
+					// a key=value pair
+					kov = []string{line, "grub:" + line, "=", line}
+				} else {
+					kov[1] = "grub:" + kov[1]
+				}
 			}
 		}
 		if kov == nil {
@@ -185,7 +175,10 @@ func ParseINI(input string) *INIFile {
 				currentEntriesMap[entry.Key] = entry
 			}
 		} else if currentSection == "block" {
-			system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
+			if blckCnt == 0 {
+				system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
+				blckCnt = blckCnt + 1
+			}
 			_, sysDevs := system.ListDir("/sys/block", "the available block devices of the system")
 			for _, bdev := range sysDevs {
 				if strings.Contains(bdev, "dm-") {

@@ -5,9 +5,7 @@ package txtparser
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"path"
+	"github.com/SUSE/saptune/system"
 	"regexp"
 	"strconv"
 	"strings"
@@ -32,18 +30,8 @@ type Sysconfig struct {
 // ParseSysconfigFile read sysconfig file and parse the file content into
 // memory structures.
 func ParseSysconfigFile(fileName string, autoCreate bool) (*Sysconfig, error) {
-	content, err := ioutil.ReadFile(fileName)
-	if os.IsNotExist(err) && autoCreate {
-		err = os.MkdirAll(path.Dir(fileName), 0755)
-		if err != nil {
-			return nil, err
-		}
-		err = ioutil.WriteFile(fileName, []byte{}, 0644)
-		content = []byte{}
-		if err != nil {
-			return nil, err
-		}
-	} else if err != nil {
+	content, err := system.ReadConfigFile(fileName, autoCreate)
+	if err != nil {
 		return nil, err
 	}
 	return ParseSysconfig(string(content))

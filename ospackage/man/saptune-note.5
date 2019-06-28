@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "May 2019" "" "saptune note file format description"
+.TH "saptune-note" "5" "June 2019" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB2\fP
 .SH DESCRIPTION
@@ -39,12 +39,30 @@ version, block, cpu, grub, limits, login, mem, pagecache, reminder, rpm, service
 See detailed description below:
 \" section version - Mandatory
 .SH "[version]"
-This section is a mandatory section and is used to display version, description and last change date of the underlying Note during saptune option 'list'.
+This section is a mandatory section and is used to display version, description and last change date of the underlying Note during saptune action 'list'.
 
 Syntax:
 .br
 .nf
 .B # <prefix>NOTE=<noteId> CATEGORY=<category> VERSION=<versionNo> DATE=<release date of used note and related values> NAME="<description of the note>"
+
+Example:
+.br
+# VIP-NOTE=vip1 CATEGORY=VIP VERSION=5 DATE=16.04.2019 NAME="VIP: this is VIP Note 1, which contains Very Important Parameters"
+
+All fields are separated by spaces. But please do not use spaces around the equal operator (=) of the fields. And please do not change the order of the fields.
+
+The <noteId> must be a text string without spaces, which will be used as the unique identifier of this Note definition. It will be displayed during the action 'saptune note list' and used for all other actions, where the NoteID is needed as parameter.
+
+The CATEGORY is for future use. So we do not have defined CATEGORIES at the moment. It must be a text string without spaces.
+
+VERSION is a number that should indicate how many changes are done for this Note definition in the past. Only digits are allowed.
+
+DATE is the date of the last changes.
+
+NAME is the description of the Note, which will be displayed during the action 'saptune note list'
+.br
+Attention: The note description from the field NAME must be placed in double quotes even if there are no spaces used inside the description.
 \" section block
 .SH "[block]"
 The section "[block]" can contain the following options:
@@ -66,7 +84,7 @@ When set, the number of requests for \fBall\fP block devices on the system will 
 .SH "[cpu]"
 The section "[cpu]" manipulates files in \fI/sys/devices/system/cpu/cpu*\fP.
 .br
-This section can contain the following options:
+This section can only contain the following options:
 .TP
 .BI energy_perf_bias= STRING
 Energy Performance Bias EPB (applies to Intel-based systems only)
@@ -145,7 +163,7 @@ This section has to contain the following option:
 .br
 where STRING is a list of valid limit definitions separated by '\fB,\fP'
 .br
-a valid limit definition contains the fields 'domain item type value' separated by space
+a valid limit definition contains the fields 'domain item type value' separated by one space
 .br
 For more information about the syntax of valid limit definitions please refer to limits.conf(5) or the comment section of \fI/etc/security/limits.conf\fP.
 .br
@@ -158,7 +176,7 @@ To leave only \fBsome\fP of the limits definitions of a Note definition file 'un
 .SH "[login]"
 The section "[login]" manipulates the behaviour of the systemd login manager.
 .br
-This section can to contain the following option:
+This section can \fBonly\fP contain the following option:
 .TP
 .BI UserTasksMax= STRING
 This option configures a parameter of the systemd login manager. It sets the maximum number of OS tasks each user may run concurrently. The behaviour of the systemd login manager was changed starting SLES12SP2 to prevent fork bomb attacks.
@@ -272,6 +290,8 @@ For the service \fBuuidd.socket\fP only '\fBstart\fP' is a valid value, because 
 Concerning \fBsysstat.service\fP please be in mind: A running sysstat service can effect the system performance. But if there are real performance trouble with the SAP system, SAP service normally orders the sysstat reports collected in /var/log/sa.
 .br
 See sar(1), sa2(8), sa1(8) for more information
+
+If a service is enabled or disabled by default or admin choice, saptune will NOT disable or enable this service. It will only start/stop the service. If such a service is started by systemd during a system reboot \fBafter\fP the start of tuned.service it will be possible that a service is stopped/running even if it was started/stopped by saptune.
 \" section sysctl
 .SH "[sysctl]"
 The section "[sysctl]" can be used to modify kernel parameters. The parameters available are those listed under /proc/sys/.

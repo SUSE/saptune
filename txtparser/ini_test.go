@@ -3,12 +3,15 @@ package txtparser
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
 	"testing"
 )
 
+var fileNotExist = "/file_does_not_exist"
+var tstFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_all_test.ini")
 var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1410736")
 var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "TCP/IP: setting keepalive interval", "", "4", "14.12.2017 ")
 var category = "NET"
@@ -116,6 +119,25 @@ var iniJSON = `
 	}
 }`
 
+func TestParseINIFile(t *testing.T) {
+	content, err := ParseINIFile(fileName, false)
+	if err != nil {
+		t.Fatal(content, err)
+	}
+	newFile := path.Join(os.TempDir(), "saptunetest")
+	content, err = ParseINIFile(newFile, true)
+	if err != nil {
+		t.Fatal(content, err)
+	}
+	os.Remove(newFile)
+	newFile2 := path.Join(os.TempDir(), "saptunetest2")
+	content, err = ParseINIFile(newFile2, false)
+	if err == nil {
+		t.Fatal(content, err)
+	}
+	os.Remove(newFile2)
+}
+
 func TestParseINI(t *testing.T) {
 	actualINI := ParseINI(iniExample)
 	var expectedINI INIFile
@@ -127,6 +149,13 @@ func TestParseINI(t *testing.T) {
 	if !reflect.DeepEqual(*actualINI, expectedINI) {
 		t.Fatalf("\n%+v\n%+v\n", *actualINI, expectedINI)
 	}
+	content, err := ioutil.ReadFile(tstFile)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_ = ParseINI(string(content))
+	//newINI := ParseINI(string(content))
+	//t.Log(newINI)
 }
 
 func TestGetINIFileDescriptiveName(t *testing.T) {
@@ -134,18 +163,31 @@ func TestGetINIFileDescriptiveName(t *testing.T) {
 	if str != descName {
 		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, descName)
 	}
-}
-
-func TestGetINIFileCategory(t *testing.T) {
-	str := GetINIFileCategory(fileName)
-	if str != category {
-		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, category)
+	str = GetINIFileDescriptiveName(fileNotExist)
+	if str != "" {
+		t.Fatalf(str)
 	}
 }
 
-func TestGetINIFileVersion(t *testing.T) {
-	str := GetINIFileVersion(fileName)
-	if str != fileVersion {
+func TestGetINIFileVersionSectionEntry(t *testing.T) {
+	str := GetINIFileVersionSectionEntry(fileName, "category")
+	if str != category {
 		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, category)
+	}
+	str = GetINIFileVersionSectionEntry(fileNotExist, "category")
+	if str != "" {
+		t.Fatalf(str)
+	}
+	str = GetINIFileVersionSectionEntry(fileName, "version")
+	if str != fileVersion {
+		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, fileVersion)
+	}
+	str = GetINIFileVersionSectionEntry(fileNotExist, "version")
+	if str != "" {
+		t.Fatalf(str)
+	}
+	str = GetINIFileVersionSectionEntry(fileName, "not_avail")
+	if str != "" {
+		t.Fatalf("\n'%+v'\nis not\n'%+v'\n", str, "")
 	}
 }
