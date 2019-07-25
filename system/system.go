@@ -73,7 +73,7 @@ func CheckForPattern(file, pattern string) bool {
 func GetServiceName(service string) string {
 	serviceName := ""
 	cmdName := "/usr/bin/systemctl"
-	cmdArgs := []string{"list-unit-files"}
+	cmdArgs := []string{"--no-pager", "list-unit-files"}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil {
 		WarningLog("There was an error running external command %s: %v, output: %s", cmdArgs, err, cmdOut)
