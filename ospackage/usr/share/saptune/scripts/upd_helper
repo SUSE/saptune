@@ -113,11 +113,17 @@ change_note_names() {
                 echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
                 sed -i "s/$srch_pat2/$new_pat2/g" $SAPTUNE_SYSCONFIG
             fi
-            srch_pat3="\"${oldNote}\""
-            new_pat3="\"${newNote}\""
+            srch_pat3="\"${oldNote} "
+            new_pat3="\"${newNote} "
             if grep "$srch_pat3" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
                 echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
                 sed -i "s/$srch_pat3/$new_pat3/g" $SAPTUNE_SYSCONFIG
+            fi
+            srch_pat4="\"${oldNote}\""
+            new_pat4="\"${newNote}\""
+            if grep "$srch_pat4" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
+                echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
+                sed -i "s/$srch_pat4/$new_pat4/g" $SAPTUNE_SYSCONFIG
             fi
 
             # 2. check existence of override file and change name
@@ -171,11 +177,17 @@ delete_notes() {
                 echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
                 sed -i "s/$srch_pat2/$del_pat2/g" $SAPTUNE_SYSCONFIG
             fi
-            srch_pat3="\"${delnote}\""
-            del_pat3="\"\""
+            srch_pat3="\"${delnote} "
+            del_pat3="\""
             if grep "$srch_pat3" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
                 echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
                 sed -i "s/$srch_pat3/$del_pat3/g" $SAPTUNE_SYSCONFIG
+            fi
+            srch_pat4="\"${delnote}\""
+            del_pat4="\"\""
+            if grep "$srch_pat4" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
+                echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
+                sed -i "s/$srch_pat4/$del_pat4/g" $SAPTUNE_SYSCONFIG
             fi
 
             # 2. check existence of override file and print a WARNING

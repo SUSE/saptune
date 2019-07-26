@@ -250,6 +250,10 @@ func (app *App) TuneSolution(solName string) (removedExplicitNotes []string, err
 // TuneAll tune for all currently enabled solutions and notes.
 func (app *App) TuneAll() error {
 	for _, noteID := range app.NoteApplyOrder {
+		if _, err := app.GetNoteByID(noteID); err != nil {
+			_ = system.ErrorLog(err.Error())
+			continue
+		}
 		if err := app.TuneNote(noteID); err != nil {
 			return err
 		}
