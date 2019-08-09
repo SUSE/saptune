@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -183,7 +184,13 @@ func (limits *SecLimits) ToDropIn(lim []string, noteID, fileName string) string 
 // ApplyDropIn overwrite file 'dropInFile' with the content of this structure.
 func (limits *SecLimits) ApplyDropIn(lim []string, noteID string) error {
 	// /etc/security/limits.d/saptune-<domain>-<item>-<type>.conf
-	dropInFile := fmt.Sprintf("/etc/security/limits.d/saptune-%s-%s-%s.conf", lim[0], lim[2], lim[1])
+	limitsDropDir := "/etc/security/limits.d"
+	dropInFile := fmt.Sprintf("%s/saptune-%s-%s-%s.conf", limitsDropDir, lim[0], lim[2], lim[1])
+	if _, err := os.Stat(limitsDropDir); os.IsNotExist(err) {
+		if err := os.MkdirAll(limitsDropDir, 0755); err != nil {
+			return ErrorLog("failed to create needed directories for the limits drop in file: %v", err)
+		}
+	}
 	return ioutil.WriteFile(dropInFile, []byte(limits.ToDropIn(lim, noteID, dropInFile)), 0644)
 }
 
