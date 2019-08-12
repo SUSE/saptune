@@ -1,0 +1,54 @@
+[version]
+# SAP-NOTE=extraNote CATEGORY=extra VERSION=0 DATE=04.06.2019 NAME="Configuration drop in for extra tests" 
+
+[mem]
+ShmFileSystemSizeMB=25605
+VSZ_TMPFS_PERCENT=60
+
+[sysctl]
+vm.nr_hugepages = 128
+vm.dirty_ratio = 10
+vm.dirty_background_ratio = 5
+kernel.sem = 250 32000 32 1024
+kernel.shmmax = 18446744073709551615
+
+[block]
+IO_SCHEDULER = noop
+NRREQ = 1020
+
+[cpu]
+energy_perf_bias = performance
+governor = performance
+force_latency = 70
+
+[vm]
+THP=always
+KSM=1
+
+[pagecache]
+ENABLE_PAGECACHE_LIMIT = yes
+PAGECACHE_LIMIT_IGNORE_DIRTY = 1
+OVERRIDE_PAGECACHE_LIMIT_MB = 326046
+
+[limits]
+limits="@sapsys soft nofile 32800, @sdba hard nofile 32800"
+
+[grub]
+transparent_hugepage=never
+
+[login]
+UserTasksMax=infinity
+
+[rpm]
+glibc all 2.22-51.6
+tuned SLE12 2.8.0-4.3.1
+
+[service]
+sysstat=stop
+uuidd.socket=start
+UnkownService=stop
+
+[reminder]
+# Text to ignore for apply but to display.
+# Everything the customer should know about this note, especially
+# which parameters are NOT handled and the reason.

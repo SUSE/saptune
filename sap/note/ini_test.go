@@ -129,6 +129,20 @@ func TestVendorSettings(t *testing.T) {
 	}
 }
 
+func TestNoConfig(t *testing.T) {
+	iniPath := "/no_config_file"
+	ini := INISettings{ConfFilePath: iniPath, ID: "47114711"}
+	initialised, err := ini.Initialise()
+	if err == nil {
+		t.Fatal(err)
+	}
+	initialisedINI := initialised.(INISettings)
+	_, err = initialisedINI.Optimise()
+	if err == nil {
+		t.Fatal(err)
+	}
+}
+
 func TestAllSettings(t *testing.T) {
 	cleanUp()
 	testString := []string{"vm.nr_hugepages", "THP", "KSM", "sysstat"}
@@ -136,7 +150,8 @@ func TestAllSettings(t *testing.T) {
 		testString = []string{"KSM", "sysstat"}
 	}
 	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_all_test.ini")
-	ini := INISettings{ConfFilePath: iniPath}
+	ini := INISettings{ConfFilePath: iniPath, ID: "9876543"}
+	//t.Logf("ini - %+v\n", ini)
 
 	if ini.Name() == "" {
 		t.Fatal(ini.Name())
@@ -146,6 +161,7 @@ func TestAllSettings(t *testing.T) {
 	}
 
 	initialised, err := ini.Initialise()
+	//t.Logf("initialised - %+v\n", initialised)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,6 +173,7 @@ func TestAllSettings(t *testing.T) {
 	}
 
 	optimised, err := initialisedINI.Optimise()
+	//t.Logf("optimised - %+v\n", optimised)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -239,6 +256,193 @@ func TestAllSettings(t *testing.T) {
 	}
 	if runtime.GOARCH != "ppc64le" {
 		if i, err := strconv.ParseInt(optimisedINI.SysctlParams["vm.nr_hugepages"], 10, 64); err != nil || i != 128 {
+			t.Fatal(i, err)
+		}
+	}
+	txt2chk := `# Text to ignore for apply but to display.
+# Everything the customer should know about this note, especially
+# which parameters are NOT handled and the reason.
+`
+	if optimisedINI.SysctlParams["reminder"] != txt2chk {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+
+	// apply
+	valToApp := map[string]string{"THP": "THP", "KSM": "KSM", "LIMIT_sybase_hard_memlock": "LIMIT_sybase_hard_memlock", "LIMIT_sybase_soft_memlock": "LIMIT_sybase_soft_memlock", "vm.dirty_ratio": "vm.dirty_ratio", "vm.dirty_background_ratio": "vm.dirty_background_ratio", "ShmFileSystemSizeMB": "ShmFileSystemSizeMB", "sysstat": "sysstat", "uuidd.socket": "uuidd.socket"}
+	optimisedINI.ValuesToApply = valToApp
+	//t.Logf("optimisedINI - %+v\n", optimisedINI)
+
+	err = optimisedINI.Apply()
+	if err != nil {
+		t.Fatal(err)
+	}
+	appl := INISettings{ConfFilePath: iniPath, ID: "9876543"}
+	//t.Logf("appl - %+v\n", appl)
+	applied, err := appl.Initialise()
+	if err != nil {
+		t.Fatal(err)
+	}
+	applyINI := applied.(INISettings)
+	//t.Logf("applied: %+v,\n optimised: %+v\n", applyINI, optimisedINI)
+	if applyINI.SysctlParams["THP"] != "always" {
+		t.Fatal(applyINI.SysctlParams)
+	}
+	if applyINI.SysctlParams["KSM"] != "1" {
+		t.Fatal(applyINI.SysctlParams)
+	}
+	if applyINI.SysctlParams["LIMIT_sybase_hard_memlock"] != "sybase hard memlock 28571380" {
+		t.Fatal(applyINI.SysctlParams)
+	}
+	if applyINI.SysctlParams["LIMIT_sybase_soft_memlock"] != "sybase soft memlock 28571380" {
+		t.Fatal(applyINI.SysctlParams)
+	}
+	if applyINI.SysctlParams["ShmFileSystemSizeMB"] != "25605" && applyINI.SysctlParams["ShmFileSystemSizeMB"] != "-1" {
+		t.Fatal(applyINI.SysctlParams)
+	}
+	if applyINI.SysctlParams["sysstat"] != "stop" && applyINI.SysctlParams["sysstat"] != "NA" {
+		t.Fatal(applyINI.SysctlParams)
+	}
+	if applyINI.SysctlParams["uuidd.socket"] != "start" && applyINI.SysctlParams["uuidd.socket"] != "NA" {
+		t.Fatal(applyINI.SysctlParams)
+	}
+
+	// revert
+	valToApp = map[string]string{"revert": "revert"}
+	initialisedINI.ValuesToApply = valToApp
+	//t.Logf("initialisedINI - %+v\n", initialisedINI)
+
+	err = initialisedINI.Apply()
+	if err != nil {
+		t.Fatal(err)
+	}
+	appl = INISettings{ConfFilePath: iniPath, ID: "9876543"}
+	//t.Logf("appl - %+v\n", appl)
+	applied, err = appl.Initialise()
+	if err != nil {
+		t.Fatal(err)
+	}
+	applyINI = applied.(INISettings)
+	//t.Logf("applied: %+v,\n initialised: %+v\n", applyINI, initialisedINI)
+}
+
+func TestOverrideAllSettings(t *testing.T) {
+	cleanUp()
+	testString := []string{"vm.nr_hugepages", "THP", "KSM", "sysstat"}
+	if runtime.GOARCH == "ppc64le" {
+		testString = []string{"KSM", "sysstat"}
+	}
+	ovFile := "/etc/saptune/override/9876543"
+	srcFile := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/override_ini_all_test.ini")
+	_ = system.CopyFile(srcFile, ovFile)
+
+	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_all_test.ini")
+	ini := INISettings{ConfFilePath: iniPath, ID: "9876543"}
+	t.Log(ini)
+
+	if ini.Name() == "" {
+		t.Fatal(ini.Name())
+	}
+	if ini.Name() != fmt.Sprintf("ini_all_test: SAP Note file for ini_all_test\n\t\t\tVersion 3 from 02.01.2019 ") {
+		t.Fatal(ini.Name())
+	}
+
+	initialised, err := ini.Initialise()
+	if err != nil {
+		t.Fatal(err)
+	}
+	initialisedINI := initialised.(INISettings)
+	for _, key := range testString {
+		if initialisedINI.SysctlParams[key] == "" {
+			t.Fatal(initialisedINI.SysctlParams)
+		}
+	}
+
+	optimised, err := initialisedINI.Optimise()
+	if err != nil {
+		t.Fatal(err)
+	}
+	optimisedINI := optimised.(INISettings)
+	// clean up
+	os.Remove(ovFile)
+
+	bval := ""
+	for _, entry := range strings.Fields(initialisedINI.SysctlParams["IO_SCHEDULER"]) {
+		fields := strings.Split(entry, "@")
+		if bval == "" {
+			bval = bval + fmt.Sprintf("%s@%s", fields[0], "noop")
+		} else {
+			bval = bval + " " + fmt.Sprintf("%s@%s", fields[0], "noop")
+		}
+	}
+	if optimisedINI.SysctlParams["IO_SCHEDULER"] != bval {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	bval = ""
+	for _, entry := range strings.Fields(initialisedINI.SysctlParams["NRREQ"]) {
+		fields := strings.Split(entry, "@")
+		if bval == "" {
+			bval = bval + fmt.Sprintf("%s@%s", fields[0], "1024")
+		} else {
+			bval = bval + " " + fmt.Sprintf("%s@%s", fields[0], "1024")
+		}
+	}
+	if optimisedINI.SysctlParams["NRREQ"] != bval {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["THP"] != "never" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["KSM"] != "0" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	bval = ""
+	for _, entry := range strings.Fields(initialisedINI.SysctlParams["energy_perf_bias"]) {
+		fields := strings.Split(entry, ":")
+		bval = bval + fmt.Sprintf("%s:%s ", fields[0], "0")
+	}
+	if optimisedINI.SysctlParams["energy_perf_bias"] != strings.TrimSpace(bval) {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	bval = ""
+	for _, entry := range strings.Fields(initialisedINI.SysctlParams["governor"]) {
+		fields := strings.Split(entry, ":")
+		bval = bval + fmt.Sprintf("%s:%s ", fields[0], "performance")
+	}
+	if optimisedINI.SysctlParams["governor"] != strings.TrimSpace(bval) {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["LIMIT_sybase_hard_memlock"] != "sybase hard memlock 571380" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["LIMIT_sybase_soft_memlock"] != "sybase soft memlock 571380" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["ShmFileSystemSizeMB"] != "25605" && optimisedINI.SysctlParams["ShmFileSystemSizeMB"] != "-1" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["VSZ_TMPFS_PERCENT"] != "60" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["sysstat"] != "start" && optimisedINI.SysctlParams["sysstat"] != "NA" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["uuidd.socket"] != "start" && optimisedINI.SysctlParams["uuidd.socket"] != "NA" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["UnkownService"] != "NA" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["grub:transparent_hugepage"] != "never" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["rpm:glibc"] != "2.22-51.6" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if optimisedINI.SysctlParams["UserTasksMax"] != "infinity" {
+		t.Fatal(optimisedINI.SysctlParams)
+	}
+	if runtime.GOARCH != "ppc64le" {
+		if i, err := strconv.ParseInt(optimisedINI.SysctlParams["vm.nr_hugepages"], 10, 64); err != nil || i != 126 {
 			t.Fatal(i, err)
 		}
 	}

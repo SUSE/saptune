@@ -6,7 +6,6 @@ import (
 	"github.com/SUSE/saptune/txtparser"
 	"os"
 	"path"
-	"runtime"
 	"strconv"
 	"testing"
 )
@@ -33,6 +32,8 @@ func TestGetServiceName(t *testing.T) {
 }
 
 func TestOptSysctlVal(t *testing.T) {
+	// remember the change in saptune 2.0 (SAP and Alliance decision)
+	// use exactly the value from the config file. No calculation any more
 	op := txtparser.Operator("=")
 	val := OptSysctlVal(op, "TestParam", "120", "100")
 	if val != "100" {
@@ -46,11 +47,41 @@ func TestOptSysctlVal(t *testing.T) {
 	if val != "" {
 		t.Fatal(val)
 	}
+	val = OptSysctlVal(op, "TestParam", "", "100 330 180")
+	if val != "" {
+		t.Fatal(val)
+	}
+	op = txtparser.Operator("<")
+	val = OptSysctlVal(op, "TestParam", "120", "100")
+	if val != "100" {
+		t.Fatal(val)
+	}
+	val = OptSysctlVal(op, "TestParam", "120", "180")
+	if val != "180" {
+		t.Fatal(val)
+	}
+	val = OptSysctlVal(op, "TestParam", "120", "120")
+	if val != "120" {
+		t.Fatal(val)
+	}
+	op = txtparser.Operator(">")
+	val = OptSysctlVal(op, "TestParam", "120", "100")
+	if val != "100" {
+		t.Fatal(val)
+	}
+	val = OptSysctlVal(op, "TestParam", "120", "180")
+	if val != "180" {
+		t.Fatal(val)
+	}
+	val = OptSysctlVal(op, "TestParam", "120", "120")
+	if val != "120" {
+		t.Fatal(val)
+	}
 }
 
 //GetBlkVal
 func TestOptBlkVal(t *testing.T) {
-	tblck := param.BlockDeviceQueue{param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}}
+	tblck := param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}}
 	val := OptBlkVal("IO_SCHEDULER_sda", "noop", &tblck)
 	if val != "noop" {
 		t.Fatal(val)
@@ -77,7 +108,7 @@ func TestOptBlkVal(t *testing.T) {
 	}
 }
 
-//SetBlkVal
+//SetBlkVal apply and revert
 
 //GetLimitsVal
 func TestOptLimitsVal(t *testing.T) {
@@ -91,16 +122,14 @@ func TestOptLimitsVal(t *testing.T) {
 	}
 }
 
-//SetLimitsVal
+//SetLimitsVal apply and revert
 
 func TestGetVMVal(t *testing.T) {
-	if runtime.GOARCH != "ppc64le" {
-		val := GetVMVal("THP")
-		if val != "always" && val != "madvise" && val != "never" {
-			t.Fatalf("wrong value '%+v' for THP.\n", val)
-		}
+	val := GetVMVal("THP")
+	if val != "always" && val != "madvise" && val != "never" {
+		t.Fatalf("wrong value '%+v' for THP.\n", val)
 	}
-	val := GetVMVal("KSM")
+	val = GetVMVal("KSM")
 	if val != "1" && val != "0" {
 		t.Fatalf("wrong value '%+v' for KSM.\n", val)
 	}
@@ -129,7 +158,48 @@ func TestOptVMVal(t *testing.T) {
 	}
 }
 
-//SetVMVal
+func TestSetVMVal(t *testing.T) {
+	newval := ""
+	oldval := GetVMVal("THP")
+	if oldval == "never" {
+		newval = "always"
+	} else {
+		newval = "never"
+	}
+	err := SetVMVal("THP", newval)
+	if err != nil {
+		t.Fatal(err)
+	}
+	val := GetVMVal("THP")
+	if val != newval {
+		t.Fatal(val)
+	}
+	// set test value back
+	err = SetVMVal("THP", oldval)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	oldval = GetVMVal("KSM")
+	if oldval == "0" {
+		newval = "1"
+	} else {
+		newval = "0"
+	}
+	err = SetVMVal("KSM", newval)
+	if err != nil {
+		t.Fatal(err)
+	}
+	val = GetVMVal("KSM")
+	if val != newval {
+		t.Fatal(val)
+	}
+	// set test value back
+	err = SetVMVal("KSM", oldval)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestGetCPUVal(t *testing.T) {
 	val, _, _ := GetCPUVal("force_latency")
@@ -158,6 +228,18 @@ func TestOptCPUVal(t *testing.T) {
 	}
 	val = OptCPUVal("energy_perf_bias", "cpu0:15 cpu1:6 cpu2:0", "performance")
 	if val != "cpu0:0 cpu1:0 cpu2:0" {
+		t.Fatal(val)
+	}
+	val = OptCPUVal("energy_perf_bias", "all:15", "normal")
+	if val != "all:6" {
+		t.Fatal(val)
+	}
+	val = OptCPUVal("energy_perf_bias", "all:15", "powersave")
+	if val != "all:15" {
+		t.Fatal(val)
+	}
+	val = OptCPUVal("energy_perf_bias", "all:15", "unknown")
+	if val != "all:0" {
 		t.Fatal(val)
 	}
 
@@ -400,7 +482,41 @@ func TestOptLoginVal(t *testing.T) {
 	}
 }
 
-// SetLoginVal
+func TestSetLoginVal(t *testing.T) {
+	utmFile := "/etc/systemd/logind.conf.d/saptune-UserTasksMax.conf"
+	val := "18446744073709"
+
+	err := SetLoginVal("UserTasksMax", val, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = os.Stat(utmFile); err != nil {
+		t.Fatal(err)
+	}
+	if !system.CheckForPattern(utmFile, val) {
+		t.Fatalf("wrong value in file '%s'\n", utmFile)
+	}
+	val = "infinity"
+	err = SetLoginVal("UserTasksMax", val, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = os.Stat(utmFile); err != nil {
+		t.Fatal(err)
+	}
+	if !system.CheckForPattern(utmFile, val) {
+		t.Fatalf("wrong value in file '%s'\n", utmFile)
+	}
+	val = "10813"
+	err = SetLoginVal("UserTasksMax", val, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err = os.Stat(utmFile); err == nil {
+		os.Remove(utmFile)
+		t.Fatalf("file '%s' still exists\n", utmFile)
+	}
+}
 
 func TestGetPagecacheVal(t *testing.T) {
 	prepare := LinuxPagingImprovements{PagingConfig: PCTestBaseConf}
