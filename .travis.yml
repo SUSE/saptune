@@ -5,15 +5,25 @@ go:
 os:
   - linux
 sudo: required
+services:
+  - docker
 
 before_script:
   - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
   - chmod +x ./cc-test-reporter
   - ./cc-test-reporter before-build
 
+before_install:
+  - docker --version
+  - docker pull shap/crmsh:latest
+  - docker run --name travis-st-ci --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro -td -v "$(pwd):/app" shap/crmsh
+  - docker ps -a
+
 script:
-  - sudo -E env "PATH=$PATH" go test -v -coverprofile=c.out -cover ./...
-  - go build
+  - docker exec -t travis-st-ci /bin/sh -c "cd /app; ./run_travis_tst.sh;"
 
 after_script:
+  - docker stop travis-st-ci
+  - docker rm travis-st-ci
+  - docker ps -a
   - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT

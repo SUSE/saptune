@@ -6,6 +6,7 @@ import (
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
+	"io"
 	"io/ioutil"
 	"os"
 	"path"
@@ -57,9 +58,9 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 }
 
 // PrintNoteApplyOrder prints out the order of the currently applied notes
-func (app *App) PrintNoteApplyOrder() {
+func (app *App) PrintNoteApplyOrder(writer io.Writer) {
 	if len(app.NoteApplyOrder) != 0 {
-		fmt.Printf("\ncurrent order of applied notes is: %s\n\n", strings.Join(app.NoteApplyOrder, " "))
+		fmt.Fprintf(writer, "\ncurrent order of applied notes is: %s\n\n", strings.Join(app.NoteApplyOrder, " "))
 	}
 }
 

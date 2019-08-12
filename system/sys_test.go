@@ -32,3 +32,59 @@ func TestReadSys(t *testing.T) {
 		t.Fatal(choice)
 	}
 }
+
+func TestWriteSys(t *testing.T) {
+	value := ""
+	key := "kernel/mm/transparent_hugepage/enabled"
+	oldVal, _ := GetSysChoice(key)
+	if oldVal == "never" {
+		value = "always"
+	} else {
+		value = "never"
+	}
+	if err := SetSysString(key, value); err != nil {
+		t.Fatal(err)
+	}
+	choice, _ := GetSysChoice(key)
+	if choice != value {
+		t.Fatal(choice)
+	}
+	// set test value back
+	if err := SetSysString(key, oldVal); err != nil {
+		t.Fatal(err)
+	}
+	ival := 0
+	key = "kernel/mm/ksm/run"
+	oval, _ := GetSysInt(key)
+	if oval == 0 {
+		ival = 1
+	}
+	if err := SetSysInt(key, ival); err != nil {
+		t.Fatal(err)
+	}
+	nval, _ := GetSysInt(key)
+	if nval != ival {
+		t.Fatal(nval)
+	}
+	// set test value back
+	if err := SetSysInt(key, oval); err != nil {
+		t.Fatal(err)
+	}
+	if err := SetSysString("kernel/not_avail", "1"); err == nil {
+		t.Fatal("writing to an non existent sys key")
+	}
+	if err := SetSysInt("kernel/not_avail", 1); err == nil {
+		t.Fatal("writing to an non existent sys key")
+	}
+}
+
+func TestTestSysString(t *testing.T) {
+	if tstErr := TestSysString("kernel/mm/ksm/run", "0"); tstErr == nil {
+		t.Log("writing sys key is possible")
+	} else {
+		t.Log("could not write sys key")
+	}
+	if tstErr := TestSysString("kernel/not_avail", "0"); tstErr == nil {
+		t.Fatal("writing to an non existent sys key")
+	}
+}

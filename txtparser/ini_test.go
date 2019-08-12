@@ -12,6 +12,7 @@ import (
 
 var fileNotExist = "/file_does_not_exist"
 var tstFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_all_test.ini")
+var tst2File = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/wrong_limit_test.ini")
 var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1410736")
 var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "TCP/IP: setting keepalive interval", "", "4", "14.12.2017 ")
 var category = "NET"
@@ -119,15 +120,51 @@ var iniJSON = `
 	}
 }`
 
+var iniWrongJSON = `
+{
+	"AllValues": [{
+		"Section": "limits",
+		"Key": "limits_NA",
+		"Operator": "=",
+		"Value": "NA"
+	}, {
+		"Section": "reminder",
+		"Key": "reminder",
+		"Operator": "",
+		"Value": "# Text to ignore for apply but to display.\n# Everything the customer should know about this note, especially\n# which parameters are NOT handled and the reason.\n"
+	}],
+	"KeyValue": {
+		"limits": {
+			"limits_NA": {
+				"Section": "limits",
+				"Key": "limits_NA",
+				"Operator": "=",
+				"Value": "NA"
+			}
+		},
+		"reminder": {
+			"reminder": {
+				"Section": "reminder",
+				"Key": "reminder",
+				"Operator": "",
+				"Value": "# Text to ignore for apply but to display.\n# Everything the customer should know about this note, especially\n# which parameters are NOT handled and the reason.\n"
+			}
+		}
+	}
+}`
+
 func TestParseINIFile(t *testing.T) {
 	content, err := ParseINIFile(fileName, false)
 	if err != nil {
 		t.Fatal(content, err)
 	}
-	newFile := path.Join(os.TempDir(), "saptunetest")
+	newFile := path.Join(os.TempDir(), "saptunetest1")
 	content, err = ParseINIFile(newFile, true)
 	if err != nil {
 		t.Fatal(content, err)
+	}
+	if _, err = os.Stat(newFile); err != nil {
+		t.Fatalf("file '%s' does not exist\n", newFile)
 	}
 	os.Remove(newFile)
 	newFile2 := path.Join(os.TempDir(), "saptunetest2")
@@ -135,7 +172,10 @@ func TestParseINIFile(t *testing.T) {
 	if err == nil {
 		t.Fatal(content, err)
 	}
-	os.Remove(newFile2)
+	if _, err = os.Stat(newFile); err == nil {
+		os.Remove(newFile2)
+		t.Fatalf("file '%s' exists\n", newFile2)
+	}
 }
 
 func TestParseINI(t *testing.T) {
@@ -153,9 +193,20 @@ func TestParseINI(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_ = ParseINI(string(content))
-	//newINI := ParseINI(string(content))
-	//t.Log(newINI)
+	newINI := ParseINI(string(content))
+
+	content, err = ioutil.ReadFile(tst2File)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newINI = ParseINI(string(content))
+	var wrongINI INIFile
+	if err := json.Unmarshal([]byte(iniWrongJSON), &wrongINI); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(*newINI, wrongINI) {
+		t.Fatalf("\n%+v\n%+v\n", *newINI, wrongINI)
+	}
 }
 
 func TestGetINIFileDescriptiveName(t *testing.T) {

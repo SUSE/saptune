@@ -14,9 +14,13 @@ var vers7 = "228-150.22.4"
 var vers8 = "228-150.22.0"
 
 func TestGetRpmVers(t *testing.T) {
-	actualVal := GetRpmVers("kernel-default")
+	actualVal := GetRpmVers("glibc")
 	if actualVal == "" {
-		t.Log("rpm 'kernel-default' not found")
+		t.Fatal("rpm 'glibc' not found")
+	}
+	actualVal = GetRpmVers("not-avail")
+	if actualVal != "" {
+		t.Fatal(actualVal)
 	}
 }
 
@@ -53,6 +57,14 @@ func TestCmpRpmVers(t *testing.T) {
 	if !actualVal {
 		t.Fatalf("'%s' reported as < '%s'\n", vers1, vers8)
 	}
+	actualVal = CmpRpmVers("", vers8)
+	if actualVal {
+		t.Fatal(actualVal)
+	}
+	actualVal = CmpRpmVers(vers1, vers1)
+	if !actualVal {
+		t.Fatalf("'%s' reported as != '%s'\n", vers1, vers1)
+	}
 }
 
 func TestCheckRpmVers(t *testing.T) {
@@ -87,6 +99,14 @@ func TestCheckRpmVers(t *testing.T) {
 	actualVal = CheckRpmVers("5.5p1", "5.5p10")
 	if actualVal >= 0 {
 		t.Fatal("higher")
+	}
+	actualVal = CheckRpmVers("5.5p1", "5.5r1")
+	if actualVal >= 0 {
+		t.Fatal("higher")
+	}
+	actualVal = CheckRpmVers("5.5p1", "5.5m1")
+	if actualVal != 1 {
+		t.Fatal("less or equal")
 	}
 	actualVal = CheckRpmVers("1b.fc17", "1b.fc17")
 	if actualVal != 0 {
@@ -135,5 +155,21 @@ func TestCheckRpmVers(t *testing.T) {
 	actualVal = CheckRpmVers("6.0", "6.0.rc1")
 	if actualVal >= 0 {
 		t.Fatal("higher")
+	}
+	actualVal = CheckRpmVers("6.0.2", "6.0.b")
+	if actualVal != 1 {
+		t.Fatal("less or equal - numeric against alpha")
+	}
+	actualVal = CheckRpmVers("6.0.b", "6.0.2")
+	if actualVal >= 0 {
+		t.Fatal("higher - alpha against numeric")
+	}
+	actualVal = CheckRpmVers("6.0", "6.0~beta")
+	if actualVal != 1 {
+		t.Fatal("less or equal - ~")
+	}
+	actualVal = CheckRpmVers("6.0~beta", "6.0")
+	if actualVal >= 0 {
+		t.Fatal("higher - ~")
 	}
 }

@@ -29,4 +29,22 @@ func TestLinuxPagingImprovements(t *testing.T) {
 	if o.VMPagecacheLimitMB != 0 || o.VMPagecacheLimitIgnoreDirty != 1 {
 		t.Fatal(o)
 	}
+	err = optimised.Apply()
+}
+
+func TestLinuxPagingImprovementsError(t *testing.T) {
+
+	PCTestBaseConf := "/not_avail_file"
+	prepare := LinuxPagingImprovements{PagingConfig: PCTestBaseConf}
+	if prepare.Name() == "" {
+		t.Fatal(prepare.Name())
+	}
+	initPrepare, err := prepare.Initialise()
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = initPrepare.(LinuxPagingImprovements).Optimise()
+	if err == nil {
+		t.Fatal(err)
+	}
 }

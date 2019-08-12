@@ -7,10 +7,13 @@ import (
 )
 
 func TestIOElevators(t *testing.T) {
+	scheduler := ""
 	inspected, err := BlockDeviceSchedulers{}.Inspect()
 	if err != nil {
 		t.Fatal(err, inspected)
 	}
+	t.Logf("inspected - '%+v'\n", inspected)
+	oldvals := inspected
 	if len(inspected.(BlockDeviceSchedulers).SchedulerChoice) == 0 {
 		t.Skip("the test case will not continue because inspection result turns out empty")
 	}
@@ -19,18 +22,58 @@ func TestIOElevators(t *testing.T) {
 			t.Fatal(inspected)
 		}
 	}
-	optimised, err := inspected.Optimise("noop")
+
+	// ANGI TODO - better solution
+	_, err = ioutil.ReadDir("/sys/block/sda/mq")
+	if err != nil {
+		// single queue scheduler (values: noop deadline cfq)
+		scheduler = "noop"
+	} else {
+		// multi queue scheduler (values: mq-deadline kyber bfq none)
+		scheduler = "none"
+	}
+
+	optimised, err := inspected.Optimise(scheduler)
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Logf("optimised - '%+v'\n", optimised)
 	if len(optimised.(BlockDeviceSchedulers).SchedulerChoice) == 0 {
 		t.Fatal(optimised)
 	}
 	for name, elevator := range optimised.(BlockDeviceSchedulers).SchedulerChoice {
-		if name == "" || elevator != "noop" {
+		if name == "" || elevator != scheduler {
 			t.Fatal(optimised)
 		}
 	}
+	// apply
+	err = optimised.Apply()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// check
+	applied, err := BlockDeviceSchedulers{}.Inspect()
+	if err != nil {
+		t.Fatal(err, applied)
+	}
+	t.Logf("applied - '%+v'\n", applied)
+	if len(applied.(BlockDeviceSchedulers).SchedulerChoice) == 0 {
+		t.Log("inspection result turns out empty")
+	}
+	for name, elevator := range applied.(BlockDeviceSchedulers).SchedulerChoice {
+		if name == "" || elevator != scheduler {
+			t.Fatal(applied)
+		}
+	}
+
+	// reset original values
+	err = oldvals.Apply()
+	if err != nil {
+		t.Fatal(err)
+	}
+	rev, _ := BlockDeviceSchedulers{}.Inspect()
+	t.Logf("reverted - '%+v'\n", rev)
 }
 
 func TestNrRequests(t *testing.T) {
@@ -38,6 +81,8 @@ func TestNrRequests(t *testing.T) {
 	if err != nil {
 		t.Fatal(err, inspected)
 	}
+	t.Logf("inspected - '%+v'\n", inspected)
+	oldvals := inspected
 	if len(inspected.(BlockDeviceNrRequests).NrRequests) == 0 {
 		t.Skip("the test case will not continue because inspection result turns out empty")
 	}
@@ -50,6 +95,7 @@ func TestNrRequests(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Logf("optimised - '%+v'\n", optimised)
 	if len(optimised.(BlockDeviceNrRequests).NrRequests) == 0 {
 		t.Fatal(optimised)
 	}
@@ -58,6 +104,34 @@ func TestNrRequests(t *testing.T) {
 			t.Fatal(optimised)
 		}
 	}
+	// apply
+	err = optimised.Apply()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// check
+	applied, err := BlockDeviceNrRequests{}.Inspect()
+	if err != nil {
+		t.Fatal(err, applied)
+	}
+	t.Logf("applied - '%+v'\n", applied)
+	if len(applied.(BlockDeviceNrRequests).NrRequests) == 0 {
+		t.Log("inspection result turns out empty")
+	}
+	for name, nrrequest := range applied.(BlockDeviceNrRequests).NrRequests {
+		if name == "" || nrrequest != 128 {
+			t.Fatal(applied)
+		}
+	}
+
+	// reset original values
+	err = oldvals.Apply()
+	if err != nil {
+		t.Fatal(err)
+	}
+	rev, _ := BlockDeviceNrRequests{}.Inspect()
+	t.Logf("reverted - '%+v'\n", rev)
 }
 
 func TestIsValidScheduler(t *testing.T) {
@@ -116,3 +190,5 @@ func TestIsValidforNrRequests(t *testing.T) {
 		}
 	}
 }
+
+// Apply für beide

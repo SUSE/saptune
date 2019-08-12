@@ -2,6 +2,8 @@ package txtparser
 
 import (
 	"fmt"
+	"os"
+	"path"
 	"reflect"
 	"testing"
 )
@@ -67,6 +69,22 @@ STRARY_TEST2="foo bar"
 `
 
 func TestSysconfig(t *testing.T) {
+	// read non existing file
+	tstconf, err := ParseSysconfigFile("/file_does_not_exist", false)
+	if err == nil {
+		t.Error(err)
+	}
+	if tstconf != nil {
+		t.Error(err)
+	}
+	// read sysconfig-sample file
+	tstconf, err = ParseSysconfigFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sysconfig-sample"), false)
+	if err != nil {
+		t.Error(err)
+	}
+	if tstconf.ToText() != sysconfigMatchText {
+		t.Error(tstconf.ToText())
+	}
 	// Parse the sample text
 	conf, err := ParseSysconfig(sysconfSampleText)
 	if err != nil {
@@ -74,60 +92,69 @@ func TestSysconfig(t *testing.T) {
 	}
 	// Read keys
 	if val := conf.GetString("LIMIT_1", ""); val != "@sapsys soft nofile 65536" {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetString("TMPFS_SIZE_MIN", ""); val != "8388608" {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetInt("TMPFS_SIZE_MIN", 0); val != 8388608 {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetUint64("TMPFS_SIZE_MIN", 0); val != 8388608 {
-		t.Fatal(val)
+		t.Error(val)
+	}
+	if val := conf.GetUint64("KEY_DOES_NOT_EXIST", 0); val != 0 {
+		t.Error(val)
 	}
 	if val := conf.GetString("KEY_DOES_NOT_EXIST", "DEFAULT"); val != "DEFAULT" {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetInt("KEY_DOES_NOT_EXIST", 12); val != 12 {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	// Read array keys
 	if val := conf.GetStringArray("STRARY_TEST", nil); !reflect.DeepEqual(val, []string{"foo", "bar", "abc"}) {
-		t.Fatal(val)
+		t.Error(val)
+	}
+	if val := conf.GetStringArray("KEY_DOES_NOT_EXIST", []string{"DEFAULT"}); !reflect.DeepEqual(val, []string{"DEFAULT"}) {
+		t.Error(val)
 	}
 	if val := conf.GetIntArray("INTARY_TEST", nil); !reflect.DeepEqual(val, []int{12, 34, 56}) {
-		t.Fatal(val)
+		t.Error(val)
+	}
+	if val := conf.GetIntArray("KEY_DOES_NOT_EXIST", []int{0}); !reflect.DeepEqual(val, []int{0}) {
+		t.Error(val)
 	}
 	// Read boolean keys
 	if val := conf.GetBool("BOOL_TEST_YES", false); !val {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetBool("BOOL_TEST_TRUE", false); !val {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetBool("BOOL_TEST_EMPTY", true); !val {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetBool("BOOL_TEST_EMPTY", false); val {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetBool("BOOL_TEST_NO", true); val {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetBool("BOOL_TEST_FALSE", true); val {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	// Write keys
 	conf.Set("LIMIT_1", "new value")
 	conf.Set("newkey", "orange")
 	if val := conf.GetString("LIMIT_1", ""); val != "new value" {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetInt("newkey", 12); val != 12 {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if val := conf.GetString("newkey", ""); val != "orange" {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	// Write array keys
 	conf.SetIntArray("INTARY_TEST", []int{12, 34})
@@ -138,6 +165,6 @@ func TestSysconfig(t *testing.T) {
 		fmt.Println("==================")
 		fmt.Println(txt)
 		fmt.Println("==================")
-		t.Fatal("failed to convert back into text")
+		t.Error("failed to convert back into text")
 	}
 }

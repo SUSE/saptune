@@ -1,0 +1,29 @@
+## Path:        Productivity/Other
+## Description: Limits for system tuning profile "sap-netweaver".
+## ServiceRestart: tuned
+
+## Type:        integer
+## Default:     8388608
+#
+# The lower tuning limit of the size of tmpfs mounted on /dev/shm in KiloBytes.
+# It should not be smaller than 8388608 (8GB).
+#
+TMPFS_SIZE_MIN="8388608"
+
+## Type:        regexp(^@(sapsys|sdba|dba)[[:space:]]+(-|hard|soft)[[:space:]]+(nofile)[[:space:]]+[[:digit:]]+)
+## Default:     ""
+#
+# Maximum number of open files for SAP application groups sapsys, sdba, and dba.
+# Consult with manual page limits.conf(5) for the correct syntax.
+#
+LIMIT_1="new value"
+LIMIT_2="@sapsys hard nofile 65536"
+BOOL_TEST_YES="yes"
+BOOL_TEST_TRUE="true"
+BOOL_TEST_EMPTY=""
+BOOL_TEST_NO="no"
+BOOL_TEST_FALSE="false"
+STRARY_TEST="foo bar"
+INTARY_TEST="12 34"
+newkey="orange"
+STRARY_TEST2="foo bar"
