@@ -15,7 +15,8 @@ func TestCalledFrom(t *testing.T) {
 func TestLog(t *testing.T) {
 	logFile := "/tmp/saptune_tst.log"
 	debug := "1"
-	LogInit(logFile, debug)
+	verbose := "on"
+	LogInit(logFile, debug, verbose)
 	DebugLog("TestMessage%s_%s", "1", "Debug")
 	if !CheckForPattern(logFile, "TestMessage1_Debug") {
 		t.Fatal("Debug message found in log file")

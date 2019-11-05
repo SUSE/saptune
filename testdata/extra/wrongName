@@ -13,7 +13,7 @@ kernel.sem = 250 32000 32 1024
 kernel.shmmax = 18446744073709551615
 
 [block]
-IO_SCHEDULER = noop
+IO_SCHEDULER = noop, none
 NRREQ = 1020
 
 [cpu]

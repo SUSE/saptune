@@ -15,6 +15,7 @@ var debugLogger *log.Logger   // Debug logger
 var errorLogger *log.Logger   // Error logger
 var warningLogger *log.Logger // Warning logger
 var debugSwitch string        // Switch Debug on or off
+var verboseSwitch string      // Switch verbose mode on or off
 
 // calledFrom returns the name and the line number of the calling source file
 func calledFrom() string {
@@ -39,7 +40,9 @@ func DebugLog(txt string, stuff ...interface{}) {
 func InfoLog(txt string, stuff ...interface{}) {
 	if infoLogger != nil {
 		infoLogger.Printf(calledFrom()+txt+"\n", stuff...)
-		fmt.Fprintf(os.Stdout, "INFO: "+txt+"\n", stuff...)
+		if verboseSwitch == "on" {
+			fmt.Fprintf(os.Stdout, "    INFO: "+txt+"\n", stuff...)
+		}
 	}
 }
 
@@ -47,7 +50,9 @@ func InfoLog(txt string, stuff ...interface{}) {
 func WarningLog(txt string, stuff ...interface{}) {
 	if warningLogger != nil {
 		warningLogger.Printf(calledFrom()+txt+"\n", stuff...)
-		fmt.Fprintf(os.Stderr, "    WARNING: "+txt+"\n", stuff...)
+		if verboseSwitch == "on" {
+			fmt.Fprintf(os.Stderr, "    WARNING: "+txt+"\n", stuff...)
+		}
 	}
 }
 
@@ -61,7 +66,7 @@ func ErrorLog(txt string, stuff ...interface{}) error {
 }
 
 // LogInit initialise the different log writer saptune will use
-func LogInit(logFile, debug string) {
+func LogInit(logFile, debug, verbose string) {
 	var saptuneLog io.Writer
 	//define log format
 	logTimeFormat := time.Now().Format("2006-01-02 15:04:05.000 ")
@@ -93,4 +98,5 @@ func LogInit(logFile, debug string) {
 	errorLogger = log.New(saptuneLog, logTimeFormat+"ERROR    saptune.", 0)
 
 	debugSwitch = debug
+	verboseSwitch = verbose
 }
