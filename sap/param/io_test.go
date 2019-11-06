@@ -13,7 +13,6 @@ func TestIOElevators(t *testing.T) {
 		t.Fatal(err, inspected)
 	}
 	t.Logf("inspected - '%+v'\n", inspected)
-	oldvals := inspected
 	if len(inspected.(BlockDeviceSchedulers).SchedulerChoice) == 0 {
 		t.Skip("the test case will not continue because inspection result turns out empty")
 	}
@@ -22,6 +21,12 @@ func TestIOElevators(t *testing.T) {
 			t.Fatal(inspected)
 		}
 	}
+	oldvals := BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}
+	t.Logf("oldvals - '%+v'\n", oldvals)
+	for name, elevator := range inspected.(BlockDeviceSchedulers).SchedulerChoice {
+		oldvals.SchedulerChoice[name] = elevator
+	}
+	t.Logf("oldvals - '%+v'\n", oldvals)
 
 	// ANGI TODO - better solution
 	_, err = ioutil.ReadDir("/sys/block/sda/mq")
@@ -33,7 +38,8 @@ func TestIOElevators(t *testing.T) {
 		scheduler = "none"
 	}
 
-	optimised, err := inspected.Optimise(scheduler)
+	optVal := "sda " + scheduler
+	optimised, err := inspected.Optimise(optVal)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +48,7 @@ func TestIOElevators(t *testing.T) {
 		t.Fatal(optimised)
 	}
 	for name, elevator := range optimised.(BlockDeviceSchedulers).SchedulerChoice {
-		if name == "" || elevator != scheduler {
+		if name == "" || (name == "sda" && elevator != scheduler) {
 			t.Fatal(optimised)
 		}
 	}
@@ -62,12 +68,13 @@ func TestIOElevators(t *testing.T) {
 		t.Log("inspection result turns out empty")
 	}
 	for name, elevator := range applied.(BlockDeviceSchedulers).SchedulerChoice {
-		if name == "" || elevator != scheduler {
+		if name == "" || (name == "sda" && elevator != scheduler) {
 			t.Fatal(applied)
 		}
 	}
 
 	// reset original values
+	t.Logf("oldvals - '%+v'\n", oldvals)
 	err = oldvals.Apply()
 	if err != nil {
 		t.Fatal(err)
@@ -82,7 +89,6 @@ func TestNrRequests(t *testing.T) {
 		t.Fatal(err, inspected)
 	}
 	t.Logf("inspected - '%+v'\n", inspected)
-	oldvals := inspected
 	if len(inspected.(BlockDeviceNrRequests).NrRequests) == 0 {
 		t.Skip("the test case will not continue because inspection result turns out empty")
 	}
@@ -91,7 +97,13 @@ func TestNrRequests(t *testing.T) {
 			t.Fatal(inspected)
 		}
 	}
-	optimised, err := inspected.Optimise(128)
+	oldvals := BlockDeviceNrRequests{NrRequests: make(map[string]int)}
+	t.Logf("oldvals - '%+v'\n", oldvals)
+	for name, nrrequest := range inspected.(BlockDeviceNrRequests).NrRequests {
+		oldvals.NrRequests[name] = nrrequest
+	}
+	t.Logf("oldvals - '%+v'\n", oldvals)
+	optimised, err := inspected.Optimise(32)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +132,7 @@ func TestNrRequests(t *testing.T) {
 		t.Log("inspection result turns out empty")
 	}
 	for name, nrrequest := range applied.(BlockDeviceNrRequests).NrRequests {
-		if name == "" || nrrequest != 128 {
+		if name == "" || nrrequest != 32 {
 			t.Fatal(applied)
 		}
 	}
@@ -179,6 +191,11 @@ func TestIsValidforNrRequests(t *testing.T) {
 				t.Log("'1024' is not a valid number of requests for 'sda'")
 			} else {
 				t.Log("'1024' is a valid number of requests for 'sda'")
+			}
+			if !IsValidforNrRequests("sda", "32") {
+				t.Log("'32' is not a valid number of requests for 'sda'")
+			} else {
+				t.Log("'32' is a valid number of requests for 'sda'")
 			}
 		}
 		if entry.Name() == "vda" {

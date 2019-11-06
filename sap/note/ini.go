@@ -109,6 +109,9 @@ func (vend INISettings) Initialise() (Note, error) {
 	vend.SysctlParams = make(map[string]string)
 	vend.OverrideParams = make(map[string]string)
 	vend.Inform = make(map[string]string)
+	pc = LinuxPagingImprovements{}
+	blck = param.BlockDeviceQueue{param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}}
+
 	for _, param := range ini.AllValues {
 		if override && len(ow.KeyValue[param.Section]) != 0 {
 			param.Key, param.Value, param.Operator = vend.handleInitOverride(param.Key, param.Value, param.Section, param.Operator, ow)
@@ -120,7 +123,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = GetVMVal(param.Key)
 		case INISectionBlock:
-			vend.SysctlParams[param.Key], _ = GetBlkVal(param.Key, &blck)
+			vend.SysctlParams[param.Key], vend.Inform[param.Key], _ = GetBlkVal(param.Key, &blck)
 		case INISectionLimits:
 			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Value)
 		case INISectionService:
@@ -161,6 +164,8 @@ func (vend INISettings) Initialise() (Note, error) {
 
 // Optimise gets the expected parameter values from the configuration
 func (vend INISettings) Optimise() (Note, error) {
+	blckOK := make(map[string][]string)
+	scheds := ""
 	// Parse the configuration file
 	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
 	if err != nil {
@@ -192,7 +197,8 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
 		case INISectionBlock:
-			vend.SysctlParams[param.Key] = OptBlkVal(param.Key, param.Value, &blck)
+			vend.SysctlParams[param.Key], vend.Inform[param.Key] = OptBlkVal(param.Key, param.Value, &blck, blckOK)
+			scheds = param.Value
 		case INISectionLimits:
 			vend.SysctlParams[param.Key] = OptLimitsVal(vend.SysctlParams[param.Key], param.Value)
 		case INISectionService:
@@ -224,6 +230,14 @@ func (vend INISettings) Optimise() (Note, error) {
 		}
 		// add values to parameter saved state file, if NOT in 'verify'
 		vend.addParamSavedStates(param.Key)
+	}
+
+	// print info about used block scheduler
+	if scheds != "" {
+		system.InfoLog("Trying scheduler in this order: %s.", scheds)
+		for b, s := range blckOK {
+			system.InfoLog("'%s' will be used as new scheduler for device '%s'.", b, strings.Join(s, " "))
+		}
 	}
 	return vend, nil
 }

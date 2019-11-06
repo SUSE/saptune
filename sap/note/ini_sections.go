@@ -94,16 +94,17 @@ var isNrreq = regexp.MustCompile(`^NRREQ_\w+$`)
 
 // GetBlkVal initialise the block device structure with the current
 // system settings
-func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, error) {
+func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) {
 	newQueue := make(map[string]string)
 	newReq := make(map[string]int)
 	retVal := ""
+	info := ""
 
 	switch {
 	case isSched.MatchString(key):
 		newIOQ, err := cur.BlockDeviceSchedulers.Inspect()
 		if err != nil {
-			return "", err
+			return "", info, err
 		}
 		newQueue = newIOQ.(param.BlockDeviceSchedulers).SchedulerChoice
 		retVal = newQueue[strings.TrimPrefix(key, "IO_SCHEDULER_")]
@@ -111,24 +112,47 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, error) {
 	case isNrreq.MatchString(key):
 		newNrR, err := cur.BlockDeviceNrRequests.Inspect()
 		if err != nil {
-			return "", err
+			return "", info, err
 		}
 		newReq = newNrR.(param.BlockDeviceNrRequests).NrRequests
 		retVal = strconv.Itoa(newReq[strings.TrimPrefix(key, "NRREQ_")])
 		cur.BlockDeviceNrRequests = newNrR.(param.BlockDeviceNrRequests)
 	}
-	return retVal, nil
+	return retVal, info, nil
 }
 
 // OptBlkVal optimises the block device structure with the settings
 // from the configuration file
-func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue) string {
+func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][]string) (string, string) {
+	info := ""
+	if cfgval == "" {
+		return cfgval, info
+	}
 	sval := cfgval
 	switch {
 	case isSched.MatchString(key):
-		sval = strings.ToLower(cfgval)
-		opt, _ := cur.BlockDeviceSchedulers.Optimise(sval)
-		cur.BlockDeviceSchedulers = opt.(param.BlockDeviceSchedulers)
+		oval := ""
+		sfound := false
+		dname := regexp.MustCompile(`^IO_SCHEDULER_(\w+)$`)
+		bdev := dname.FindStringSubmatch(key)
+		for _, sched := range strings.Split(cfgval, ",") {
+			sval = strings.ToLower(strings.TrimSpace(sched))
+			if !param.IsValidScheduler(bdev[1], sval) {
+				continue
+			} else {
+				sfound = true
+				oval = bdev[1] + " " + sval
+				bOK[sval] = append(bOK[sval], bdev[1])
+				break
+			}
+		}
+		if !sfound {
+			sval = cfgval
+			info = "NA"
+		} else {
+			opt, _ := cur.BlockDeviceSchedulers.Optimise(oval)
+			cur.BlockDeviceSchedulers = opt.(param.BlockDeviceSchedulers)
+		}
 	case isNrreq.MatchString(key):
 		if sval == "0" {
 			sval = "1024"
@@ -137,7 +161,7 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue) string {
 		opt, _ := cur.BlockDeviceNrRequests.Optimise(ival)
 		cur.BlockDeviceNrRequests = opt.(param.BlockDeviceNrRequests)
 	}
-	return sval
+	return sval, info
 }
 
 // SetBlkVal applies the settings to the system

@@ -51,9 +51,16 @@ func (ioe BlockDeviceSchedulers) Inspect() (Parameter, error) {
 
 // Optimise gets the expected scheduler value from the configuration
 func (ioe BlockDeviceSchedulers) Optimise(newElevatorName interface{}) (Parameter, error) {
-	newIOE := BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}
-	for k := range ioe.SchedulerChoice {
-		newIOE.SchedulerChoice[k] = newElevatorName.(string)
+	newIOE := ioe
+	fields := strings.Fields(newElevatorName.(string))
+	if len(fields) > 1 {
+		bdev := fields[0]
+		newSched := fields[1]
+		for k := range ioe.SchedulerChoice {
+			if k == bdev {
+				newIOE.SchedulerChoice[k] = newSched
+			}
+		}
 	}
 	return newIOE, nil
 }

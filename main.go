@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/exec"
 	"reflect"
+	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
@@ -40,6 +41,7 @@ const (
 	footnote2             = "[2] setting is not available on the system"
 	footnote3             = "[3] value is only checked, but NOT set"
 	footnote4             = "[4] cpu idle state settings differ"
+	footnote5             = "[5] expected value does not contain a supported scheduler"
 )
 
 // PrintHelpAndExit Print the usage and exit
@@ -88,10 +90,11 @@ func cliArg(i int) string {
 	return ""
 }
 
-var tuneApp *app.App                 // application configuration and tuning states
-var tuningOptions note.TuningOptions // Collection of tuning options from SAP notes and 3rd party vendors.
-var footnote1 = footnote1X86         // set 'unsupported' footnote regarding the architecture
-var debugSwitch = "0"                // Switch Debug on or off
+var tuneApp *app.App                             // application configuration and tuning states
+var tuningOptions note.TuningOptions             // Collection of tuning options from SAP notes and 3rd party vendors.
+var footnote1 = footnote1X86                     // set 'unsupported' footnote regarding the architecture
+var debugSwitch = os.Getenv("SAPTUNE_DEBUG")     // Switch Debug on ("1") or off ("0" - default)
+var verboseSwitch = os.Getenv("SAPTUNE_VERBOSE") // Switch verbose mode on ("on" - default) or off ("off")
 var solutionSelector = runtime.GOARCH
 
 func main() {
@@ -107,7 +110,12 @@ func main() {
 	}
 	saptuneVersion := sconf.GetString("SAPTUNE_VERSION", "")
 	// check, if DEBUG is set in /etc/sysconfig/saptune
-	debugSwitch = sconf.GetString("DEBUG", "0")
+	if debugSwitch == "" {
+		debugSwitch = sconf.GetString("DEBUG", "0")
+	}
+	if verboseSwitch == "" {
+		verboseSwitch = sconf.GetString("VERBOSE", "on")
+	}
 
 	if arg1 := cliArg(1); arg1 == "" || arg1 == "help" || arg1 == "--help" {
 		PrintHelpAndExit(0)
@@ -124,7 +132,7 @@ func main() {
 	}
 
 	// activate logging
-	system.LogInit(logFile, debugSwitch)
+	system.LogInit(logFile, debugSwitch, verboseSwitch)
 
 	switch saptuneVersion {
 	case "1":
@@ -299,7 +307,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 4, 4)
+	footnote := make([]string, 5, 5)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -344,6 +352,9 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 		inform := ""
 		if noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue != nil {
 			inform = noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string)
+			if inform == "" && noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ExpectedValue != nil {
+				inform = noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ExpectedValue.(string)
+			}
 		}
 
 		// prepare footnote
@@ -506,6 +517,12 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 		compliant = "no [4]"
 		comment = comment + " [4]"
 		footnote[3] = footnote4
+	}
+	var isSched = regexp.MustCompile(`^IO_SCHEDULER_\w+$`)
+	if isSched.MatchString(comparison.ReflectMapKey) && inform == "NA" {
+		compliant = compliant + " [5]"
+		comment = comment + " [5]"
+		footnote[4] = footnote5
 	}
 	return compliant, comment, footnote
 }
