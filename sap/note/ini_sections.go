@@ -138,10 +138,8 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 		for _, sched := range strings.Split(cfgval, ",") {
 			sval = strings.ToLower(strings.TrimSpace(sched))
 			if !param.IsValidScheduler(bdev[1], sval) {
-				//system.WarningLog("'%s' is not a valid scheduler for device '%s', skipping.", sval, bdev[1])
 				continue
 			} else {
-				//system.InfoLog("'%s' will be used as new scheduler for device '%s'.", sval, bdev[1])
 				sfound = true
 				oval = bdev[1] + " " + sval
 				bOK[sval] = append(bOK[sval], bdev[1])
