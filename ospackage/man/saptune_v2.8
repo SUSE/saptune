@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "June 2019" "" "System Optimisation For SAP"
+.TH saptune "8" "November 2019" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 2\fP)
 
@@ -122,6 +122,8 @@ e.g.
 [3] value is only checked, but NOT set
 .br
 [4] cpu idle state settings differ
+.br
+[5] expected value does not contain a supported scheduler
 
 If a Note definition contains a '\fB[reminder]\fP' section, this section will be printed below the table and the footnotes. It will be highlighted with red color.
 .TP
@@ -148,6 +150,8 @@ e.g.
 [3] value is only checked, but NOT set
 .br
 [4] cpu idle state settings differ
+.br
+[5] expected value does not contain a supported scheduler
 
 If a Note definition contains a '\fB[reminder]\fP' section, this section will be printed below the table and the footnotes. It will be highlighted with red color.
 .TP
@@ -245,6 +249,13 @@ or   SAP4711-very_aromatic_tunings
 .RS 0
 Syntax of the file:
 The content of the 'drop-in' file should be written in a INI file style with sections headed by '[section_name]' keywords. See saptune-note(5) to find the supported sections and their available options.
+
+ATTENTION:
+If renaming or removing an active (aka 'already applied') note definition file from the file system the \fBold\fP name of this note still remains in the configuration of saptune. This may lead to unexpected messages.
+.br
+So please always revert the note \fBbefore\fP renaming or removing it from the file system.
+.br
+Even if editing an active vendor or customer specific note definition file on the file system level, please do a revert of that note and then apply the Note again, to get the changes take effect.
 .PP
 
 .SH FILES
