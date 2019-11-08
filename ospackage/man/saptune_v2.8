@@ -169,7 +169,10 @@ The values from the override files will take precedence over the values from \fI
 .br
 The saptune options 'list', 'verify' and 'simulate' will mark the existence of an override file and the contained values.
 
-When creating an override file for an already applied SAP Note definition, please do a 'revert all' and then apply the Notes again, to get the changes take effect.
+ATTENTION:
+Creating or changing an override file just changes the configuration \fIinside\fP this Note definition file, but does not change the \fIrunning\fP configuration of the system.
+.br
+That means: When creating or changing an override file for an \fBalready applied\fP Note definition, please do a '\fIsaptune note revert <NoteID>\fP' and then apply this Note again, to get the changes take effect.
 .TP
 .B create
 This allows to create own Note definition files in \fI/etc/saptune/extra\fP. The Note definition file will be created from a template file into the location \fI/etc/saptune/extra\fP, if the file does not exist already. After that an editor will be launched to allow changing the Note definitions.

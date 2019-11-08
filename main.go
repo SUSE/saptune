@@ -748,7 +748,7 @@ func NoteActionCustomise(noteID string) {
 		}
 		editFileName = ovFileName
 	} else if err == nil {
-		system.InfoLog("Note override file already exists, using file '%s' as base for editing\n", ovFileName)
+		system.InfoLog("Note override file already exists, using file '%s' as base for editing", ovFileName)
 		editFileName = ovFileName
 	} else {
 		errorExit("Failed to read file '%s' - %v", ovFileName, err)
@@ -757,10 +757,16 @@ func NoteActionCustomise(noteID string) {
 	if editor == "" {
 		editor = "/usr/bin/vim" // launch vim by default
 	}
-	//if err := syscall.Exec(editor, []string{editor, fileName}, os.Environ()); err != nil {
+	i := tuneApp.PositionInNoteApplyOrder(noteID)
+	if i < 0 { // noteID not yet available
+		system.InfoLog("Do not forget to apply the just edited Note to get your changes take effect\n")
+	} else { // noteID already applied
+		system.InfoLog("Your just edited Note is already applied. To get your changes take effect, please 'revert' the Note and apply again.\n")
+	}
 	if err := syscall.Exec(editor, []string{editor, editFileName}, os.Environ()); err != nil {
 		errorExit("Failed to start launch editor %s: %v", editor, err)
 	}
+	// if syscall.Exec returns 'nil' the execution of the program ends immediately
 }
 
 // NoteActionCreate helps the customer to create an own Note definition
