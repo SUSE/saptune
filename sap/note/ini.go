@@ -185,6 +185,9 @@ func (vend INISettings) Optimise() (Note, error) {
 			// use value from override file instead of the value
 			// from the sap note (ConfFile)
 			if vend.OverrideParams[param.Key] == "untouched" {
+				if isSched.MatchString(param.Key) {
+					scheds = "untouched"
+				}
 				continue
 			}
 			param.Value = vend.OverrideParams[param.Key]
@@ -198,7 +201,9 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = OptBlkVal(param.Key, param.Value, &blck, blckOK)
-			scheds = param.Value
+			if isSched.MatchString(param.Key) {
+				scheds = param.Value
+			}
 		case INISectionLimits:
 			vend.SysctlParams[param.Key] = OptLimitsVal(vend.SysctlParams[param.Key], param.Value)
 		case INISectionService:
@@ -232,11 +237,16 @@ func (vend INISettings) Optimise() (Note, error) {
 		vend.addParamSavedStates(param.Key)
 	}
 
-	// print info about used block scheduler
-	if scheds != "" {
-		system.InfoLog("Trying scheduler in this order: %s.", scheds)
-		for b, s := range blckOK {
-			system.InfoLog("'%s' will be used as new scheduler for device '%s'.", b, strings.Join(s, " "))
+	// print info about used block scheduler only during 'verify' to
+	// supress double prints in case of 'apply'
+	if _, ok := vend.ValuesToApply["verify"]; ok && scheds != "" {
+		if scheds == "untouched" {
+			system.InfoLog("Schedulers will be remain untouched!")
+		} else {
+			system.InfoLog("Trying scheduler in this order: %s.", scheds)
+			for b, s := range blckOK {
+				system.InfoLog("'%s' will be used as new scheduler for device '%s'.", b, strings.Join(s, " "))
+			}
 		}
 	}
 	return vend, nil
