@@ -759,9 +759,9 @@ func NoteActionCustomise(noteID string) {
 	}
 	i := tuneApp.PositionInNoteApplyOrder(noteID)
 	if i < 0 { // noteID not yet available
-		system.InfoLog("Do not forget to apply the just edited Note to get your changes take effect\n")
+		system.InfoLog("Do not forget to apply the just edited Note to get your changes to take effect\n")
 	} else { // noteID already applied
-		system.InfoLog("Your just edited Note is already applied. To get your changes take effect, please 'revert' the Note and apply again.\n")
+		system.InfoLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
 	}
 	if err := syscall.Exec(editor, []string{editor, editFileName}, os.Environ()); err != nil {
 		errorExit("Failed to start launch editor %s: %v", editor, err)
