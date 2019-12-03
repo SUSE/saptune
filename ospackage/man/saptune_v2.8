@@ -28,7 +28,10 @@ ATTENTION: If you still use version \fB1\fP of saptune please refer to man page 
 [ list | verify ]
 
 \fBsaptune note\fP
-[ apply | simulate | verify | customise | create | revert | show ]  NoteID
+[ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
+
+\fBsaptune note\fP
+rename NoteID newNoteID
 
 \fBsaptune solution\fP
 [ list | verify ]
@@ -184,6 +187,33 @@ Revert optimisation settings carried out by the Note, and the Note will no longe
 .TP
 .B show
 Print content of Note definition file to stdout
+.TP
+.B delete
+This allows to delete a customer or vendor specific Note definition file including the corresponding override file if available. A confirmation is needed to finish the action.
+
+ATTENTION:
+.br
+Note definition files shipped by the saptune package - so called \fIinternal\fP saptune Note definition files - \fBmust not\fP be deleted. There will be an appropriate error message.
+.br
+If a corresponding override file is avaiable, there will be the possibility to delete this file instead.
+
+ATTENTION:
+.br
+If the Note is already applied, the command will be terminated with the information, that the Note first needs to be reverted before it can be deleted.
+.TP
+.B rename
+This allows to rename a customer or vendor specific Note definition file to a new name. If a corresponding override file is available, this file will be renamed too. A confirmation is needed to finish the action.
+.br
+If the \fBnew\fP Note definition name already exists the command will be terminated with a respective message.
+
+ATTENTION:
+.br
+Note definition files shipped by the saptune package - so called \fIinternal\fP saptune Note definition files - and their corresponding override files, if available, \fBmust not\fP be renamed. There will be an appropriate error message.
+
+ATTENTION:
+.br
+If the Note is already applied, the command will be terminated with the information, that the Note first needs to be reverted before it can be deleted.
+.TP
 
 .SH SOLUTION ACTIONS
 A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.
