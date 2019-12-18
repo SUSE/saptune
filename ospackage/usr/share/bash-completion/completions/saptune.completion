@@ -1,8 +1,9 @@
-# v1.2
+# v1.3
 #
 #   saptune daemon [ start | status | stop ]
 #   saptune note [ list | verify ]
-#   saptune note [ apply | simulate | verify | customise | revert | create | show ] NoteID
+#   saptune note [ apply | simulate | verify | customise | revert | create | show | delete ] NoteID
+#   saptune note rename NoteID NoteID
 #   saptune solution [ list | verify ]
 #   saptune solution [ apply | simulate | verify | revert ] SolutionName
 #   saptune revert all
@@ -27,7 +28,7 @@ _saptune() {
                             ;;
                 solution)   opts="list verify apply simulate revert"
                             ;;
-                note)       opts="list verify apply simulate customise revert create show"
+                note)       opts="list verify apply simulate customise revert create show delete rename"
                             ;;
 		revert)	    opts="all"	
 			    ;;
@@ -36,7 +37,7 @@ _saptune() {
             ;;
 
         3)  case "${prev}" in
-                apply|simulate|verify|customise|revert|create|show)
+                apply|simulate|verify|customise|revert|create|show|delete|rename)
                         case "${COMP_WORDS[COMP_CWORD-2]}" in
                             note)       opts=$((ls -1q /usr/share/saptune/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | cut -d '-' -f 1 | sed 's/\.conf$//') | tr '\n' ' ') 
                                         ;;
