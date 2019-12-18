@@ -1,9 +1,9 @@
 # 1984787 - SUSE LINUX Enterprise Server 12: Installation notes
 # Description:    You want to use SAP software on SUSE Linux Enterprise Server 12 (SLES 12) or SUSE Linux Enterprise Server for SAP Applications 12 (SLES for SAP 12).
-# Version 32 from 26.06.2018 in English
+# Version 35 from 29.11.2019 in English
 
 [version]
-# SAP-NOTE=1984787 CATEGORY=LINUX VERSION=32 DATE=26.06.2018 NAME="SUSE LINUX Enterprise Server 12: Installation notes"
+# SAP-NOTE=1984787 CATEGORY=LINUX VERSION=35 DATE=29.11.2019 NAME="SUSE LINUX Enterprise Server 12: Installation notes"
 
 [login]
 # /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf UserTasksMax setting
