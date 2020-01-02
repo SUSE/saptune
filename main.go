@@ -908,7 +908,6 @@ func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 		errorExit("Failed to revert note %s: %v", noteID, err)
 	}
 	fmt.Fprintf(writer, "Parameters tuned by the note have been successfully reverted.\n")
-	fmt.Fprintf(writer, "Please note: the reverted note may still show up in list of enabled notes, if an enabled solution refers to it.\n")
 }
 
 // SolutionAction  Solution actions like apply, revert, verify asm.

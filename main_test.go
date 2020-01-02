@@ -153,7 +153,6 @@ The system fully conforms to the specified note.
 
 func TestNoteActionRevert(t *testing.T) {
 	var revertMatchText = `Parameters tuned by the note have been successfully reverted.
-Please note: the reverted note may still show up in list of enabled notes, if an enabled solution refers to it.
 `
 	buffer := bytes.Buffer{}
 	nID := "simpleNote"
