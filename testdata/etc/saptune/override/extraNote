@@ -1,0 +1,10 @@
+[version]
+# SAP-NOTE=extraNote CATEGORY=extra VERSION=0 DATE=04.06.2019 NAME="Configuration drop in for extra tests" 
+
+[sysctl]
+kernel.sem = 250 32000 32 1024
+
+[reminder]
+# Text to ignore for apply but to display.
+# Everything the customer should know about this note, especially
+# which parameters are NOT handled and the reason.

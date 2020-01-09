@@ -466,8 +466,8 @@ func setupTableFormat(skeys []string, noteField string, noteCompare map[string]m
 func printHeadline(writer io.Writer, header, id string, tuningOpts note.TuningOptions) {
 	if header != "NONE" {
 		nName := ""
-		if len(tuningOptions) > 0 {
-			nName = tuningOptions[id].Name()
+		if len(tuningOpts) > 0 {
+			nName = tuningOpts[id].Name()
 		}
 		fmt.Fprintf(writer, "\n%s - %s \n\n", id, nName)
 	}
@@ -579,18 +579,18 @@ func setWidthOfColums(compare note.FieldComparison, c1, c2, c3, c4 int) (int, in
 }
 
 // VerifyAllParameters Verify that all system parameters do not deviate from any of the enabled solutions/notes.
-func VerifyAllParameters() {
+func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
 	if len(tuneApp.NoteApplyOrder) == 0 {
-		fmt.Println("No notes or solutions enabled, nothing to verify.")
+		fmt.Fprintf(writer, "No notes or solutions enabled, nothing to verify.\n")
 	} else {
 		unsatisfiedNotes, comparisons, err := tuneApp.VerifyAll()
 		if err != nil {
 			errorExit("Failed to inspect the current system: %v", err)
 		}
-		PrintNoteFields(os.Stdout, "NONE", comparisons, true)
-		tuneApp.PrintNoteApplyOrder(os.Stdout)
+		PrintNoteFields(writer, "NONE", comparisons, true)
+		tuneApp.PrintNoteApplyOrder(writer)
 		if len(unsatisfiedNotes) == 0 {
-			fmt.Println("The running system is currently well-tuned according to all of the enabled notes.")
+			fmt.Fprintf(writer, "The running system is currently well-tuned according to all of the enabled notes.\n")
 		} else {
 			errorExit("The parameters listed above have deviated from SAP/SUSE recommendations.")
 		}
@@ -613,11 +613,11 @@ func NoteAction(actionName, noteID, newNoteID string) {
 	case "create":
 		NoteActionCreate(noteID)
 	case "show":
-		NoteActionShow(noteID)
+		NoteActionShow(os.Stdout, noteID, NoteTuningSheets, ExtraTuningSheets, tuneApp)
 	case "delete":
-		NoteActionDelete(noteID)
+		NoteActionDelete(os.Stdin, os.Stdout, noteID, NoteTuningSheets, ExtraTuningSheets, OverrideTuningSheets, tuneApp)
 	case "rename":
-		NoteActionRename(noteID, newNoteID)
+		NoteActionRename(os.Stdin, os.Stdout, noteID, newNoteID, NoteTuningSheets, ExtraTuningSheets, OverrideTuningSheets, tuneApp)
 	case "revert":
 		NoteActionRevert(os.Stdout, noteID, tuneApp)
 	default:
@@ -689,7 +689,7 @@ func NoteActionList(writer io.Writer, tuneApp *app.App, tOptions note.TuningOpti
 // against the system settings
 func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		VerifyAllParameters()
+		VerifyAllParameters(writer, tuneApp)
 	} else {
 		// Check system parameters against the specified note, no matter the note has been tuned for or not.
 		conforming, comparisons, _, err := tuneApp.VerifyNote(noteID)
@@ -735,8 +735,8 @@ func NoteActionCustomise(noteID string) {
 		errorExit("%v", err)
 	}
 	editFileName := ""
-	fileName, _ := getFileName(noteID)
-	ovFileName, overrideNote := getovFile(noteID)
+	fileName, _ := getFileName(noteID, NoteTuningSheets, ExtraTuningSheets)
+	ovFileName, overrideNote := getovFile(noteID, OverrideTuningSheets)
 	if !overrideNote {
 		//copy file
 		err := system.CopyFile(fileName, ovFileName)
@@ -798,24 +798,24 @@ func NoteActionCreate(noteID string) {
 }
 
 // NoteActionShow shows the content of the Note definition file
-func NoteActionShow(noteID string) {
+func NoteActionShow(writer io.Writer, noteID, noteTuningSheets, extraTuningSheets string, tuneApp *app.App) {
 	if noteID == "" {
 		PrintHelpAndExit(1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		errorExit("%v", err)
 	}
-	fileName, _ := getFileName(noteID)
+	fileName, _ := getFileName(noteID, noteTuningSheets, extraTuningSheets)
 	cont, err := ioutil.ReadFile(fileName)
 	if err != nil {
 		errorExit("Failed to read file '%s' - %v", fileName, err)
 	}
-	fmt.Printf("\nContent of Note %s:\n%s\n", noteID, string(cont))
+	fmt.Fprintf(writer, "\nContent of Note %s:\n%s\n", noteID, string(cont))
 }
 
 // NoteActionDelete deletes a custom Note definition file and
 // the corresponding override file
-func NoteActionDelete(noteID string) {
+func NoteActionDelete(reader io.Reader, writer io.Writer, noteID, noteTuningSheets, extraTuningSheets, ovTuningSheets string, tuneApp *app.App) {
 	if noteID == "" {
 		PrintHelpAndExit(1)
 	}
@@ -824,8 +824,8 @@ func NoteActionDelete(noteID string) {
 	}
 
 	txtConfirm := fmt.Sprintf("Do you really want to delete Note (%s)?", noteID)
-	fileName, extraNote := getFileName(noteID)
-	ovFileName, overrideNote := getovFile(noteID)
+	fileName, extraNote := getFileName(noteID, noteTuningSheets, extraTuningSheets)
+	ovFileName, overrideNote := getovFile(noteID, ovTuningSheets)
 
 	// check, if note is active - applied
 	i := tuneApp.PositionInNoteApplyOrder(noteID)
@@ -851,14 +851,14 @@ func NoteActionDelete(noteID string) {
 		txtConfirm = fmt.Sprintf("Note to delete is a customer/vendor specific Note.\nDo you really want to delete this Note (%s)?", noteID)
 	}
 
-	if readYesNo(txtConfirm, os.Stdin) {
+	if readYesNo(txtConfirm, reader, writer) {
 		deleteNote(fileName, ovFileName, overrideNote, extraNote)
 	}
 }
 
 // NoteActionRename renames a custom Note definition file and
 // the corresponding override file
-func NoteActionRename(noteID, newNoteID string) {
+func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID, noteTuningSheets, extraTuningSheets, ovTuningSheets string, tuneApp *app.App) {
 	if noteID == "" || newNoteID == "" {
 		PrintHelpAndExit(1)
 	}
@@ -870,11 +870,13 @@ func NoteActionRename(noteID, newNoteID string) {
 	}
 
 	txtConfirm := fmt.Sprintf("Do you really want to rename Note %s to %s?", noteID, newNoteID)
-	fileName, extraNote := getFileName(noteID)
+	fileName, extraNote := getFileName(noteID, noteTuningSheets, extraTuningSheets)
+	newFileName := fmt.Sprintf("%s%s.conf", extraTuningSheets, newNoteID)
 	if !extraNote {
 		errorExit("The Note definition file you want to rename is a saptune internal (shipped) Note and can NOT be renamed. Exiting ...")
 	}
-	ovFileName, overrideNote := getovFile(noteID)
+	ovFileName, overrideNote := getovFile(noteID, ovTuningSheets)
+	newovFileName := fmt.Sprintf("%s%s", ovTuningSheets, newNoteID)
 
 	// check, if note is active - applied
 	i := tuneApp.PositionInNoteApplyOrder(noteID)
@@ -893,8 +895,8 @@ func NoteActionRename(noteID, newNoteID string) {
 		txtConfirm = fmt.Sprintf("Note to rename is a customer/vendor specific Note.\nDo you really want to rename this Note (%s) to the new name '%s'?", noteID, newNoteID)
 	}
 
-	if readYesNo(txtConfirm, os.Stdin) {
-		renameNote(newNoteID, fileName, ovFileName, overrideNote, extraNote)
+	if readYesNo(txtConfirm, reader, writer) {
+		renameNote(fileName, newFileName, ovFileName, newovFileName, overrideNote, extraNote)
 	}
 }
 
@@ -914,15 +916,15 @@ func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 func SolutionAction(actionName, solName string) {
 	switch actionName {
 	case "apply":
-		SolutionActionApply(solName)
+		SolutionActionApply(os.Stdout, solName, tuneApp)
 	case "list":
-		SolutionActionList()
+		SolutionActionList(os.Stdout, tuneApp)
 	case "verify":
-		SolutionActionVerify(solName)
+		SolutionActionVerify(os.Stdout, solName, tuneApp)
 	case "simulate":
-		SolutionActionSimulate(solName)
+		SolutionActionSimulate(os.Stdout, solName, tuneApp)
 	case "revert":
-		SolutionActionRevert(solName)
+		SolutionActionRevert(os.Stdout, solName, tuneApp)
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -930,7 +932,7 @@ func SolutionAction(actionName, solName string) {
 
 // SolutionActionApply applies parameter settings defined by the solution
 // to the system
-func SolutionActionApply(solName string) {
+func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
 		PrintHelpAndExit(1)
 	}
@@ -944,27 +946,29 @@ func SolutionActionApply(solName string) {
 	if err != nil {
 		errorExit("Failed to tune for solution %s: %v", solName, err)
 	}
-	fmt.Println("All tuning options for the SAP solution have been applied successfully.")
+	fmt.Fprintf(writer, "All tuning options for the SAP solution have been applied successfully.\n")
 	if len(removedAdditionalNotes) > 0 {
-		fmt.Println("The following previously-enabled notes are now tuned by the SAP solution:")
+		fmt.Fprintf(writer, "\nThe following previously-enabled notes are now tuned by the SAP solution:\n")
 		for _, noteNumber := range removedAdditionalNotes {
-			fmt.Printf("\t%s\t%s\n", noteNumber, tuningOptions[noteNumber].Name())
+			fmt.Fprintf(writer, "\t%s\t%s\n", noteNumber, tuneApp.AllNotes[noteNumber].Name())
 		}
 	}
 	if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
-		fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
-			"you must instruct saptune to configure \"tuned\" daemon by running:" +
-			"\n    saptune daemon start")
+		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot,"+
+			"you must instruct saptune to configure \"tuned\" daemon by running:"+
+			"\n    saptune daemon start\n")
 	}
 }
 
 // SolutionActionList lists all available solution definitions
-func SolutionActionList() {
-	fmt.Println("\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, D denotes deprecated solutions):")
+func SolutionActionList(writer io.Writer, tuneApp *app.App) {
+	setColor := false
+	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, D denotes deprecated solutions):\n")
 	for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 		format := "\t%-18s -"
 		if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
 			format = " " + setGreenText + "*" + format
+			setColor = true
 		}
 		if len(solution.OverrideSolutions[solutionSelector][solName]) != 0 {
 			//override solution
@@ -978,30 +982,35 @@ func SolutionActionList() {
 		if _, ok := solution.DeprecSolutions[solutionSelector][solName]; ok {
 			format = " D" + format
 		}
-		format = format + solNotes + resetTextColor + "\n"
-		fmt.Printf(format, solName)
+		format = format + solNotes
+		if setColor {
+			format = format + resetTextColor
+		}
+		format = format + "\n"
+		//fmt.Printf(format, solName)
+		fmt.Fprintf(writer, format, solName)
 	}
 	if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
-		fmt.Println("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot," +
-			"you must instruct saptune to configure \"tuned\" daemon by running:" +
-			"\n    saptune daemon start")
+		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot,"+
+			"you must instruct saptune to configure \"tuned\" daemon by running:"+
+			"\n    saptune daemon start\n")
 	}
 }
 
 // SolutionActionVerify compares all parameter settings from a solution
 // definition against the system settings
-func SolutionActionVerify(solName string) {
+func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
-		VerifyAllParameters()
+		VerifyAllParameters(writer, tuneApp)
 	} else {
 		// Check system parameters against the specified solution, no matter the solution has been tuned for or not.
 		unsatisfiedNotes, comparisons, err := tuneApp.VerifySolution(solName)
 		if err != nil {
 			errorExit("Failed to test the current system against the specified SAP solution: %v", err)
 		}
-		PrintNoteFields(os.Stdout, "NONE", comparisons, true)
+		PrintNoteFields(writer, "NONE", comparisons, true)
 		if len(unsatisfiedNotes) == 0 {
-			fmt.Println("The system fully conforms to the tuning guidelines of the specified SAP solution.")
+			fmt.Fprintf(writer, "The system fully conforms to the tuning guidelines of the specified SAP solution.\n")
 		} else {
 			errorExit("The parameters listed above have deviated from the specified SAP solution recommendations.\n")
 		}
@@ -1010,7 +1019,7 @@ func SolutionActionVerify(solName string) {
 
 // SolutionActionSimulate shows all changes that will be applied to the system if
 // the solution will be applied.
-func SolutionActionSimulate(solName string) {
+func SolutionActionSimulate(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
 		PrintHelpAndExit(1)
 	}
@@ -1018,27 +1027,27 @@ func SolutionActionSimulate(solName string) {
 	if _, comparisons, err := tuneApp.VerifySolution(solName); err != nil {
 		errorExit("Failed to test the current system against the specified note: %v", err)
 	} else {
-		fmt.Printf("If you run `saptune solution apply %s`, the following changes will be applied to your system:\n", solName)
-		PrintNoteFields(os.Stdout, "NONE", comparisons, false)
+		fmt.Fprintf(writer, "If you run `saptune solution apply %s`, the following changes will be applied to your system:\n", solName)
+		PrintNoteFields(writer, "NONE", comparisons, false)
 	}
 }
 
 // SolutionActionRevert reverts all parameter settings of a solution back to
 // the state before 'apply'
-func SolutionActionRevert(solName string) {
+func SolutionActionRevert(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
 		PrintHelpAndExit(1)
 	}
 	if err := tuneApp.RevertSolution(solName); err != nil {
 		errorExit("Failed to revert tuning for solution %s: %v", solName, err)
 	}
-	fmt.Println("Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
+	fmt.Fprintf(writer, "Parameters tuned by the notes referred by the SAP solution have been successfully reverted.\n")
 }
 
 // getFileName returns the corresponding filename of a given noteID
 // additional it returns a boolean value which is pointing out that the Note
 // the Note is a custom Note (extraNote = true) or an internal one
-func getFileName(noteID string) (string, bool) {
+func getFileName(noteID, NoteTuningSheets, ExtraTuningSheets string) (string, bool) {
 	extraNote := false
 	fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
@@ -1064,7 +1073,7 @@ func getFileName(noteID string) (string, bool) {
 // getovFile returns the corresponding override filename of a given noteID
 // additional it returns a boolean value which is pointing out if the
 // override file already exists (overrideNote = true) or not
-func getovFile(noteID string) (string, bool) {
+func getovFile(noteID, OverrideTuningSheets string) (string, bool) {
 	overrideNote := true
 	ovFileName := fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)
 	if _, err := os.Stat(ovFileName); os.IsNotExist(err) {
@@ -1078,10 +1087,10 @@ func getovFile(noteID string) (string, bool) {
 // readYesNo asks the user for yes/no answer.
 // "y", "Y", "yes", "YES", and "Yes" following by "enter" count as confirmation
 // "n", "N", "no", "NO", and "No" following by "enter" count as non-confirmation
-func readYesNo(s string, in io.Reader) bool {
+func readYesNo(s string, in io.Reader, out io.Writer) bool {
 	reader := bufio.NewReader(in)
 	for {
-		fmt.Printf("%s [y/n]: ", s)
+		fmt.Fprintf(out, "%s [y/n]: ", s)
 		response, err := reader.ReadString('\n')
 		if err != nil {
 			errorExit("Failed to read input: %v", err)
@@ -1096,15 +1105,13 @@ func readYesNo(s string, in io.Reader) bool {
 }
 
 // renameNote will rename a Note to an new name
-func renameNote(newNoteID, fileName, ovFileName string, overrideNote, extraNote bool) {
+func renameNote(fileName, newFileName, ovFileName, newovFileName string, overrideNote, extraNote bool) {
 	if overrideNote {
-		newovFileName := fmt.Sprintf("%s%s", OverrideTuningSheets, newNoteID)
 		if err := os.Rename(ovFileName, newovFileName); err != nil {
 			errorExit("Failed to rename file '%s' to '%s' - %v", ovFileName, newovFileName, err)
 		}
 	}
 	if extraNote {
-		newFileName := fmt.Sprintf("%s%s.conf", ExtraTuningSheets, newNoteID)
 		if err := os.Rename(fileName, newFileName); err != nil {
 			errorExit("Failed to rename file '%s' to '%s' - %v", fileName, newFileName, err)
 		}
