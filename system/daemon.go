@@ -1,6 +1,7 @@
 package system
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os/exec"
 	"regexp"
@@ -98,6 +99,32 @@ func IsSystemRunning() bool {
 	return match
 }
 
+// IsServiceAvailable checks, if a systemd service is available on the system
+func IsServiceAvailable(service string) bool {
+	match := false
+	cmdName := "/usr/bin/systemctl"
+	cmdArgs := []string{"--no-pager", "list-unit-files", "-t", "service"}
+	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	if err != nil {
+		return match
+	}
+	for _, line := range strings.Split(string(cmdOut), "\n") {
+		fields := strings.Fields(line)
+		if len(fields) == 0 {
+			continue
+		}
+		if strings.TrimSpace(fields[0]) == service {
+			match = true
+			break
+		}
+		if strings.TrimSpace(fields[0]) == fmt.Sprintf("%s.service", service) {
+			match = true
+			break
+		}
+	}
+	return match
+}
+
 // WriteTunedAdmProfile write new profile to tuned, used instead of sometimes
 // unreliable 'tuned-adm' command
 func WriteTunedAdmProfile(profileName string) error {
@@ -122,6 +149,10 @@ func GetTunedProfile() string {
 
 // TunedAdmOff calls tuned-adm to switch off the active profile.
 func TunedAdmOff() error {
+	if !SystemctlIsRunning("tuned.service") {
+		// 'tuned-adm off' does not work without running tuned
+		return nil
+	}
 	if out, err := exec.Command("tuned-adm", "off").CombinedOutput(); err != nil {
 		return ErrorLog("Failed to call tuned-adm to switch off the active profile - %v %s", err, string(out))
 	}

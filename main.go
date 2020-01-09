@@ -244,7 +244,11 @@ func DaemonAction(actionName string) {
 // DaemonActionStart starts the tuned service
 func DaemonActionStart() {
 	fmt.Println("Starting daemon (tuned.service), this may take several seconds...")
-	system.SystemctlDisableStop(SapconfService) // do not error exit on failure
+	if system.IsServiceAvailable(SapconfService) {
+		if err := system.SystemctlDisableStop(SapconfService); err != nil {
+			errorExit("%v", err)
+		}
+	}
 	if err := system.TunedAdmProfile("saptune"); err != nil {
 		errorExit("%v", err)
 	}
