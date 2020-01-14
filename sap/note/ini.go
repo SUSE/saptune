@@ -143,6 +143,8 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
 			continue
+		case INISectionVersion:
+			continue
 		case INISectionPagecache:
 			// page cache is special, has it's own config file
 			// so adjust path to pagecache config file, if needed
@@ -227,6 +229,8 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
 			continue
+		case INISectionVersion:
+			continue
 		case INISectionPagecache:
 			vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc)
 		default:
@@ -283,7 +287,7 @@ func (vend INISettings) Apply() error {
 		}
 
 		switch param.Section {
-		case INISectionRpm, INISectionGrub, INISectionReminder:
+		case INISectionVersion, INISectionRpm, INISectionGrub, INISectionReminder:
 			// These parameters are only checked, but not applied.
 			// So nothing to do during apply and no need for revert
 			continue

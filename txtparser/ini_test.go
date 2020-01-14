@@ -13,10 +13,10 @@ import (
 var fileNotExist = "/file_does_not_exist"
 var tstFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_all_test.ini")
 var tst2File = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/wrong_limit_test.ini")
-var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1410736")
-var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "TCP/IP: setting keepalive interval", "", "4", "14.12.2017 ")
-var category = "NET"
-var fileVersion = "4"
+var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1557506")
+var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "Linux paging improvements", "", "14", "10.08.2015 ")
+var category = "LINUX"
+var fileVersion = "14"
 
 var iniExample = `
 # comment
