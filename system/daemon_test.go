@@ -17,6 +17,12 @@ func TestSystemctl(t *testing.T) {
 	}
 
 	testService := "rpcbind.service"
+	if !IsServiceAvailable("rpcbind") {
+		t.Fatalf("service 'rpcbind' not available on the system\n")
+	}
+	if !IsServiceAvailable(testService) {
+		t.Fatalf("service '%s' not available on the system\n", testService)
+	}
 	if err := SystemctlEnable(testService); err != nil {
 		t.Fatal(err)
 	}
@@ -54,6 +60,9 @@ func TestSystemctl(t *testing.T) {
 		t.Fatalf("service '%s' still running\n", testService)
 	}
 
+	if IsServiceAvailable("UnkownService") {
+		t.Fatalf("service '%s' should not, but is available on the system\n", testService)
+	}
 	if err := SystemctlEnable("UnkownService"); err == nil {
 		t.Fatal(err)
 	}

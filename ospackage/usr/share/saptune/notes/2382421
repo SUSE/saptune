@@ -1,8 +1,8 @@
 # 2382421 - Optimizing the Network Configuration on HANA- and OS-Level
-# Version 33 from 07.05.2019 in English
+# Version 35 from 10.12.2019 in English
 
 [version]
-# SAP-NOTE=2382421 CATEGORY=HANA VERSION=33 DATE=07.05.2019 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
+# SAP-NOTE=2382421 CATEGORY=HANA VERSION=35 DATE=10.12.2019 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
 
 [sysctl]
 # This parameter limits the size of the accept backlog of a listening socket.
@@ -126,6 +126,9 @@ net.ipv4.tcp_syn_retries = 8
 # To ensure complete functionality it must be ensured that the wmem_max and
 # rmem_max values are at least the same as the respective maximum value of the
 # parameters net.ipv4.tcp_wmem and net.ipv4.tcp_rmem.
+#
+# In landscapes where TCP timestamps are enabled please carefully evaluate if
+# the following OS settings can be applied:
 #
 # net.ipv4.tcp_tw_reuse
 # This setting allows HANA to reuse a client port immediately after the
