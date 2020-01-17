@@ -1,5 +1,5 @@
 .\"/* 
-.\" * Copyright (c) 2018-2019 SUSE LLC.
+.\" * Copyright (c) 2018-2020 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Angela Briel
 .\" *
@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "November 2019" "" "saptune note file format description"
+.TH "saptune-note" "5" "January 2029" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB2\fP
 .SH DESCRIPTION
@@ -142,18 +142,18 @@ ATTENTION: not idling *at all* increases power consumption significantly and red
 The section "[grub]" is checking kernel command line settings for grub.
 The values from the Note definition files are only checked against \fI/proc/cmdline\fP. Changing the grub configuration is not supported by saptune.
 
-Some of these values are set by saptune during runtime, so changing the grub configuration is possible but not needed.
+Some of these values are set by 'alternative' settings by saptune during runtime, so changing the grub configuration is possible but not needed.
 
 This section can contain options like:
 .TP
 \fBintel_idle.max_cstate=1\fP and \fBprocessor.max_cstate=1\fP
-Configure C-States for lower latency in Linux (applies to Intel-based systems only) - see energy_perf_bias, governor and force latency in section [cpu]
+Configure C-States for lower latency in Linux (applies to Intel-based systems only) - see force_latency in section [cpu] as 'alternative' settings
 .TP
 .BI numa_balancing=disable
-Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl]
+Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl] as 'alternative' settings
 .TP
 .BI transparent_hugepage=never
-Disable transparent hugepages - see THP in section [vm]
+Disable transparent hugepages - see THP in section [vm] as 'alternative' settings
 \" section limits
 .SH "[limits]"
 The section "[limits]" is dealing with ulimit settings for user login sessions in the pam_limits module. The settings will \fBNOT\fP be done in the central limits file \fI/etc/security/limits.conf\fP. Instead there will be a \fBdrop-in file\fP in \fI/etc/security/limits.d\fP for each domain-item-type combination used in the Note definition file.

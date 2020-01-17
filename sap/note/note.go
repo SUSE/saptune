@@ -165,6 +165,7 @@ func CompareJSValue(v1, v2 interface{}, op string) (v1JS, v2JS string, match boo
 func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]FieldComparison, valApplyList []string) {
 	comparisons = make(map[string]FieldComparison)
 	allMatch = true
+	grubAvail := false
 	// Compare all fields
 	refActualNote := reflect.ValueOf(actualNote)
 	refExpectedNote := reflect.ValueOf(expectedNote)
@@ -177,6 +178,9 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 			actualMap := refActualNote.Field(i)
 			expectedMap := refExpectedNote.Field(i)
 			for _, key := range actualMap.MapKeys() {
+				if strings.Contains(key.String(), "grub") {
+					grubAvail = true
+				}
 				actualValue := actualMap.MapIndex(key).Interface()
 				expectedValue := expectedMap.MapIndex(key).Interface()
 				ckey := fmt.Sprintf("%s[%s]", fieldName, key.String())
@@ -187,7 +191,14 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					valApplyList = append(valApplyList, comparisons[ckey].ReflectMapKey)
 				}
 				if !comparisons[ckey].MatchExpectation {
-					allMatch = false
+					// a parameter, which is not supported
+					// by the system ("all:none") should not
+					// influence the compare result
+					// and grub compliance will be handled
+					// at the end of the compare
+					if actualValue.(string) != "all:none" && !strings.Contains(key.String(), "grub") {
+						allMatch = false
+					}
 				}
 			}
 		} else {
@@ -198,7 +209,35 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 			}
 		}
 	}
+	if allMatch && grubAvail {
+		allMatch = chkGrubCompliance(comparisons, allMatch)
+	}
 	return
+}
+
+// grub special - check compliance of alternative settings
+// only if one of these alternatives are not compliant, modify the result of
+// the compare
+func chkGrubCompliance(comparisons map[string]FieldComparison, allMatch bool) bool {
+	// grub:numa_balancing, kernel.numa_balancing
+	if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "grub:numa_balancing")].MatchExpectation {
+		if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "kernel.numa_balancing")].MatchExpectation && allMatch == true {
+			allMatch = false
+		}
+	}
+	// grub:transparent_hugepage, THP
+	if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "grub:transparent_hugepage")].MatchExpectation {
+		if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "THP")].MatchExpectation && allMatch == true {
+			allMatch = false
+		}
+	}
+	// grub:intel_idle.max_cstate, grub:processor.max_cstate, force_latency
+	if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "grub:intel_idle.max_cstate")].MatchExpectation || !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "grub:processor.max_cstate")].MatchExpectation {
+		if (!comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "force_latency")].MatchExpectation && comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "force_latency")].ActualValue != "all:none") && allMatch == true {
+			allMatch = false
+		}
+	}
+	return allMatch
 }
 
 // cmpMapValue compares map values
