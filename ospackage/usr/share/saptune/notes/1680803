@@ -1,7 +1,14 @@
 # 1680803 - SYB: SAP Adaptive Server Enterprise
 # - Best Practice for SAP Business Suite and SAP BW
+#
 # as described in the best practice document appended to the note
-# capter 2.2 Configuration for Linux
+# or if outdated look at https://www.sap.com/documents/2016/06/26450353-767c-0010-82c7-eda71af511fa.html
+# chapter 3.2 Configuration for Linux
+#
+# SAP Applications on SAP Adaptive Server Enterprise
+# - Best Practices for Migration and Runtime
+# Version 1.6 from 2018-01-15
+#
 # SAP ASE (Sybase)
 # Version 24 from 20.11.2017 in English
 #
@@ -78,4 +85,4 @@ vm.swappiness = 15
 # For best performance, disable the journal via tune2fs ^has_journal.
 # For ext4 the recommended mount options are 'noatime,nodiratime', if journaling is disabled or 'noatime,nodiratime,cache=writeback,barrier=0', if journaling is not disabled
 # For xfs the recommended mount options are 'noatime,nodiratime,nobarrier,logbufs=8'
-# network tuning including transmit queue (ifconfig <eth#> txqueuelen <value>). See Best_Practices_SAP_ASE_v1.2b.pdf (appended to the SAP Note) for more information.
+# network tuning including transmit queue (ifconfig <eth#> txqueuelen <value>). See Best_Practices_SAP_ASE_v1.2b.pdf (appended to the SAP Note) for more information or look at https://www.sap.com/documents/2016/06/26450353-767c-0010-82c7-eda71af511fa.html

@@ -43,6 +43,7 @@ const (
 	footnote3             = "[3] value is only checked, but NOT set"
 	footnote4             = "[4] cpu idle state settings differ"
 	footnote5             = "[5] expected value does not contain a supported scheduler"
+	footnote6             = "[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
 )
 
 // PrintHelpAndExit Print the usage and exit
@@ -319,7 +320,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 5, 5)
+	footnote := make([]string, 6, 6)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -358,6 +359,9 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 			compliant = "no "
 		} else {
 			compliant = "yes"
+		}
+		if comparison.ActualValue.(string) == "all:none" {
+			compliant = " - "
 		}
 
 		// check inform map for special settings
@@ -535,6 +539,11 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 		compliant = compliant + " [5]"
 		comment = comment + " [5]"
 		footnote[4] = footnote5
+	}
+	if strings.Contains(comparison.ReflectMapKey, "grub") {
+		compliant = compliant + " [6]"
+		comment = comment + " [6]"
+		footnote[5] = footnote6
 	}
 	return compliant, comment, footnote
 }
