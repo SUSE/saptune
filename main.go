@@ -52,11 +52,11 @@ func PrintHelpAndExit(exitStatus int) {
 Daemon control:
   saptune daemon [ start | status | stop ]
 Tune system according to SAP and SUSE notes:
-  saptune note [ list | verify ]
+  saptune note [ list | verify | enabled ]
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify ]
+  saptune solution [ list | verify | enabled ]
   saptune solution [ apply | simulate | verify | revert ] SolutionName
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
@@ -633,6 +633,8 @@ func NoteAction(actionName, noteID, newNoteID string) {
 		NoteActionRename(os.Stdin, os.Stdout, noteID, newNoteID, NoteTuningSheets, ExtraTuningSheets, OverrideTuningSheets, tuneApp)
 	case "revert":
 		NoteActionRevert(os.Stdout, noteID, tuneApp)
+	case "enabled":
+		NoteActionEnabled(os.Stdout, tuneApp)
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -925,6 +927,15 @@ func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 	fmt.Fprintf(writer, "Parameters tuned by the note have been successfully reverted.\n")
 }
 
+// NoteActionEnabled lists all enabled Note definitions as list separated
+// by blanks
+func NoteActionEnabled(writer io.Writer, tuneApp *app.App) {
+	if len(tuneApp.NoteApplyOrder) != 0 {
+		fmt.Fprintf(writer, "%s", strings.Join(tuneApp.NoteApplyOrder, " "))
+	}
+}
+
+
 // SolutionAction  Solution actions like apply, revert, verify asm.
 func SolutionAction(actionName, solName string) {
 	switch actionName {
@@ -938,6 +949,8 @@ func SolutionAction(actionName, solName string) {
 		SolutionActionSimulate(os.Stdout, solName, tuneApp)
 	case "revert":
 		SolutionActionRevert(os.Stdout, solName, tuneApp)
+	case "enabled":
+		SolutionActionEnabled(os.Stdout, tuneApp)
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -1055,6 +1068,13 @@ func SolutionActionRevert(writer io.Writer, solName string, tuneApp *app.App) {
 		errorExit("Failed to revert tuning for solution %s: %v", solName, err)
 	}
 	fmt.Fprintf(writer, "Parameters tuned by the notes referred by the SAP solution have been successfully reverted.\n")
+}
+
+// SolutionActionEnabled prints out the enabled solution definition
+func SolutionActionEnabled(writer io.Writer, tuneApp *app.App) {
+	if len(tuneApp.TuneForSolutions) != 0 {
+		fmt.Fprintf(writer, "%s", tuneApp.TuneForSolutions[0])
+	}
 }
 
 // getFileName returns the corresponding filename of a given noteID

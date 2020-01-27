@@ -1,10 +1,10 @@
 # v1.3
 #
 #   saptune daemon [ start | status | stop ]
-#   saptune note [ list | verify ]
+#   saptune note [ list | verify | enabled ]
 #   saptune note [ apply | simulate | verify | customise | revert | create | show | delete ] NoteID
 #   saptune note rename NoteID NoteID
-#   saptune solution [ list | verify ]
+#   saptune solution [ list | verify | enabled ]
 #   saptune solution [ apply | simulate | verify | revert ] SolutionName
 #   saptune revert all
 #   saptune version
@@ -26,9 +26,9 @@ _saptune() {
         2)  case "${prev}" in
                 daemon)     opts="start status stop"
                             ;;
-                solution)   opts="list verify apply simulate revert"
+                solution)   opts="list verify apply simulate revert enabled"
                             ;;
-                note)       opts="list verify apply simulate customise revert create show delete rename"
+                note)       opts="list verify apply simulate customise revert create show delete rename enabled"
                             ;;
 		revert)	    opts="all"	
 			    ;;

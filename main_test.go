@@ -196,7 +196,7 @@ Hints or values not yet handled by saptune. So please read carefully, check and 
 # which parameters are NOT handled and the reason.
 [0m
 
-current order of applied notes is: simpleNote
+current order of enabled notes is: simpleNote
 
 The running system is currently well-tuned according to all of the enabled notes.
 `
@@ -225,7 +225,7 @@ Hints or values not yet handled by saptune. So please read carefully, check and 
 # which parameters are NOT handled and the reason.
 [0m
 
-current order of applied notes is: simpleNote
+current order of enabled notes is: simpleNote
 
 The system fully conforms to the specified note.
 `
@@ -234,6 +234,16 @@ The system fully conforms to the specified note.
 		NoteActionVerify(&buffer, nID, tApp)
 		txt := buffer.String()
 		checkOut(t, txt, verifyMatchText)
+	})
+
+	// Test NoteActionEnabled
+	t.Run("NoteActionEnabled", func(t *testing.T) {
+		enabledMatchText := "simpleNote"
+
+		buffer := bytes.Buffer{}
+		NoteActionEnabled(&buffer, tApp)
+		txt := buffer.String()
+		checkOut(t, txt, enabledMatchText)
 	})
 
 	// Test NoteActionRevert
@@ -634,6 +644,16 @@ The system fully conforms to the tuning guidelines of the specified SAP solution
 		SolutionActionVerify(&buffer, sName, tApp)
 		txt := buffer.String()
 		checkOut(t, txt, verifyMatchText)
+	})
+
+	// Test SolutionActionEnabled
+	t.Run("SolutionActionEnabled", func(t *testing.T) {
+		enabledMatchText := "sol1"
+
+		buffer := bytes.Buffer{}
+		SolutionActionEnabled(&buffer, tApp)
+		txt := buffer.String()
+		checkOut(t, txt, enabledMatchText)
 	})
 
 	// Test SolutionActionRevert

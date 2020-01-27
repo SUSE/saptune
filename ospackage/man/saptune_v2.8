@@ -25,7 +25,7 @@ ATTENTION: If you still use version \fB1\fP of saptune please refer to man page 
 [ start | status | stop ]
 
 \fBsaptune note\fP
-[ list | verify ]
+[ list | verify | enabled ]
 
 \fBsaptune note\fP
 [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
@@ -34,7 +34,7 @@ ATTENTION: If you still use version \fB1\fP of saptune please refer to man page 
 rename NoteID newNoteID
 
 \fBsaptune solution\fP
-[ list | verify ]
+[ list | verify | enabled ]
 
 \fBsaptune solution\fP
 [ apply | simulate | verify | revert ] SolutionName
@@ -100,6 +100,9 @@ List all SAP Notes, vendor specific tuning definitions and SUSE recommendation a
 Currently implemented notes are marked with '\fB+\fP', if manually enabled, '\fB*\fP', if enabled by solutions or '\fB-\fP', if a note belonging to an enabled solution was reverted manually. In all cases the notes are highlighted with green color.
 .br
 If an \fBoverride\fP file exists for a NoteID, the note is marked with '\fBO\fP'.
+.TP
+.B enabled
+Print all current enabled notes as a list separated by blanks.
 .TP
 .B verify
 If a Note ID is specified, saptune verifies the current running system against the recommendations specified in the Note. If Note ID is not specified, saptune verifies all system parameters against all implemented Notes. As a result you will see a table containing the following columns
@@ -240,6 +243,9 @@ List all SAP solution names that saptune is capable of implementing.
 The currently implemented solution is marked with '\fB*\fP' and is highlighted with green color. A deprecated solution is marked with '\fBD\fP'.
 .br
 If an \fBoverride\fP file exists for a solution, the solution is marked with '\fBO\fP'.
+.TP
+.B enabled
+Print the current enabled solution.
 .TP
 .B simulate
 Show all notes that are associated with the specified SAP solution, and all changes that will be applied once the solution is activated.
