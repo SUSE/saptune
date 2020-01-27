@@ -139,7 +139,7 @@ func TestReadConfig(t *testing.T) {
 	// Read from testdata config 'testdata/etc/sysconfig/saptune'
 	tuneApp = InitialiseApp(TstFilesInGOPATH, "", AllTestNotes, AllTestSolutions)
 	matchTxt := `
-current order of applied notes is: 2205917 2684254 1680803
+current order of enabled notes is: 2205917 2684254 1680803
 
 `
 	buffer := bytes.Buffer{}
