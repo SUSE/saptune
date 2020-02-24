@@ -935,7 +935,6 @@ func NoteActionEnabled(writer io.Writer, tuneApp *app.App) {
 	}
 }
 
-
 // SolutionAction  Solution actions like apply, revert, verify asm.
 func SolutionAction(actionName, solName string) {
 	switch actionName {

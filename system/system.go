@@ -55,6 +55,15 @@ func GetOsName() string {
 	return matches[1]
 }
 
+// IsSLE15 returns true, if System is running a SLE15 release
+func IsSLE15() bool {
+	var re = regexp.MustCompile(`15-SP\d+`)
+	if GetOsName() == "SLES" && (GetOsVers() == "15" || re.MatchString(GetOsVers())) {
+		return true
+	}
+	return false
+}
+
 // CheckForPattern returns true, if the file is available and
 // contains the expected string
 func CheckForPattern(file, pattern string) bool {

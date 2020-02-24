@@ -206,6 +206,17 @@ delete_notes() {
     done
 }
 
+cleanup_savestates() {
+    # cleanup older, no longer handled savedState files
+    param_filelist="/var/lib/saptune/parameter/IO_SCHEDULER_sr* /var/lib/saptune/parameter/IO_SCHEDULER_dm-*"
+    for i in $param_filelist ; do
+        [ -f "$i" ] && rm -f "$i"
+    done
+    sle_vers=$(sed -n "s%.*baseversion>\(.*\)</base.*%\1%p" /etc/products.d/baseproduct)
+    [[ $sle_vers != 12 ]] && rm -f /var/lib/saptune/parameter/UserTasksMax
+    [[ $sle_vers != 12 ]] && rm -f /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf
+}
+
 case "$upd_opt" in
 v1tov2pi)
     # called from the postinstall script of saptune, if installation was an
@@ -223,5 +234,10 @@ sle12to15pt)
     # update from saptune version 2 to version 2
     change_note_names
     delete_notes
+    ;;
+cleanup)
+    # called from the postinstall script of saptune to clean up some leftover
+    # files from older saptune operations
+    cleanup_savestates
     ;;
 esac

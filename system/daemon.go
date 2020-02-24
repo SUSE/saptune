@@ -34,6 +34,16 @@ func SystemctlRestart(thing string) error {
 	return nil
 }
 
+// SystemctlReloadTryRestart call systemctl reload on thing.
+func SystemctlReloadTryRestart(thing string) error {
+	if IsSystemRunning() {
+		if out, err := exec.Command("systemctl", "reload-or-try-restart", thing).CombinedOutput(); err != nil {
+			return ErrorLog("%v - Failed to call systemctl reload-or-try-restart on %s - %s", err, thing, string(out))
+		}
+	}
+	return nil
+}
+
 // SystemctlStart call systemctl start on thing.
 func SystemctlStart(thing string) error {
 	if IsSystemRunning() {
