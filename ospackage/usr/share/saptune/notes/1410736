@@ -8,4 +8,4 @@
 [sysctl]
 net.ipv4.tcp_keepalive_time = 300
 net.ipv4.tcp_keepalive_intvl = 75
-net.ipv4.tcp_probes = 9
+net.ipv4.tcp_keepalive_probes = 9
