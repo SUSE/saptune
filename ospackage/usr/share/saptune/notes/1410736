@@ -1,9 +1,9 @@
 # 1410736 - TCP/IP: setting keepalive interval
 # Description:    Set keepalive interval
-# Version 5 from Jan 13, 2020 in English
+# Version 6 from Jan 13, 2020 in English
 
 [version]
-# SAP-NOTE=1410736 CATEGORY=NET VERSION=5 DATE=13.01.2020 NAME="TCP/IP: setting keepalive interval"
+# SAP-NOTE=1410736 CATEGORY=NET VERSION=6 DATE=13.01.2020 NAME="TCP/IP: setting keepalive interval"
 
 [sysctl]
 net.ipv4.tcp_keepalive_time = 300
