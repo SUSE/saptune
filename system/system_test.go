@@ -35,6 +35,14 @@ func TestGetOsVers(t *testing.T) {
 	}
 }
 
+func TestIsSLE15(t *testing.T) {
+	if IsSLE15() {
+		t.Logf("found SLE15 OS version\n")
+	} else {
+		t.Logf("OS version is '%s'\n", GetOsVers())
+	}
+}
+
 func TestCmdIsAvailable(t *testing.T) {
 	if !CmdIsAvailable("/usr/bin/go") {
 		t.Fatal("'/usr/bin/go' not found")

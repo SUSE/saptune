@@ -41,6 +41,12 @@ func TestSystemctl(t *testing.T) {
 	if !SystemctlIsRunning(testService) {
 		t.Fatalf("service '%s' not running\n", testService)
 	}
+	if err := SystemctlReloadTryRestart(testService); err != nil {
+		t.Fatal(err)
+	}
+	if !SystemctlIsRunning(testService) {
+		t.Fatalf("service '%s' not running\n", testService)
+	}
 	if err := SystemctlStop(testService); err != nil {
 		t.Fatal(err)
 	}

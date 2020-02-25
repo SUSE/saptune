@@ -408,7 +408,11 @@ func (vend INISettings) createParamSavedStates(key, flstates string) {
 	// do not write parameter values to the saved state file during
 	// a pure 'verify' action
 	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "" {
-		CreateParameterStartValues(key, vend.SysctlParams[key])
+		start := vend.SysctlParams[key]
+		if key == "UserTasksMax" {
+			start = system.GetTasksMax("0")
+		}
+		CreateParameterStartValues(key, start)
 		if key == "force_latency" {
 			CreateParameterStartValues("fl_states", flstates)
 		}

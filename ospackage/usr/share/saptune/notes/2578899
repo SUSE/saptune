@@ -5,17 +5,6 @@
 [version]
 # SAP-NOTE=2578899 CATEGORY=LINUX VERSION=20 DATE=29.11.2019 NAME="SUSE LINUX Enterprise Server 15: Installation notes"
 
-[login]
-# /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf UserTasksMax setting
-# This file configures a parameter of the systemd login manager
-# It sets the maximum number of OS tasks each user may run concurrently
-# The behaviour of the systemd login manager was changed starting SLES12SP2
-# to prevent fork bomb attacks.
-# The value for UserTasksMax will be set to 'infinity'
-# With this setting your system is vulnerable to fork bomb attacks
-#
-UserTasksMax=infinity
-
 [service]
 # start the related services
 uuidd.socket=start

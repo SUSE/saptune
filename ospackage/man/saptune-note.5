@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "January 2020" "" "saptune note file format description"
+.TH "saptune-note" "5" "February 2020" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB2\fP
 .SH DESCRIPTION
@@ -186,13 +186,15 @@ The section "[login]" manipulates the behaviour of the systemd login manager.
 This section can \fBonly\fP contain the following option:
 .TP
 .BI UserTasksMax= STRING
+This option is only available on SLE12. In SLE15 the limit is removed from the systemd login manager and therefore the setting is no longer supported by saptune.
+
 This option configures a parameter of the systemd login manager. It sets the maximum number of OS tasks each user may run concurrently. The behaviour of the systemd login manager was changed starting SLES12SP2 to prevent fork bomb attacks.
 
 Recommended value is '\fBinfinity\fP'.
 
 If set, the drop-in file \fI/etc/systemd/logind.conf.d/saptune-UserTasksMax.conf\fP is created and for all currently logged in users the maximum number of OS tasks each user may run concurrently is changed using the command '\fBsystemctl --runtime set-property user-<uid>.slice TasksMax=<value>\fP'.
 .br
-After creating the drop-in file the \fIsystemd-logind.service\fP will be restarted.
+After creating the drop-in file the \fIsystemd-logind.service\fP will be reloaded.
 
 ATTENTION: With this setting your system is vulnerable to fork bomb attacks
 \" section mem

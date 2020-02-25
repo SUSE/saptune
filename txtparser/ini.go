@@ -26,6 +26,9 @@ var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.
 // counter to control the [block] section detected warning
 var blckCnt = 0
 
+// counter to control the [login] section info message
+var loginCnt = 0
+
 // INIEntry contains a single key-value pair in INI file.
 type INIEntry struct {
 	Section  string
@@ -149,6 +152,13 @@ func ParseINI(input string) *INIFile {
 		}
 		if kov == nil {
 			// Skip comments, empty, and irregular lines.
+			continue
+		}
+		if kov[1] == "UserTasksMax" && system.IsSLE15() {
+			if loginCnt == 0 {
+				system.InfoLog("UserTasksMax setting no longer supported on SLE15 releases. Leaving system's default unchanged.")
+			}
+			loginCnt = loginCnt + 1
 			continue
 		}
 		if currentSection == "limits" {
