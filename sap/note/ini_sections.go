@@ -91,6 +91,7 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 
 var isSched = regexp.MustCompile(`^IO_SCHEDULER_\w+$`)
 var isNrreq = regexp.MustCompile(`^NRREQ_\w+$`)
+var isRahead = regexp.MustCompile(`^READ_AHEAD_KB_\w+$`)
 
 // GetBlkVal initialise the block device structure with the current
 // system settings
@@ -117,6 +118,14 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 		newReq = newNrR.(param.BlockDeviceNrRequests).NrRequests
 		retVal = strconv.Itoa(newReq[strings.TrimPrefix(key, "NRREQ_")])
 		cur.BlockDeviceNrRequests = newNrR.(param.BlockDeviceNrRequests)
+	case isRahead.MatchString(key):
+		newRah, err := cur.BlockDeviceReadAheadKB.Inspect()
+		if err != nil {
+			return "", info, err
+		}
+		newReq = newRah.(param.BlockDeviceReadAheadKB).ReadAheadKB
+		retVal = strconv.Itoa(newReq[strings.TrimPrefix(key, "READ_AHEAD_KB_")])
+		cur.BlockDeviceReadAheadKB = newRah.(param.BlockDeviceReadAheadKB)
 	}
 	return retVal, info, nil
 }
@@ -160,6 +169,13 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 		ival, _ := strconv.Atoi(sval)
 		opt, _ := cur.BlockDeviceNrRequests.Optimise(ival)
 		cur.BlockDeviceNrRequests = opt.(param.BlockDeviceNrRequests)
+	case isRahead.MatchString(key):
+		if sval == "0" {
+			sval = "512"
+		}
+		ival, _ := strconv.Atoi(sval)
+		opt, _ := cur.BlockDeviceReadAheadKB.Optimise(ival)
+		cur.BlockDeviceReadAheadKB = opt.(param.BlockDeviceReadAheadKB)
 	}
 	return sval, info
 }
@@ -183,6 +199,15 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 			cur.BlockDeviceNrRequests.NrRequests[strings.TrimPrefix(key, "NRREQ_")] = ival
 		}
 		err = cur.BlockDeviceNrRequests.Apply()
+		if err != nil {
+			return err
+		}
+	case isRahead.MatchString(key):
+		if revert {
+			ival, _ := strconv.Atoi(value)
+			cur.BlockDeviceReadAheadKB.ReadAheadKB[strings.TrimPrefix(key, "READ_AHEAD_KB_")] = ival
+		}
+		err = cur.BlockDeviceReadAheadKB.Apply()
 		if err != nil {
 			return err
 		}

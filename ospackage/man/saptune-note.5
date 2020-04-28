@@ -128,6 +128,13 @@ Valid values can be found in \fI/sys/block/<device>/queue/scheduler\fP.
 IO nr_requests specifies the maximum number of read and write requests that can be queued at one time. The default value is 128, which means that 128 read requests and 128 write requests can be queued before the next process to request a read or write is put to sleep.
 .br
 When set, the number of requests for \fBall\fP block devices on the system will be switched to the chosen value
+.TP
+.BI READ_AHEAD_KB= INT
+disk readahead (queue/read_ahead_kb) defines the maximum number of kilobytes that the operating system may read ahead during a sequential read operation. As a result, the likely-needed information is already present within the kernel page cache for the next sequential read, which improves read I/O performance.
+Device mappers often benefit from a high read_ahead_kb value.
+Increasing the read_ahead_kb value might improve performance in environments where sequential reading of large files takes place.
+.br
+When set, the value of read_ahead_kb for \fBall\fP block devices on the system will be switched to the chosen value
 \" section cpu
 .SH "[cpu]"
 The section "[cpu]" manipulates files in \fI/sys/devices/system/cpu/cpu*\fP.

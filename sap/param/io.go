@@ -11,10 +11,11 @@ import (
 )
 
 // BlockDeviceQueue is the data structure for block devices
-// for schedulers and IO nr_request changes
+// for schedulers, IO nr_request and read_ahead_kb changes
 type BlockDeviceQueue struct {
 	BlockDeviceSchedulers
 	BlockDeviceNrRequests
+	BlockDeviceReadAheadKB
 }
 
 // BlockDeviceSchedulers changes IO elevators on all IO devices
@@ -31,7 +32,7 @@ func (ioe BlockDeviceSchedulers) Inspect() (Parameter, error) {
 		return nil, err
 	}
 	for _, entry := range dirContent {
-		if strings.Contains(entry.Name(), "dm-") {
+		if !system.BlockDeviceIsDisk(entry.Name()) {
 			// skip unsupported devices
 			continue
 		}
@@ -94,7 +95,7 @@ func (ior BlockDeviceNrRequests) Inspect() (Parameter, error) {
 	}
 	for _, entry := range dirContent {
 		// Remember, GetSysString does not accept the leading /sys/
-		if strings.Contains(entry.Name(), "dm-") {
+		if !system.BlockDeviceIsDisk(entry.Name()) {
 			// skip unsupported devices
 			continue
 		}
@@ -129,6 +130,56 @@ func (ior BlockDeviceNrRequests) Apply() error {
 	return err
 }
 
+// BlockDeviceReadAheadKB changes the read_ahead_kb value on all block devices
+type BlockDeviceReadAheadKB struct {
+	ReadAheadKB map[string]int
+}
+
+// Inspect retrieves the current read_ahead_kb from the system
+func (rakb BlockDeviceReadAheadKB) Inspect() (Parameter, error) {
+	newRAKB := BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}
+	// List /sys/block and inspect the value of read_ahead_kb of each one
+	dirContent, err := ioutil.ReadDir("/sys/block")
+	if err != nil {
+		return nil, err
+	}
+	for _, entry := range dirContent {
+		if !system.BlockDeviceIsDisk(entry.Name()) {
+			// skip unsupported devices
+			continue
+		}
+		// Remember, GetSysString does not accept the leading /sys/
+		readahead, err := system.GetSysInt(path.Join("block", entry.Name(), "queue", "read_ahead_kb"))
+		if readahead >= 0 && err == nil {
+			newRAKB.ReadAheadKB[entry.Name()] = readahead
+		}
+	}
+	return newRAKB, nil
+}
+
+// Optimise gets the expected read_ahead_kb value from the configuration
+func (rakb BlockDeviceReadAheadKB) Optimise(newReadAheadKBValue interface{}) (Parameter, error) {
+	newRAKB := BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}
+	for k := range rakb.ReadAheadKB {
+		newRAKB.ReadAheadKB[k] = newReadAheadKBValue.(int)
+	}
+	return newRAKB, nil
+}
+
+// Apply sets the new read_ahead_kb value in the system
+func (rakb BlockDeviceReadAheadKB) Apply() error {
+	errs := make([]error, 0, 0)
+	for name, readahead := range rakb.ReadAheadKB {
+		if !IsValidforReadAheadKB(name, strconv.Itoa(readahead)) {
+			system.WarningLog("skipping device '%s', not valid for setting 'read_ahead_kb' to '%v'", name, readahead)
+			continue
+		}
+		errs = append(errs, system.SetSysInt(path.Join("block", name, "queue", "read_ahead_kb"), readahead))
+	}
+	err := sap.PrintErrors(errs)
+	return err
+}
+
 // IsValidScheduler checks, if the scheduler value is supported by the system
 func IsValidScheduler(blockdev, scheduler string) bool {
 	val, err := ioutil.ReadFile(path.Join("/sys/block/", blockdev, "/queue/scheduler"))
@@ -150,6 +201,18 @@ func IsValidforNrRequests(blockdev, nrreq string) bool {
 	if elev != "" {
 		file := path.Join("block", blockdev, "queue", "nr_requests")
 		if tstErr := system.TestSysString(file, nrreq); tstErr == nil {
+			return true
+		}
+	}
+	return false
+}
+
+// IsValidforReadAheadKB checks, if the read_ahead_kb value is supported by the system
+func IsValidforReadAheadKB(blockdev, readahead string) bool {
+	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
+	if elev != "" {
+		file := path.Join("block", blockdev, "queue", "read_ahead_kb")
+		if tstErr := system.TestSysString(file, readahead); tstErr == nil {
 			return true
 		}
 	}

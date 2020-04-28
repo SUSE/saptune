@@ -146,3 +146,19 @@ func CopyFile(srcFile, destFile string) error {
 	}
 	return err
 }
+
+// BlockDeviceIsDisk checks, if a block device is a disk
+// /sys/block/*/device/type (TYPE_DISK / 0x00)
+// does not work for virtio block devices, needs workaround
+func BlockDeviceIsDisk(dev string) bool {
+	isVD := regexp.MustCompile(`^vd\w+$`)
+	fname := fmt.Sprintf("/sys/block/%s/device/type", dev)
+	dtype, err := ioutil.ReadFile(fname)
+	if err != nil || strings.TrimSpace(string(dtype)) != "0" {
+		if strings.Join(isVD.FindStringSubmatch(dev), "") == "" {
+			// unsupported device
+			return false
+		}
+	}
+	return true
+}
