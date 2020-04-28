@@ -64,6 +64,15 @@ func IsSLE15() bool {
 	return false
 }
 
+// IsSLE12 returns true, if System is running a SLE12 release
+func IsSLE12() bool {
+	var re = regexp.MustCompile(`12-SP\d+`)
+	if GetOsName() == "SLES" && (GetOsVers() == "12" || re.MatchString(GetOsVers())) {
+		return true
+	}
+	return false
+}
+
 // CheckForPattern returns true, if the file is available and
 // contains the expected string
 func CheckForPattern(file, pattern string) bool {

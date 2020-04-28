@@ -5,6 +5,7 @@ import (
 	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"regexp"
+	"runtime"
 	"strings"
 )
 
@@ -82,6 +83,68 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 	return rval
 }
 
+// chkSecTags checks, if the tags of a section are valid
+func chkSecTags(secFields []string) bool {
+	osWild := regexp.MustCompile(`(.*)-(\*)`)
+	ret := true
+	cnt :=0
+	for _, secTag := range secFields {
+		if cnt == 0 {
+			// skip section name
+			cnt = cnt + 1
+			continue
+		}
+		tagField := strings.Split(secTag, "=")
+		if len(tagField) != 2 {
+			system.WarningLog("wrong syntax of section tag '%s', skipping whole section '%v'. Please check. ", secTag, secFields)
+			return false
+		}
+		switch tagField[0] {
+		case "os":
+			osw := osWild.FindStringSubmatch(tagField[1])
+			if len(osw) != 3 {
+				if tagField[1] != system.GetOsVers() {
+					// os version does not match
+					system.WarningLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField[1], secFields, system.GetOsVers())
+					ret = false
+				}
+			} else if osw[2] == "*" {
+				// wildcard
+				switch osw[1] {
+				case "15":
+					if !system.IsSLE15() {
+						system.WarningLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField[1], secFields, system.GetOsVers())
+						ret = false
+					}
+				case "12":
+					if !system.IsSLE12() {
+						system.WarningLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField[1], secFields, system.GetOsVers())
+						ret = false
+					}
+				default:
+					system.WarningLog("unsupported os version '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", tagField[1], secFields)
+						ret = false
+				}
+			}
+		case "arch":
+			chkArch := runtime.GOARCH
+			if chkArch == "amd64" {
+				// map architecture to 'uname -i' output
+				chkArch = "x86_64"
+			}
+			if tagField[1] != chkArch {
+				// arch does not match
+				system.WarningLog("system architecture '%s' in section definition '%v' does not match the architecture of the running system '%s'. Skipping whole section with all lines till next valid section definition", tagField[1], secFields, chkArch)
+				ret = false
+			}
+		default:
+			system.WarningLog("skip unkown section tag '%v'.", secTag)
+			ret = false
+		}
+	}
+	return ret
+}
+
 // ParseINIFile read the content of the configuration file
 func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
 	content, err := system.ReadConfigFile(fileName, autoCreate)
@@ -99,24 +162,54 @@ func ParseINI(input string) *INIFile {
 	}
 
 	reminder := ""
+	skip_section := false
 	currentSection := ""
 	currentEntriesArray := make([]INIEntry, 0, 8)
 	currentEntriesMap := make(map[string]INIEntry)
 	for _, line := range strings.Split(input, "\n") {
 		line = strings.TrimSpace(line)
 		if len(line) == 0 {
+			// skip empty lines
+			continue
+		}
+		if line[0] != '[' && skip_section {
+			// skip all lines from a non-valid section
 			continue
 		}
 		if line[0] == '[' {
-			// Save previous section
-			if currentSection != "" {
+			// Save previous section, if valid
+			if currentSection != "" && !skip_section {
 				ret.KeyValue[currentSection] = currentEntriesMap
 				ret.AllValues = append(ret.AllValues, currentEntriesArray...)
 			}
+
 			// Start a new section
+			chk_ok := true
+			if skip_section {
+				skip_section = false
+			}
 			currentSection = line[1 : len(line)-1]
-			currentEntriesArray = make([]INIEntry, 0, 8)
-			currentEntriesMap = make(map[string]INIEntry)
+			if currentSection == "" {
+				// empty section line [], skip whole section
+				system.WarningLog("found empty section definition []. Skipping whole section with all lines till next valid section definition")
+				skip_section = true
+				continue
+			}
+			sectionFields := strings.Split(currentSection, ":")
+			// len(sectionFields) == 1 - standard syntax [section], no os or arch check needed, chk_ok = true
+			if len(sectionFields) > 1 {
+				// check of section tags needed
+				chk_ok = chkSecTags(sectionFields)
+
+			}
+			if chk_ok {
+				currentSection = sectionFields[0]
+				currentEntriesArray = make([]INIEntry, 0, 8)
+				currentEntriesMap = make(map[string]INIEntry)
+			} else {
+				// skip non-valid section with all lines
+				skip_section = true
+			}
 			continue
 		}
 		if strings.HasPrefix(line, "#") {

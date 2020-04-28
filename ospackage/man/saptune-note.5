@@ -31,9 +31,50 @@ Lines starting with '[' indicate the begin of a new section.
 .SH SECTIONS
 A section starts with a '[section_name]' keyword in the first line, followed by lines with options and comments.
 
-The following section definitions are available and used in the saptune SAP Note definition files. Each of these sections can be used in a vendor or customer specific tuning definition placed in \fI/etc/saptune/extra\fP.
+It is possible to limit the scope of a section (e.g. to a special \fIhardware architecture\fP and/or a special \fIos version\fP) by adding tags to the section definition.
+.br
+Tags are separated  by ':' and can appear in any order. Unsupported tags are considered an error and the whole section is ignored.
+
+The \fBsyntax\fP for such sections is:
+
+[section_name:[tag=value]...]
+
+Supported tags are:
+.TP
+.BI os= <os_version>
+to define a special \fIos version\fP
+.br
+Valid values for \fBos=\fP are the values from the \fBVERSION=\fP line of \fB/etc/os-release\fP, e.g. 12-SP5 or 15-SP1
+.br
+To mark an entire major release the string 1[256]-* (wildcard) can be used.
+.TP
+.BI arch= <hardware_architecture>
+to define a special \fIhardware architecture\fP:
+.br
+Valid values for \fBarch=\fP are the output from \fBuname -i\fP
+
+.RE
+Example:
+.br
+[sysctl:os=15-SP1:arch=ppc64le]
+
+For processing a section the following rules apply:
+.IP \[bu]
+Only sections that match the system are processed. Sections without a tag are always used.
+.IP \[bu]
+The order of the section within the file matter. Eache section and each line in a section gets processed from top to down.
+.RE
+
+The rules apply for shipped Note definition files as well as for customer defined Note definition files. Tagged sections can be used in override files.
+
+\fBATTENTION:\fP To be clear - if there are more sections with the \fBsame\fP \fIsection_name\fP containing the \fBsame\fP \fIparameters\fP with \fBdifferent\fP \fIvalues\fP, the last valid section will win.
+.br
+So it's all about \fBorder\fP.
+
+The following section definitions are available and used in the saptune SAP Note definition files. Each of these sections can be used in a vendor or customer specific Note definition file placed in \fI/etc/saptune/extra\fP.
 
 List of supported sections:
+.br
 version, block, cpu, grub, limits, login, mem, pagecache, reminder, rpm, service, sysctl, vm
 
 See detailed description below:
