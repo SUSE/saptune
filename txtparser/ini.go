@@ -87,7 +87,7 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 func chkSecTags(secFields []string) bool {
 	osWild := regexp.MustCompile(`(.*)-(\*)`)
 	ret := true
-	cnt :=0
+	cnt := 0
 	for _, secTag := range secFields {
 		if cnt == 0 {
 			// skip section name
@@ -123,7 +123,7 @@ func chkSecTags(secFields []string) bool {
 					}
 				default:
 					system.WarningLog("unsupported os version '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", tagField[1], secFields)
-						ret = false
+					ret = false
 				}
 			}
 		case "arch":
@@ -162,7 +162,7 @@ func ParseINI(input string) *INIFile {
 	}
 
 	reminder := ""
-	skip_section := false
+	skipSection := false
 	currentSection := ""
 	currentEntriesArray := make([]INIEntry, 0, 8)
 	currentEntriesMap := make(map[string]INIEntry)
@@ -172,43 +172,43 @@ func ParseINI(input string) *INIFile {
 			// skip empty lines
 			continue
 		}
-		if line[0] != '[' && skip_section {
+		if line[0] != '[' && skipSection {
 			// skip all lines from a non-valid section
 			continue
 		}
 		if line[0] == '[' {
 			// Save previous section, if valid
-			if currentSection != "" && !skip_section {
+			if currentSection != "" && !skipSection {
 				ret.KeyValue[currentSection] = currentEntriesMap
 				ret.AllValues = append(ret.AllValues, currentEntriesArray...)
 			}
 
 			// Start a new section
-			chk_ok := true
-			if skip_section {
-				skip_section = false
+			chkOk := true
+			if skipSection {
+				skipSection = false
 			}
 			currentSection = line[1 : len(line)-1]
 			if currentSection == "" {
 				// empty section line [], skip whole section
 				system.WarningLog("found empty section definition []. Skipping whole section with all lines till next valid section definition")
-				skip_section = true
+				skipSection = true
 				continue
 			}
 			sectionFields := strings.Split(currentSection, ":")
-			// len(sectionFields) == 1 - standard syntax [section], no os or arch check needed, chk_ok = true
+			// len(sectionFields) == 1 - standard syntax [section], no os or arch check needed, chkOk = true
 			if len(sectionFields) > 1 {
 				// check of section tags needed
-				chk_ok = chkSecTags(sectionFields)
+				chkOk = chkSecTags(sectionFields)
 
 			}
-			if chk_ok {
+			if chkOk {
 				currentSection = sectionFields[0]
 				currentEntriesArray = make([]INIEntry, 0, 8)
 				currentEntriesMap = make(map[string]INIEntry)
 			} else {
 				// skip non-valid section with all lines
-				skip_section = true
+				skipSection = true
 			}
 			continue
 		}
@@ -226,10 +226,24 @@ func ParseINI(input string) *INIFile {
 		kov := make([]string, 0)
 		if currentSection == "rpm" {
 			fields := strings.Fields(line)
-			if fields[1] == "all" || fields[1] == system.GetOsVers() {
-				kov = []string{"rpm", "rpm:" + fields[0], fields[1], fields[2]}
+			kov = nil
+			if len(fields) == 3 {
+				// old syntax - rpm to check | os version | expected package version
+				// kov needs 3 fields (parameter, operator, value)
+				// to not get confused let operator empty, it's not needed for rpm check
+				// to be compatible to old section definitions without 'tags' we need to check fields[1] for os matching
+				if fields[1] == "all" || fields[1] == system.GetOsVers() {
+					kov = []string{"rpm", "rpm:" + fields[0], "", fields[2]}
+				}
+			} else if len(fields) == 2 {
+				// new syntax - rpm to check | expected package version
+				// os and/or arch are set with section tags
+				// kov needs 3 fields (parameter, operator, value)
+				// to not get confused let operator empty, it's not needed for rpm check
+				kov = []string{"rpm", "rpm:" + fields[0], "", fields[1]}
 			} else {
-				kov = nil
+				// wrong syntax
+				system.WarningLog("[rpm] section contains a line with wrong syntax - '%v', skipping entry. Please check", fields)
 			}
 		} else {
 			kov = RegexKeyOperatorValue.FindStringSubmatch(line)
