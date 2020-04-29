@@ -43,6 +43,14 @@ func TestIsSLE15(t *testing.T) {
 	}
 }
 
+func TestIsSLE12(t *testing.T) {
+	if IsSLE12() {
+		t.Logf("found SLE12 OS version\n")
+	} else {
+		t.Logf("OS version is '%s'\n", GetOsVers())
+	}
+}
+
 func TestCmdIsAvailable(t *testing.T) {
 	if !CmdIsAvailable("/usr/bin/go") {
 		t.Fatal("'/usr/bin/go' not found")
@@ -109,5 +117,16 @@ func TestCopyFile(t *testing.T) {
 	err = CopyFile(src, "/tmp/saptune_test/saptune_tstfile")
 	if err == nil {
 		t.Fatalf("copied from non existing file")
+	}
+}
+
+func TestBlockDeviceIsDisk(t *testing.T) {
+	devs := []string{"sda", "vda", "sr0"}
+	for _, bdev := range devs {
+		if !BlockDeviceIsDisk(bdev) {
+			t.Logf("device unsupported, '%s' is NOT a disk", bdev)
+		} else {
+			t.Logf("device supported, '%s' is a disk", bdev)
+		}
 	}
 }
