@@ -210,30 +210,30 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 		}
 	}
 	if allMatch && grubAvail {
-		allMatch = chkGrubCompliance(comparisons, allMatch)
+		allMatch = ChkGrubCompliance(comparisons, allMatch)
 	}
 	return
 }
 
-// grub special - check compliance of alternative settings
+// ChkGrubCompliance grub special - check compliance of alternative settings
 // only if one of these alternatives are not compliant, modify the result of
 // the compare
-func chkGrubCompliance(comparisons map[string]FieldComparison, allMatch bool) bool {
+func ChkGrubCompliance(comparisons map[string]FieldComparison, allMatch bool) bool {
 	// grub:numa_balancing, kernel.numa_balancing
-	if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "grub:numa_balancing")].MatchExpectation {
-		if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "kernel.numa_balancing")].MatchExpectation && allMatch == true {
+	if comparisons["SysctlParams[grub:numa_balancing]"].ReflectMapKey == "grub:numa_balancing" && !comparisons["SysctlParams[grub:numa_balancing]"].MatchExpectation {
+		if comparisons["SysctlParams[kernel.numa_balancing]"].ReflectMapKey == "kernel.numa_balancing" && !comparisons["SysctlParams[kernel.numa_balancing]"].MatchExpectation && allMatch {
 			allMatch = false
 		}
 	}
 	// grub:transparent_hugepage, THP
-	if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "grub:transparent_hugepage")].MatchExpectation {
-		if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "THP")].MatchExpectation && allMatch == true {
+	if comparisons["SysctlParams[grub:transparent_hugepage]"].ReflectMapKey == "grub:transparent_hugepage" && !comparisons["SysctlParams[grub:transparent_hugepage]"].MatchExpectation {
+		if comparisons["SysctlParams[THP]"].ReflectMapKey == "THP" && !comparisons["SysctlParams[THP]"].MatchExpectation && allMatch {
 			allMatch = false
 		}
 	}
 	// grub:intel_idle.max_cstate, grub:processor.max_cstate, force_latency
-	if !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "grub:intel_idle.max_cstate")].MatchExpectation || !comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "grub:processor.max_cstate")].MatchExpectation {
-		if (!comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "force_latency")].MatchExpectation && comparisons[fmt.Sprintf("%s[%s]", "SysctlParams", "force_latency")].ActualValue != "all:none") && allMatch == true {
+	if (comparisons["SysctlParams[grub:intel_idle.max_cstate]"].ReflectMapKey == "grub:intel_idle.max_cstate" && !comparisons["SysctlParams[grub:intel_idle.max_cstate]"].MatchExpectation) || (comparisons["SysctlParams[grub:processor.max_cstate]"].ReflectMapKey == "grub:processor.max_cstate" && !comparisons["SysctlParams[grub:processor.max_cstate]"].MatchExpectation) {
+		if (!comparisons["SysctlParams[force_latency]"].MatchExpectation && comparisons["SysctlParams[force_latency]"].ActualValue != "all:none") && allMatch {
 			allMatch = false
 		}
 	}

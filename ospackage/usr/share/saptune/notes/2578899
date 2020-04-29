@@ -33,6 +33,23 @@ sysstat.service=start
 # chosen schedulers.
 IO_SCHEDULER=noop, none
 
+[block:os=15-SP2:arch=ppc64le]
+#
+# disk readahead
+# queue/read_ahead_kb
+#
+# Defines the maximum number of kilobytes that the operating system may read
+# ahead during a sequential read operation. As a result, the likely-needed
+# information is already present within the kernel page cache for the next
+# sequential read, which improves read I/O performance.
+# Device mappers often benefit from a high read_ahead_kb value.
+# Increasing the read_ahead_kb value might improve performance in environments
+# where sequential reading of large files takes place.
+#
+# When set, the value of read_ahead_kb for all block devices on the system will
+# be switched to the chosen value
+READ_AHEAD_KB=128
+
 [rpm]
 # dependencies handled by saptune package installation
 libopenssl1_0_0 15 1.0.2n-3.3.1
@@ -71,3 +88,7 @@ vm.dirty_bytes=629145600
 # vm.dirty_background_bytes should be set to 314572800 (see TID_7010287)
 #
 vm.dirty_background_bytes=314572800
+
+[sysctl:os=15-SP2:arch=ppc64le]
+kernel.sched_min_granularity_ns = 3000000
+kernel.sched_wakeup_granularity_ns = 4000000

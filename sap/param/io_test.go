@@ -146,6 +146,69 @@ func TestNrRequests(t *testing.T) {
 	t.Logf("reverted - '%+v'\n", rev)
 }
 
+func TestReadAheadKB(t *testing.T) {
+	inspected, err := BlockDeviceReadAheadKB{}.Inspect()
+	if err != nil {
+		t.Fatal(err, inspected)
+	}
+	t.Logf("inspected - '%+v'\n", inspected)
+	if len(inspected.(BlockDeviceReadAheadKB).ReadAheadKB) == 0 {
+		t.Skip("the test case will not continue because inspection result turns out empty")
+	}
+	for name, readaheadkb := range inspected.(BlockDeviceReadAheadKB).ReadAheadKB {
+		if name == "" || readaheadkb < 0 {
+			t.Fatal(inspected)
+		}
+	}
+	oldvals := BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}
+	t.Logf("oldvals - '%+v'\n", oldvals)
+	for name, readaheadkb := range inspected.(BlockDeviceReadAheadKB).ReadAheadKB {
+		oldvals.ReadAheadKB[name] = readaheadkb
+	}
+	t.Logf("oldvals - '%+v'\n", oldvals)
+	optimised, err := inspected.Optimise(132)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("optimised - '%+v'\n", optimised)
+	if len(optimised.(BlockDeviceReadAheadKB).ReadAheadKB) == 0 {
+		t.Fatal(optimised)
+	}
+	for name, readaheadkb := range optimised.(BlockDeviceReadAheadKB).ReadAheadKB {
+		if name == "" || readaheadkb < 0 {
+			t.Fatal(optimised)
+		}
+	}
+	// apply
+	err = optimised.Apply()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// check
+	applied, err := BlockDeviceReadAheadKB{}.Inspect()
+	if err != nil {
+		t.Fatal(err, applied)
+	}
+	t.Logf("applied - '%+v'\n", applied)
+	if len(applied.(BlockDeviceReadAheadKB).ReadAheadKB) == 0 {
+		t.Log("inspection result turns out empty")
+	}
+	for name, readaheadkb := range applied.(BlockDeviceReadAheadKB).ReadAheadKB {
+		if name == "" || readaheadkb != 132 {
+			t.Fatal(applied)
+		}
+	}
+
+	// reset original values
+	err = oldvals.Apply()
+	if err != nil {
+		t.Fatal(err)
+	}
+	rev, _ := BlockDeviceReadAheadKB{}.Inspect()
+	t.Logf("reverted - '%+v'\n", rev)
+}
+
 func TestIsValidScheduler(t *testing.T) {
 	scheduler := ""
 	dirCont, err := ioutil.ReadDir("/sys/block")
@@ -196,6 +259,39 @@ func TestIsValidforNrRequests(t *testing.T) {
 				t.Log("'32' is not a valid number of requests for 'sda'")
 			} else {
 				t.Log("'32' is a valid number of requests for 'sda'")
+			}
+		}
+		if entry.Name() == "vda" {
+			if !IsValidforNrRequests("vda", "128") {
+				t.Log("'128' is not a valid number of requests for 'vda'")
+			} else {
+				t.Log("'128' is a valid number of requests for 'vda'")
+			}
+		}
+	}
+}
+
+func TestIsValidforReadAheadKB(t *testing.T) {
+	dirCont, err := ioutil.ReadDir("/sys/block")
+	if err != nil {
+		t.Skip("no block files available. Skip test.")
+	}
+	for _, entry := range dirCont {
+		if entry.Name() == "sda" {
+			if !IsValidforReadAheadKB("sda", "1024") {
+				t.Log("'1024' is not a valid number of requests for 'sda'")
+			} else {
+				t.Log("'1024' is a valid number of requests for 'sda'")
+			}
+			if !IsValidforReadAheadKB("sda", "132") {
+				t.Log("'132' is not a valid number of requests for 'sda'")
+			} else {
+				t.Log("'132' is a valid number of requests for 'sda'")
+			}
+			if !IsValidforReadAheadKB("sda", "133") {
+				t.Log("'133' is not a valid number of requests for 'sda'")
+			} else {
+				t.Log("'133' is a valid number of requests for 'sda'")
 			}
 		}
 		if entry.Name() == "vda" {
