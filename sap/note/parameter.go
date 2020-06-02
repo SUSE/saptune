@@ -115,7 +115,9 @@ func GetSavedParameterNotes(param string) ParameterNotes {
 	if err != nil {
 		return pEntries
 	}
-	err = json.Unmarshal(content, &pEntries)
+	if len(content) != 0 {
+		err = json.Unmarshal(content, &pEntries)
+	}
 	return pEntries
 }
 
