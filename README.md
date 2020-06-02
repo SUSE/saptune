@@ -78,3 +78,8 @@ With each new version of saptune we implement many of them, but the journey will
 
 
 Enjoy the new saptune!
+
+---
+
+[Hints for development](development.md)
+
