@@ -89,6 +89,10 @@ func chkSecTags(secFields []string) bool {
 	ret := true
 	cnt := 0
 	for _, secTag := range secFields {
+		if secTag == "" {
+			// support empty tags
+			continue
+		}
 		if cnt == 0 {
 			// skip section name
 			cnt = cnt + 1
@@ -234,6 +238,8 @@ func ParseINI(input string) *INIFile {
 				// to be compatible to old section definitions without 'tags' we need to check fields[1] for os matching
 				if fields[1] == "all" || fields[1] == system.GetOsVers() {
 					kov = []string{"rpm", "rpm:" + fields[0], "", fields[2]}
+				} else {
+					system.WarningLog("in rpm section '%v' the line '%v' contains a non-matching os version '%s'. Skipping line", currentSection, fields, fields[1])
 				}
 			} else if len(fields) == 2 {
 				// new syntax - rpm to check | expected package version
