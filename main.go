@@ -134,6 +134,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// cleanup runtime file
+	note.CleanUpRun()
+
 	// activate logging
 	system.LogInit(logFile, debugSwitch, verboseSwitch)
 

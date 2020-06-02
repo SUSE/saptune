@@ -1,19 +1,27 @@
 package note
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/SUSE/saptune/sap"
 	"github.com/SUSE/saptune/sap/param"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
+	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
+// SaptuneSectionDir defines saptunes saved state directory
+const SaptuneSectionDir = "/var/lib/saptune/sections"
+
 // OverrideTuningSheets defines saptunes override directory
 const OverrideTuningSheets = "/etc/saptune/override/"
 
+var ini *txtparser.INIFile
 var pc = LinuxPagingImprovements{}
 var blck = param.BlockDeviceQueue{param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}}
 var isLimitSoft = regexp.MustCompile(`LIMIT_.*_soft_memlock`)
@@ -93,10 +101,19 @@ func (vend INISettings) Name() string {
 
 // Initialise retrieves the current parameter values from the system
 func (vend INISettings) Initialise() (Note, error) {
-	// Parse the configuration file
-	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
+	ini, err := vend.getSectionInfo(false)
 	if err != nil {
-		return vend, err
+		// Parse the configuration file
+		ini, err = txtparser.ParseINIFile(vend.ConfFilePath, false)
+		if err != nil {
+			return vend, err
+		}
+		// write section data to section runtime file
+		err = vend.storeSectionInfo(ini, "run", true)
+		if err != nil {
+			system.ErrorLog("Problems during storing of section information")
+			return vend, err
+		}
 	}
 
 	// looking for override file
@@ -168,10 +185,22 @@ func (vend INISettings) Initialise() (Note, error) {
 func (vend INISettings) Optimise() (Note, error) {
 	blckOK := make(map[string][]string)
 	scheds := ""
-	// Parse the configuration file
-	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
+
+	// read saved section data == config data from configuration file
+	ini, err := vend.getSectionInfo(false)
 	if err != nil {
-		return vend, err
+		// fallback, parse the configuration file
+		system.WarningLog("Problems while reading section information, trying fallback")
+		ini, err = txtparser.ParseINIFile(vend.ConfFilePath, false)
+		if err != nil {
+			return vend, err
+		}
+		// write section data to section runtime file
+		err = vend.storeSectionInfo(ini, "run", true)
+		if err != nil {
+			system.ErrorLog("Problems during storing of section information")
+			return vend, err
+		}
 	}
 
 	for _, param := range ini.AllValues {
@@ -259,6 +288,7 @@ func (vend INISettings) Optimise() (Note, error) {
 // Apply sets the new parameter values in the system or
 // revert the system to the former parameter values
 func (vend INISettings) Apply() error {
+	var err error
 	errs := make([]error, 0, 0)
 	revertValues := false
 	pvendID := vend.ID
@@ -270,13 +300,25 @@ func (vend INISettings) Apply() error {
 	if _, ok := vend.ValuesToApply["revert"]; ok {
 		revertValues = true
 	}
-	// Parse the configuration file
-	ini, err := txtparser.ParseINIFile(vend.ConfFilePath, false)
+
+	ini, err = vend.getSectionInfo(revertValues)
 	if err != nil {
-		return err
+		// fallback, reading info from config file
+		system.WarningLog("Problems while reading section information, trying fallback")
+		ini, err = txtparser.ParseINIFile(vend.ConfFilePath, false)
+		if err != nil {
+			return err
+		}
+	}
+	if !revertValues {
+		// apply, write section data for revert
+		err = vend.storeSectionInfo(ini, "section", true)
+		if err != nil {
+			system.ErrorLog("Problems during storing of section information")
+			return err
+		}
 	}
 
-	//for key, value := range vend.SysctlParams {
 	for _, param := range ini.AllValues {
 		if len(vend.OverrideParams) != 0 && vend.ID == "1805750" {
 			// as note 1805750 does not set a limits domain, but
@@ -425,6 +467,69 @@ func (vend INISettings) addParamSavedStates(key string) {
 	// a pure 'verify' action
 	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "" {
 		AddParameterNoteValues(key, vend.SysctlParams[key], vend.ID)
+	}
+}
+
+// storeSectionInfo stores INIFile section information to section directory
+func (vend INISettings) storeSectionInfo(obj *txtparser.INIFile, file string, overwriteExisting bool) error {
+	iniFileName := ""
+	if file == "run" {
+		iniFileName = fmt.Sprintf("%s/%s.run", SaptuneSectionDir, vend.ID)
+	} else {
+		iniFileName = fmt.Sprintf("%s/%s.sections", SaptuneSectionDir, vend.ID)
+	}
+	content, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+	if err = os.MkdirAll(SaptuneSectionDir, 0755); err != nil {
+		return err
+	}
+	if _, err := os.Stat(iniFileName); os.IsNotExist(err) || overwriteExisting {
+		return ioutil.WriteFile(iniFileName, content, 0644)
+	}
+	return nil
+
+}
+
+// getSectionInfo reads content of stored INIFile information.
+// Return the content as INIFile
+func (vend INISettings) getSectionInfo(fileSelect bool) (*txtparser.INIFile, error) {
+	iniFileName := ""
+	if fileSelect {
+		iniFileName = fmt.Sprintf("%s/%s.sections", SaptuneSectionDir, vend.ID)
+	} else {
+		iniFileName = fmt.Sprintf("%s/%s.run", SaptuneSectionDir, vend.ID)
+	}
+	iniConf := &txtparser.INIFile{
+		AllValues: make([]txtparser.INIEntry, 0, 64),
+		KeyValue:  make(map[string]map[string]txtparser.INIEntry),
+	}
+
+	content, err := ioutil.ReadFile(iniFileName)
+	if err == nil {
+		// do not remove section runtime file, but remove section
+		// saved state file after reading
+		if fileSelect {
+			// remove section saved state file after reading
+			err = os.Remove(iniFileName)
+		}
+		if len(content) != 0 {
+			err = json.Unmarshal(content, &iniConf)
+		}
+	}
+	return iniConf, err
+}
+
+// CleanUpRun cleans up runtime files
+func CleanUpRun() {
+	var runfile = regexp.MustCompile(`.*\.run$`)
+	content, _ := ioutil.ReadDir(SaptuneSectionDir)
+	for _, entry := range content {
+		if runfile.MatchString(entry.Name()) {
+			// remove runtime file
+			_ = os.Remove(path.Join(SaptuneSectionDir, entry.Name()))
+		}
 	}
 }
 
