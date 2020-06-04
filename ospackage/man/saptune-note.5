@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "February 2020" "" "saptune note file format description"
+.TH "saptune-note" "5" "June 2020" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB2\fP
 .SH DESCRIPTION
@@ -302,6 +302,8 @@ To remove the override, set the parameter to empty string.
 The section "[reminder]" contains important information and all settings of a SAP Note, which can not set by saptune. 
 
 This section is displayed at the end of the saptune options 'verify', 'simulate' and 'apply'. It will be highlighted with red color to get the attention of the customer.
+
+Sometimes this section may include lines with parameter settings commented out as the SAP Note only contains rough estimations as the settings are highly customer environment and workload dependend. Please be aware that these parameter settings can't be activated by an override file. If you need to set such parameters you need to create a 'custom' note containing these settings by using 'saptune note create'
 \" section rpm
 .SH "[rpm]"
 The section "[rpm]" is checking rpm versions on the system.
