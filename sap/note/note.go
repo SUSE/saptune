@@ -191,12 +191,17 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					valApplyList = append(valApplyList, comparisons[ckey].ReflectMapKey)
 				}
 				if !comparisons[ckey].MatchExpectation {
+					// if the expected value is empty, the
+					// parameter value will be untouched
+					// this case should not influence the
+					// compare result
+					//
 					// a parameter, which is not supported
 					// by the system ("all:none") should not
 					// influence the compare result
 					// and grub compliance will be handled
 					// at the end of the compare
-					if actualValue.(string) != "all:none" && !strings.Contains(key.String(), "grub") {
+					if expectedValue.(string) != "" && actualValue.(string) != "all:none" && !strings.Contains(key.String(), "grub") {
 						allMatch = false
 					}
 				}

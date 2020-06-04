@@ -48,6 +48,10 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 		// sysctl parameter not available in system
 		return ""
 	}
+	if cfgval == "" {
+		// sysctl parameter should be leave untouched
+		return ""
+	}
 	allFieldsC := strings.Fields(actval)
 	allFieldsE := strings.Fields(cfgval)
 	allFieldsS := ""
