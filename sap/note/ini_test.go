@@ -16,6 +16,9 @@ func cleanUp() {
 	var parameterStateDir = "/var/lib/saptune/parameter"
 	os.RemoveAll(parameterStateDir)
 	defer os.RemoveAll(parameterStateDir)
+	var saptuneSectionDir = "/var/lib/saptune/sections"
+	os.RemoveAll(saptuneSectionDir)
+	defer os.RemoveAll(saptuneSectionDir)
 }
 
 func TestCalculateOptimumValue(t *testing.T) {
@@ -79,7 +82,7 @@ func TestCalculateOptimumValue(t *testing.T) {
 func TestVendorSettings(t *testing.T) {
 	cleanUp()
 	iniPath := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_test.ini")
-	ini := INISettings{ConfFilePath: iniPath}
+	ini := INISettings{ConfFilePath: iniPath, ID: "471147"}
 
 	if ini.Name() == "" {
 		t.Fatal(ini.Name())
@@ -453,6 +456,8 @@ func TestOverrideAllSettings(t *testing.T) {
 	if optimisedINI.SysctlParams["reminder"] != txt2chk {
 		t.Fatal(optimisedINI.SysctlParams)
 	}
+	// cleanup
+	CleanUpRun()
 }
 
 func TestPageCacheSettings(t *testing.T) {

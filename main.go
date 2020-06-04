@@ -134,6 +134,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// cleanup runtime file
+	note.CleanUpRun()
+
 	// activate logging
 	system.LogInit(logFile, debugSwitch, verboseSwitch)
 
@@ -649,12 +652,27 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 	// Otherwise, the state file (serialised parameters) will be
 	// overwritten, and it will no longer be possible to revert the
 	// note to the state before it was tuned.
-	_, err := os.Stat(tuneApp.State.GetPathToNote(noteID))
+	sfile, err := os.Stat(tuneApp.State.GetPathToNote(noteID))
 	if err == nil {
 		// state file for note already exists
-		// do not apply the note again
-		system.InfoLog("note '%s' already applied. Nothing to do", noteID)
-		os.Exit(0)
+		// check, if note is part of NOTE_APPLY_ORDER
+		if tuneApp.PositionInNoteApplyOrder(noteID) < 0 { // noteID not yet available
+			// bsc#1167618
+			// check, if state file is empty - seems to be a
+			// left-over of the update from saptune V1 to V2
+			if sfile.Size() == 0 {
+				// remove old, left-over state file and go
+				// forward to apply the note
+				os.Remove(tuneApp.State.GetPathToNote(noteID))
+			} else {
+				// data mismatch, do not apply the note
+				system.WarningLog("note '%s' is not listed in 'NOTE_APPLY_ORDER', but a non-empty state file exists. To prevent configuration mismatch, please revert note '%s' first and apply again.", noteID, noteID)
+				os.Exit(0)
+			}
+		} else {
+			system.InfoLog("note '%s' already applied. Nothing to do", noteID)
+			os.Exit(0)
+		}
 	}
 	if err := tuneApp.TuneNote(noteID); err != nil {
 		errorExit("Failed to tune for note %s: %v", noteID, err)

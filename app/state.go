@@ -63,6 +63,9 @@ func (state *State) Retrieve(noteID string, dest interface{}) error {
 	if err != nil {
 		return err
 	}
+	if len(content) == 0 {
+		return nil
+	}
 	return json.Unmarshal(content, dest)
 }
 
