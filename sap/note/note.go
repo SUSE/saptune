@@ -223,6 +223,8 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 // ChkGrubCompliance grub special - check compliance of alternative settings
 // only if one of these alternatives are not compliant, modify the result of
 // the compare
+// restricted to grub parameter shipped with saptune integrated notes
+// grub parameter and 'alternative' setting have to be within the same note
 func ChkGrubCompliance(comparisons map[string]FieldComparison, allMatch bool) bool {
 	// grub:numa_balancing, kernel.numa_balancing
 	if comparisons["SysctlParams[grub:numa_balancing]"].ReflectMapKey == "grub:numa_balancing" && !comparisons["SysctlParams[grub:numa_balancing]"].MatchExpectation {

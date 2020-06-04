@@ -992,8 +992,8 @@ func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 	if len(tuneApp.TuneForSolutions) > 0 {
 		// already one solution applied.
 		// do not apply another solution. Does not make sense
-		system.InfoLog("There is already one solution applied. Applying another solution is NOT supported.")
-		os.Exit(0)
+		system.ErrorLog("There is already one solution applied. Applying another solution is NOT supported.")
+		os.Exit(1)
 	}
 	removedAdditionalNotes, err := tuneApp.TuneSolution(solName)
 	if err != nil {
