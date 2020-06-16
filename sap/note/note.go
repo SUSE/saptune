@@ -191,17 +191,19 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					valApplyList = append(valApplyList, comparisons[ckey].ReflectMapKey)
 				}
 				if !comparisons[ckey].MatchExpectation {
-					// if the expected value is empty, the
-					// parameter value will be untouched
-					// this case should not influence the
-					// compare result
-					//
 					// a parameter, which is not supported
 					// by the system ("all:none") should not
 					// influence the compare result
-					// and grub compliance will be handled
+					//
+					// and grub compliance of saptune
+					// integrated notes will be handled
 					// at the end of the compare
-					if expectedValue.(string) != "" && actualValue.(string) != "all:none" && !strings.Contains(key.String(), "grub") {
+					// all other grub settings treated as
+					// normal parameters
+					// if this should change in the future use
+					// !strings.Contains(key.String(), "grub")
+					// instead of !isInternalGrub(key.String())
+					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) {
 						allMatch = false
 					}
 				}
@@ -220,6 +222,20 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 	return
 }
 
+// isInternalGrub - checks, if a grub setting found in the note definition
+// is a saptune integrated grub parameter or a customer specific parameter
+func isInternalGrub(val string) bool {
+	// define saptune integrated grub parameter
+	internalGrub := []string{"grub:numa_balancing", "grub:transparent_hugepage", "grub:intel_idle.max_cstate", "grub:processor.max_cstate"}
+
+	for _, item := range internalGrub {
+		if item == val {
+			return true
+		}
+	}
+	return false
+}
+
 // ChkGrubCompliance grub special - check compliance of alternative settings
 // only if one of these alternatives are not compliant, modify the result of
 // the compare
@@ -227,21 +243,27 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 // grub parameter and 'alternative' setting have to be within the same note
 func ChkGrubCompliance(comparisons map[string]FieldComparison, allMatch bool) bool {
 	// grub:numa_balancing, kernel.numa_balancing
-	if comparisons["SysctlParams[grub:numa_balancing]"].ReflectMapKey == "grub:numa_balancing" && !comparisons["SysctlParams[grub:numa_balancing]"].MatchExpectation {
-		if comparisons["SysctlParams[kernel.numa_balancing]"].ReflectMapKey == "kernel.numa_balancing" && !comparisons["SysctlParams[kernel.numa_balancing]"].MatchExpectation && allMatch {
-			allMatch = false
-		}
-	}
 	// grub:transparent_hugepage, THP
-	if comparisons["SysctlParams[grub:transparent_hugepage]"].ReflectMapKey == "grub:transparent_hugepage" && !comparisons["SysctlParams[grub:transparent_hugepage]"].MatchExpectation {
-		if comparisons["SysctlParams[THP]"].ReflectMapKey == "THP" && !comparisons["SysctlParams[THP]"].MatchExpectation && allMatch {
-			allMatch = false
-		}
-	}
 	// grub:intel_idle.max_cstate, grub:processor.max_cstate, force_latency
-	if (comparisons["SysctlParams[grub:intel_idle.max_cstate]"].ReflectMapKey == "grub:intel_idle.max_cstate" && !comparisons["SysctlParams[grub:intel_idle.max_cstate]"].MatchExpectation) || (comparisons["SysctlParams[grub:processor.max_cstate]"].ReflectMapKey == "grub:processor.max_cstate" && !comparisons["SysctlParams[grub:processor.max_cstate]"].MatchExpectation) {
-		if (!comparisons["SysctlParams[force_latency]"].MatchExpectation && comparisons["SysctlParams[force_latency]"].ActualValue != "all:none") && allMatch {
-			allMatch = false
+	entries := []string{"grub:numa_balancing#kernel.numa_balancing", "grub:transparent_hugepage#THP", "grub:intel_idle.max_cstate#force_latency", "grub:processor.max_cstate#force_latency"}
+
+	for _, item := range entries {
+		entFields := strings.Split(item, "#")
+		grubEnt := entFields[0]
+		alterEnt := entFields[1]
+		grubEntry := fmt.Sprintf("SysctlParams[%s]", grubEnt)
+		alterEntry := fmt.Sprintf("SysctlParams[%s]", alterEnt)
+
+		if comparisons[grubEntry].ReflectMapKey == grubEnt && !comparisons[grubEntry].MatchExpectation {
+			if alterEnt == "force_latency" {
+				if (comparisons[alterEntry].ReflectMapKey == alterEnt && !comparisons[alterEntry].MatchExpectation && comparisons[alterEntry].ActualValue != "all:none") && allMatch {
+					allMatch = false
+				}
+			} else {
+				if comparisons[alterEntry].ReflectMapKey == alterEnt && !comparisons[alterEntry].MatchExpectation && allMatch {
+					allMatch = false
+				}
+			}
 		}
 	}
 	return allMatch
@@ -254,6 +276,13 @@ func cmpMapValue(fieldName string, key reflect.Value, actVal, expVal interface{}
 		op = "<="
 	}
 	actualValueJS, expectedValueJS, match := CompareJSValue(actVal, expVal, op)
+	if expVal == "" {
+		// if the expected value is empty, the parameter value will
+		// be untouched
+		// this case should not influence the compare result
+		// so set match to true
+		match = true
+	}
 	if strings.Split(key.String(), ":")[0] == "rpm" {
 		match = system.CmpRpmVers(actVal.(string), expVal.(string))
 	}

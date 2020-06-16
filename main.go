@@ -359,12 +359,8 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 			continue
 		}
 		if !comparison.MatchExpectation {
-			if comparison.ExpectedValue.(string) == "" {
-				compliant = "yes"
-			} else {
-				hasDiff = true
-				compliant = "no "
-			}
+			hasDiff = true
+			compliant = "no "
 		} else {
 			compliant = "yes"
 		}
