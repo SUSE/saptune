@@ -170,7 +170,7 @@ func (app *App) NoteSanityCheck() error {
 		// bsc#1149205
 		// noteID available in apply order list, but no note definition
 		// file found. May be removed or renamed.
-		system.ErrorLog("the Note ID '%s' is not recognised by saptune, but is listed in the apply order list.\nMay be you removed or renamed the associated Note definition file on command line without reverting the Note first.\nWe will now remove the NoteID from the apply order list to prevent further confusion.", note)
+		system.ErrorLog("The Note ID '%s' is not recognized by saptune, but it is listed in the apply order list.\nMay be the associated Note definition file was removed or renamed via command line without previously reverting the Note.\nSaptune will now remove the NoteID from the apply order list to prevent further confusion.", note)
 		app.removeFromConfig(note)
 		if err := app.SaveConfig(); err != nil {
 			errs = append(errs, err)
