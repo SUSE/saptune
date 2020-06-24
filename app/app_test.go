@@ -91,17 +91,17 @@ var AllTestSolutions = map[string]solution.Solution{
 // Make sure that the app struct and its configuration file both have the same enabled notes and enabled solutions.
 func VerifyConfig(t *testing.T, app *App, hasNotes []string, hasSolutions []string) {
 	if !reflect.DeepEqual(app.TuneForNotes, hasNotes) {
-		panic(fmt.Sprintf("Notes diff %v %v", hasNotes, app.TuneForNotes))
+		t.Errorf("Notes diff %v %v", hasNotes, app.TuneForNotes)
 	}
 	if !reflect.DeepEqual(app.TuneForSolutions, hasSolutions) {
-		panic(fmt.Sprintf("Solutions diff %v %v", hasSolutions, app.TuneForSolutions))
+		t.Errorf("Solutions diff %v %v", hasSolutions, app.TuneForSolutions)
 	}
 	appReloaded := InitialiseApp(app.SysconfigPrefix, app.State.StateDirPrefix, AllTestNotes, AllTestSolutions)
 	if !reflect.DeepEqual(app.TuneForNotes, appReloaded.TuneForNotes) {
-		panic(fmt.Sprintf("Notes diff %v %v", appReloaded.TuneForNotes, app.TuneForNotes))
+		t.Errorf("Notes diff %v %v", appReloaded.TuneForNotes, app.TuneForNotes)
 	}
 	if !reflect.DeepEqual(app.TuneForSolutions, appReloaded.TuneForSolutions) {
-		panic(fmt.Sprintf("Solutions diff %v %v", appReloaded.TuneForNotes, app.TuneForSolutions))
+		t.Errorf("Solutions diff %v %v", appReloaded.TuneForNotes, app.TuneForSolutions)
 	}
 }
 
@@ -116,7 +116,7 @@ func VerifyFileContent(t *testing.T, filePath, content string) {
 	if fileContent, err := ioutil.ReadFile(filePath); err != nil {
 		t.Fatal(err)
 	} else if string(fileContent) != content {
-		panic(fmt.Sprintf("file content mismatch\nexpected:%s\nactual:%s", content, string(fileContent)))
+		t.Errorf("file content mismatch\nexpected:%s\nactual:%s", content, string(fileContent))
 	}
 }
 
@@ -285,9 +285,9 @@ func TestOptimiseSolutionOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
-	// change expected value from "optimised1" back to "optimised2", as
-	// the check for already applied notes has moved
-	VerifyFileContent(t, SampleParamFile, "optimised2")
+	// change expected value from "optimised2" to "optimised1", as we do no
+	// longer apply a note again, which was already applied before.
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
 	}
@@ -304,9 +304,9 @@ func TestOptimiseSolutionOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12"})
-	// change expected value from "optimised2" back to "optimised1", as
-	// the check for already applied notes has moved
-	VerifyFileContent(t, SampleParamFile, "optimised1")
+	// change expected value from "optimised1" to "optimised2", as we do no
+	// longer apply a note again, which was already applied before.
+	VerifyFileContent(t, SampleParamFile, "optimised2")
 	if err := tuneApp.RevertSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
@@ -369,17 +369,17 @@ func TestOverlappingSolutions(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol12", "sol2"})
-	// change expected value from "optimised1" back to "optimised2", as
-	// the check for already applied notes has moved
-	VerifyFileContent(t, SampleParamFile, "optimised2")
+	// change expected value from "optimised2" to "optimised1", as we do no
+	// longer apply a note again, which was already applied before.
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 	if err := tuneApp.RevertSolution("sol12"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{"sol1", "sol2"})
 	// Reverting sol12 should not affect anything
-	// change expected value from "optimised1" back to "optimised2", as
-	// the check for already applied notes has moved
-	VerifyFileContent(t, SampleParamFile, "optimised2")
+	// change expected value from "optimised2" to "optimised1", as we do no
+	// longer apply a note again, which was already applied before.
+	VerifyFileContent(t, SampleParamFile, "optimised1")
 }
 
 func TestCombiningSolutionAndNotes(t *testing.T) {
@@ -459,4 +459,58 @@ func TestVerifyNoteAndSolutions(t *testing.T) {
 	if notes, comparisons, err := tuneApp.VerifyAll(); err != nil || len(notes) != 1 || len(comparisons) != 2 || notes[0] != "1001" {
 		t.Fatal(notes, comparisons, err)
 	}
+}
+
+func TestGetNoteByID(t *testing.T) {
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+
+	// check for existing Note
+	if _, err := tuneApp.GetNoteByID("1001"); err != nil {
+		t.Errorf("Note ID '1001' not found, but should be available. AllNote is '%+v', err is '%+v'\n", tuneApp.AllNotes, err)
+	}
+	// check for non-existing Note
+	if _, err := tuneApp.GetNoteByID("8932147"); err == nil {
+		t.Errorf("Note ID '8932147' should NOT be avaiable, but is reported as avaiable. AllNote is '%+v'\n", tuneApp.AllNotes)
+	}
+	tuneApp = InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+}
+
+func TestNoteSanityCheck(t *testing.T) {
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+	if err := tuneApp.TuneNote("1002"); err != nil {
+		t.Error(err)
+	}
+	if err := tuneApp.TuneNote("1001"); err != nil {
+		t.Error(err)
+	}
+
+	if err := tuneApp.NoteSanityCheck(); err != nil {
+		t.Errorf("Error during NoteSanityCheck - '%v'\n", err)
+	}
+
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "8932147")
+	err := tuneApp.NoteSanityCheck()
+	t.Logf("NoteSanityCheck - '%v'\n", err)
+	tuneApp = InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+}
+
+func TestTuneAll(t *testing.T) {
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "1001")
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "1002")
+	if err := tuneApp.TuneAll(); err != nil {
+		t.Errorf("Error during TuneAll - '%v'\n", err)
+	}
+	tuneApp = InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "8932147")
+	if err := tuneApp.TuneAll(); err != nil {
+		t.Errorf("Error during TuneAll - '%v'\n", err)
+	}
+	tuneApp = InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 }

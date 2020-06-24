@@ -44,6 +44,7 @@ const (
 	footnote4             = "[4] cpu idle state settings differ"
 	footnote5             = "[5] expected value does not contain a supported scheduler"
 	footnote6             = "[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
+	footnote7             = "[7] parameter value is untouched by default"
 )
 
 // PrintHelpAndExit Print the usage and exit
@@ -171,6 +172,9 @@ func main() {
 	tuneApp = app.InitialiseApp("", "", tuningOptions, archSolutions)
 
 	checkUpdateLeftOvers()
+	if err := tuneApp.NoteSanityCheck(); err != nil {
+		errorExit("Error during NoteSanityCheck - '%v'\n", err)
+	}
 	selectAction()
 
 }
@@ -323,7 +327,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 6, 6)
+	footnote := make([]string, 7, 7)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -548,6 +552,11 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 		comment = comment + " [6]"
 		footnote[5] = footnote6
 	}
+	if comparison.ExpectedValue == "" {
+		compliant = compliant + " [7]"
+		comment = comment + " [7]"
+		footnote[6] = footnote7
+	}
 	return compliant, comment, footnote
 }
 
@@ -648,31 +657,16 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
 		PrintHelpAndExit(1)
 	}
+
 	// Do not apply the note, if it was applied before
 	// Otherwise, the state file (serialised parameters) will be
 	// overwritten, and it will no longer be possible to revert the
 	// note to the state before it was tuned.
-	sfile, err := os.Stat(tuneApp.State.GetPathToNote(noteID))
-	if err == nil {
-		// state file for note already exists
-		// check, if note is part of NOTE_APPLY_ORDER
-		if tuneApp.PositionInNoteApplyOrder(noteID) < 0 { // noteID not yet available
-			// bsc#1167618
-			// check, if state file is empty - seems to be a
-			// left-over of the update from saptune V1 to V2
-			if sfile.Size() == 0 {
-				// remove old, left-over state file and go
-				// forward to apply the note
-				os.Remove(tuneApp.State.GetPathToNote(noteID))
-			} else {
-				// data mismatch, do not apply the note
-				system.WarningLog("note '%s' is not listed in 'NOTE_APPLY_ORDER', but a non-empty state file exists. To prevent configuration mismatch, please revert note '%s' first and apply again.", noteID, noteID)
-				os.Exit(0)
-			}
-		} else {
+	if str, ok := tuneApp.IsNoteApplied(noteID); ok {
+		if str == "" {
 			system.InfoLog("note '%s' already applied. Nothing to do", noteID)
-			os.Exit(0)
 		}
+		os.Exit(0)
 	}
 	if err := tuneApp.TuneNote(noteID); err != nil {
 		errorExit("Failed to tune for note %s: %v", noteID, err)
@@ -786,8 +780,7 @@ func NoteActionCustomise(noteID string) {
 	if editor == "" {
 		editor = "/usr/bin/vim" // launch vim by default
 	}
-	i := tuneApp.PositionInNoteApplyOrder(noteID)
-	if i < 0 { // noteID not yet available
+	if _, ok := tuneApp.IsNoteApplied(noteID); !ok {
 		system.InfoLog("Do not forget to apply the just edited Note to get your changes to take effect\n")
 	} else { // noteID already applied
 		system.InfoLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
@@ -861,8 +854,7 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID, noteTuningShee
 	ovFileName, overrideNote := getovFile(noteID, ovTuningSheets)
 
 	// check, if note is active - applied
-	i := tuneApp.PositionInNoteApplyOrder(noteID)
-	if i >= 0 { // noteID already applied
+	if _, ok := tuneApp.IsNoteApplied(noteID); ok {
 		system.InfoLog("The Note definition file you want to delete is currently in use, which means it is already applied.")
 		system.InfoLog("So please 'revert' the Note first and then try deleting again.\n")
 		os.Exit(0)
@@ -912,8 +904,7 @@ func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID, not
 	newovFileName := fmt.Sprintf("%s%s", ovTuningSheets, newNoteID)
 
 	// check, if note is active - applied
-	i := tuneApp.PositionInNoteApplyOrder(noteID)
-	if i >= 0 { // noteID already applied
+	if _, ok := tuneApp.IsNoteApplied(noteID); ok {
 		system.InfoLog("The Note definition file you want to rename is currently in use, which means it is already applied.")
 		system.InfoLog("So please 'revert' the Note first and then try renaming again.\n")
 		os.Exit(0)
@@ -982,8 +973,8 @@ func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 	if len(tuneApp.TuneForSolutions) > 0 {
 		// already one solution applied.
 		// do not apply another solution. Does not make sense
-		system.InfoLog("There is already one solution applied. Applying another solution is NOT supported.")
-		os.Exit(0)
+		system.ErrorLog("There is already one solution applied. Applying another solution is NOT supported.")
+		os.Exit(1)
 	}
 	removedAdditionalNotes, err := tuneApp.TuneSolution(solName)
 	if err != nil {

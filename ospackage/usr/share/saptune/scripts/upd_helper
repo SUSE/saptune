@@ -29,7 +29,7 @@ PARAMETERSTATEDIR=/var/lib/saptune/parameter
 
 NOTEDIR=/usr/share/saptune/notes
 NOTES2CHANGE_12to15="1984787,2578899 2205917,2684254"
-NOTES2DELETE_15="1557506"
+NOTES2DELETE_15="1557506 1275776"
 
 set_sysconfig_version() {
     # add or change SAPTUNE_VERSION string in /etc/sysconfig/saptune to "1"
