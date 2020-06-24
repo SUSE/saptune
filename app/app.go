@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	"github.com/SUSE/saptune/sap"
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
@@ -101,6 +102,113 @@ func (app *App) GetSortedSolutionEnabledNotes() (allNoteIDs []string) {
 		}
 	}
 	return
+}
+
+// removeFromConfig removes NoteID from the variables in the configuration
+// changes TuneForNotes and NoteApplyOrder
+func (app *App) removeFromConfig(noteID string) {
+	i := sort.SearchStrings(app.TuneForNotes, noteID)
+	if i < len(app.TuneForNotes) && app.TuneForNotes[i] == noteID {
+		// remove noteID from the configuration 'TuneForNotes'
+		app.TuneForNotes = append(app.TuneForNotes[0:i], app.TuneForNotes[i+1:]...)
+	}
+	i = app.PositionInNoteApplyOrder(noteID)
+	if i < 0 {
+		system.WarningLog("noteID '%s' not found in configuration 'NoteApplyOrder'", noteID)
+	} else if i < len(app.NoteApplyOrder) && app.NoteApplyOrder[i] == noteID {
+		// remove noteID from the configuration 'NoteApplyOrder'
+		app.NoteApplyOrder = append(app.NoteApplyOrder[0:i], app.NoteApplyOrder[i+1:]...)
+	}
+}
+
+// IsNoteApplied checks, if a note is applied or not
+// return true, if note is already applied
+// return false, if not is NOT applied
+func (app *App) IsNoteApplied(noteID string) (string, bool) {
+	rval := ""
+	ret := false
+	// ANGI TODO - is check against state file still ok or should
+	// the check switched to first check NOTE_APPLY_ORDER and later
+	// the state file
+	sfile, err := os.Stat(app.State.GetPathToNote(noteID))
+	if err == nil {
+		// state file for note already exists
+		// check, if note is part of NOTE_APPLY_ORDER
+		if app.PositionInNoteApplyOrder(noteID) < 0 { // noteID not yet available
+			// bsc#1167618
+			// check, if state file is empty - seems to be a
+			// left-over of the update from saptune V1 to V2
+			if sfile.Size() == 0 {
+				// remove old, left-over state file and go
+				// forward to apply the note
+				os.Remove(app.State.GetPathToNote(noteID))
+			} else {
+				// data mismatch, do not apply the note
+				system.WarningLog("note '%s' is not listed in 'NOTE_APPLY_ORDER', but a non-empty state file exists. To prevent configuration mismatch, please revert note '%s' first and try again.", noteID, noteID)
+				rval = "mismatch"
+				ret = true
+			}
+		} else { // note applied
+			ret = true
+		}
+	}
+	return rval, ret
+}
+
+// NoteSanityCheck checks, if for all notes listed in
+// NoteApplyOrder and TuneForNotes a note definition file exists.
+// if not, remove the NoteID from the variables, save the new config and
+// inform the user
+func (app *App) NoteSanityCheck() error {
+	// app.NoteApplyOrder, app.TuneForNotes
+	errs := make([]error, 0, 0)
+	for _, note := range app.NoteApplyOrder {
+		if _, exists := app.AllNotes[note]; exists {
+			// note definition file for NoteID exists
+			continue
+		}
+		// bsc#1149205
+		// noteID available in apply order list, but no note definition
+		// file found. May be removed or renamed.
+		system.ErrorLog("the Note ID '%s' is not recognised by saptune, but is listed in the apply order list.\nMay be you removed or renamed the associated Note definition file on command line without reverting the Note first.\nWe will now remove the NoteID from the apply order list to prevent further confusion.", note)
+		app.removeFromConfig(note)
+		if err := app.SaveConfig(); err != nil {
+			errs = append(errs, err)
+		}
+
+		// idea to first check for existence of section file and then
+		// check the state file will NOT work in case that the apply
+		// was done with a previous saptune version where NO section
+		// file handling exists
+		fileName := fmt.Sprintf("/var/lib/saptune/sections/%s.sections", note)
+		// check, if empty state file exists
+		if content, err := ioutil.ReadFile(app.State.GetPathToNote(note)); err == nil && len(content) == 0 {
+			 // remove empty state file
+			_ = app.State.Remove(note)
+			if _, err := os.Stat(fileName); err == nil {
+				// section file exists, remove
+				_ = os.Remove(fileName)
+			}
+		} else if err == nil {
+			// non-empty state file
+			if _, err := os.Stat(fileName); err == nil {
+				// section file exists, try revert
+				// without section file a revert is
+				// impossible as the fall back, the
+				// Note definition file no longer exists
+				_ = app.RevertNote(note, true)
+			} else {
+				// non empty state file, but no chance to revert
+				_ = app.State.Remove(note)
+			}
+		} else if _, err := os.Stat(fileName); err == nil {
+			// no state file, but section file exists, remove
+			_ = os.Remove(fileName)
+		}
+	}
+
+	err := sap.PrintErrors(errs)
+	return err
 }
 
 // GetNoteByID return the note corresponding to the number, or an error
@@ -241,6 +349,9 @@ func (app *App) TuneSolution(solName string) (removedExplicitNotes []string, err
 				return
 			}
 		}
+		if _, ok := app.IsNoteApplied(noteID); ok {
+			continue
+		}
 		if err = app.TuneNote(noteID); err != nil {
 			return
 		}
@@ -264,24 +375,23 @@ func (app *App) TuneAll() error {
 
 // RevertNote revert parameters tuned by the note and clear its stored states.
 func (app *App) RevertNote(noteID string, permanent bool) error {
+
 	noteTemplate, err := app.GetNoteByID(noteID)
 	if err != nil {
-		return err
+		// to revert an applied note even if the corresponding
+		// note definition file is no longer available, but the
+		// saved state info can be found
+		// helpfull for cleanup
+		noteTemplate = note.INISettings{
+			ConfFilePath:    "",
+			ID:              "",
+			DescriptiveName: "",
+		}
 	}
 
 	// Remove from configuration
 	if permanent {
-		i := sort.SearchStrings(app.TuneForNotes, noteID)
-		if i < len(app.TuneForNotes) && app.TuneForNotes[i] == noteID {
-			app.TuneForNotes = append(app.TuneForNotes[0:i], app.TuneForNotes[i+1:]...)
-		}
-		i = app.PositionInNoteApplyOrder(noteID)
-		if i < 0 {
-			system.WarningLog("noteID '%s' not found in configuration 'NoteApplyOrder'", noteID)
-		} else if i < len(app.NoteApplyOrder) && app.NoteApplyOrder[i] == noteID {
-			// remove noteID from the configuration 'NoteApplyOrder'
-			app.NoteApplyOrder = append(app.NoteApplyOrder[0:i], app.NoteApplyOrder[i+1:]...)
-		}
+		app.removeFromConfig(noteID)
 		if err := app.SaveConfig(); err != nil {
 			return err
 		}
@@ -291,7 +401,7 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 	// Workaround for Go JSON package's stubbornness, Go developers are not willing to fix their code in this occasion.
 	var noteReflectValue = reflect.New(reflect.TypeOf(noteTemplate))
 	var noteIface interface{} = noteReflectValue.Interface()
-	if err = app.State.Retrieve(noteID, &noteIface); err == nil {
+	if err := app.State.Retrieve(noteID, &noteIface); err == nil {
 		var noteRecovered note.Note = noteIface.(note.Note)
 		if reflect.TypeOf(noteRecovered).String() == "*note.INISettings" {
 			noteRecovered = noteRecovered.(*note.INISettings).SetValuesToApply([]string{"revert"})
@@ -347,9 +457,7 @@ func (app *App) RevertSolution(solName string) error {
 			continue // skip this one
 		}
 		if err := app.RevertNote(noteID, true); err != nil {
-			if err != nil {
-				noteErrs = append(noteErrs, err)
-			}
+			noteErrs = append(noteErrs, err)
 		}
 	}
 	if len(noteErrs) == 0 {

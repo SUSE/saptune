@@ -190,7 +190,6 @@ func (vend INISettings) Optimise() (Note, error) {
 	ini, err := vend.getSectionInfo(false)
 	if err != nil {
 		// fallback, parse the configuration file
-		system.WarningLog("Problems while reading section information, trying fallback")
 		ini, err = txtparser.ParseINIFile(vend.ConfFilePath, false)
 		if err != nil {
 			return vend, err
@@ -282,6 +281,19 @@ func (vend INISettings) Optimise() (Note, error) {
 			}
 		}
 	}
+
+	// write section data to section store file, if NOT in 'verify'
+	// will cover the situation where a note fully conforms with the
+	// system, so that there is NO apply operation, but later a
+	// revert may happen
+	if _, ok := vend.ValuesToApply["verify"]; !ok {
+		// this code section was moved from function 'Apply'
+		err = vend.storeSectionInfo(ini, "section", true)
+		if err != nil {
+			system.ErrorLog("Problems during storing of section information")
+			return vend, err
+		}
+	}
 	return vend, nil
 }
 
@@ -304,17 +316,8 @@ func (vend INISettings) Apply() error {
 	ini, err = vend.getSectionInfo(revertValues)
 	if err != nil {
 		// fallback, reading info from config file
-		system.WarningLog("Problems while reading section information, trying fallback")
 		ini, err = txtparser.ParseINIFile(vend.ConfFilePath, false)
 		if err != nil {
-			return err
-		}
-	}
-	if !revertValues {
-		// apply, write section data for revert
-		err = vend.storeSectionInfo(ini, "section", true)
-		if err != nil {
-			system.ErrorLog("Problems during storing of section information")
 			return err
 		}
 	}
