@@ -1,6 +1,6 @@
 ## Path:        Productivity/Other
 ## Description: Limits for system tuning profile "sap-netweaver".
-## ServiceRestart: tuned
+## ServiceRestart: saptune
 
 ## Type:        integer
 ## Default:     8388608

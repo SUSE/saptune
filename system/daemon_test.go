@@ -83,6 +83,26 @@ func TestSystemctl(t *testing.T) {
 	}
 }
 
+func TestSystemctlIsEnabled(t *testing.T) {
+	testService := "rpcbind.service"
+	if SystemctlIsEnabled(testService) {
+		t.Errorf("service '%s' is detected as enabled, but should be disabled", testService)
+	}
+	if err := SystemctlEnableStart(testService); err != nil {
+		t.Errorf("Error enable and start '%s': '%v'\n", testService, err)
+	}
+	if !SystemctlIsEnabled(testService) {
+		t.Errorf("service '%s' is detected as disabled, but should be enabled", testService)
+	}
+	if err := SystemctlDisableStop(testService); err != nil {
+		t.Errorf("Error disable and stop '%s': '%v'\n", testService, err)
+	}
+
+	if SystemctlIsEnabled("UnkownService") {
+		t.Errorf("service 'UnkownService' is detected as enabled, which is not possible")
+	}
+}
+
 func TestSystemctlIsRunning(t *testing.T) {
 	// check, if command is available
 	if !CmdIsAvailable("/usr/bin/systemctl") {

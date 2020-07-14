@@ -5,6 +5,14 @@ echo "zypper in ..."
 # additional libs needed to get 'tuned' working
 zypper -n --gpg-auto-import-keys ref && zypper -n --gpg-auto-import-keys in glib2 glib2-tools libgio-2_0-0 libglib-2_0-0 libgmodule-2_0-0 libgobject-2_0-0 go1.10 go rpcbind cpupower uuidd polkit tuned sysstat
 
+# setup saptune service
+cp /app/ospackage/svc/saptune.service /usr/lib/systemd/system
+if [ ! -f /usr/sbin/rcsaptune ]; then
+	ln -s /usr/sbin/service /usr/sbin/rcsaptune
+fi
+cp /app/saptune /usr/sbin/saptune
+mkdir /var/log/saptune
+
 # dbus can not be started directly, only by dependency - so start 'tuned' instead
 /bin/systemctl start tuned
 systemctl --no-pager status
@@ -17,14 +25,18 @@ echo "PATH is $PATH, GOPATH is $GOPATH, TRAVIS_HOME is $TRAVIS_HOME"
 export TRAVIS_HOME=/home/travis
 mkdir -p ${TRAVIS_HOME}/gopath/src/github.com/SUSE
 cd ${TRAVIS_HOME}/gopath/src/github.com/SUSE
-ln -s /app saptune
+if [ ! -f saptune ]; then
+	ln -s /app saptune
+fi
 export GOPATH=${TRAVIS_HOME}/gopath
 export PATH=${TRAVIS_HOME}/gopath/bin:$PATH
 export TRAVIS_BUILD_DIR=${TRAVIS_HOME}/gopath/src/github.com/SUSE/saptune
 
 mkdir -p /etc/saptune/override
 mkdir -p /usr/share/saptune
-ln -s /app/testdata/saptune-test-solutions /usr/share/saptune/solutions
+if [ ! -f /usr/share/saptune/solutions ]; then
+	ln -s /app/testdata/saptune-test-solutions /usr/share/saptune/solutions
+fi
 
 echo "go environment:"
 go env

@@ -23,35 +23,35 @@ import (
 
 // constant definitions
 const (
-	SapconfService        = "sapconf.service"
-	TunedService          = "tuned.service"
-	TunedProfileName      = "saptune"
-	logFile               = "/var/log/tuned/tuned.log"
-	NoteTuningSheets      = "/usr/share/saptune/notes/"
-	OverrideTuningSheets  = "/etc/saptune/override/"
-	ExtraTuningSheets     = "/etc/saptune/extra/" // ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
-	exitTunedStopped      = 1
-	exitTunedWrongProfile = 2
-	exitNotTuned          = 3
-	saptuneV1             = "/usr/sbin/saptune_v1"
-	setGreenText          = "\033[32m"
-	setRedText            = "\033[31m"
-	resetTextColor        = "\033[0m"
-	footnote1X86          = "[1] setting is not supported by the system"
-	footnote1IBM          = "[1] setting is not relevant for the system"
-	footnote2             = "[2] setting is not available on the system"
-	footnote3             = "[3] value is only checked, but NOT set"
-	footnote4             = "[4] cpu idle state settings differ"
-	footnote5             = "[5] expected value does not contain a supported scheduler"
-	footnote6             = "[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
-	footnote7             = "[7] parameter value is untouched by default"
+	SaptuneService       = "saptune.service"
+	SapconfService       = "sapconf.service"
+	TunedService         = "tuned.service"
+	logFile              = "/var/log/saptune/saptune.log"
+	NoteTuningSheets     = "/usr/share/saptune/notes/"
+	OverrideTuningSheets = "/etc/saptune/override/"
+	ExtraTuningSheets    = "/etc/saptune/extra/" // ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
+	exitSaptuneStopped   = 1
+	exitNotTuned         = 3
+	saptuneV1            = "/usr/sbin/saptune_v1"
+	setGreenText         = "\033[32m"
+	setRedText           = "\033[31m"
+	resetTextColor       = "\033[0m"
+	footnote1X86         = "[1] setting is not supported by the system"
+	footnote1IBM         = "[1] setting is not relevant for the system"
+	footnote2            = "[2] setting is not available on the system"
+	footnote3            = "[3] value is only checked, but NOT set"
+	footnote4            = "[4] cpu idle state settings differ"
+	footnote5            = "[5] expected value does not contain a supported scheduler"
+	footnote6            = "[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
+	footnote7            = "[7] parameter value is untouched by default"
 )
 
 // PrintHelpAndExit Print the usage and exit
 func PrintHelpAndExit(exitStatus int) {
 	fmt.Println(`saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
-  saptune daemon [ start | status | stop ]
+  saptune daemon [ start | status | stop ]  ATTENTION: deprecated
+  saptune service [ start | status | stop | enable | disable | enablestart | stopdisable ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | enabled ]
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
@@ -100,6 +100,9 @@ var footnote1 = footnote1X86                     // set 'unsupported' footnote r
 var debugSwitch = os.Getenv("SAPTUNE_DEBUG")     // Switch Debug on ("1") or off ("0" - default)
 var verboseSwitch = os.Getenv("SAPTUNE_VERBOSE") // Switch verbose mode on ("on" - default) or off ("off")
 var solutionSelector = runtime.GOARCH
+var SaptuneVersion = ""
+var RPMVersion = "undef"
+var RPMDate = "undef"
 
 func main() {
 	if runtime.GOARCH == "ppc64le" {
@@ -112,7 +115,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: Unable to read file '/etc/sysconfig/saptune': %v\n", err)
 		os.Exit(1)
 	}
-	saptuneVersion := sconf.GetString("SAPTUNE_VERSION", "")
+	SaptuneVersion = sconf.GetString("SAPTUNE_VERSION", "")
 	// check, if DEBUG is set in /etc/sysconfig/saptune
 	if debugSwitch == "" {
 		debugSwitch = sconf.GetString("DEBUG", "0")
@@ -125,7 +128,7 @@ func main() {
 		PrintHelpAndExit(0)
 	}
 	if arg1 := cliArg(1); arg1 == "version" || arg1 == "--version" {
-		fmt.Printf("current active saptune version is '%s'\n", saptuneVersion)
+		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
 		os.Exit(0)
 	}
 
@@ -141,7 +144,7 @@ func main() {
 	// activate logging
 	system.LogInit(logFile, debugSwitch, verboseSwitch)
 
-	switch saptuneVersion {
+	switch SaptuneVersion {
 	case "1":
 		cmd := exec.Command(saptuneV1, os.Args[1:]...)
 		cmd.Stdin = os.Stdin
@@ -153,10 +156,10 @@ func main() {
 		} else {
 			os.Exit(0)
 		}
-	case "2":
+	case "2", "3":
 		break
 	default:
-		errorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", saptuneVersion)
+		errorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", SaptuneVersion)
 	}
 
 	if system.IsPagecacheAvailable() {
@@ -175,6 +178,7 @@ func main() {
 	if err := tuneApp.NoteSanityCheck(); err != nil {
 		errorExit("Error during NoteSanityCheck - '%v'\n", err)
 	}
+	checkForTuned()
 	selectAction()
 
 }
@@ -184,13 +188,15 @@ func main() {
 func selectAction() {
 	switch cliArg(1) {
 	case "daemon":
-		DaemonAction(cliArg(2))
+		DaemonAction(cliArg(2), tuneApp)
 	case "note":
 		NoteAction(cliArg(2), cliArg(3), cliArg(4))
 	case "solution":
 		SolutionAction(cliArg(2), cliArg(3))
 	case "revert":
 		RevertAction(os.Stdout, cliArg(2), tuneApp)
+	case "service":
+		ServiceAction(cliArg(2))
 	default:
 		PrintHelpAndExit(1)
 	}
@@ -225,98 +231,205 @@ func RevertAction(writer io.Writer, actionName string, tuneApp *app.App) {
 	fmt.Fprintf(writer, "Parameters tuned by the notes and solutions have been successfully reverted.\n")
 }
 
-// DaemonAction handles daemon actions like start, stop, status asm.
-func DaemonAction(actionName string) {
+// ServiceAction handles service actions like start, stop, status, enable, disable
+// it controlles the systemd saptune.service
+func ServiceAction(actionName string) {
 	switch actionName {
 	case "start":
-		DaemonActionStart()
+		ServiceActionStart(false, tuneApp)
 	case "apply":
-		// This action name is only used by tuned script, hence it is not advertised to end user.
-		if err := tuneApp.TuneAll(); err != nil {
-			panic(err)
-		}
+		// This action name is only used by saptune service, hence it is not advertised to end user.
+		ServiceActionApply(tuneApp)
+	case "enable":
+		ServiceActionEnable()
+	case "enablestart":
+		ServiceActionStart(true, tuneApp)
 	case "status":
-		DaemonActionStatus()
+		ServiceActionStatus(os.Stdout, tuneApp)
 	case "stop":
-		DaemonActionStop()
+		ServiceActionStop(false)
 	case "revert":
-		// This action name is only used by tuned script, hence it is not advertised to end user.
-		if err := tuneApp.RevertAll(false); err != nil {
-			panic(err)
-		}
+		// This action name is only used by saptune service, hence it is not advertised to end user.
+		ServiceActionRevert(tuneApp)
+	case "stopdisable":
+		ServiceActionStop(true)
+	case "disable":
+		ServiceActionDisable()
 	default:
 		PrintHelpAndExit(1)
 	}
 }
 
-// DaemonActionStart starts the tuned service
-func DaemonActionStart() {
-	fmt.Println("Starting daemon (tuned.service), this may take several seconds...")
+// ServiceActionStart starts the saptune service
+// enable service before start, if enableService is true
+func ServiceActionStart(enableService bool, tuneApp *app.App) {
+	var err error
+	system.InfoLog("Starting 'saptune.service', this may take some time...")
+	// disable and stop 'sapconf.service'
+	if system.IsServiceAvailable(SapconfService) {
+		if err = system.SystemctlDisableStop(SapconfService); err != nil {
+			errorExit("%v", err)
+		}
+	}
+	// enable and/or start 'saptune.service'
+	if enableService {
+		err = system.SystemctlEnableStart(SaptuneService)
+		system.InfoLog("Service 'saptune.service' has been enabled and started.")
+	} else {
+		err = system.SystemctlStart(SaptuneService)
+		system.InfoLog("Service 'saptune.service' has been started.")
+	}
+	if err != nil {
+		errorExit("%v", err)
+	}
+	// saptune.service then calls `saptune service apply` to
+	// tune the system
+	if len(tuneApp.TuneForSolutions) == 0 && len(tuneApp.TuneForNotes) == 0 {
+		system.InfoLog("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
+	}
+	if !system.SystemctlIsEnabled(SaptuneService) {
+		system.InfoLog("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable saptune.service by running:\n    saptune service enable\n")
+	}
+}
+
+// ServiceActionApply is only used by saptune service, hence it is not
+// advertised to the end user. It is used to tune the system after reboot
+func ServiceActionApply(tuneApp *app.App) {
+	// service should fail, if sapconf.service is enabled or has exited
+	// but 'active' file is available
+	// /var/lib/sapconf/act_profile in sle12
+	// /var/run/sapconf/active in sle15
+	if system.SystemctlIsEnabled(SapconfService) || system.CmdIsAvailable("/var/lib/sapconf/act_profile") || system.CmdIsAvailable("/var/run/sapconf/active") {
+		system.ErrorLog("ATTENTION: found an active sapconf, so refuse any action")
+		os.Exit(1)
+	}
+	system.InfoLog("saptune is now tuning the system...")
+	if err := tuneApp.TuneAll(); err != nil {
+		errorExit("%v", err)
+	}
+}
+
+// ServiceActionEnable enables the saptune service
+func ServiceActionEnable() {
+	system.InfoLog("Enable 'saptune.service'")
+	// disable and stop 'sapconf.service'
 	if system.IsServiceAvailable(SapconfService) {
 		if err := system.SystemctlDisableStop(SapconfService); err != nil {
 			errorExit("%v", err)
 		}
 	}
-	if err := system.TunedAdmProfile("saptune"); err != nil {
+	// enable 'saptune.service'
+	if err := system.SystemctlEnable(SaptuneService); err != nil {
 		errorExit("%v", err)
 	}
-	if err := system.SystemctlEnableStart(TunedService); err != nil {
-		errorExit("%v", err)
-	}
-	// Check tuned profile
-	if system.GetTunedAdmProfile() != TunedProfileName {
-		_ = system.ErrorLog("tuned.service profile is incorrect. Please check tuned logs for more information")
-		// defined exit value needed for yast module
-		os.Exit(exitTunedWrongProfile)
-	}
-	// tuned then calls `saptune daemon apply`
-	fmt.Println("Daemon (tuned.service) has been enabled and started.")
-	if len(tuneApp.TuneForSolutions) == 0 && len(tuneApp.TuneForNotes) == 0 {
-		fmt.Println("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
+	system.InfoLog("Service 'saptune.service' has been enabled.")
+	if !system.SystemctlIsRunning(SaptuneService) {
+		system.InfoLog("Service 'saptune.service' is not running. Please use `saptune service start` to start the service and tune the system")
 	}
 }
 
-// DaemonActionStatus checks the status of the tuned service
-func DaemonActionStatus() {
-	// Check daemon
-	if system.SystemctlIsRunning(TunedService) {
-		fmt.Println("Daemon (tuned.service) is running.")
+// ServiceActionStatus checks the status of the saptune service
+func ServiceActionStatus(writer io.Writer, tuneApp *app.App) {
+	// check for running saptune.service
+	if system.SystemctlIsRunning(SaptuneService) {
+		system.InfoLog("Service 'saptune.service' is running.")
 	} else {
-		fmt.Fprintln(os.Stderr, "Daemon (tuned.service) is stopped. If you wish to start the daemon, run `saptune daemon start`.")
-		os.Exit(exitTunedStopped)
+		system.ErrorLog("Service 'saptune.service' is stopped. If you wish to start the service, run `saptune service start`.")
+		os.Exit(exitSaptuneStopped)
 	}
-	// Check tuned profile
-	if system.GetTunedProfile() != TunedProfileName {
-		fmt.Fprintln(os.Stderr, "tuned.service profile is incorrect. If you wish to correct it, run `saptune daemon start`.")
-		os.Exit(exitTunedWrongProfile)
+	if !system.SystemctlIsEnabled(SaptuneService) {
+		system.InfoLog("Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable saptune.service by running:\n    saptune service enable")
 	}
+
+	// print saptune version
+	system.InfoLog("current active saptune version is '%s'\n", SaptuneVersion)
+	// print saptune rpm version and date
+	system.InfoLog("installed saptune version is '%s' from '%s'\n", RPMVersion, RPMDate)
+
+	// ANGI TODO - umschreiben der Ausgaben, so dass system.InfoLog genutzt werden kann. Also in Variablen schreiben oder einfach die Struktur ausgeben.
 	// Check for any enabled note/solution
 	if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 {
-		fmt.Println("The system has been tuned for the following solutions and notes:")
+		fmt.Fprintf(writer, "The system has been tuned for the following solutions and notes:")
 		for _, sol := range tuneApp.TuneForSolutions {
-			fmt.Println("\t" + sol)
+			fmt.Fprintf(writer, "\t" + sol)
 		}
 		for _, noteID := range tuneApp.TuneForNotes {
-			fmt.Println("\t" + noteID)
+			fmt.Fprintf(writer, "\t" + noteID)
 		}
+		// list order of enabled notes
+		tuneApp.PrintNoteApplyOrder(writer)
 	} else {
-		fmt.Fprintln(os.Stderr, "Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
+		system.ErrorLog("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
 		os.Exit(exitNotTuned)
 	}
 }
 
-// DaemonActionStop stops the tuned service
-func DaemonActionStop() {
-	fmt.Println("Stopping daemon (tuned.service), this may take several seconds...")
-	if err := system.TunedAdmOff(); err != nil {
+// ServiceActionStop stops the saptune service
+// disable service before stop, if disableService is true
+func ServiceActionStop(disableService bool) {
+	var err error
+	system.InfoLog("Stopping 'saptune.service', this may take some time...")
+	// disable and/or stop 'saptune.service'
+	if disableService {
+		err = system.SystemctlDisableStop(SaptuneService)
+		system.InfoLog("Service 'saptune.service' has been disabled and stopped.")
+	} else {
+		err = system.SystemctlStop(SaptuneService)
+		system.InfoLog("Service 'saptune.service' has been stopped.")
+	}
+	if err != nil {
 		errorExit("%v", err)
 	}
-	if err := system.SystemctlDisableStop(TunedService); err != nil {
+	// saptune.service then calls `saptune daemon revert` to
+	// revert all tuned parameter
+	system.InfoLog("All tuned parameters have been reverted to default.")
+}
+
+// ServiceActionRevert is only used by saptune service, hence it is not
+// advertised to the end user. It is used to revert all the tuned parameters
+// right before a system reboot
+func ServiceActionRevert(tuneApp *app.App) {
+	// service should fail, if sapconf.service is enabled or has exited
+	// but 'active' file is available
+	// /var/lib/sapconf/act_profile in sle12
+	// /var/run/sapconf/active in sle15
+	if system.SystemctlIsEnabled(SapconfService) || system.CmdIsAvailable("/var/lib/sapconf/act_profile") || system.CmdIsAvailable("/var/run/sapconf/active") {
+		system.ErrorLog("ATTENTION: found an active sapconf, so refuse any action")
+		os.Exit(1)
+	}
+	system.InfoLog("saptune is now reverting all settings...")
+	if err := tuneApp.RevertAll(false); err != nil {
 		errorExit("%v", err)
 	}
-	// tuned then calls `saptune daemon revert`
-	fmt.Println("Daemon (tuned.service) has been disabled and stopped.")
-	fmt.Println("All tuned parameters have been reverted to default.")
+}
+
+// ServiceActionDisable disables the saptune service
+func ServiceActionDisable() {
+	system.InfoLog("Disable 'saptune.service'")
+	// disable 'saptune.service'
+	if err := system.SystemctlDisable(SaptuneService); err != nil {
+		errorExit("%v", err)
+	}
+	system.InfoLog("Service 'saptune.service' has been disabled.")
+	if system.SystemctlIsRunning(SaptuneService) {
+		system.InfoLog("Service 'saptune.service' still running. Please use `saptune service stop` to stop the service and revert the tuned parameter")
+	}
+}
+
+// DaemonAction handles daemon actions like start, stop, status asm.
+// still available for compatibility reasons
+func DaemonAction(actionName string, tuneApp *app.App) {
+	system.WarningLog("ATTENTION: the argument 'daemon' is deprecated!. saptune will forward the request to 'saptune service %s'.\nFor the future please use 'saptune service %s'.", actionName, actionName)
+	switch actionName {
+	case "start":
+		ServiceActionStart(false, tuneApp)
+	case "status":
+		ServiceActionStatus(os.Stdout, tuneApp)
+	case "stop":
+		ServiceActionStop(false)
+	default:
+		PrintHelpAndExit(1)
+	}
 }
 
 // PrintNoteFields Print mismatching fields in the note comparison result.
@@ -672,11 +785,7 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 		errorExit("Failed to tune for note %s: %v", noteID, err)
 	}
 	fmt.Fprintf(writer, "The note has been applied successfully.\n")
-	if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
-		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot,"+
-			"you must instruct saptune to configure \"tuned\" daemon by running:"+
-			"\n    saptune daemon start\n")
-	}
+	rememberMessage(writer)
 }
 
 // NoteActionList lists all available Note definitions
@@ -705,11 +814,7 @@ func NoteActionList(writer io.Writer, tuneApp *app.App, tOptions note.TuningOpti
 		fmt.Fprintf(writer, format, noteID, noteObj.Name())
 	}
 	tuneApp.PrintNoteApplyOrder(writer)
-	if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
-		fmt.Fprintf(writer, "Remember: if you wish to automatically activate the solution's tuning options after a reboot,"+
-			"you must instruct saptune to configure \"tuned\" daemon by running:"+
-			"\n    saptune daemon start\n")
-	}
+	rememberMessage(writer)
 }
 
 // NoteActionVerify compares all parameter settings from a Note definition
@@ -987,11 +1092,7 @@ func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 			fmt.Fprintf(writer, "\t%s\t%s\n", noteNumber, tuneApp.AllNotes[noteNumber].Name())
 		}
 	}
-	if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
-		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot,"+
-			"you must instruct saptune to configure \"tuned\" daemon by running:"+
-			"\n    saptune daemon start\n")
-	}
+	rememberMessage(writer)
 }
 
 // SolutionActionList lists all available solution definitions
@@ -1024,11 +1125,7 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 		//fmt.Printf(format, solName)
 		fmt.Fprintf(writer, format, solName)
 	}
-	if !system.SystemctlIsRunning(TunedService) || system.GetTunedProfile() != TunedProfileName {
-		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot,"+
-			"you must instruct saptune to configure \"tuned\" daemon by running:"+
-			"\n    saptune daemon start\n")
-	}
+	rememberMessage(writer)
 }
 
 // SolutionActionVerify compares all parameter settings from a solution
@@ -1170,5 +1267,22 @@ func deleteNote(fileName, ovFileName string, overrideNote, extraNote bool) {
 		if err := os.Remove(fileName); err != nil {
 			errorExit("Failed to remove file '%s' - %v", fileName, err)
 		}
+	}
+}
+
+// rememberMessage prints a reminder message
+func rememberMessage(writer io.Writer) {
+	if !system.SystemctlIsRunning(SaptuneService) {
+		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot,"+
+			"you must enable and start saptune.service by running:"+
+			"\n    saptune service enablestart\n")
+	}
+}
+
+// checkForTuned checks for enabled and/or running tuned and prints out
+// a warning message
+func checkForTuned() {
+	if system.SystemctlIsEnabled(TunedService) || system.SystemctlIsRunning(TunedService) {
+		system.WarningLog("ATTENTION: tuned service is enabled/active, so we may encounter conflicting tuning values")
 	}
 }

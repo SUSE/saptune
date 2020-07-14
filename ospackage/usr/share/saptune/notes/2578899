@@ -48,8 +48,6 @@ tcsh 15-SP1 6.20.00-4.9.1
 # specified at a time. When one sysctl is written it is immediately taken into
 # account to evaluate the dirty memory limits and the other appears as 0 when
 # read.
-# Note: when changing the tuned profile or switching off tuned, both values
-# will be set back to their previous settings.
 # Note: the minimum value allowed for dirty_bytes is two pages (in bytes); any
 # value lower than this limit will be ignored and the old configuration will be
 # retained.
@@ -65,8 +63,6 @@ vm.dirty_bytes=629145600
 # Only one of them may be specified at a time. When one sysctl is written it is
 # immediately taken into account to evaluate the dirty memory limits and the
 # other appears as 0 when read.
-# Note: when changing the tuned profile or switching off tuned, both values
-# will be set back to their previous settings.
 #
 # vm.dirty_background_bytes should be set to 314572800 (see TID_7010287)
 #
