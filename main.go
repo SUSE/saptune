@@ -100,8 +100,14 @@ var footnote1 = footnote1X86                     // set 'unsupported' footnote r
 var debugSwitch = os.Getenv("SAPTUNE_DEBUG")     // Switch Debug on ("1") or off ("0" - default)
 var verboseSwitch = os.Getenv("SAPTUNE_VERBOSE") // Switch verbose mode on ("on" - default) or off ("off")
 var solutionSelector = runtime.GOARCH
+
+// SaptuneVersion is the saptune version from /etc/sysconfig/saptune
 var SaptuneVersion = ""
+
+// RPMVersion is the package version from package build process
 var RPMVersion = "undef"
+
+// RPMDate is the date of package build
 var RPMDate = "undef"
 
 func main() {
@@ -351,10 +357,10 @@ func ServiceActionStatus(writer io.Writer, tuneApp *app.App) {
 	if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 {
 		fmt.Fprintf(writer, "The system has been tuned for the following solutions and notes:")
 		for _, sol := range tuneApp.TuneForSolutions {
-			fmt.Fprintf(writer, "\t" + sol)
+			fmt.Fprintf(writer, "\t"+sol)
 		}
 		for _, noteID := range tuneApp.TuneForNotes {
-			fmt.Fprintf(writer, "\t" + noteID)
+			fmt.Fprintf(writer, "\t"+noteID)
 		}
 		// list order of enabled notes
 		tuneApp.PrintNoteApplyOrder(writer)

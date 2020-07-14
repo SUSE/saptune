@@ -65,6 +65,39 @@ var tearDown = func(t *testing.T) {
 	}
 }
 
+var setupSaptuneService = func(t *testing.T) {
+	t.Helper()
+	_ = system.CopyFile(fmt.Sprintf("%s/etc/sysconfig/saptune", TstFilesInGOPATH), "/etc/sysconfig/saptune")
+	if err := system.CopyFile("/usr/bin/true", "/usr/sbin/saptune"); err != nil {
+		t.Errorf("copy '/usr/bin/true' to '/usr/sbin/saptune' failed - '%v'", err)
+	}
+	if err := os.Chmod("/usr/sbin/saptune", 0755); err != nil {
+		t.Errorf("chmod '/usr/sbin/saptune' failed - '%v'", err)
+	}
+	if err := system.CopyFile("/app/ospackage/svc/saptune.service", "/usr/lib/systemd/system/saptune.service"); err != nil {
+		t.Errorf("copy '/app/ospackage/svc/saptune.service' to '/usr/lib/systemd/system/saptune.service' failed - '%v'", err)
+	}
+	if err := os.Symlink("/usr/sbin/service", "/usr/sbin/rcsaptune"); err != nil {
+		t.Errorf("linking '/usr/sbin/service' to '/usr/sbin/rcsaptune' failed - '%v'", err)
+	}
+	if err := os.Mkdir("/var/log/saptune", 0755); err != nil {
+		t.Errorf("mkdir for '/var/log/saptune' failed - '%v'", err)
+	}
+
+	tApp.TuneForSolutions = []string{"sol1"}
+	tApp.TuneForNotes = []string{"2205917"}
+	tApp.NoteApplyOrder = []string{"2205917"}
+}
+
+var teardownSaptuneService = func(t *testing.T) {
+	t.Helper()
+	os.Remove("/etc/sysconfig/saptune")
+	os.Remove("/usr/sbin/saptune")
+	os.Remove("/usr/lib/systemd/system/saptune.service")
+	os.Remove("/usr/sbin/rcsaptune")
+	os.RemoveAll("/var/log/saptune")
+}
+
 func TestSetWidthOfColums(t *testing.T) {
 	compare := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "IO_SCHEDULER_sr0", ActualValueJS: "cfq", ExpectedValueJS: "cfq"}
 	w1 := 2
@@ -123,9 +156,7 @@ Parameters tuned by the notes and solutions have been successfully reverted.
 func TestDaemonActions(t *testing.T) {
 	// test setup
 	setUp(t)
-	_ = system.CopyFile(fmt.Sprintf("%s/etc/sysconfig/saptune", TstFilesInGOPATH), "/etc/sysconfig/saptune")
-	tApp.TuneForNotes = []string{"2205917"}
-	tApp.NoteApplyOrder = []string{"2205917"}
+	setupSaptuneService(t)
 	testService := "saptune.service"
 
 	// Test DaemonActionStart
@@ -147,17 +178,14 @@ func TestDaemonActions(t *testing.T) {
 		}
 	})
 
-	os.Remove("/etc/sysconfig/saptune")
+	teardownSaptuneService(t)
 	tearDown(t)
 }
 
 func TestServiceActions(t *testing.T) {
 	// test setup
 	setUp(t)
-	_ = system.CopyFile(fmt.Sprintf("%s/etc/sysconfig/saptune", TstFilesInGOPATH), "/etc/sysconfig/saptune")
-	tApp.TuneForSolutions = []string{"sol1"}
-	tApp.TuneForNotes = []string{"2205917"}
-	tApp.NoteApplyOrder = []string{"2205917"}
+	setupSaptuneService(t)
 	testService := "saptune.service"
 
 	// Test ServiceActionStart
@@ -233,7 +261,7 @@ current order of enabled notes is: 2205917
 		ServiceActionStop(false)
 	})
 
-	os.Remove("/etc/sysconfig/saptune")
+	teardownSaptuneService(t)
 	tearDown(t)
 }
 
