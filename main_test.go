@@ -27,6 +27,7 @@ var AllTestSolutions = map[string]solution.Solution{
 
 var tuningOpts = note.GetTuningOptions("", ExtraFilesInGOPATH)
 var tApp = app.InitialiseApp(TstFilesInGOPATH, "", tuningOpts, AllTestSolutions)
+var sApp *app.App
 
 var checkOut = func(t *testing.T, got, want string) {
 	t.Helper()
@@ -68,6 +69,7 @@ var tearDown = func(t *testing.T) {
 var setupSaptuneService = func(t *testing.T) {
 	t.Helper()
 	_ = system.CopyFile(fmt.Sprintf("%s/etc/sysconfig/saptune", TstFilesInGOPATH), "/etc/sysconfig/saptune")
+	sApp = app.InitialiseApp("", "", tuningOpts, AllTestSolutions)
 	if err := system.CopyFile("/usr/bin/true", "/usr/sbin/saptune"); err != nil {
 		t.Errorf("copy '/usr/bin/true' to '/usr/sbin/saptune' failed - '%v'", err)
 	}
@@ -84,9 +86,9 @@ var setupSaptuneService = func(t *testing.T) {
 		t.Errorf("mkdir for '/var/log/saptune' failed - '%v'", err)
 	}
 
-	tApp.TuneForSolutions = []string{"sol1"}
-	tApp.TuneForNotes = []string{"2205917"}
-	tApp.NoteApplyOrder = []string{"2205917"}
+	sApp.TuneForSolutions = []string{"sol1"}
+	sApp.TuneForNotes = []string{"2205917"}
+	sApp.NoteApplyOrder = []string{"2205917"}
 }
 
 var teardownSaptuneService = func(t *testing.T) {
@@ -155,42 +157,39 @@ Parameters tuned by the notes and solutions have been successfully reverted.
 
 func TestDaemonActions(t *testing.T) {
 	// test setup
-	setUp(t)
 	setupSaptuneService(t)
 	testService := "saptune.service"
 
 	// Test DaemonActionStart
 	t.Run("DaemonActionStart", func(t *testing.T) {
-		DaemonAction("start", tApp)
+		DaemonAction("start", sApp)
 		if !system.SystemctlIsRunning(testService) {
 			t.Errorf("'%s' not started", testService)
 		}
 	})
 	// Test DaemonActionStatus
 	t.Run("DaemonActionStatus", func(t *testing.T) {
-		DaemonAction("status", tApp)
+		DaemonAction("status", sApp)
 	})
 	// Test DaemonActionStop
 	t.Run("DaemonActionStop", func(t *testing.T) {
-		DaemonAction("stop", tApp)
+		DaemonAction("stop", sApp)
 		if system.SystemctlIsRunning(testService) {
 			t.Errorf("'%s' not stopped", testService)
 		}
 	})
 
 	teardownSaptuneService(t)
-	tearDown(t)
 }
 
 func TestServiceActions(t *testing.T) {
 	// test setup
-	setUp(t)
 	setupSaptuneService(t)
 	testService := "saptune.service"
 
 	// Test ServiceActionStart
 	t.Run("ServiceActionStartandEnable", func(t *testing.T) {
-		ServiceActionStart(true, tApp)
+		ServiceActionStart(true, sApp)
 		if !system.SystemctlIsRunning(testService) {
 			t.Errorf("'%s' not started", testService)
 		}
@@ -211,7 +210,7 @@ func TestServiceActions(t *testing.T) {
 
 	// Test ServiceActionStart
 	t.Run("ServiceActionStart", func(t *testing.T) {
-		ServiceActionStart(false, tApp)
+		ServiceActionStart(false, sApp)
 		if !system.SystemctlIsRunning(testService) {
 			t.Errorf("'%s' not started", testService)
 		}
@@ -240,11 +239,11 @@ func TestServiceActions(t *testing.T) {
 
 	// Test ServiceActionApply
 	t.Run("ServiceActionApply", func(t *testing.T) {
-		ServiceActionApply(tApp)
+		ServiceActionApply(sApp)
 	})
 	// Test ServiceActionRevert
 	t.Run("ServiceActionRevert", func(t *testing.T) {
-		ServiceActionRevert(tApp)
+		ServiceActionRevert(sApp)
 	})
 
 	// Test ServiceActionStatus
@@ -253,16 +252,15 @@ func TestServiceActions(t *testing.T) {
 current order of enabled notes is: 2205917
 
 `
-		ServiceActionStart(false, tApp)
+		ServiceActionStart(false, sApp)
 		buffer := bytes.Buffer{}
-		ServiceActionStatus(&buffer, tApp)
+		ServiceActionStatus(&buffer, sApp)
 		txt := buffer.String()
 		checkOut(t, txt, serviceStatusMatchText)
 		ServiceActionStop(false)
 	})
 
 	teardownSaptuneService(t)
-	tearDown(t)
 }
 
 func TestNoteActions(t *testing.T) {
