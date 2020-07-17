@@ -14,15 +14,20 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "January 2020" "" "System Optimisation For SAP"
+.TH saptune "8" "July 2020" "" "System Optimisation For SAP"
 .SH NAME
-saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 2\fP)
+saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 2 and 3\fP)
 
 ATTENTION: If you still use version \fB1\fP of saptune please refer to man page  saptune_v1(8) instead.
 
 .SH SYNOPSIS
+ATTENTION: deprecated
+.br
 \fBsaptune daemon\fP
 [ start | status | stop ]
+
+\fBsaptune service\fP
+[ start | status | stop | enable | disable | enablestart | stopdisable ]
 
 \fBsaptune note\fP
 [ list | verify | enabled ]
@@ -58,21 +63,44 @@ saptune does not only set kernel values (like sysctl does), but also values like
 .PP
 /proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.d/, /etc/systemd/logind.conf.d/ and some others.
 
-saptune fully integrates with tuned(8), the tuned-profile name associated with this utility is "saptune".
+saptune does no longer use tuned(8) to restart after a system reboot. It is using it's own systemd service named "saptune.service".
 
 We decided to have only ONE solution applied, but multiple Notes. Each Note is applied exactly once.
 
-.SH DAEMON ACTIONS
+.SH DAEMON ACTIONS - ATTENTION: deprecated
 .SS
 .TP
 .B start
-Start tuned(8) daemon, set tuning profile to "saptune", and apply a set of optimisations to the system, if solutions or notes were selected during a previous call of saptune. The daemon will be automatically activated upon system boot.
+As saptune no longer uses tuned, this action is internally linked to 'saptune service start'. See description below
 .TP
 .B status
-Report the status of tuned(8) daemon and whether it is using the correct profile.
+As saptune no longer uses tuned, this action is internally linked to 'saptune service status'. See description below
 .TP
 .B stop
-Stop tuned(8) daemon, and revert all optimisations that were previously applied by saptune. The daemon will no longer automatically activate upon boot.
+As saptune no longer uses tuned, this action is internally linked to 'saptune service stop'. See description below
+
+.SH SERVICE ACTIONS
+.SS
+.TP
+.B start
+Start saptune service and apply a set of optimisations to the system, if solutions or notes were selected during a previous call of saptune. If the service is enabled, the tuning will be automatically activated upon system boot.
+.TP
+.B status
+Report the status of saptune service, the saptune version from \fI/etc/sysconfig/saptune\fP and the rpm version and build date from the current installed saptune package.
+.TP
+.B stop
+Stop saptune service and revert all optimisations that were previously applied by saptune. If the service is disabled, the tuning will no longer automatically activate upon boot.
+.B enable
+Enables the saptune service. To activate the tuning, the saptune service needs to be started. But as the service is now enabled, the tuning will automatically activated upon system boot.
+.TP
+.B disable
+Disable the saptune service. To revert all optimisations that were previously applied by saptune, the saptune service needs to be stopped. But as the service is now disabled, the tuning will no longer automatically activated upon system boot.
+.TP
+.B enablestart
+Enables and start the saptune service and apply a set of optimisations to the system, if solutions or notes were selected during a previous call of saptune. As the service is now enabled, the tuning will automatically activated upon system boot.
+.TP
+.B stopdisable
+Stop and disable the saptune service and revert all optimisations that were previously applied by saptune. As the service is now disabled, the tuning will no longer automatically activated upon system boot.
 
 .SH NOTE ACTIONS
 Note denotes either a SAP Note, a vendor specific tuning definition or SUSE recommendation article.
@@ -224,7 +252,6 @@ Note definition files shipped by the saptune package - so called \fIinternal\fP 
 ATTENTION:
 .br
 If the Note is already applied, the command will be terminated with the information, that the Note first needs to be reverted before it can be deleted.
-.TP
 
 .SH SOLUTION ACTIONS
 A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.
@@ -370,7 +397,7 @@ saptune now sets the values read from the Note definition files irrespective of 
 
 .SH SEE ALSO
 .NF
-saptune-note(5) saptune-migrate(7) saptune(8) saptune_v1(8) tuned(8) tuned-adm(8)
+saptune-note(5) saptune-migrate(7) saptune(8) saptune_v1(8)
 
 .SH AUTHOR
 .NF
