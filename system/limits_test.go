@@ -60,8 +60,19 @@ func TestSecLimits(t *testing.T) {
 	if value, exists := limits.Get("@dba", "hard", "memlock"); !exists || value != "unlimited" {
 		t.Fatal(value, exists)
 	}
-	if value := limits.GetOr0("@dba", "hard", "memlock"); value != SecurityLimitUnlimitedValue {
-		t.Fatal(value)
+	value := limits.GetOr0("@dba", "hard", "memlock")
+	if value != SecurityLimitUnlimitedValue {
+		t.Error(value)
+	}
+	if value.String() != "unlimited" {
+		t.Errorf("value should be 'unlimited', but is '%+v'\n", value)
+	}
+	value = limits.GetOr0("root", "soft", "nproc")
+	if value != 8000 {
+		t.Error(value)
+	}
+	if value.String() != "8000" {
+		t.Errorf("value should be '8000', but is '%+v'\n", value)
 	}
 	if value, exists := limits.Get("does_not_exist", "soft", "nproc"); exists {
 		t.Fatal(value, exists)
@@ -123,5 +134,24 @@ func TestSecLimits(t *testing.T) {
 	if value, exists := newLimits.Get("@dba", "soft", "memlock"); !exists || value != "unlimited" {
 		t.Fatal(value, exists)
 	}
+
+	// no limits file for input available
+	_ = CopyFile("/etc/security/limits.conf", "/etc/security/limits.conf_OrG")
+	os.Remove("/etc/security/limits.conf")
+	noLimits, err := ParseSecLimitsFile("file_does_not_exist")
+	if err == nil && noLimits != nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	_ = CopyFile("/etc/security/limits.conf_OrG", "/etc/security/limits.conf")
+	os.Remove("/etc/security/limits.conf_OrG")
 	os.Remove(dropInFile)
+
+	tstlim := []string{"tst1", "tst2", "tst3"}
+	os.Rename("/etc/security/limits.d", "/etc/security/limits.d_OrG")
+	err = limits.ApplyDropIn(tstlim, "tstnote")
+	if err != nil {
+		t.Error(err)
+	}
+	os.RemoveAll("/etc/security/limits.d")
+	os.Rename("/etc/security/limits.d_OrG", "/etc/security/limits.d")
 }

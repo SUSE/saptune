@@ -18,11 +18,11 @@ import (
 //constant definition
 const (
 	notSupported = "System does not support Intel's performance bias setting"
-	cpuDir       = "/sys/devices/system/cpu"
 	cpuDirSys    = "devices/system/cpu"
-	cpupowerCmd  = "/usr/bin/cpupower"
 )
 
+var cpuDir       = "/sys/devices/system/cpu"
+var cpupowerCmd  = "/usr/bin/cpupower"
 var isCPU = regexp.MustCompile(`^cpu\d+$`)
 var isState = regexp.MustCompile(`^state\d+$`)
 

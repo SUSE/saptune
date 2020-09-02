@@ -55,6 +55,7 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 	}
 	sort.Strings(app.TuneForSolutions)
 	sort.Strings(app.TuneForNotes)
+	// Never ever sort app.NoteApplyOrder !
 	return
 }
 
@@ -233,44 +234,9 @@ Run "saptune solution list" for a complete list of supported solutions,
 and then please double check your input and /etc/sysconfig/saptune`, name)
 }
 
-// TuneNote apply tuning for a note.
-// If the note is not yet covered by one of the enabled solutions,
-// the note number will be added into the list of additional notes.
-func (app *App) TuneNote(noteID string) error {
+// handleCounterParts will save the counterpart values of parameters
+func handleCounterParts(currentState *note.Note) bool {
 	forceApply := false
-	aNote, err := app.GetNoteByID(noteID)
-	if err != nil {
-		return err
-	}
-	solNotes := app.GetSortedSolutionEnabledNotes()
-	searchInSol := sort.SearchStrings(solNotes, noteID)
-	searchInNote := sort.SearchStrings(app.TuneForNotes, noteID)
-	if !(searchInSol < len(solNotes) && solNotes[searchInSol] == noteID) && !(searchInNote < len(app.TuneForNotes) && app.TuneForNotes[searchInNote] == noteID) {
-		// Note is not covered by any of the existing solution, hence adding it into the additions' list
-		app.TuneForNotes = append(app.TuneForNotes, noteID)
-		sort.Strings(app.TuneForNotes)
-	}
-	// to prevent double noteIDs in the apply order list
-	i := app.PositionInNoteApplyOrder(noteID)
-	if i < 0 { // noteID not yet available
-		app.NoteApplyOrder = append(app.NoteApplyOrder, noteID)
-	}
-	if err := app.SaveConfig(); err != nil {
-		return err
-	}
-
-	// check, if system already complies with the requirements.
-	// set values for later use
-	conforming, _, valApplyList, err := app.VerifyNote(noteID)
-	if err != nil {
-		return err
-	}
-
-	// Save current state for the Note in any case
-	currentState, err := aNote.Initialise()
-	if err != nil {
-		return fmt.Errorf("Failed to examine system for the current status of note %s - %v", noteID, err)
-	}
 	if reflect.TypeOf(currentState).String() == "note.INISettings" {
 		// in case of vm.dirty parameters save additionally the
 		// counterpart values to be able to revert the values
@@ -299,6 +265,52 @@ func (app *App) TuneNote(noteID string) error {
 			}
 		}
 	}
+	return forceApply
+}
+
+// TuneNote apply tuning for a note.
+// If the note is not yet covered by one of the enabled solutions,
+// the note number will be added into the list of additional notes.
+func (app *App) TuneNote(noteID string) error {
+	savConf := false
+	aNote, err := app.GetNoteByID(noteID)
+	if err != nil {
+		return err
+	}
+	solNotes := app.GetSortedSolutionEnabledNotes()
+	searchInSol := sort.SearchStrings(solNotes, noteID)
+	searchInNote := sort.SearchStrings(app.TuneForNotes, noteID)
+	if !(searchInSol < len(solNotes) && solNotes[searchInSol] == noteID) && !(searchInNote < len(app.TuneForNotes) && app.TuneForNotes[searchInNote] == noteID) {
+		// Note is not covered by any of the existing solution, hence adding it into the additions' list
+		app.TuneForNotes = append(app.TuneForNotes, noteID)
+		sort.Strings(app.TuneForNotes)
+		savConf = true
+	}
+	// to prevent double noteIDs in the apply order list
+	i := app.PositionInNoteApplyOrder(noteID)
+	if i < 0 { // noteID not yet available
+		app.NoteApplyOrder = append(app.NoteApplyOrder, noteID)
+		savConf = true
+	}
+	if savConf {
+		if err := app.SaveConfig(); err != nil {
+			return err
+		}
+	}
+
+	// check, if system already complies with the requirements.
+	// set values for later use
+	conforming, _, valApplyList, err := app.VerifyNote(noteID)
+	if err != nil {
+		return err
+	}
+
+	// Save current state for the Note in any case
+	currentState, err := aNote.Initialise()
+	if err != nil {
+		return fmt.Errorf("Failed to examine system for the current status of note %s - %v", noteID, err)
+	}
+	forceApply := handleCounterParts(&currentState)
 	if err = app.State.Store(noteID, currentState, false); err != nil {
 		return fmt.Errorf("Failed to save current state of note %s - %v", noteID, err)
 	}
@@ -406,7 +418,8 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 	var noteReflectValue = reflect.New(reflect.TypeOf(noteTemplate))
 	var noteIface interface{} = noteReflectValue.Interface()
 	if err := app.State.Retrieve(noteID, &noteIface); err == nil {
-		var noteRecovered note.Note = noteIface.(note.Note)
+		//var noteRecovered note.Note = noteIface.(note.Note)
+		var noteRecovered = noteIface.(note.Note)
 		if reflect.TypeOf(noteRecovered).String() == "*note.INISettings" {
 			noteRecovered = noteRecovered.(*note.INISettings).SetValuesToApply([]string{"revert"})
 		}

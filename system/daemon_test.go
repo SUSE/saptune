@@ -216,3 +216,57 @@ func TestGetTunedAdmProfile(t *testing.T) {
 		t.Fatalf("seams 'tuned-adm off' does not work: profile is '%v'\n", actVal)
 	}
 }
+
+func TestDaemonErrorCases(t *testing.T) {
+	oldSystemctlCmd := systemctlCmd
+	systemctlCmd = "/usr/bin/false"
+	if err := SystemctlRestart("tstserv"); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	if err := SystemctlReloadTryRestart("tstserv"); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	if err := SystemctlStart("tstserv"); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	if err := SystemctlStop("tstserv"); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	if IsServiceAvailable("tstserv") {
+		t.Error("service 'tstserv' should not, but is available on the system")
+	}
+	systemctlCmd = oldSystemctlCmd
+
+	oldActTunedProfile := actTunedProfile
+	actTunedProfile = "/etc/tst/tst/tstProfile"
+	actProfile := GetTunedProfile()
+	if actProfile != "" {
+		t.Error(actProfile)
+	}
+	profileName := "balanced"
+	if err := WriteTunedAdmProfile(profileName); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	actTunedProfile = oldActTunedProfile
+
+	oldTunedAdmCmd := tunedAdmCmd
+	tunedAdmCmd = "/usr/bin/false"
+	if err := TunedAdmOff(); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	if err := TunedAdmProfile("balanced"); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	tunedAdmCmd = "/usr/bin/true"
+	actVal := GetTunedAdmProfile()
+	if actVal != "" {
+		t.Error(actVal)
+	}
+
+	tunedAdmCmd = oldTunedAdmCmd
+	_ = SystemctlStop("tuned.service")
+	if err := TunedAdmOff(); err != nil {
+		t.Error(err)
+	}
+	_ = SystemctlStart("tuned.service")
+}

@@ -217,7 +217,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 		}
 	}
 	if allMatch && grubAvail {
-		allMatch = ChkGrubCompliance(comparisons, allMatch)
+		allMatch = chkGrubCompliance(comparisons, allMatch)
 	}
 	return
 }
@@ -236,12 +236,12 @@ func isInternalGrub(val string) bool {
 	return false
 }
 
-// ChkGrubCompliance grub special - check compliance of alternative settings
+// chkGrubCompliance grub special - check compliance of alternative settings
 // only if one of these alternatives are not compliant, modify the result of
 // the compare
 // restricted to grub parameter shipped with saptune integrated notes
 // grub parameter and 'alternative' setting have to be within the same note
-func ChkGrubCompliance(comparisons map[string]FieldComparison, allMatch bool) bool {
+func chkGrubCompliance(comparisons map[string]FieldComparison, allMatch bool) bool {
 	// grub:numa_balancing, kernel.numa_balancing
 	// grub:transparent_hugepage, THP
 	// grub:intel_idle.max_cstate, grub:processor.max_cstate, force_latency

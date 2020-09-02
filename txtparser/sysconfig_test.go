@@ -106,6 +106,9 @@ func TestSysconfig(t *testing.T) {
 	if val := conf.GetUint64("KEY_DOES_NOT_EXIST", 0); val != 0 {
 		t.Error(val)
 	}
+	if val := conf.GetUint64("BOOL_TEST_YES", 0); val != 0 {
+		t.Error(val)
+	}
 	if val := conf.GetString("KEY_DOES_NOT_EXIST", "DEFAULT"); val != "DEFAULT" {
 		t.Error(val)
 	}

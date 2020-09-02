@@ -8,8 +8,12 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
+	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
+	"syscall"
 )
 
 // SaptuneSectionDir defines saptunes saved state directory
@@ -25,6 +29,25 @@ type BlockDev struct {
 // IsUserRoot return true only if the current user is root.
 func IsUserRoot() bool {
 	return os.Getuid() == 0
+}
+
+// CliArg returns the i-th command line parameter,
+// or empty string if it is not specified.
+func CliArg(i int) string {
+	if len(os.Args) >= i+1 {
+		return os.Args[i]
+	}
+	return ""
+}
+
+// GetSolutionSelector returns the architecture string
+// needed to select the supported set os solutions
+func GetSolutionSelector() string {
+	solutionSelector := runtime.GOARCH
+	if IsPagecacheAvailable() {
+		solutionSelector = solutionSelector + "_PC"
+	}
+	return solutionSelector
 }
 
 // CmdIsAvailable returns true, if the cmd is available.
@@ -265,4 +288,39 @@ func storeBlockDeviceInfo(obj BlockDev) error {
 		return ioutil.WriteFile(bdevFileName, content, 0644)
 	}
 	return nil
+}
+
+// CalledFrom returns the name and the line number of the calling source file
+func CalledFrom() string {
+	ret := ""
+	_, file, no, ok := runtime.Caller(2)
+	if ok {
+		_, relfile := filepath.Split(file)
+		ret = fmt.Sprintf("%s:%d: ", relfile, no)
+	}
+	return ret
+}
+
+// ErrorExit prints the message to stderr and exit 1.
+func ErrorExit(template string, stuff ...interface{}) {
+	exState := 1
+	fieldType := ""
+	field := len(stuff) - 1
+	if field >= 0 {
+		fieldType = reflect.TypeOf(stuff[field]).String()
+	}
+	if fieldType == "*exec.ExitError" {
+		// get return code of failed command, if available
+		if exitError, ok := stuff[field].(*exec.ExitError); ok {
+			exState = exitError.Sys().(syscall.WaitStatus).ExitStatus()
+		}
+	}
+	if fieldType == "int" {
+		exState = reflect.ValueOf(stuff[field]).Interface().(int)
+		stuff = stuff[:len(stuff)-1]
+	}
+	if len(template) != 0 {
+		_ = ErrorLog(template+"\n", stuff...)
+	}
+	os.Exit(exState)
 }

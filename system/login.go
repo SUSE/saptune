@@ -50,8 +50,10 @@ func GetTasksMax(userID string) string {
 		return ""
 	}
 	tasksMax := strings.Split(strings.TrimSpace(string(cmdOut)), "=")
-	if len(tasksMax) == 0 {
-		return ""
+	// The result of strings.Split of an 'empty' string is a slice with
+	// one element - the empty string.
+	if len(tasksMax) == 1 && tasksMax[0] == "" {
+		return tasksMax[0]
 	}
 	return tasksMax[1]
 }
