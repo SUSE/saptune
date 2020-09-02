@@ -144,6 +144,8 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 	sval := cfgval
 	switch {
 	case isSched.MatchString(key):
+		// ANGI TODO - support different scheduler per device or
+		// all devices with same scheduler (oval="all none")
 		oval := ""
 		sfound := false
 		dname := regexp.MustCompile(`^IO_SCHEDULER_(\w+)$`)
@@ -193,7 +195,7 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 		if revert {
 			cur.BlockDeviceSchedulers.SchedulerChoice[strings.TrimPrefix(key, "IO_SCHEDULER_")] = value
 		}
-		err = cur.BlockDeviceSchedulers.Apply()
+		err = cur.BlockDeviceSchedulers.Apply(strings.TrimPrefix(key, "IO_SCHEDULER_"))
 		if err != nil {
 			return err
 		}
@@ -202,7 +204,7 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 			ival, _ := strconv.Atoi(value)
 			cur.BlockDeviceNrRequests.NrRequests[strings.TrimPrefix(key, "NRREQ_")] = ival
 		}
-		err = cur.BlockDeviceNrRequests.Apply()
+		err = cur.BlockDeviceNrRequests.Apply(strings.TrimPrefix(key, "NRREQ_"))
 		if err != nil {
 			return err
 		}
@@ -211,7 +213,7 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 			ival, _ := strconv.Atoi(value)
 			cur.BlockDeviceReadAheadKB.ReadAheadKB[strings.TrimPrefix(key, "READ_AHEAD_KB_")] = ival
 		}
-		err = cur.BlockDeviceReadAheadKB.Apply()
+		err = cur.BlockDeviceReadAheadKB.Apply(strings.TrimPrefix(key, "READ_AHEAD_KB_"))
 		if err != nil {
 			return err
 		}

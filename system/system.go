@@ -1,6 +1,7 @@
 package system
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,6 +11,16 @@ import (
 	"regexp"
 	"strings"
 )
+
+// SaptuneSectionDir defines saptunes saved state directory
+const SaptuneSectionDir = "/var/lib/saptune/sections"
+
+// BlockDev contains all key-value pairs of current avaliable
+// block devices in /sys/block
+type BlockDev struct {
+	AllBlockDevs    []string
+	BlockAttributes map[string]map[string]string
+}
 
 // IsUserRoot return true only if the current user is root.
 func IsUserRoot() bool {
@@ -161,4 +172,97 @@ func BlockDeviceIsDisk(dev string) bool {
 		}
 	}
 	return true
+}
+
+// GetBlockDeviceInfo reads content of stored block device information.
+// content stored in SaptuneSectionDir (/var/lib/saptune/sections)
+// as blockdev.run
+// Return the content as BlockDev
+func GetBlockDeviceInfo() (*BlockDev, error) {
+	bdevFileName := fmt.Sprintf("%s/blockdev.run", SaptuneSectionDir)
+	bdevConf := &BlockDev{
+		AllBlockDevs:    make([]string, 0, 64),
+		BlockAttributes: make(map[string]map[string]string),
+	}
+
+	content, err := ioutil.ReadFile(bdevFileName)
+	if err == nil && len(content) != 0 {
+		err = json.Unmarshal(content, &bdevConf)
+	}
+	return bdevConf, err
+}
+
+// CollectBlockDeviceInfo collects all needed information about
+// block devices from /sys/block
+// write info to /var/lib/saptune/sections/block.run
+func CollectBlockDeviceInfo() []string {
+	bdevConf := BlockDev{
+		AllBlockDevs:    make([]string, 0, 64),
+		BlockAttributes: make(map[string]map[string]string),
+	}
+	blockMap := make(map[string]string)
+
+	// List /sys/block and inspect the needed info of each one
+	_, sysDevs := ListDir("/sys/block", "the available block devices of the system")
+	for _, bdev := range sysDevs {
+		if !BlockDeviceIsDisk(bdev) {
+			// skip unsupported devices
+			WarningLog("skipping device '%s', unsupported", bdev)
+			continue
+		}
+		// add new block device
+		blockMap = make(map[string]string)
+
+		// Remember, GetSysChoice does not accept the leading /sys/
+		elev, _ := GetSysChoice(path.Join("block", bdev, "queue", "scheduler"))
+		blockMap["IO_SCHEDULER"] = elev
+		val, err := ioutil.ReadFile(path.Join("/sys/block/", bdev, "/queue/scheduler"))
+		sched := ""
+		if err == nil {
+			sched = string(val)
+		}
+		blockMap["VALID_SCHEDS"] = sched
+
+		// Remember, GetSysString does not accept the leading /sys/
+		nrreq, _ := GetSysString(path.Join("block", bdev, "queue", "nr_requests"))
+		blockMap["NRREQ"] = nrreq
+
+		readahead, _ := GetSysString(path.Join("block", bdev, "queue", "read_ahead_kb"))
+		blockMap["READ_AHEAD_KB"] = readahead
+
+		// ANGI TODO - VENDOR, TYPE for FUJITSU udev -
+		//BlockAttributes[sda]= [VENDOR] FUJITSU
+		//BlockAttributes[sda]= [TYPE] DX7241
+
+		// end of sys/block loop
+		// save block info
+		bdevConf.BlockAttributes[bdev] = blockMap
+		bdevConf.AllBlockDevs = append(bdevConf.AllBlockDevs, bdev)
+	}
+
+	err := storeBlockDeviceInfo(bdevConf)
+	if err != nil {
+		ErrorLog("could not store block device information - err: %v", err)
+	}
+	return bdevConf.AllBlockDevs
+}
+
+// storeBlockDeviceInfo stores block device information to file blockdev.run
+// only used in txtparser
+// storeSectionInfo stores INIFile section information to section directory
+func storeBlockDeviceInfo(obj BlockDev) error {
+	overwriteExisting := true
+	bdevFileName := fmt.Sprintf("%s/blockdev.run", SaptuneSectionDir)
+
+	content, err := json.Marshal(obj)
+	if err != nil {
+		return err
+	}
+	if err = os.MkdirAll(SaptuneSectionDir, 0755); err != nil {
+		return err
+	}
+	if _, err := os.Stat(bdevFileName); os.IsNotExist(err) || overwriteExisting {
+		return ioutil.WriteFile(bdevFileName, content, 0644)
+	}
+	return nil
 }

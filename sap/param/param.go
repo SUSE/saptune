@@ -23,7 +23,7 @@ Parameter is immutable. Internal state changes can only be made to copies.
 type Parameter interface {
 	Inspect() (Parameter, error)                             // Read the parameter values from current system.
 	Optimise(additionalInput interface{}) (Parameter, error) // Calculate new values based on internal states, and return a copy of new states.
-	Apply() error                                            // Apply the parameter value without further calculation.
+	Apply(additionalInput interface{}) error                 // Apply the parameter value without further calculation.
 }
 
 // MaxI64 returns the maximum among the input values.

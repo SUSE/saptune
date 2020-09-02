@@ -2,9 +2,7 @@ package param
 
 import (
 	"fmt"
-	"github.com/SUSE/saptune/sap"
 	"github.com/SUSE/saptune/system"
-	"io/ioutil"
 	"path"
 	"strconv"
 	"strings"
@@ -18,6 +16,8 @@ type BlockDeviceQueue struct {
 	BlockDeviceReadAheadKB
 }
 
+var blkDev *system.BlockDev
+
 // BlockDeviceSchedulers changes IO elevators on all IO devices
 type BlockDeviceSchedulers struct {
 	SchedulerChoice map[string]string
@@ -25,26 +25,18 @@ type BlockDeviceSchedulers struct {
 
 // Inspect retrieves the current scheduler from the system
 func (ioe BlockDeviceSchedulers) Inspect() (Parameter, error) {
-	newIOE := BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}
-	// List /sys/block and inspect the IO elevator of each one
-	dirContent, err := ioutil.ReadDir("/sys/block")
-	if err != nil {
-		return nil, err
+	if len(ioe.SchedulerChoice) != 0 {
+		// inspect needs to run only once per saptune call
+		return ioe, nil
 	}
-	for _, entry := range dirContent {
-		if !system.BlockDeviceIsDisk(entry.Name()) {
-			// skip unsupported devices
-			continue
-		}
-		/*
-			Remember: GetSysChoice does not accept the leading /sys/.
-			The file "scheduler" may look like "[noop] deadline cfq", in which case the choice will be read successfully.
-			If the file simply says "none", which means IO scheduling is not relevant to the block device, then
-			the device name will not appear in return value, and there is no point in tuning it anyways.
-		*/
-		elev, _ := system.GetSysChoice(path.Join("block", entry.Name(), "queue", "scheduler"))
+	if blkDev == nil || (len(blkDev.AllBlockDevs) == 0 && len(blkDev.BlockAttributes) == 0) {
+		blkDev, _ = system.GetBlockDeviceInfo()
+	}
+	newIOE := BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}
+	for _, entry := range blkDev.AllBlockDevs {
+		elev := blkDev.BlockAttributes[entry]["IO_SCHEDULER"]
 		if elev != "" {
-			newIOE.SchedulerChoice[entry.Name()] = elev
+			newIOE.SchedulerChoice[entry] = elev
 		}
 	}
 	return newIOE, nil
@@ -57,26 +49,39 @@ func (ioe BlockDeviceSchedulers) Optimise(newElevatorName interface{}) (Paramete
 	if len(fields) > 1 {
 		bdev := fields[0]
 		newSched := fields[1]
-		for k := range ioe.SchedulerChoice {
-			if k == bdev {
+		newIOE.SchedulerChoice[bdev] = newSched
+		/* Future
+		if bdev == "all" {
+			// all devices with same scheduler
+			for k := range ioe.SchedulerChoice {
+				if !IsValidScheduler(k, newSched) {
+					continue
+				}
 				newIOE.SchedulerChoice[k] = newSched
 			}
+		} else {
+			if IsValidScheduler(bdev, newSched) {
+				newIOE.SchedulerChoice[bdev] = newSched
+			}
 		}
+		*/
 	}
 	return newIOE, nil
 }
 
 // Apply sets the new scheduler value in the system
-func (ioe BlockDeviceSchedulers) Apply() error {
-	errs := make([]error, 0, 0)
+func (ioe BlockDeviceSchedulers) Apply(blkdev interface{}) error {
+	//errs := make([]error, 0, 0)
+	bdev := blkdev.(string)
+	elevator := ioe.SchedulerChoice[bdev]
+	err := system.SetSysString(path.Join("block", bdev, "queue", "scheduler"), elevator)
+
+	/* reuse in future
 	for name, elevator := range ioe.SchedulerChoice {
-		if !IsValidScheduler(name, elevator) {
-			system.WarningLog("'%s' is not a valid scheduler for device '%s', skipping.", elevator, name)
-			continue
-		}
 		errs = append(errs, system.SetSysString(path.Join("block", name, "queue", "scheduler"), elevator))
 	}
 	err := sap.PrintErrors(errs)
+	*/
 	return err
 }
 
@@ -87,21 +92,21 @@ type BlockDeviceNrRequests struct {
 
 // Inspect retrieves the current nr_requests from the system
 func (ior BlockDeviceNrRequests) Inspect() (Parameter, error) {
-	newIOR := BlockDeviceNrRequests{NrRequests: make(map[string]int)}
-	// List /sys/block and inspect the number of requests of each one
-	dirContent, err := ioutil.ReadDir("/sys/block")
-	if err != nil {
-		return nil, err
+	if len(ior.NrRequests) != 0 {
+		// inspect needs to run only once per saptune call
+		return ior, nil
 	}
-	for _, entry := range dirContent {
-		// Remember, GetSysString does not accept the leading /sys/
-		if !system.BlockDeviceIsDisk(entry.Name()) {
-			// skip unsupported devices
-			continue
-		}
-		nrreq, err := system.GetSysInt(path.Join("block", entry.Name(), "queue", "nr_requests"))
-		if nrreq >= 0 && err == nil {
-			newIOR.NrRequests[entry.Name()] = nrreq
+	if blkDev == nil || (len(blkDev.AllBlockDevs) == 0 && len(blkDev.BlockAttributes) == 0) {
+		blkDev, _ = system.GetBlockDeviceInfo()
+	}
+	newIOR := BlockDeviceNrRequests{NrRequests: make(map[string]int)}
+	for _, entry := range blkDev.AllBlockDevs {
+		nrreq := blkDev.BlockAttributes[entry]["NRREQ"]
+		if nrreq != "" {
+			ival, _ := strconv.Atoi(nrreq)
+			if ival >= 0 {
+				newIOR.NrRequests[entry] = ival
+			}
 		}
 	}
 	return newIOR, nil
@@ -117,7 +122,14 @@ func (ior BlockDeviceNrRequests) Optimise(newNrRequestValue interface{}) (Parame
 }
 
 // Apply sets the new nr_requests value in the system
-func (ior BlockDeviceNrRequests) Apply() error {
+func (ior BlockDeviceNrRequests) Apply(blkdev interface{}) error {
+	bdev := blkdev.(string)
+	nrreq := ior.NrRequests[bdev]
+	err := system.SetSysInt(path.Join("block", bdev, "queue", "nr_requests"), nrreq)
+	if err != nil {
+		system.WarningLog("skipping device '%s', not valid for setting 'number of requests' to '%v'", bdev, nrreq)
+	}
+	/* for future use
 	errs := make([]error, 0, 0)
 	for name, nrreq := range ior.NrRequests {
 		if !IsValidforNrRequests(name, strconv.Itoa(nrreq)) {
@@ -128,6 +140,8 @@ func (ior BlockDeviceNrRequests) Apply() error {
 	}
 	err := sap.PrintErrors(errs)
 	return err
+	*/
+	return nil
 }
 
 // BlockDeviceReadAheadKB changes the read_ahead_kb value on all block devices
@@ -137,21 +151,21 @@ type BlockDeviceReadAheadKB struct {
 
 // Inspect retrieves the current read_ahead_kb from the system
 func (rakb BlockDeviceReadAheadKB) Inspect() (Parameter, error) {
-	newRAKB := BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}
-	// List /sys/block and inspect the value of read_ahead_kb of each one
-	dirContent, err := ioutil.ReadDir("/sys/block")
-	if err != nil {
-		return nil, err
+	if len(rakb.ReadAheadKB) != 0 {
+		// inspect needs to run only once per saptune call
+		return rakb, nil
 	}
-	for _, entry := range dirContent {
-		if !system.BlockDeviceIsDisk(entry.Name()) {
-			// skip unsupported devices
-			continue
-		}
-		// Remember, GetSysString does not accept the leading /sys/
-		readahead, err := system.GetSysInt(path.Join("block", entry.Name(), "queue", "read_ahead_kb"))
-		if readahead >= 0 && err == nil {
-			newRAKB.ReadAheadKB[entry.Name()] = readahead
+	if blkDev == nil || (len(blkDev.AllBlockDevs) == 0 && len(blkDev.BlockAttributes) == 0) {
+		blkDev, _ = system.GetBlockDeviceInfo()
+	}
+	newRAKB := BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}
+	for _, entry := range blkDev.AllBlockDevs {
+		readahead := blkDev.BlockAttributes[entry]["READ_AHEAD_KB"]
+		if readahead != "" {
+			ival, _ := strconv.Atoi(readahead)
+			if ival >= 0 {
+				newRAKB.ReadAheadKB[entry] = ival
+			}
 		}
 	}
 	return newRAKB, nil
@@ -167,7 +181,14 @@ func (rakb BlockDeviceReadAheadKB) Optimise(newReadAheadKBValue interface{}) (Pa
 }
 
 // Apply sets the new read_ahead_kb value in the system
-func (rakb BlockDeviceReadAheadKB) Apply() error {
+func (rakb BlockDeviceReadAheadKB) Apply(blkdev interface{}) error {
+	bdev := blkdev.(string)
+	readahead := rakb.ReadAheadKB[bdev]
+	err := system.SetSysInt(path.Join("block", bdev, "queue", "read_ahead_kb"), readahead)
+	if err != nil {
+		system.WarningLog("skipping device '%s', not valid for setting 'read_ahead_kb' to '%v'", bdev, readahead)
+	}
+	/* for future use
 	errs := make([]error, 0, 0)
 	for name, readahead := range rakb.ReadAheadKB {
 		if !IsValidforReadAheadKB(name, strconv.Itoa(readahead)) {
@@ -178,13 +199,24 @@ func (rakb BlockDeviceReadAheadKB) Apply() error {
 	}
 	err := sap.PrintErrors(errs)
 	return err
+	*/
+	return nil
 }
 
-// IsValidScheduler checks, if the scheduler value is supported by the system
+// IsValidScheduler checks, if the scheduler value is supported by the system.
+// only used during optimize
+// During initialize, the scheduler is read from the system, so no check needed.
+// Only needed during optimize, as apply is using the value from optimize and
+// revert is using the stored valid old values from before apply.
+// And a scheduler can only change during a system reboot
+// (single-queued -> multi-queued)
 func IsValidScheduler(blockdev, scheduler string) bool {
-	val, err := ioutil.ReadFile(path.Join("/sys/block/", blockdev, "/queue/scheduler"))
+	if blkDev == nil || (len(blkDev.AllBlockDevs) == 0 && len(blkDev.BlockAttributes) == 0) {
+		blkDev, _ = system.GetBlockDeviceInfo()
+	}
+	val := blkDev.BlockAttributes[blockdev]["VALID_SCHEDS"]
 	actsched := fmt.Sprintf("[%s]", scheduler)
-	if err == nil {
+	if val != "" {
 		for _, s := range strings.Split(string(val), " ") {
 			s = strings.TrimSpace(s)
 			if s == scheduler || s == actsched {
@@ -192,10 +224,14 @@ func IsValidScheduler(blockdev, scheduler string) bool {
 			}
 		}
 	}
+	system.WarningLog("'%s' is not a valid scheduler for device '%s', skipping.", scheduler, blockdev)
 	return false
 }
 
 // IsValidforNrRequests checks, if the nr_requests value is supported by the system
+// it's not a good idea to use this during optimize, as it will write a new
+// value to the device, so only used during apply, but this can be performed
+// in a better way.
 func IsValidforNrRequests(blockdev, nrreq string) bool {
 	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
 	if elev != "" {
@@ -208,6 +244,9 @@ func IsValidforNrRequests(blockdev, nrreq string) bool {
 }
 
 // IsValidforReadAheadKB checks, if the read_ahead_kb value is supported by the system
+// it's not a good idea to use this during optimize, as it will write a new
+// value to the device, so only used during apply, but this can be performed
+// in a better way.
 func IsValidforReadAheadKB(blockdev, readahead string) bool {
 	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
 	if elev != "" {

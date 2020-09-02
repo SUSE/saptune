@@ -26,6 +26,7 @@ var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.
 
 // counter to control the [block] section detected warning
 var blckCnt = 0
+var blockDev = make([]string, 0, 10)
 
 // counter to control the [login] section info message
 var loginCnt = 0
@@ -315,13 +316,9 @@ func ParseINI(input string) *INIFile {
 			if blckCnt == 0 {
 				system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
 				blckCnt = blckCnt + 1
+				blockDev = system.CollectBlockDeviceInfo()
 			}
-			_, sysDevs := system.ListDir("/sys/block", "the available block devices of the system")
-			for _, bdev := range sysDevs {
-				if !system.BlockDeviceIsDisk(bdev) {
-					// skip unsupported devices
-					continue
-				}
+			for _, bdev := range blockDev {
 				entry := INIEntry{
 					Section:  currentSection,
 					Key:      fmt.Sprintf("%s_%s", kov[1], bdev),
