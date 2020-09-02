@@ -10,7 +10,7 @@ import (
 
 var sysconfSampleText = `## Path:        Productivity/Other
 ## Description: Limits for system tuning profile "sap-netweaver".
-## ServiceRestart: tuned
+## ServiceRestart: saptune
 
 ## Type:        integer
 ## Default:     8388608
@@ -39,7 +39,7 @@ INTARY_TEST=" 12 34 abc 56 "
 
 var sysconfigMatchText = `## Path:        Productivity/Other
 ## Description: Limits for system tuning profile "sap-netweaver".
-## ServiceRestart: tuned
+## ServiceRestart: saptune
 
 ## Type:        integer
 ## Default:     8388608

@@ -1,6 +1,7 @@
-# v1.3
+# v1.4
 #
 #   saptune daemon [ start | status | stop ]
+#   saptune service [ start | status | stop | enable | disable | enablestart | stopdisable ]
 #   saptune note [ list | verify | enabled ]
 #   saptune note [ apply | simulate | verify | customise | revert | create | show | delete ] NoteID
 #   saptune note rename NoteID NoteID
@@ -20,11 +21,13 @@ _saptune() {
     
     case ${COMP_CWORD} in 
 
-        1)  opts="daemon solution note revert version --version help"
+        1)  opts="daemon service solution note revert version --version help"
             ;;
         
         2)  case "${prev}" in
                 daemon)     opts="start status stop"
+                            ;;
+                service)    opts="start status stop enable disable enablestart stopdisable"
                             ;;
                 solution)   opts="list verify apply simulate revert enabled"
                             ;;

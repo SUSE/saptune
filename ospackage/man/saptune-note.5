@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "June 2020" "" "saptune note file format description"
+.TH "saptune-note" "5" "July 2020" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB2\fP
 .SH DESCRIPTION
@@ -374,7 +374,7 @@ Concerning \fBsysstat.service\fP please be in mind: A running sysstat service ca
 .br
 See sar(1), sa2(8), sa1(8) for more information
 
-If a service is enabled or disabled by default or admin choice, saptune will NOT disable or enable this service. It will only start/stop the service. If such a service is started by systemd during a system reboot \fBafter\fP the start of tuned.service it will be possible that a service is stopped/running even if it was started/stopped by saptune.
+If a service is enabled or disabled by default or admin choice, saptune will NOT disable or enable this service. It will only start/stop the service. If such a service is started by systemd during a system reboot \fBafter\fP the start of saptune.service it will be possible that a service is stopped/running even if it was started/stopped by saptune.
 \" section sysctl
 .SH "[sysctl]"
 The section "[sysctl]" can be used to modify kernel parameters. The parameters available are those listed under /proc/sys/.
@@ -406,7 +406,7 @@ But please do not change the files located here. You will lose all your changes 
 
 .SH "SEE ALSO"
 .LP
-saptune-migrate(7) saptune(8) saptune_v1(8) saptune_v2(8) tuned(8) tuned-adm(8)
+saptune-migrate(7) saptune(8) saptune_v1(8) saptune_v2(8)
 
 .SH AUTHOR
 .NF

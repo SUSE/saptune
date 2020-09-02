@@ -17,14 +17,18 @@ echo "PATH is $PATH, GOPATH is $GOPATH, TRAVIS_HOME is $TRAVIS_HOME"
 export TRAVIS_HOME=/home/travis
 mkdir -p ${TRAVIS_HOME}/gopath/src/github.com/SUSE
 cd ${TRAVIS_HOME}/gopath/src/github.com/SUSE
-ln -s /app saptune
+if [ ! -f saptune ]; then
+	ln -s /app saptune
+fi
 export GOPATH=${TRAVIS_HOME}/gopath
 export PATH=${TRAVIS_HOME}/gopath/bin:$PATH
 export TRAVIS_BUILD_DIR=${TRAVIS_HOME}/gopath/src/github.com/SUSE/saptune
 
 mkdir -p /etc/saptune/override
 mkdir -p /usr/share/saptune
-ln -s /app/testdata/saptune-test-solutions /usr/share/saptune/solutions
+if [ ! -f /usr/share/saptune/solutions ]; then
+	ln -s /app/testdata/saptune-test-solutions /usr/share/saptune/solutions
+fi
 
 echo "go environment:"
 go env

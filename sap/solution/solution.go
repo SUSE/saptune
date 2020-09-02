@@ -2,8 +2,6 @@ package solution
 
 /*
 Solutions are collections of relevant SAP notes, all of which are applicable to specific SAP products.
-
-A system can be tuned for more than one solutions at a time.
 */
 
 import (

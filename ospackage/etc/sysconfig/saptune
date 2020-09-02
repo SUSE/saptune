@@ -1,6 +1,6 @@
 ## Path:           SAP/System Tuning/General
 ## Description:    Global settings for saptune - the comprehensive optimisation management utility for SAP solutions
-## ServiceRestart: tuned
+## ServiceRestart: saptune
 
 ## Type:    string
 ## Default: ""
@@ -28,7 +28,7 @@ TUNE_FOR_NOTES=""
 NOTE_APPLY_ORDER=""
 
 ## Type:    string
-## Default: "2"
+## Default: "3"
 #
 # Version of saptune
-SAPTUNE_VERSION="2"
+SAPTUNE_VERSION="3"

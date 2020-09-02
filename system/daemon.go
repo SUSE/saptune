@@ -83,6 +83,15 @@ func SystemctlDisableStop(thing string) error {
 	return err
 }
 
+// SystemctlIsEnabled return true only if systemctl suggests that the thing is
+// enabled.
+func SystemctlIsEnabled(thing string) bool {
+	if _, err := exec.Command("systemctl", "is-enabled", thing).CombinedOutput(); err == nil {
+		return true
+	}
+	return false
+}
+
 // SystemctlIsRunning return true only if systemctl suggests that the thing is
 // running.
 func SystemctlIsRunning(thing string) bool {

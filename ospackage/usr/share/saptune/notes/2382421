@@ -1,8 +1,8 @@
 # 2382421 - Optimizing the Network Configuration on HANA- and OS-Level
-# Version 37 from 24.04.2020 in English
+# Version 38 from 29.06.2020 in English
 
 [version]
-# SAP-NOTE=2382421 CATEGORY=HANA VERSION=37 DATE=24.04.2020 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
+# SAP-NOTE=2382421 CATEGORY=HANA VERSION=38 DATE=29.06.2020 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
 
 [sysctl]
 # This parameter limits the size of the accept backlog of a listening socket.
@@ -13,6 +13,7 @@
 # tcp_backlog, tcp_backlog will be silently truncated to the value set for
 # net.core.somaxconn. Therefore, you need to ensure that net.core.somaxconn
 # is always set to a value equal to or greater than tcp_backlog.
+# net.core.somaxconn >= 4096
 net.core.somaxconn = 4096
 
 # This is the size of the SYN backlog.
@@ -20,6 +21,7 @@ net.core.somaxconn = 4096
 # connection requests are sent in a short timeframe and to prevent a
 # corresponding warning about a potential SYN flooding attack in the system
 # log, the size of the SYN backlog should be set to a reasonably high value.
+# net.ipv4.tcp_max_syn_backlog >= 8192
 net.ipv4.tcp_max_syn_backlog = 8192
 
 # net.ipv4.ip_local_port_range
