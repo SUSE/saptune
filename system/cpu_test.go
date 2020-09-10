@@ -219,3 +219,36 @@ func TestMissingCmd(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestCPUErrorCases(t *testing.T) {
+	if !SupportsPerfBias() {
+		t.Skip("System does not support Intel's performance bias setting. Skipping test")
+	}
+	oldCpupowerCmd := cpupowerCmd
+	cpupowerCmd = "/usr/bin/false"
+	val := GetPerfBias()
+	if val != "all:none" {
+		t.Error(val)
+	}
+	if err := SetPerfBias("all:15"); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	if err := SetGovernor("all:performance", ""); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	if SupportsPerfBias() {
+		t.Error("reports supported, but shouldn't")
+	}
+	cpupowerCmd = oldCpupowerCmd
+
+	oldCpuDir := cpuDir
+	cpuDir = "/unknownDir"
+	gval := GetGovernor()
+	if len(gval) != 0 {
+		t.Errorf("should return an empty value, but returns: %+v", gval)
+	}
+	if err := SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "", false); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
+	cpuDir = oldCpuDir
+}

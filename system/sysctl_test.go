@@ -12,6 +12,11 @@ func TestReadSysctl(t *testing.T) {
 	if value, _ := GetSysctlString("vm.max_map_count"); len(value) < 2 { // indeed testing string length
 		t.Fatal(value)
 	}
+	if value, err := GetSysctlUint64Field("net.ipv4.ip_local_port_range", 0); err != nil {
+		t.Error(value, err)
+	} else {
+		t.Log(value)
+	}
 
 	if value, err := GetSysctlInt("does not exist"); err == nil {
 		t.Fatal(value)
@@ -21,6 +26,10 @@ func TestReadSysctl(t *testing.T) {
 	}
 	if value, err := GetSysctlString("does not exist"); err == nil {
 		t.Fatal(value)
+	}
+
+	if value, err := GetSysctlUint64Field("does not exist", 0); err == nil {
+		t.Error(value, err)
 	}
 }
 
@@ -63,11 +72,18 @@ func TestWriteSysctl(t *testing.T) {
 		t.Fatal(uintval)
 	}
 
+	if err := SetSysctlString("vm.dirty_bytes", "100"); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
 	if err := SetSysctlString("UnknownKey", "100"); err != nil {
 		t.Fatal(err)
 	}
+	// net.ipv4.ip_local_port_range has only 2 fields
+	if err := SetSysctlUint64Field("net.ipv4.ip_local_port_range", 3, 4711); err == nil {
+		t.Error("should return an error and not 'nil'")
+	}
 	if err := SetSysctlUint64Field("UnknownKey", 1, 100); err == nil {
-		t.Fatal(err)
+		t.Error("should return an error and not 'nil'")
 	}
 	// set test value back
 	if err := SetSysctlInt("vm.max_map_count", oldval); err != nil {

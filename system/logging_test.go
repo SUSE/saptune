@@ -1,16 +1,8 @@
 package system
 
 import (
-	"strings"
 	"testing"
 )
-
-func TestCalledFrom(t *testing.T) {
-	val := calledFrom()
-	if !strings.Contains(val, "testing.go") {
-		t.Fatalf("called from '%s' instead of 'testing.go'\n", val)
-	}
-}
 
 func TestLog(t *testing.T) {
 	logFile := "/tmp/saptune_tst.log"

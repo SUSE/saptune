@@ -167,7 +167,7 @@ func TestChkGrubCompliance(t *testing.T) {
 		comparison["SysctlParams[grub:numa_balancing]"] = comp1
 		comparison["SysctlParams[kernel.numa_balancing]"] = comp2
 
-		allMatch = ChkGrubCompliance(comparison, allMatch)
+		allMatch = chkGrubCompliance(comparison, allMatch)
 		if !allMatch {
 			t.Errorf("grub:numa_balancing = false and kernel.numa_balancing = true should be true and NOT false")
 		}
@@ -180,7 +180,7 @@ func TestChkGrubCompliance(t *testing.T) {
 		comparison["SysctlParams[grub:numa_balancing]"] = comp1
 		comparison["SysctlParams[kernel.numa_balancing]"] = comp3
 
-		allMatch = ChkGrubCompliance(comparison, allMatch)
+		allMatch = chkGrubCompliance(comparison, allMatch)
 		if allMatch {
 			t.Errorf("grub:numa_balancing = false and kernel.numa_balancing = false should be false and NOT true")
 		}
@@ -193,7 +193,7 @@ func TestChkGrubCompliance(t *testing.T) {
 		comparison["SysctlParams[grub:transparent_hugepage]"] = comp4
 		comparison["SysctlParams[THP]"] = comp5
 
-		allMatch = ChkGrubCompliance(comparison, allMatch)
+		allMatch = chkGrubCompliance(comparison, allMatch)
 		if !allMatch {
 			t.Errorf("grub:transparent_hugepage = false and THP = true should be true and NOT false")
 		}
@@ -206,7 +206,7 @@ func TestChkGrubCompliance(t *testing.T) {
 		comparison["SysctlParams[grub:transparent_hugepage]"] = comp4
 		comparison["SysctlParams[THP]"] = comp6
 
-		allMatch = ChkGrubCompliance(comparison, allMatch)
+		allMatch = chkGrubCompliance(comparison, allMatch)
 		if allMatch {
 			t.Errorf("grub:transparent_hugepage = false and THP = false should be false and NOT true")
 		}
@@ -220,7 +220,7 @@ func TestChkGrubCompliance(t *testing.T) {
 		comparison["SysctlParams[grub:processor.max_cstate]"] = comp8
 		comparison["SysctlParams[force_latency]"] = comp9
 
-		allMatch = ChkGrubCompliance(comparison, allMatch)
+		allMatch = chkGrubCompliance(comparison, allMatch)
 		if !allMatch {
 			t.Errorf("grub:intel_idle.max_cstate = false, grub:processor.max_cstate = true, force_latency = false and force_latency.act_val = all:none should be true and NOT false")
 		}
@@ -234,7 +234,7 @@ func TestChkGrubCompliance(t *testing.T) {
 		comparison["SysctlParams[grub:processor.max_cstate]"] = comp11
 		comparison["SysctlParams[force_latency]"] = comp9
 
-		allMatch = ChkGrubCompliance(comparison, allMatch)
+		allMatch = chkGrubCompliance(comparison, allMatch)
 		if !allMatch {
 			t.Errorf("grub:intel_idle.max_cstate = true, grub:processor.max_cstate = false, force_latency = false and force_latency.act_val = all:none should be true and NOT false")
 		}
@@ -248,7 +248,7 @@ func TestChkGrubCompliance(t *testing.T) {
 		comparison["SysctlParams[grub:processor.max_cstate]"] = comp11
 		comparison["SysctlParams[force_latency]"] = comp12
 
-		allMatch = ChkGrubCompliance(comparison, allMatch)
+		allMatch = chkGrubCompliance(comparison, allMatch)
 		if !allMatch {
 			t.Errorf("grub:intel_idle.max_cstate = false, grub:processor.max_cstate = false, force_latency = true and force_latency.act_val = all:none should be true and NOT false")
 		}
@@ -262,7 +262,7 @@ func TestChkGrubCompliance(t *testing.T) {
 		comparison["SysctlParams[grub:processor.max_cstate]"] = comp11
 		comparison["SysctlParams[force_latency]"] = comp13
 
-		allMatch = ChkGrubCompliance(comparison, allMatch)
+		allMatch = chkGrubCompliance(comparison, allMatch)
 		if allMatch {
 			t.Errorf("grub:intel_idle.max_cstate = true, grub:processor.max_cstate = false, force_latency = false and force_latency.act_val != all:none should be false and NOT true")
 		}

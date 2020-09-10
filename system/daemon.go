@@ -8,9 +8,13 @@ import (
 	"strings"
 )
 
+var systemctlCmd = "/usr/bin/systemctl"
+var tunedAdmCmd = "/usr/sbin/tuned-adm"
+var actTunedProfile = "/etc/tuned/active_profile"
+
 // SystemctlEnable call systemctl enable on thing.
 func SystemctlEnable(thing string) error {
-	if out, err := exec.Command("systemctl", "enable", thing).CombinedOutput(); err != nil {
+	if out, err := exec.Command(systemctlCmd, "enable", thing).CombinedOutput(); err != nil {
 		return ErrorLog("%v - Failed to call systemctl enable on %s - %s", err, thing, string(out))
 	}
 	return nil
@@ -18,7 +22,7 @@ func SystemctlEnable(thing string) error {
 
 // SystemctlDisable call systemctl disable on thing.
 func SystemctlDisable(thing string) error {
-	if out, err := exec.Command("systemctl", "disable", thing).CombinedOutput(); err != nil {
+	if out, err := exec.Command(systemctlCmd, "disable", thing).CombinedOutput(); err != nil {
 		return ErrorLog("%v - Failed to call systemctl disable on %s - %s", err, thing, string(out))
 	}
 	return nil
@@ -27,7 +31,7 @@ func SystemctlDisable(thing string) error {
 // SystemctlRestart call systemctl restart on thing.
 func SystemctlRestart(thing string) error {
 	if IsSystemRunning() {
-		if out, err := exec.Command("systemctl", "restart", thing).CombinedOutput(); err != nil {
+		if out, err := exec.Command(systemctlCmd, "restart", thing).CombinedOutput(); err != nil {
 			return ErrorLog("%v - Failed to call systemctl restart on %s - %s", err, thing, string(out))
 		}
 	}
@@ -37,7 +41,7 @@ func SystemctlRestart(thing string) error {
 // SystemctlReloadTryRestart call systemctl reload on thing.
 func SystemctlReloadTryRestart(thing string) error {
 	if IsSystemRunning() {
-		if out, err := exec.Command("systemctl", "reload-or-try-restart", thing).CombinedOutput(); err != nil {
+		if out, err := exec.Command(systemctlCmd, "reload-or-try-restart", thing).CombinedOutput(); err != nil {
 			return ErrorLog("%v - Failed to call systemctl reload-or-try-restart on %s - %s", err, thing, string(out))
 		}
 	}
@@ -47,7 +51,7 @@ func SystemctlReloadTryRestart(thing string) error {
 // SystemctlStart call systemctl start on thing.
 func SystemctlStart(thing string) error {
 	if IsSystemRunning() {
-		if out, err := exec.Command("systemctl", "start", thing).CombinedOutput(); err != nil {
+		if out, err := exec.Command(systemctlCmd, "start", thing).CombinedOutput(); err != nil {
 			return ErrorLog("%v - Failed to call systemctl start on %s - %s", err, thing, string(out))
 		}
 	}
@@ -57,7 +61,7 @@ func SystemctlStart(thing string) error {
 // SystemctlStop call systemctl stop on thing.
 func SystemctlStop(thing string) error {
 	if IsSystemRunning() {
-		if out, err := exec.Command("systemctl", "stop", thing).CombinedOutput(); err != nil {
+		if out, err := exec.Command(systemctlCmd, "stop", thing).CombinedOutput(); err != nil {
 			return ErrorLog("%v - Failed to call systemctl stop on %s - %s", err, thing, string(out))
 		}
 	}
@@ -86,7 +90,7 @@ func SystemctlDisableStop(thing string) error {
 // SystemctlIsEnabled return true only if systemctl suggests that the thing is
 // enabled.
 func SystemctlIsEnabled(thing string) bool {
-	if _, err := exec.Command("systemctl", "is-enabled", thing).CombinedOutput(); err == nil {
+	if _, err := exec.Command(systemctlCmd, "is-enabled", thing).CombinedOutput(); err == nil {
 		return true
 	}
 	return false
@@ -95,7 +99,7 @@ func SystemctlIsEnabled(thing string) bool {
 // SystemctlIsRunning return true only if systemctl suggests that the thing is
 // running.
 func SystemctlIsRunning(thing string) bool {
-	if _, err := exec.Command("systemctl", "is-active", thing).CombinedOutput(); err == nil {
+	if _, err := exec.Command(systemctlCmd, "is-active", thing).CombinedOutput(); err == nil {
 		return true
 	}
 	return false
@@ -121,9 +125,8 @@ func IsSystemRunning() bool {
 // IsServiceAvailable checks, if a systemd service is available on the system
 func IsServiceAvailable(service string) bool {
 	match := false
-	cmdName := "/usr/bin/systemctl"
 	cmdArgs := []string{"--no-pager", "list-unit-files", "-t", "service"}
-	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	cmdOut, err := exec.Command(systemctlCmd, cmdArgs...).CombinedOutput()
 	if err != nil {
 		return match
 	}
@@ -147,9 +150,9 @@ func IsServiceAvailable(service string) bool {
 // WriteTunedAdmProfile write new profile to tuned, used instead of sometimes
 // unreliable 'tuned-adm' command
 func WriteTunedAdmProfile(profileName string) error {
-	err := ioutil.WriteFile("/etc/tuned/active_profile", []byte(profileName), 0644)
+	err := ioutil.WriteFile(actTunedProfile, []byte(profileName), 0644)
 	if err != nil {
-		return ErrorLog("Failed to write tuned profile '%s' to '%s': %v", profileName, "/etc/tuned/active_profile", err)
+		return ErrorLog("Failed to write tuned profile '%s' to '%s': %v", profileName, actTunedProfile, err)
 	}
 	return nil
 }
@@ -159,7 +162,7 @@ func WriteTunedAdmProfile(profileName string) error {
 // may be unreliable in newer tuned versions, so better use 'tuned-adm active'
 // Return empty string if it cannot be determined.
 func GetTunedProfile() string {
-	content, err := ioutil.ReadFile("/etc/tuned/active_profile")
+	content, err := ioutil.ReadFile(actTunedProfile)
 	if err != nil {
 		return ""
 	}
@@ -172,7 +175,7 @@ func TunedAdmOff() error {
 		// 'tuned-adm off' does not work without running tuned
 		return nil
 	}
-	if out, err := exec.Command("tuned-adm", "off").CombinedOutput(); err != nil {
+	if out, err := exec.Command(tunedAdmCmd, "off").CombinedOutput(); err != nil {
 		return ErrorLog("Failed to call tuned-adm to switch off the active profile - %v %s", err, string(out))
 	}
 	return nil
@@ -182,7 +185,7 @@ func TunedAdmOff() error {
 // newer versions of tuned seems to be reliable with this command and they
 // changed the behaviour/handling of the file /etc/tuned/active_profile
 func TunedAdmProfile(profileName string) error {
-	if out, err := exec.Command("tuned-adm", "profile", profileName).CombinedOutput(); err != nil {
+	if out, err := exec.Command(tunedAdmCmd, "profile", profileName).CombinedOutput(); err != nil {
 		return ErrorLog("Failed to call tuned-adm to active profile %s - %v %s", profileName, err, string(out))
 	}
 	return nil
@@ -191,7 +194,7 @@ func TunedAdmProfile(profileName string) error {
 // GetTunedAdmProfile return the currently active tuned profile.
 // Return empty string if it cannot be determined.
 func GetTunedAdmProfile() string {
-	out, err := exec.Command("tuned-adm", "active").CombinedOutput()
+	out, err := exec.Command(tunedAdmCmd, "active").CombinedOutput()
 	if err != nil {
 		_ = ErrorLog("Failed to call tuned-adm to get the active profile - %v %s", err, string(out))
 		return ""

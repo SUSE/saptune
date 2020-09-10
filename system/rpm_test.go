@@ -172,4 +172,28 @@ func TestCheckRpmVers(t *testing.T) {
 	if actualVal >= 0 {
 		t.Fatal("higher - ~")
 	}
+	actualVal = CheckRpmVers("6.0~beta", "6.0~beta~git123")
+	if actualVal != 1 {
+		t.Error("less or equal - ~")
+	}
+	actualVal = CheckRpmVers("6.0~beta~git123", "6.0~beta")
+	if actualVal >= 0 {
+		t.Error("higher - ~")
+	}
+	actualVal = CheckRpmVers("6.0", "6.0~beta~git123")
+	if actualVal != 1 {
+		t.Error("less or equal - ~")
+	}
+	actualVal = CheckRpmVers("6.0~beta~git123", "6.0")
+	if actualVal >= 0 {
+		t.Error("higher - ~")
+	}
+	actualVal = CheckRpmVers("6.0~beta", "6.0~beta")
+	if actualVal != 0 {
+		t.Error("unequal")
+	}
+	actualVal = CheckRpmVers("6.0~beta~git123", "6.0~beta~git123")
+	if actualVal != 0 {
+		t.Error("unequal")
+	}
 }

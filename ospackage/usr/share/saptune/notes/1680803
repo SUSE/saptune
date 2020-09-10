@@ -42,10 +42,15 @@
 IO_SCHEDULER=noop, none
 
 ## Type:    integer
-## Default: 1024
+## Default: depends on the used I/O scheduler
 #
 # IO nr_requests
+# Increasing the value will improve the I/O throughput, but will also
+# increase the memory usage.
+# Decreasing the value will benefit the real-time applications that are
+# sensitive to latency, but it also decreases the I/O throughput.
 #
+# possible maximum value depends on the choosen scheduler
 # When set, the number of requests for all block devices on the system will 
 # be switched to the chosen value
 NRREQ=1024

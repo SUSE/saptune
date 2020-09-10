@@ -45,6 +45,9 @@ sleep 10
 ps -ef
 loginctl --no-pager
 
+echo "exchange /etc/os-release"
+cp /etc/os-release /etc/os-release_OrG
+
 echo "run go tests"
 go test -v -coverprofile=c.out -cover ./...
 exitErr=$?

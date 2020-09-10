@@ -24,11 +24,13 @@ type Operator string
 // RegexKeyOperatorValue breaks up a line into key, operator, value.
 var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`)
 
+// counter to control the [login] section info message
+var loginCnt = 0
+
 // counter to control the [block] section detected warning
 var blckCnt = 0
 
-// counter to control the [login] section info message
-var loginCnt = 0
+var blockDev = make([]string, 0, 10)
 
 // INIEntry contains a single key-value pair in INI file.
 type INIEntry struct {
@@ -83,18 +85,59 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 	return rval
 }
 
+// splitLineIntoKOV break apart a line into key, operator, value.
+func splitLineIntoKOV(curSection, line string) []string {
+	kov := make([]string, 0)
+	if curSection == "rpm" {
+		fields := strings.Fields(line)
+		kov = nil
+		if len(fields) == 3 {
+			// old syntax - rpm to check | os version | expected package version
+			// kov needs 3 fields (parameter, operator, value)
+			// to not get confused let operator empty, it's not needed for rpm check
+			// to be compatible to old section definitions without 'tags' we need to check fields[1] for os matching
+			if fields[1] == "all" || fields[1] == system.GetOsVers() {
+				kov = []string{"rpm", "rpm:" + fields[0], "", fields[2]}
+			} else {
+				system.WarningLog("in rpm section '%v' the line '%v' contains a non-matching os version '%s'. Skipping line", curSection, fields, fields[1])
+			}
+		} else if len(fields) == 2 {
+			// new syntax - rpm to check | expected package version
+			// os and/or arch are set with section tags
+			// kov needs 3 fields (parameter, operator, value)
+			// to not get confused let operator empty, it's not needed for rpm check
+			kov = []string{"rpm", "rpm:" + fields[0], "", fields[1]}
+		} else {
+			// wrong syntax
+			system.WarningLog("[rpm] section contains a line with wrong syntax - '%v', skipping entry. Please check", fields)
+		}
+	} else {
+		kov = RegexKeyOperatorValue.FindStringSubmatch(line)
+		if curSection == "grub" {
+			if len(kov) == 0 {
+				// seams to be a single option and not
+				// a key=value pair
+				kov = []string{line, "grub:" + line, "=", line}
+			} else {
+				kov[1] = "grub:" + kov[1]
+			}
+		}
+	}
+	return kov
+}
+
 // chkSecTags checks, if the tags of a section are valid
 func chkSecTags(secFields []string) bool {
 	ret := true
 	cnt := 0
 	for _, secTag := range secFields {
-		if secTag == "" {
-			// support empty tags
-			continue
-		}
 		if cnt == 0 {
 			// skip section name
 			cnt = cnt + 1
+			continue
+		}
+		if secTag == "" {
+			// support empty tags
 			continue
 		}
 		tagField := strings.Split(secTag, "=")
@@ -241,42 +284,7 @@ func ParseINI(input string) *INIFile {
 			continue
 		}
 		// Break apart a line into key, operator, value.
-		kov := make([]string, 0)
-		if currentSection == "rpm" {
-			fields := strings.Fields(line)
-			kov = nil
-			if len(fields) == 3 {
-				// old syntax - rpm to check | os version | expected package version
-				// kov needs 3 fields (parameter, operator, value)
-				// to not get confused let operator empty, it's not needed for rpm check
-				// to be compatible to old section definitions without 'tags' we need to check fields[1] for os matching
-				if fields[1] == "all" || fields[1] == system.GetOsVers() {
-					kov = []string{"rpm", "rpm:" + fields[0], "", fields[2]}
-				} else {
-					system.WarningLog("in rpm section '%v' the line '%v' contains a non-matching os version '%s'. Skipping line", currentSection, fields, fields[1])
-				}
-			} else if len(fields) == 2 {
-				// new syntax - rpm to check | expected package version
-				// os and/or arch are set with section tags
-				// kov needs 3 fields (parameter, operator, value)
-				// to not get confused let operator empty, it's not needed for rpm check
-				kov = []string{"rpm", "rpm:" + fields[0], "", fields[1]}
-			} else {
-				// wrong syntax
-				system.WarningLog("[rpm] section contains a line with wrong syntax - '%v', skipping entry. Please check", fields)
-			}
-		} else {
-			kov = RegexKeyOperatorValue.FindStringSubmatch(line)
-			if currentSection == "grub" {
-				if len(kov) == 0 {
-					// seams to be a single option and not
-					// a key=value pair
-					kov = []string{line, "grub:" + line, "=", line}
-				} else {
-					kov[1] = "grub:" + kov[1]
-				}
-			}
-		}
+		kov := splitLineIntoKOV(currentSection, line)
 		if kov == nil {
 			// Skip comments, empty, and irregular lines.
 			continue
@@ -315,13 +323,9 @@ func ParseINI(input string) *INIFile {
 			if blckCnt == 0 {
 				system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
 				blckCnt = blckCnt + 1
+				blockDev = system.CollectBlockDeviceInfo()
 			}
-			_, sysDevs := system.ListDir("/sys/block", "the available block devices of the system")
-			for _, bdev := range sysDevs {
-				if !system.BlockDeviceIsDisk(bdev) {
-					// skip unsupported devices
-					continue
-				}
+			for _, bdev := range blockDev {
 				entry := INIEntry{
 					Section:  currentSection,
 					Key:      fmt.Sprintf("%s_%s", kov[1], bdev),

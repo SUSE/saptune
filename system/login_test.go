@@ -6,14 +6,50 @@ import (
 )
 
 func TestGetCurrentLogins(t *testing.T) {
+	cmd := "/usr/bin/loginctl"
+	ocmd := "/usr/bin/loginctl_OrG"
 	val := ""
 	for _, userID := range GetCurrentLogins() {
 		val = userID
 	}
 	if val == "" {
-		t.Logf("no users currently logged in")
-	} else {
-		t.Logf("at least user '%s' is logged in\n", val)
+		t.Error("no users currently logged in")
+	} else if val != "65534" {
+		t.Errorf("wrong user listed as logged in - '%s'\n", val)
+	}
+	err := CopyFile(cmd, ocmd)
+	if err == nil {
+		_ = os.Chmod(ocmd, 0755)
+		_ = CopyFile("/usr/bin/false", cmd)
+		curLogins := GetCurrentLogins()
+		_ = CopyFile(ocmd, cmd)
+		os.Remove(ocmd)
+		if len(curLogins) != 0 {
+			t.Errorf("found currently logged in users - '%+v'\n", curLogins)
+		}
+	}
+}
+
+func TestGetTasksMax(t *testing.T) {
+	cmd := "/usr/bin/systemctl"
+	ocmd := "/usr/bin/systemctl_OrG"
+	userID := "65534"
+
+	err := CopyFile(cmd, ocmd)
+	if err == nil {
+		_ = os.Chmod(ocmd, 0755)
+		_ = CopyFile("/usr/bin/false", cmd)
+		taskMax1 := GetTasksMax(userID)
+		_ = CopyFile("/usr/bin/true", cmd)
+		taskMax2 := GetTasksMax(userID)
+		_ = CopyFile(ocmd, cmd)
+		os.Remove(ocmd)
+		if taskMax1 != "" {
+			t.Errorf("value of UserTasksMax should be empty, but is '%s'\n", taskMax1)
+		}
+		if taskMax2 != "" {
+			t.Errorf("value of UserTasksMax should be empty, but is '%s'\n", taskMax2)
+		}
 	}
 }
 
