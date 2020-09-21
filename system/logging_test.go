@@ -25,4 +25,5 @@ func TestLog(t *testing.T) {
 	if !CheckForPattern(logFile, "TestMessage4_Error") {
 		t.Fatal("Error message not found in log file")
 	}
+	SwitchOffLogging()
 }

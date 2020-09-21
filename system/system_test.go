@@ -1,15 +1,42 @@
 package system
 
 import (
+	"bytes"
+	"fmt"
+	"io"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 )
 
 var readFileMatchText = `Only a test for read file
 `
+var tstRetErrorExit = -1
+var tstosExit = func(val int) {
+	tstRetErrorExit = val
+}
+var tstwriter io.Writer
+var tstErrorExitOut = func(str string, out ...interface{}) error {
+	fmt.Fprintf(tstwriter, "ERROR: "+str, out...)
+	return fmt.Errorf(str+"\n", out...)
+}
+
+var checkOut = func(t *testing.T, got, want string) {
+	t.Helper()
+	if got != want {
+		fmt.Println("==============")
+		fmt.Println(got)
+		fmt.Println("==============")
+		fmt.Println(want)
+		fmt.Println("==============")
+		t.Errorf("Output differs from expected one")
+	}
+}
 
 func TestIsUserRoot(t *testing.T) {
 	if !IsUserRoot() {
@@ -292,67 +319,100 @@ func TestCalledFrom(t *testing.T) {
 	}
 }
 
-/*
+func TestLock(t *testing.T) {
+	if saptuneIsLocked() {
+		_, err := os.Stat(stLockFile)
+		if os.IsNotExist(err) {
+			t.Errorf("saptune lock does NOT exists, but is reported as existing\n")
+		} else {
+			t.Errorf("saptune lock exists, but shouldn't\n")
+		}
+	}
+	SaptuneLock()
+	if !saptuneIsLocked() {
+		_, err := os.Stat(stLockFile)
+		if os.IsNotExist(err) {
+			t.Errorf("saptune should be locked, but isn't\n")
+		} else {
+			t.Errorf("saptune lock exists, but is reported as non-existing\n")
+		}
+	}
+	if !isOwnLock() {
+		pid := -1
+		p, err := ioutil.ReadFile(stLockFile)
+		if err == nil {
+			pid, _ = strconv.Atoi(string(p))
+		}
+		t.Errorf("wrong pid found in lock file: '%d' instead of '%d'\n", pid, os.Getpid())
+	}
+	ReleaseSaptuneLock()
+	if saptuneIsLocked() {
+		_, err := os.Stat(stLockFile)
+		if os.IsNotExist(err) {
+			t.Errorf("saptune lock does NOT exists, but is reported as existing\n")
+		} else {
+			t.Errorf("saptune lock exists, but shouldn't\n")
+			os.Remove(stLockFile)
+		}
+	}
 
-## fieldType is 'string'
-SaptuneVersion = "5"
-system.ErrorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", SaptuneVersion)
--> ERROR: Wrong saptune version in file '/etc/sysconfig/saptune': 5
--> $? ist 1
+	sl, _ := os.OpenFile(stLockFile, os.O_CREATE|os.O_RDWR|os.O_EXCL, 0600)
+	fmt.Fprintf(sl, "")
+	saptuneIsLocked()
+	os.Remove(stLockFile)
+	sl, _ = os.OpenFile(stLockFile, os.O_CREATE|os.O_RDWR|os.O_EXCL, 0600)
+	fmt.Fprintf(sl, "%d", 4711)
+	saptuneIsLocked()
+	os.Remove(stLockFile)
+	ReleaseSaptuneLock()
+}
 
-## fieldType is 'int'
-system.ErrorExit("Wrong saptune version in file '/etc/sysconfig/saptune'.", 4)
--> ERROR: Wrong saptune version in file '/etc/sysconfig/saptune'.
--> $? ist 4
+func TestErrorExit(t *testing.T) {
+	oldOSExit := OSExit
+	defer func() { OSExit = oldOSExit }()
+	OSExit = tstosExit
+	oldErrorExitOut := ErrorExitOut
+	defer func() { ErrorExitOut = oldErrorExitOut }()
+	ErrorExitOut = tstErrorExitOut
+	buffer := bytes.Buffer{}
+	tstwriter = &buffer
 
-const (
-	exitNotYetTuned = 5
-)
-system.ErrorExit("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.", exitNotYetTuned)
--> ERROR: Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.
--> $? ist 5
+	ErrorExit("Hallo")
+	if tstRetErrorExit != 1 {
+		t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
+	}
+	txt := buffer.String()
+	checkOut(t, txt, "ERROR: Hallo\n")
+	//buffer.Reset() - if we plan to check more test cases
 
-_, err := os.Stat("/hugo")
-system.ErrorExit("Failed to revert notes: %v", err)
--> ERROR: Failed to revert notes: stat /hugo: no such file or directory
--> $? ist 1
+	SaptuneLock()
+	// to reach ErrorExit("saptune currently in use, try later ...", 11)
+	SaptuneLock()
+	ErrorExit("", 0)
+	if tstRetErrorExit != 0 {
+		t.Errorf("error exit should be '0' and NOT '%v'\n", tstRetErrorExit)
+	}
+	// error is '*exec.ExitError'
+	cmd := exec.Command("/usr/bin/false")
+	err := cmd.Run()
+	t.Logf("command failed with error '%v'\n", err)
+	if err != nil {
+		ErrorExit("command failed with error '%v'\n", err)
+	}
+	if tstRetErrorExit != 1 {
+		t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
+	}
 
-system.ErrorExit("The parameters listed above have deviated from SAP/SUSE recommendations.")
--> ERROR: The parameters listed above have deviated from SAP/SUSE recommendations.
--> return 1
-
-
-_, err := os.Stat("/hugo")
-fileName := "/hugo"
-system.ErrorExit("Failed to read file '%s' - %v", fileName, err)
--> ERROR: Failed to read file '/hugo' - stat /hugo: no such file or directory
--> return 1
-
-_, err := os.Stat("/hugo")
-fileName := "/hugo"
-system.ErrorExit("Failed to read file '%s' - %v", fileName, err, 6)
--> ERROR: Failed to read file '/hugo' - stat /hugo: no such file or directory
--> return 6
-
-_, err := os.Stat("/hugo")
-fileName := "/hugo"
-nfileName := "/egon"
-system.ErrorExit("Failed to rename file '%s' to '%s' - %v", fileName, nfileName, err)
--> ERROR: Failed to rename file '/hugo' to '/egon' - stat /hugo: no such file or directory
--> return 1
-
-system.ErrorExit("", 0)
--> Keine Ausgabe
--> return 0
-
-_, err := os.Stat("/hugo")
-system.ErrorExit("%v", err)
--> ERROR: stat /hugo: no such file or directory
--> return 1
-
-_, err := os.Stat("/hugo")
-system.ErrorExit("%v", err, 8)
--> ERROR: stat /hugo: no such file or directory
--> return 8
-
-*/
+	ErrorExit("", 5)
+	if tstRetErrorExit != 5 {
+		t.Errorf("error exit should be '5' and NOT '%v'\n", tstRetErrorExit)
+	}
+	// error is '*os.PathError'
+	_, err = os.Stat("/not_avail")
+	if err != nil {
+		ErrorExit("problems with file '/not_avail': %v", err)
+		if tstRetErrorExit != 1 {
+			t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
+		}
+	}
+}

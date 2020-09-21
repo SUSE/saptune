@@ -45,7 +45,7 @@ func main() {
 	}
 
 	if arg1 := system.CliArg(1); arg1 == "" || arg1 == "help" || arg1 == "--help" {
-		actions.PrintHelpAndExit(0)
+		actions.PrintHelpAndExit(os.Stdout, 0)
 	}
 	if arg1 := system.CliArg(1); arg1 == "version" || arg1 == "--version" {
 		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
@@ -58,11 +58,28 @@ func main() {
 		system.ErrorExit("", 1)
 	}
 
-	// cleanup runtime file
-	note.CleanUpRun()
-
 	// activate logging
 	system.LogInit(logFile, debugSwitch, verboseSwitch)
+	// now system.ErrorExit can write to log and os.Stderr. No longer extra
+	// care is needed.
+
+	if arg1 := system.CliArg(1); arg1 == "lock" {
+		if arg2 := system.CliArg(2); arg2 == "remove" {
+			system.ReleaseSaptuneLock()
+			system.InfoLog("command line triggered remove of lock file '/var/run/.saptune.lock'\n")
+			system.ErrorExit("", 0)
+		} else {
+			actions.PrintHelpAndExit(os.Stdout, 0)
+		}
+	}
+
+	// only one instance of saptune should run
+	// check and set saptune lock file
+	system.SaptuneLock()
+	defer system.ReleaseSaptuneLock()
+
+	// cleanup runtime file
+	note.CleanUpRun()
 
 	switch SaptuneVersion {
 	case "1":

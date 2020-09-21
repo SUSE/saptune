@@ -221,27 +221,32 @@ func TestMissingCmd(t *testing.T) {
 }
 
 func TestCPUErrorCases(t *testing.T) {
-	if !SupportsPerfBias() {
-		t.Skip("System does not support Intel's performance bias setting. Skipping test")
-	}
 	oldCpupowerCmd := cpupowerCmd
+	defer func() { cpupowerCmd = oldCpupowerCmd }()
 	cpupowerCmd = "/usr/bin/false"
 	val := GetPerfBias()
 	if val != "all:none" {
 		t.Error(val)
 	}
-	if err := SetPerfBias("all:15"); err == nil {
-		t.Error("should return an error and not 'nil'")
+	if err := SetPerfBias("all:15"); err != nil {
+		t.Errorf("should return 'nil' and not '%v'\n", err)
 	}
-	if err := SetGovernor("all:performance", ""); err == nil {
-		t.Error("should return an error and not 'nil'")
+	if IsValidGovernor("cpu0", "performance") {
+		if err := SetGovernor("all:performance", ""); err == nil {
+			t.Error("should return an error and not 'nil'")
+		}
+	} else {
+		if err := SetGovernor("all:performance", ""); err != nil {
+			t.Errorf("should return 'nil' and not '%v'\n", err)
+		}
 	}
 	if SupportsPerfBias() {
 		t.Error("reports supported, but shouldn't")
 	}
 	cpupowerCmd = oldCpupowerCmd
 
-	oldCpuDir := cpuDir
+	oldCPUDir := cpuDir
+	defer func() { cpuDir = oldCPUDir }()
 	cpuDir = "/unknownDir"
 	gval := GetGovernor()
 	if len(gval) != 0 {
@@ -250,5 +255,5 @@ func TestCPUErrorCases(t *testing.T) {
 	if err := SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "", false); err == nil {
 		t.Error("should return an error and not 'nil'")
 	}
-	cpuDir = oldCpuDir
+	cpuDir = oldCPUDir
 }

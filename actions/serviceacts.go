@@ -34,7 +34,7 @@ func ServiceAction(actionName, saptuneVersion string, tApp *app.App) {
 	case "disable":
 		ServiceActionDisable()
 	default:
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(os.Stdout, 1)
 	}
 }
 
@@ -206,6 +206,6 @@ func DaemonAction(actionName, saptuneVersion string, tuneApp *app.App) {
 	case "stop":
 		ServiceActionStop(false)
 	default:
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(os.Stdout, 1)
 	}
 }

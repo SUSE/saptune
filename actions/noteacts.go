@@ -8,10 +8,13 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"sort"
 	"strings"
-	"syscall"
 )
+
+var templateFile = "/usr/share/saptune/NoteTemplate.conf"
+var editor = os.Getenv("EDITOR")
 
 // NoteAction  Note actions like apply, revert, verify asm.
 func NoteAction(actionName, noteID, newNoteID string, tuneApp *app.App) {
@@ -39,14 +42,14 @@ func NoteAction(actionName, noteID, newNoteID string, tuneApp *app.App) {
 	case "enabled":
 		NoteActionEnabled(os.Stdout, tuneApp)
 	default:
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(os.Stdout, 1)
 	}
 }
 
 // NoteActionApply applies Note parameter settings to the system
 func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 
 	// Do not apply the note, if it was applied before
@@ -122,7 +125,7 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 // the Note will be applied.
 func NoteActionSimulate(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 	// Run verify and print out all fields of the note
 	if _, comparisons, _, err := tuneApp.VerifyNote(noteID); err != nil {
@@ -139,7 +142,7 @@ func NoteActionSimulate(writer io.Writer, noteID string, tuneApp *app.App) {
 // definition file
 func NoteActionCustomise(noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(os.Stdout, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		system.ErrorExit("%v", err)
@@ -159,25 +162,30 @@ func NoteActionCustomise(noteID string, tuneApp *app.App) {
 		editFileName = ovFileName
 	}
 
-	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "/usr/bin/vim" // launch vim by default
+	}
+	cmd := exec.Command(editor, editFileName)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+	if err := cmd.Run(); err != nil {
+		system.ErrorExit("Failed to start launch editor %s: %v", editor, err)
 	}
 	if _, ok := tuneApp.IsNoteApplied(noteID); !ok {
 		system.InfoLog("Do not forget to apply the just edited Note to get your changes to take effect\n")
 	} else { // noteID already applied
 		system.InfoLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
 	}
-	if err := syscall.Exec(editor, []string{editor, editFileName}, os.Environ()); err != nil {
-		system.ErrorExit("Failed to start launch editor %s: %v", editor, err)
-	}
 	// if syscall.Exec returns 'nil' the execution of the program ends immediately
+	// changed syscall.Exec to exec.Command because of the new 'lock' handling
 }
 
 // NoteActionCreate helps the customer to create an own Note definition
 func NoteActionCreate(noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(os.Stdout, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err == nil {
 		system.ErrorExit("Note '%s' already exists. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, noteID)
@@ -190,18 +198,21 @@ func NoteActionCreate(noteID string, tuneApp *app.App) {
 	if _, err := os.Stat(extraFileName); err == nil {
 		system.ErrorExit("Note '%s' already exists in %s. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, ExtraTuningSheets, noteID)
 	}
-	templateFile := "/usr/share/saptune/NoteTemplate.conf"
 	//if _, err := os.Stat(extraFileName); os.IsNotExist(err) {
 	//copy template file
 	err := system.CopyFile(templateFile, extraFileName)
 	if err != nil {
 		system.ErrorExit("Problems while copying '%s' to '%s' - %v", templateFile, extraFileName, err)
 	}
-	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "/usr/bin/vim" // launch vim by default
 	}
-	if err := syscall.Exec(editor, []string{editor, extraFileName}, os.Environ()); err != nil {
+	cmd := exec.Command(editor, extraFileName)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+	if err := cmd.Run(); err != nil {
 		system.ErrorExit("Failed to start launch editor %s: %v", editor, err)
 	}
 }
@@ -209,7 +220,7 @@ func NoteActionCreate(noteID string, tuneApp *app.App) {
 // NoteActionShow shows the content of the Note definition file
 func NoteActionShow(writer io.Writer, noteID, noteTuningSheets, extraTuningSheets string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		system.ErrorExit("%v", err)
@@ -226,7 +237,7 @@ func NoteActionShow(writer io.Writer, noteID, noteTuningSheets, extraTuningSheet
 // the corresponding override file
 func NoteActionDelete(reader io.Reader, writer io.Writer, noteID, noteTuningSheets, extraTuningSheets, ovTuningSheets string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		system.ErrorExit("%v", err)
@@ -268,7 +279,7 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID, noteTuningShee
 // the corresponding override file
 func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID, noteTuningSheets, extraTuningSheets, ovTuningSheets string, tuneApp *app.App) {
 	if noteID == "" || newNoteID == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		system.ErrorExit("%v", err)
@@ -311,7 +322,7 @@ func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID, not
 // state before 'apply'
 func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if err := tuneApp.RevertNote(noteID, true); err != nil {
 		system.ErrorExit("Failed to revert note %s: %v", noteID, err)

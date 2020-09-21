@@ -3,6 +3,7 @@ package system
 import (
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -14,6 +15,7 @@ var errorLogger *log.Logger   // Error logger
 var warningLogger *log.Logger // Warning logger
 var debugSwitch string        // Switch Debug on or off
 var verboseSwitch string      // Switch verbose mode on or off
+var errorSwitch = ""          // Switch error mode on or off
 
 // DebugLog sents text to the debugLogger and stderr
 func DebugLog(txt string, stuff ...interface{}) {
@@ -47,7 +49,9 @@ func WarningLog(txt string, stuff ...interface{}) {
 func ErrorLog(txt string, stuff ...interface{}) error {
 	if errorLogger != nil {
 		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		fmt.Fprintf(os.Stderr, "ERROR: "+txt+"\n", stuff...)
+		if errorSwitch == "on" {
+			fmt.Fprintf(os.Stderr, "ERROR: "+txt+"\n", stuff...)
+		}
 	}
 	return fmt.Errorf(txt+"\n", stuff...)
 }
@@ -76,4 +80,13 @@ func LogInit(logFile, debug, verbose string) {
 
 	debugSwitch = debug
 	verboseSwitch = verbose
+	errorSwitch = "on"
+}
+
+// SwitchOffLogging disables logging
+func SwitchOffLogging() {
+	debugSwitch = "off"
+	verboseSwitch = "off"
+	errorSwitch = "off"
+	log.SetOutput(ioutil.Discard)
 }

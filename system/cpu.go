@@ -21,8 +21,8 @@ const (
 	cpuDirSys    = "devices/system/cpu"
 )
 
-var cpuDir       = "/sys/devices/system/cpu"
-var cpupowerCmd  = "/usr/bin/cpupower"
+var cpuDir = "/sys/devices/system/cpu"
+var cpupowerCmd = "/usr/bin/cpupower"
 var isCPU = regexp.MustCompile(`^cpu\d+$`)
 var isState = regexp.MustCompile(`^state\d+$`)
 
@@ -85,8 +85,7 @@ func SetPerfBias(value string) error {
 		} else {
 			cpu = fields[0]
 		}
-		cmd := exec.Command(cpupowerCmd, "-c", cpu, "set", "-b", fields[1])
-		out, err := cmd.CombinedOutput()
+		out, err := exec.Command(cpupowerCmd, "-c", cpu, "set", "-b", fields[1]).CombinedOutput()
 		if err != nil {
 			WarningLog("failed to invoke external command 'cpupower -c %s set -b %s': %v, output: %s", cpu, fields[1], err, out)
 			return err
@@ -182,8 +181,7 @@ func SetGovernor(value, info string) error {
 			WarningLog("'%s' is not a valid governor, skipping.", fields[1])
 			continue
 		}
-		cmd := exec.Command(cpupowerCmd, "-c", cpu, "frequency-set", "-g", fields[1])
-		out, err := cmd.CombinedOutput()
+		out, err := exec.Command(cpupowerCmd, "-c", cpu, "frequency-set", "-g", fields[1]).CombinedOutput()
 		if err != nil {
 			WarningLog("failed to invoke external command 'cpupower -c %s frequency-set -g %s': %v, output: %s", cpu, fields[1], err, out)
 			return err

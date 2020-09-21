@@ -26,7 +26,7 @@ func SolutionAction(actionName, solName string, tuneApp *app.App) {
 	case "enabled":
 		SolutionActionEnabled(os.Stdout, tuneApp)
 	default:
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(os.Stdout, 1)
 	}
 }
 
@@ -34,7 +34,7 @@ func SolutionAction(actionName, solName string, tuneApp *app.App) {
 // to the system
 func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if len(tuneApp.TuneForSolutions) > 0 {
 		// already one solution applied.
@@ -114,7 +114,7 @@ func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 // the solution will be applied.
 func SolutionActionSimulate(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 	// Run verify and print out all fields of the note
 	if _, comparisons, err := tuneApp.VerifySolution(solName); err != nil {
@@ -129,7 +129,7 @@ func SolutionActionSimulate(writer io.Writer, solName string, tuneApp *app.App) 
 // the state before 'apply'
 func SolutionActionRevert(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if err := tuneApp.RevertSolution(solName); err != nil {
 		system.ErrorExit("Failed to revert tuning for solution %s: %v", solName, err)
