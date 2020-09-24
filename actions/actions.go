@@ -16,9 +16,6 @@ const (
 	SaptuneService     = "saptune.service"
 	SapconfService     = "sapconf.service"
 	TunedService       = "tuned.service"
-	setGreenText       = "\033[32m"
-	setRedText         = "\033[31m"
-	resetTextColor     = "\033[0m"
 	exitSaptuneStopped = 1
 	exitNotTuned       = 3
 	footnote1X86       = "[1] setting is not supported by the system"
@@ -52,9 +49,21 @@ var footnote1 = footnote1X86
 // Collection of tuning options from SAP notes and 3rd party vendors.
 var tuningOptions = note.GetTuningOptions(NoteTuningSheets, ExtraTuningSheets)
 
+// set colors for the table and list output
+var setGreenText = "\033[32m"
+var setRedText = "\033[31m"
+var resetTextColor = "\033[0m"
+
 // SelectAction selects the choosen action depending on the first command line
 // argument
 func SelectAction(stApp *app.App, saptuneVers string) {
+	// switch off color, if Stdout is not a terminal
+	if !system.OutIsTerm(os.Stdout) {
+		setGreenText = ""
+		setRedText = ""
+		resetTextColor = ""
+	}
+
 	switch system.CliArg(1) {
 	case "daemon":
 		DaemonAction(system.CliArg(2), saptuneVers, stApp)

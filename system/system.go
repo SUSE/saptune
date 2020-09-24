@@ -411,3 +411,12 @@ func ReleaseSaptuneLock() {
 		ErrorLog("problems removing lock. Please remove lock file '%s' manually before the next start of saptune.\n", stLockFile)
 	}
 }
+
+// OutIsTerm returns true, if Stdout is a terminal
+func OutIsTerm(writer *os.File) bool {
+	fileInfo, _ := writer.Stat()
+	if (fileInfo.Mode() & os.ModeCharDevice) == 0 {
+		return false
+	}
+	return true
+}

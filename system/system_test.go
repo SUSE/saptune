@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -235,8 +236,9 @@ func TestCopyFile(t *testing.T) {
 	}
 	err = CopyFile(src, "/tmp/saptune_test/saptune_tstfile")
 	if err == nil {
-		t.Errorf("copied from non existing file")
+		t.Errorf("copied to non existing file")
 	}
+	os.Remove(dst)
 }
 
 func TestBlockDeviceIsDisk(t *testing.T) {
@@ -414,5 +416,22 @@ func TestErrorExit(t *testing.T) {
 		if tstRetErrorExit != 1 {
 			t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
 		}
+	}
+}
+
+func TestOutIsTerm(t *testing.T) {
+	pipeName := "/tmp/saptune_pipe_tst"
+	syscall.Mkfifo(pipeName, 0666)
+	pipeFile, _ := os.OpenFile(pipeName, os.O_CREATE|syscall.O_NONBLOCK, os.ModeNamedPipe)
+	pipeInfo, _ := pipeFile.Stat()
+	if OutIsTerm(pipeFile) {
+		t.Errorf("file is a pipe, but reported as terminal - %+v\n", pipeInfo.Mode())
+	}
+	pipeFile.Close()
+	os.Remove(pipeName)
+	termFile := os.Stdin
+	termInfo, _ := termFile.Stat()
+	if !OutIsTerm(termFile) {
+		t.Errorf("file is a terminal, but reported as NOT a terminal - %+v\n", termInfo.Mode())
 	}
 }

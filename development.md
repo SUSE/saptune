@@ -6,6 +6,12 @@ the sources should be available at $GOPATH/src/github.com/SUSE/saptune
 	cd $GOPATH/src/github.com/SUSE/saptune
 	go build
 
+## build saptune v3
+	cd $GOPATH/src/github.com/SUSE/saptune
+	version="3.0.0-test"
+	bdate=$(date +"%Y/%m/%d")
+	go build -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion=$version' -X 'github.com/SUSE/saptune/actions.RPMDate=$bdate'"
+
 ## lint and format checks for the sources before committing changes
 
 	gofmt -d *
@@ -46,19 +52,20 @@ clean up when finished with your tests
 saptune is build on ibs (and not obs, as saptune is not available on Factory)
 
 branch from a maintained project (see https://maintenance.suse.de/maintained)
+
 	osc -A https://api.suse.de bco -M SUSE:SLE-12-SP2:Update saptune
 
-build the source archive from the github repository (something like 'tar -czvf ../saptune-\<release\>.tgz .') and move it to your obs directory
-Or - if the new version is already created in github -
+build the source archive from the github repository (something like `tar -czvf ../saptune-\<release\>.tgz .`) and move it to your obs directory\
+Or - if the new version is already created in github -\
 copy the archive from https://github.com/SUSE/saptune/releases to your obs directory
 
 change the saptune.spec file, at least the version field
 
 change the saptune.changes file.
-	first line should be '- update version of saptune v2 to \<new version\>'
-	Add a description of the changes and do not forget to add the bsc# or jsc# reference to these changes.
-	And don't forget the line length restriction :-)
-	Important - changes of SAP Notes need to be mentioned in the changes file
+* first line should be '- update version of saptune v2 to \<new version\>'
+* Add a description of the changes and do not forget to add the bsc# or jsc# reference to these changes.
+* And don't forget the line length restriction :-)
+* Important - changes of SAP Notes need to be mentioned in the changes file
 
 change the \_service file and add the new version number
 
