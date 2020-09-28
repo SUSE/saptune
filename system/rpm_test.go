@@ -65,6 +65,10 @@ func TestCmpRpmVers(t *testing.T) {
 	if !actualVal {
 		t.Fatalf("'%s' reported as != '%s'\n", vers1, vers1)
 	}
+	actualVal = CmpRpmVers(vers3, vers2)
+	if !actualVal {
+		t.Fatalf("'%s' reported as != '%s'\n", vers1, vers1)
+	}
 }
 
 func TestCheckRpmVers(t *testing.T) {

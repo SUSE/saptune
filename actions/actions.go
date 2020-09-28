@@ -13,26 +13,32 @@ import (
 
 //define constants and variables for the whole package
 const (
-	SaptuneService       = "saptune.service"
-	SapconfService       = "sapconf.service"
-	TunedService         = "tuned.service"
-	NoteTuningSheets     = "/usr/share/saptune/notes/"
-	OverrideTuningSheets = "/etc/saptune/override/"
-	ExtraTuningSheets    = "/etc/saptune/extra/" // ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
-	setGreenText         = "\033[32m"
-	setRedText           = "\033[31m"
-	resetTextColor       = "\033[0m"
-	exitSaptuneStopped   = 1
-	exitNotTuned         = 3
-	footnote1X86         = "[1] setting is not supported by the system"
-	footnote1IBM         = "[1] setting is not relevant for the system"
-	footnote2            = "[2] setting is not available on the system"
-	footnote3            = "[3] value is only checked, but NOT set"
-	footnote4            = "[4] cpu idle state settings differ"
-	footnote5            = "[5] expected value does not contain a supported scheduler"
-	footnote6            = "[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
-	footnote7            = "[7] parameter value is untouched by default"
+	SaptuneService     = "saptune.service"
+	SapconfService     = "sapconf.service"
+	TunedService       = "tuned.service"
+	setGreenText       = "\033[32m"
+	setRedText         = "\033[31m"
+	resetTextColor     = "\033[0m"
+	exitSaptuneStopped = 1
+	exitNotTuned       = 3
+	footnote1X86       = "[1] setting is not supported by the system"
+	footnote1IBM       = "[1] setting is not relevant for the system"
+	footnote2          = "[2] setting is not available on the system"
+	footnote3          = "[3] value is only checked, but NOT set"
+	footnote4          = "[4] cpu idle state settings differ"
+	footnote5          = "[5] expected value does not contain a supported scheduler"
+	footnote6          = "[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
+	footnote7          = "[7] parameter value is untouched by default"
 )
+
+// NoteTuningSheets is the directory for the sap notes shipped with the satune package
+var NoteTuningSheets = "/usr/share/saptune/notes/"
+
+// OverrideTuningSheets is the directory for the override files
+var OverrideTuningSheets = "/etc/saptune/override/"
+
+// ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
+var ExtraTuningSheets = "/etc/saptune/extra/"
 
 // RPMVersion is the package version from package build process
 var RPMVersion = "undef"
@@ -52,28 +58,27 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 	switch system.CliArg(1) {
 	case "daemon":
 		DaemonAction(system.CliArg(2), saptuneVers, stApp)
+	case "service":
+		ServiceAction(system.CliArg(2), saptuneVers, stApp)
 	case "note":
 		NoteAction(system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "solution":
 		SolutionAction(system.CliArg(2), system.CliArg(3), stApp)
 	case "revert":
 		RevertAction(os.Stdout, system.CliArg(2), stApp)
-	case "service":
-		ServiceAction(system.CliArg(2), saptuneVers, stApp)
 	default:
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(os.Stdout, 1)
 	}
 }
 
 // RevertAction Revert all notes and solutions
 func RevertAction(writer io.Writer, actionName string, tuneApp *app.App) {
 	if actionName != "all" {
-		PrintHelpAndExit(1)
+		PrintHelpAndExit(writer, 1)
 	}
 	fmt.Fprintf(writer, "Reverting all notes and solutions, this may take some time...\n")
 	if err := tuneApp.RevertAll(true); err != nil {
 		system.ErrorExit("Failed to revert notes: %v", err)
-		//panic(err)
 	}
 	fmt.Fprintf(writer, "Parameters tuned by the notes and solutions have been successfully reverted.\n")
 }
@@ -195,8 +200,8 @@ func deleteNote(fileName, ovFileName string, overrideNote, extraNote bool) {
 }
 
 // PrintHelpAndExit prints the usage and exit
-func PrintHelpAndExit(exitStatus int) {
-	fmt.Println(`saptune: Comprehensive system optimisation management for SAP solutions.
+func PrintHelpAndExit(writer io.Writer, exitStatus int) {
+	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
   saptune service [ start | status | stop | enable | disable | enablestart | stopdisable ]
@@ -209,6 +214,8 @@ Tune system for all notes applicable to your SAP solution:
   saptune solution [ apply | simulate | verify | revert ] SolutionName
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
+Remove the pending lock file from a former saptune call
+  saptune lock remove
 Print current saptune version:
   saptune version
 Print this message:

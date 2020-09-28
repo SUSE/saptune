@@ -14,6 +14,19 @@ import (
 
 var OverTstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/etc/saptune/override") + "/"
 
+/*
+// setup for ErroExit catches
+var tstRetErrorExit = -1
+var tstosExit = func(val int) {
+        tstRetErrorExit = val
+}
+var tstwriter io.Writer
+var tstErrorExitOut = func(str string, out ...interface{}) error {
+        fmt.Fprintf(tstwriter, "ERROR: "+str, out...)
+        return fmt.Errorf(str+"\n", out...)
+}
+*/
+
 func TestNoteActions(t *testing.T) {
 	// test setup
 	setUp(t)
@@ -176,6 +189,52 @@ net.ipv4.ip_local_port_range = 31768 61999
 	})
 
 	tearDown(t)
+}
+
+func TestNoteActionCreate(t *testing.T) {
+	tstRetErrorExit = -1
+	oldOSExit := system.OSExit
+	defer func() { system.OSExit = oldOSExit }()
+	system.OSExit = tstosExit
+	oldErrorExitOut := system.ErrorExitOut
+	defer func() { system.ErrorExitOut = oldErrorExitOut }()
+	system.ErrorExitOut = tstErrorExitOut
+	buffer := bytes.Buffer{}
+	tstwriter = &buffer
+
+	editor = "/usr/bin/echo"
+
+	newTuningOpts := note.GetTuningOptions("", ExtraFilesInGOPATH)
+	nApp := app.InitialiseApp(TstFilesInGOPATH, "", newTuningOpts, AllTestSolutions)
+	// test with missing template file
+	nID := "hugo"
+	createMatchText := fmt.Sprintf("ERROR: Problems while copying '/usr/share/saptune/NoteTemplate.conf' to '/etc/saptune/extra/hugo.conf' - open /usr/share/saptune/NoteTemplate.conf: no such file or directory\n")
+	NoteActionCreate(nID, nApp)
+	if tstRetErrorExit != 1 {
+		t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
+	}
+	txt := buffer.String()
+	checkOut(t, txt, createMatchText)
+
+	templateFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/NoteTemplate.conf")
+	// test with available template file
+	buffer.Reset()
+	createMatchText = fmt.Sprintf("")
+	tstRetErrorExit = -1
+	oldExtraTuningSheets := ExtraTuningSheets
+	defer func() { ExtraTuningSheets = oldExtraTuningSheets }()
+	ExtraTuningSheets = ExtraFilesInGOPATH
+	fname := fmt.Sprintf("%s%s.conf", ExtraTuningSheets, nID)
+	NoteActionCreate(nID, nApp)
+	if tstRetErrorExit != -1 {
+		t.Errorf("error exit should be '-1' and NOT '%v'\n", tstRetErrorExit)
+	}
+	txt = buffer.String()
+	checkOut(t, txt, createMatchText)
+	if _, err := os.Stat(fname); os.IsNotExist(err) {
+		t.Errorf("can't find just created file '%s'", fname)
+	}
+	os.Remove(fname)
 }
 
 func TestNoteActionRenameShowDelete(t *testing.T) {

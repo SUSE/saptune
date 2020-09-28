@@ -11,6 +11,7 @@ import (
 )
 
 var PCTestBaseConf = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/note/1557506")
+var blockDev = system.CollectBlockDeviceInfo()
 
 func TestGetServiceName(t *testing.T) {
 	val := system.GetServiceName("uuidd.socket")
