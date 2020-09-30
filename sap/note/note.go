@@ -276,6 +276,12 @@ func cmpMapValue(fieldName string, key reflect.Value, actVal, expVal interface{}
 		op = "<="
 	}
 	actualValueJS, expectedValueJS, match := CompareJSValue(actVal, expVal, op)
+	if strings.Split(key.String(), ":")[0] == "rpm" {
+		match = system.CmpRpmVers(actVal.(string), expVal.(string))
+	}
+	if strings.Split(key.String(), ":")[0] == "systemd" {
+		match = system.CmpServiceStates(actVal.(string), expVal.(string))
+	}
 	if expVal == "" {
 		// if the expected value is empty, the parameter value will
 		// be untouched
@@ -283,9 +289,12 @@ func cmpMapValue(fieldName string, key reflect.Value, actVal, expVal interface{}
 		// so set match to true
 		match = true
 	}
-	if strings.Split(key.String(), ":")[0] == "rpm" {
-		match = system.CmpRpmVers(actVal.(string), expVal.(string))
+	if key.String() == "reminder" {
+		// a diff in the reminder section should not influence the
+		// compare result. So set macth to true
+		match = true
 	}
+
 	fieldComparison := FieldComparison{
 		ReflectFieldName: fieldName,
 		ReflectMapKey:    key.String(),

@@ -147,6 +147,50 @@ func IsServiceAvailable(service string) bool {
 	return match
 }
 
+// CmpServiceStates compares the expected service states with the current
+// active service states
+func CmpServiceStates(actStates, expStates string) bool {
+	ret := false
+	retStart := ""
+	retEnable := ""
+	if expStates == "" {
+		return true
+	}
+	for _, state := range strings.Split(expStates, ",") {
+		tmpret := ""
+		sval := strings.ToLower(strings.TrimSpace(state))
+		if sval != "start" && sval != "stop" && sval != "enable" && sval != "disable" {
+			continue
+		}
+		for _, aState := range strings.Split(actStates, ",") {
+			aval := strings.ToLower(strings.TrimSpace(aState))
+			if sval == aval {
+				tmpret = "true"
+				break
+			} else {
+				tmpret = "false"
+			}
+		}
+		if sval == "start" || sval == "stop" {
+			if retStart != "true" {
+				retStart = tmpret
+			}
+		} else {
+			if retEnable != "true" {
+				retEnable = tmpret
+			}
+		}
+	}
+
+	if (retStart == "" || retStart == "true") && (retEnable == "" || retEnable == "true") {
+		ret = true
+	}
+	if retStart == "" && retEnable == "" {
+		ret = false
+	}
+	return ret
+}
+
 // WriteTunedAdmProfile write new profile to tuned, used instead of sometimes
 // unreliable 'tuned-adm' command
 func WriteTunedAdmProfile(profileName string) error {

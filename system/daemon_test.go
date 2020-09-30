@@ -120,6 +120,96 @@ func TestSystemctlIsRunning(t *testing.T) {
 	}
 }
 
+func TestCmpServiceStates(t *testing.T) {
+	match := false
+	current := "stop, disable"
+	expected := "stop"
+	match = CmpServiceStates(current, expected)
+	if !match {
+		t.Errorf("'%s' should match '%s'\n", expected, current)
+	}
+	expected = "start"
+	match = CmpServiceStates(current, expected)
+	if match {
+		t.Errorf("'%s' should NOT match '%s'\n", expected, current)
+	}
+	expected = "enable"
+	match = CmpServiceStates(current, expected)
+	if match {
+		t.Errorf("'%s' should NOT match '%s'\n", expected, current)
+	}
+	expected = "disable"
+	match = CmpServiceStates(current, expected)
+	if !match {
+		t.Errorf("'%s' should match '%s'\n", expected, current)
+	}
+	expected = ""
+	match = CmpServiceStates(current, expected)
+	if !match {
+		t.Errorf("'%s' should match '%s'\n", expected, current)
+	}
+	expected = "start, enable"
+	match = CmpServiceStates(current, expected)
+	if match {
+		t.Errorf("'%s' should NOT match '%s'\n", expected, current)
+	}
+	expected = "enable, stop"
+	match = CmpServiceStates(current, expected)
+	if match {
+		t.Errorf("'%s' should NOT match '%s'\n", expected, current)
+	}
+	expected = "start, disable"
+	match = CmpServiceStates(current, expected)
+	if match {
+		t.Errorf("'%s' should NOT match '%s'\n", expected, current)
+	}
+	expected = "disable, stop"
+	match = CmpServiceStates(current, expected)
+	if !match {
+		t.Errorf("'%s' should match '%s'\n", expected, current)
+	}
+	expected = "stop, start, disable"
+	match = CmpServiceStates(current, expected)
+	if !match {
+		t.Errorf("'%s' should match '%s'\n", expected, current)
+	}
+	expected = "start, stop, disable"
+	match = CmpServiceStates(current, expected)
+	if !match {
+		t.Errorf("'%s' should match '%s'\n", expected, current)
+	}
+	expected = "start, hugo, stop, disable"
+	match = CmpServiceStates(current, expected)
+	if !match {
+		t.Errorf("'%s' should match '%s'\n", expected, current)
+	}
+	expected = "start, hugo, stop, enable, disable"
+	match = CmpServiceStates(current, expected)
+	if !match {
+		t.Errorf("'%s' should match '%s'\n", expected, current)
+	}
+	expected = "sToP, hugo, start, disable, enable"
+	match = CmpServiceStates(current, expected)
+	if !match {
+		t.Errorf("'%s' should match '%s'\n", expected, current)
+	}
+	expected = "stop, hugo, start, enable"
+	match = CmpServiceStates(current, expected)
+	if match {
+		t.Errorf("'%s' should NOT match '%s'\n", expected, current)
+	}
+	expected = "start, stop, enable"
+	match = CmpServiceStates(current, expected)
+	if match {
+		t.Errorf("'%s' should NOT match '%s'\n", expected, current)
+	}
+	expected = "hugo"
+	match = CmpServiceStates(current, expected)
+	if match {
+		t.Errorf("'%s' should NOT match '%s'\n", expected, current)
+	}
+}
+
 func TestWriteTunedAdmProfile(t *testing.T) {
 	profileName := "balanced"
 	if err := WriteTunedAdmProfile(profileName); err != nil {

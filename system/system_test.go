@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -185,15 +186,23 @@ func TestGetServiceName(t *testing.T) {
 	if value != "" {
 		t.Errorf("found service '%s' instead of 'UnkownService'\n", value)
 	}
+}
+
+func TestGetAvailServices(t *testing.T) {
 	// test with missing command
+	services = map[string]string{"": ""}
 	cmdName := "/usr/bin/systemctl"
 	savName := "/usr/bin/systemctl_SAVE"
 	if err := os.Rename(cmdName, savName); err != nil {
 		t.Error(err)
 	}
-	value = GetServiceName("sysstat")
-	if value != "" {
-		t.Errorf("found service '%s' instead of 'UnkownService'\n", value)
+	value := GetAvailServices()
+	if value != nil && len(value) != 0 {
+		t.Error("found services")
+	}
+	service := GetServiceName("sysstat")
+	if service != "" {
+		t.Errorf("found service '%s' instead of 'UnkownService'\n", service)
 	}
 	if err := os.Rename(savName, cmdName); err != nil {
 		t.Error(err)
@@ -235,8 +244,9 @@ func TestCopyFile(t *testing.T) {
 	}
 	err = CopyFile(src, "/tmp/saptune_test/saptune_tstfile")
 	if err == nil {
-		t.Errorf("copied from non existing file")
+		t.Errorf("copied to non existing file")
 	}
+	os.Remove(dst)
 }
 
 func TestBlockDeviceIsDisk(t *testing.T) {
@@ -414,5 +424,22 @@ func TestErrorExit(t *testing.T) {
 		if tstRetErrorExit != 1 {
 			t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
 		}
+	}
+}
+
+func TestOutIsTerm(t *testing.T) {
+	pipeName := "/tmp/saptune_pipe_tst"
+	syscall.Mkfifo(pipeName, 0666)
+	pipeFile, _ := os.OpenFile(pipeName, os.O_CREATE|syscall.O_NONBLOCK, os.ModeNamedPipe)
+	pipeInfo, _ := pipeFile.Stat()
+	if OutIsTerm(pipeFile) {
+		t.Errorf("file is a pipe, but reported as terminal - %+v\n", pipeInfo.Mode())
+	}
+	pipeFile.Close()
+	os.Remove(pipeName)
+	termFile := os.Stdin
+	termInfo, _ := termFile.Stat()
+	if !OutIsTerm(termFile) {
+		t.Errorf("file is a terminal, but reported as NOT a terminal - %+v\n", termInfo.Mode())
 	}
 }
