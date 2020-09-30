@@ -89,39 +89,66 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 func splitLineIntoKOV(curSection, line string) []string {
 	kov := make([]string, 0)
 	if curSection == "rpm" {
-		fields := strings.Fields(line)
-		kov = nil
-		if len(fields) == 3 {
-			// old syntax - rpm to check | os version | expected package version
-			// kov needs 3 fields (parameter, operator, value)
-			// to not get confused let operator empty, it's not needed for rpm check
-			// to be compatible to old section definitions without 'tags' we need to check fields[1] for os matching
-			if fields[1] == "all" || fields[1] == system.GetOsVers() {
-				kov = []string{"rpm", "rpm:" + fields[0], "", fields[2]}
-			} else {
-				system.WarningLog("in rpm section '%v' the line '%v' contains a non-matching os version '%s'. Skipping line", curSection, fields, fields[1])
-			}
-		} else if len(fields) == 2 {
-			// new syntax - rpm to check | expected package version
-			// os and/or arch are set with section tags
-			// kov needs 3 fields (parameter, operator, value)
-			// to not get confused let operator empty, it's not needed for rpm check
-			kov = []string{"rpm", "rpm:" + fields[0], "", fields[1]}
-		} else {
-			// wrong syntax
-			system.WarningLog("[rpm] section contains a line with wrong syntax - '%v', skipping entry. Please check", fields)
-		}
+		kov = splitRPM(line)
 	} else {
 		kov = RegexKeyOperatorValue.FindStringSubmatch(line)
 		if curSection == "grub" {
-			if len(kov) == 0 {
-				// seams to be a single option and not
-				// a key=value pair
-				kov = []string{line, "grub:" + line, "=", line}
-			} else {
-				kov[1] = "grub:" + kov[1]
-			}
+			kov = splitGrub(line, kov)
+		} else if curSection == "service" {
+			kov = splitService(line, kov)
 		}
+	}
+	return kov
+}
+
+// splitService split line of section service into the needed syntax
+func splitService(line string, kov []string) []string {
+	if len(kov) == 0 {
+		// seams to be a single option and not
+		// a key=value pair
+		kov = []string{line, "systemd:" + line, "=", "unsupported"}
+	} else {
+		kov[1] = "systemd:" + kov[1]
+	}
+	return kov
+}
+
+// splitRPM split line of section rpm into the needed syntax
+func splitRPM(line string) []string {
+	fields := strings.Fields(line)
+	kov := make([]string, 0)
+	kov = nil
+	if len(fields) == 3 {
+		// old syntax - rpm to check | os version | expected package version
+		// kov needs 3 fields (parameter, operator, value)
+		// to not get confused let operator empty, it's not needed for rpm check
+		// to be compatible to old section definitions without 'tags' we need to check fields[1] for os matching
+		if fields[1] == "all" || fields[1] == system.GetOsVers() {
+			kov = []string{"rpm", "rpm:" + fields[0], "", fields[2]}
+		} else {
+			system.WarningLog("in section 'rpm' the line '%v' contains a non-matching os version '%s'. Skipping line", fields, fields[1])
+		}
+	} else if len(fields) == 2 {
+		// new syntax - rpm to check | expected package version
+		// os and/or arch are set with section tags
+		// kov needs 3 fields (parameter, operator, value)
+		// to not get confused let operator empty, it's not needed for rpm check
+		kov = []string{"rpm", "rpm:" + fields[0], "", fields[1]}
+	} else {
+		// wrong syntax
+		system.WarningLog("[rpm] section contains a line with wrong syntax - '%v', skipping entry. Please check", fields)
+	}
+	return kov
+}
+
+// splitGrub split line of section grub into the needed syntax
+func splitGrub(line string, kov []string) []string {
+	if len(kov) == 0 {
+		// seams to be a single option and not
+		// a key=value pair
+		kov = []string{line, "grub:" + line, "=", line}
+	} else {
+		kov[1] = "grub:" + kov[1]
 	}
 	return kov
 }

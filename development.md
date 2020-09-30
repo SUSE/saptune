@@ -33,7 +33,7 @@ But before committing the sources, run the tests locally by using docker and the
 
 in $GOPATH/src/github.com/SUSE/saptune
 
-	go tool cover -html=c.out -o coverage.html
+	go tool cover -html=c.out -o coverage.html; sed -i 's/black/whitesmoke/g' coverage.html
 
 and check the file 'coverage.html' in your Browser to see the coverage
 

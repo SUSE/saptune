@@ -23,6 +23,9 @@ const SaptuneSectionDir = "/var/lib/saptune/sections"
 // saptune lock file
 var stLockFile = "/var/run/.saptune.lock"
 
+// map to hold the current available systemd services
+var services map[string]string
+
 // OSExit defines, which exit function should be used
 var OSExit = os.Exit
 
@@ -131,28 +134,38 @@ func CheckForPattern(file, pattern string) bool {
 	return strings.Contains(string(content), pattern)
 }
 
-// GetServiceName returns the systemd service name for supported services
-func GetServiceName(service string) string {
-	serviceName := ""
-	cmdName := "/usr/bin/systemctl"
+// GetAvailServices returns a map of the available services of the system
+func GetAvailServices() map[string]string {
+	allServices := make(map[string]string)
 	cmdArgs := []string{"--no-pager", "list-unit-files"}
-	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	cmdOut, err := exec.Command(systemctlCmd, cmdArgs...).CombinedOutput()
 	if err != nil {
-		WarningLog("There was an error running external command %s: %v, output: %s", cmdArgs, err, cmdOut)
-		return serviceName
+		WarningLog("There was an error running external command %s %s: %v, output: %s", systemctlCmd, cmdArgs, err, cmdOut)
+		return allServices
 	}
 	for _, line := range strings.Split(string(cmdOut), "\n") {
 		fields := strings.Fields(line)
 		if len(fields) == 0 {
 			continue
 		}
-		if strings.TrimSpace(fields[0]) == service {
-			serviceName = service
-			break
-		}
-		if strings.TrimSpace(fields[0]) == fmt.Sprintf("%s.service", service) {
-			serviceName = fmt.Sprintf("%s.service", service)
-			break
+		serv := strings.TrimSpace(fields[0])
+		allServices[serv] = serv
+	}
+	return allServices
+}
+
+// GetServiceName returns the systemd service name for supported services
+func GetServiceName(service string) string {
+	serviceName := ""
+	if services == nil || len(services) == 0 {
+		services = GetAvailServices()
+	}
+	if _, ok := services[service]; ok {
+		serviceName = service
+	} else {
+		serv := fmt.Sprintf("%s.service", service)
+		if _, ok := services[serv]; ok {
+			serviceName = serv
 		}
 	}
 	if serviceName == "" {
@@ -262,6 +275,14 @@ func CollectBlockDeviceInfo() []string {
 
 		readahead, _ := GetSysString(path.Join("block", bdev, "queue", "read_ahead_kb"))
 		blockMap["READ_AHEAD_KB"] = readahead
+
+		// future use
+		// VENDOR, TYPE for FUJITSU udev replacement
+		// vend := GetDMIDecode(bdev, "VENDOR")
+		// blockMap["VENDOR"] = vendor
+		// blckType := GetDMIDecode(bdev, "TYPE")
+		// blockMap["TYPE""] = blckType
+		// ... more to come
 
 		// end of sys/block loop
 		// save block info
