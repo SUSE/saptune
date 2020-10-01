@@ -17,6 +17,7 @@ import (
 
 //constant definition
 const (
+	secBootoff   = "SecureBoot disabled"
 	notSupported = "System does not support Intel's performance bias setting"
 	cpuDirSys    = "devices/system/cpu"
 )
@@ -78,6 +79,10 @@ func SetPerfBias(value string) error {
 		WarningLog(notSupported)
 		return nil
 	}
+	if SecureBootEnabled() {
+		WarningLog("Cannot set Perf Bias when SecureBoot is enabled, skipping")
+		return nil
+	}
 	for k, entry := range strings.Fields(value) {
 		fields := strings.Split(entry, ":")
 		if fields[0] != "all" {
@@ -92,6 +97,22 @@ func SetPerfBias(value string) error {
 		}
 	}
 	return nil
+}
+
+// SecureBootEnabled check, if the system is in lock-down mode
+func SecureBootEnabled() bool {
+	cmdName := "/usr/bin/mokutil"
+	cmdArgs := []string{"--sb-state"}
+
+	if !CmdIsAvailable(cmdName) {
+		WarningLog("command '%s' not found", cmdName)
+		return false
+	}
+	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	if err != nil || (err == nil && strings.Contains(string(cmdOut), secBootOff)) {
+		return false
+	}
+	return true
 }
 
 // SupportsPerfBias check, if the system will support CPU performance settings
