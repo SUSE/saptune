@@ -17,7 +17,7 @@ import (
 
 //constant definition
 const (
-	secBootoff   = "SecureBoot disabled"
+	secBootOff   = "SecureBoot disabled"
 	notSupported = "System does not support Intel's performance bias setting"
 	cpuDirSys    = "devices/system/cpu"
 )
