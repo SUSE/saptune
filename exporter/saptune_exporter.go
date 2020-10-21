@@ -1,13 +1,22 @@
 package main
 
 import (
-	"net/http"
-
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+	"net/http"
 )
 
 func main() {
+
+	solutionCollector, err := NewSolutionCollector()
+	if err != nil {
+		log.Warn(err)
+	} else {
+		prometheus.MustRegister(solutionCollector)
+		log.Info("Saptune Solution collector registered")
+	}
+
 	http.HandleFunc("/", landing)
 	http.Handle("/metrics", promhttp.Handler())
 
