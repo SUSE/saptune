@@ -16,7 +16,7 @@ func NewSolutionCollector() (*solutionCollector, error) {
 	c := &solutionCollector{
 		NewDefaultCollector(subsystem),
 	}
-	c.SetDescriptor("hanadb_enabled", "Status of hanadb solution. 1 means the solution is enabled on node, 0 otherwise", nil)
+	c.SetDescriptor("hana_enabled", "Status of hanadb solution. 1 means the solution is enabled on node, 0 otherwise", nil)
 
 	return c, nil
 }
@@ -24,5 +24,5 @@ func NewSolutionCollector() (*solutionCollector, error) {
 func (c *solutionCollector) Collect(ch chan<- prometheus.Metric) {
 	log.Debugln("Collecting saptune solution metrics...")
 
-	ch <- c.MakeGaugeMetric("hanadb_enabled", 1)
+	ch <- c.MakeGaugeMetric("hana_enabled", 1)
 }
