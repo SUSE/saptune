@@ -10,6 +10,7 @@ import (
 
 func main() {
 
+	// register various collectors
 	solutionCollector, err := NewSolutionCollector()
 	if err != nil {
 		log.Warn(err)
@@ -17,7 +18,14 @@ func main() {
 		prometheus.MustRegister(solutionCollector)
 		log.Info("Saptune Solution collector registered")
 	}
-
+	miscCollector, err := NewMiscCollector()
+	if err != nil {
+		log.Warn(err)
+	} else {
+		prometheus.MustRegister(miscCollector)
+		log.Info("Saptune Meta collector registered")
+	}
+	// serve metrics
 	http.HandleFunc("/", landing)
 	http.Handle("/metrics", promhttp.Handler())
 
