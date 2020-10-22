@@ -1,19 +1,33 @@
 # Saptune exporter
 
-This is a prometheus exporter of saptune
+This is a bespoke Prometheus exporter used to enable the monitoring of Pacemaker based HA clusters.  
+`
+The exporter run on port `9758` and it is **officially** registered upstream at Prometheus doc: https://github.com/prometheus/prometheus/wiki/Default-port-allocations
 
 
-# Metrics:
+## Table of Contents
 
+1. [Features](#features)
+2. [Installation](#installation)
+3. [Usage](#usage)
+   1. [Metrics](doc/metrics.md)
+4. [Design](#design)
 
-- `solution` metrics.
+# Features:
 
-This metrics are related to the solution collector.
+* monitor and export saptune solution metric
 
-- `saptune_solution_hana_enabled` 
+# Installation:
 
- Status of hanadb solution. 1 means the solution is enabled on node, 0 is disabled.
+At this time
 
-- `saptune_solution_bobj_enabled`
+# Usage:
 
-- `saptune_solution_maxdb_enabled`
+You can run the exporter in any of the nodes you have saptune installed.
+
+$ ./saptune_exporter  
+INFO[0000] Serving metrics on 0.0.0.0:9664
+
+# Design:
+
+The following project follows convention used by implementation of other exporters like https://github.com/ClusterLabs/ha_cluster_exporter and prometheus upstream conventions.
