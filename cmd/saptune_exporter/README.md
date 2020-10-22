@@ -25,8 +25,9 @@ At this time
 
 You can run the exporter in any of the nodes you have saptune installed.
 
-$ ./saptune_exporter  
-INFO[0000] Serving metrics on 0.0.0.0:9664
+$ ./saptune_exporter 
+INFO[0000] Saptune Solution collector registered        
+INFO[0000] Serving metrics on port 9758                 
 
 # Design:
 

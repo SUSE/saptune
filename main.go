@@ -2,14 +2,15 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+
 	"github.com/SUSE/saptune/actions"
 	"github.com/SUSE/saptune/app"
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
-	"os"
-	"os/exec"
 )
 
 // constant definitions
