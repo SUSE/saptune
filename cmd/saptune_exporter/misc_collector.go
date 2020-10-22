@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
@@ -43,6 +44,8 @@ func (c *MiscCollector) setSaptuneVersionMetric(ch chan<- prometheus.Metric) {
 	}
 	SaptuneVersion := sconf.GetString("SAPTUNE_VERSION", "")
 	// check if this is always major only and no dot
-	ch <- c.MakeGaugeMetric("version", float64(string(SaptuneVersion)[1]))
+	if SaptuneVersionF, err := strconv.ParseFloat(SaptuneVersion, 32); err == nil {
+		ch <- c.MakeGaugeMetric("version", float64(SaptuneVersionF))
+	}
 
 }

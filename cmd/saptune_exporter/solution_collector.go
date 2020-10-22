@@ -40,43 +40,48 @@ func (c *SolutionCollector) Collect(ch chan<- prometheus.Metric) {
 
 func (c *SolutionCollector) setSolutionEnabledMetric(ch chan<- prometheus.Metric) {
 	// by default all solution are disable, even if saptune error out
-	ch <- c.MakeGaugeMetric("bobj", 0)
-	ch <- c.MakeGaugeMetric("sap_ase", 0)
-	ch <- c.MakeGaugeMetric("maxdb", 0)
-	ch <- c.MakeGaugeMetric("netweaver", 0)
-	ch <- c.MakeGaugeMetric("hana", 0)
-	ch <- c.MakeGaugeMetric("netweaver_hana", 0)
-	ch <- c.MakeGaugeMetric("s4hana_appserver", 0)
-	ch <- c.MakeGaugeMetric("s4hana_dbserver", 0)
-	ch <- c.MakeGaugeMetric("s4hana_app_db", 0)
+	solutions := make(map[string]int)
+	solutions["bobj"] = 0
+	solutions["sap_ase"] = 0
+	solutions["maxdb"] = 0
+	solutions["netweaver"] = 0
+	solutions["hana"] = 0
+	solutions["netweaver_hana"] = 0
+	solutions["s4hana_appserver"] = 0
+	solutions["s4hana_dbserver"] = 0
+	solutions["s4hana_app_db"] = 0
 
 	solutionName, err := exec.Command("saptune", "solution", "enabled").CombinedOutput()
 	if err != nil {
-		log.Errorf("%v - Failed to run saptune solution enabled command n %s ", err, string(solutionName))
+		log.Warnf("%v - Failed to run saptune solution enabled command n %s ", err, string(solutionName))
 		return
 	}
 	// set active solution accordingly to ouput of saptune
 	switch string(solutionName) {
 	case "BOBJ":
-		ch <- c.MakeGaugeMetric("bobj", 1)
+		solutions["bobj"] = 1
 	case "HANA":
-		ch <- c.MakeGaugeMetric("hana", 1)
+		solutions["hana"] = 1
 	case "MAXDB":
-		ch <- c.MakeGaugeMetric("maxdb", 1)
+		solutions["maxdb"] = 1
 	case "NETWEAVER":
-		ch <- c.MakeGaugeMetric("netweaver", 1)
+		solutions["netweaver"] = 1
 	case "NETWEAVER+HANA":
-		ch <- c.MakeGaugeMetric("netweaver_hana", 1)
+		solutions["netweaver_hana"] = 1
 	case "S4HANA-APP+DB":
-		ch <- c.MakeGaugeMetric("s4hana_app_db", 1)
+		solutions["s4hana_app_db"] = 1
 	case "S4HANA-APPSERVER":
-		ch <- c.MakeGaugeMetric("s4hana_appserver", 1)
+		solutions["s4hana_appserver"] = 1
 	case "S4HANA-DBSERVER":
-		ch <- c.MakeGaugeMetric("s4hana_dbserver", 1)
+		solutions["s4hana_dbserver"] = 1
 	case "SAP-ASE":
-		ch <- c.MakeGaugeMetric("sap_ase", 1)
+		solutions["sap_ase"] = 1
 
 	default:
 		log.Warnf("Unrecognized saptune solution name %s", solutionName)
 	}
+	for solutionName, status := range solutions {
+		ch <- c.MakeGaugeMetric(solutionName, float64(status))
+	}
+
 }
