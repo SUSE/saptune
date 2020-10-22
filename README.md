@@ -59,6 +59,10 @@ To help you, we will provide a step-by-step guide. Just plan your switch when yo
 
 We will support saptune version 1 until end of the lifetime of SLES 12 / SLES 15 SP1, which should give enough time to move. Although please bear in mind that since saptune version 1 will be deprecated, we will only do bug fixing. New features, new SAP notes or new parameters will only be done for version 2!
 
+# Saptune Exporter:
+
+Saptune is providing a [prometheus exporter](cmd/saptune_exporter/README.md)
+
 
 # Where to find documentation?
 
@@ -82,4 +86,3 @@ Enjoy the new saptune!
 ---
 
 [Hints for development](development.md)
-
