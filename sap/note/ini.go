@@ -24,7 +24,6 @@ const OverrideTuningSheets = "/etc/saptune/override/"
 var ini *txtparser.INIFile
 var pc = LinuxPagingImprovements{}
 
-//var blck = param.BlockDeviceQueue{param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}}
 var blck = param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, BlockDeviceReadAheadKB: param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}}
 var isLimitSoft = regexp.MustCompile(`LIMIT_.*_soft_memlock`)
 var isLimitHard = regexp.MustCompile(`LIMIT_.*_hard_memlock`)
@@ -495,7 +494,6 @@ func (vend INISettings) storeSectionInfo(obj *txtparser.INIFile, file string, ov
 		return ioutil.WriteFile(iniFileName, content, 0644)
 	}
 	return nil
-
 }
 
 // getSectionInfo reads content of stored INIFile information.
