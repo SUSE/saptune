@@ -96,7 +96,7 @@ Parameters tuned by the notes and solutions have been successfully reverted.
 	errExitMatchText := fmt.Sprintf(`saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | enable | disable | enablestart | stopdisable ]
+  saptune service [ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | enabled ]
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
@@ -104,6 +104,9 @@ Tune system according to SAP and SUSE notes:
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify | enabled ]
   saptune solution [ apply | simulate | verify | revert ] SolutionName
+Staging control:
+   saptune staging [ status | enable | disable | is-enabled | list | diff ]
+   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
@@ -206,7 +209,7 @@ func TestPrintHelpAndExit(t *testing.T) {
 	errExitMatchText := fmt.Sprintf(`saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | enable | disable | enablestart | stopdisable ]
+  saptune service [ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | enabled ]
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
@@ -214,6 +217,9 @@ Tune system according to SAP and SUSE notes:
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify | enabled ]
   saptune solution [ apply | simulate | verify | revert ] SolutionName
+Staging control:
+   saptune staging [ status | enable | disable | is-enabled | list | diff ]
+   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call

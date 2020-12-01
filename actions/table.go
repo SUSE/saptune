@@ -3,6 +3,7 @@ package actions
 import (
 	"fmt"
 	"github.com/SUSE/saptune/sap/note"
+	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io"
 	"regexp"
@@ -20,7 +21,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 7, 7)
+	footnote := make([]string, 8, 8)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -254,6 +255,12 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 		comment = comment + " [7]"
 		footnote[6] = footnote7
 	}
+	if comparison.ReflectMapKey == "energy_perf_bias" && system.SecureBootEnabled() {
+		compliant = compliant + " [8]"
+		comment = comment + " [8]"
+		footnote[7] = footnote8
+	}
+
 	return compliant, comment, footnote
 }
 

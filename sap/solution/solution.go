@@ -15,10 +15,10 @@ import (
 
 // solution constant definitions
 const (
-	SolutionSheet         = "/usr/share/saptune/solutions"
+	SolutionSheet         = "/var/lib/saptune/working/solutions"
 	OverrideSolutionSheet = "/etc/saptune/override/solutions"
 	DeprecSolutionSheet   = "/usr/share/saptune/solsdeprecated"
-	NoteTuningSheets      = "/usr/share/saptune/notes/"
+	NoteTuningSheets      = "/var/lib/saptune/working/notes/"
 	ArchX86               = "amd64"      // ArchX86 is the GOARCH value for x86 platform.
 	ArchPPC64LE           = "ppc64le"    // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform.
 	ArchX86PC             = "amd64_PC"   // ArchX86 is the GOARCH value for x86 platform. PC indicates PageCache is available
@@ -58,7 +58,7 @@ func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
 	}
 
 	for _, param := range content.AllValues {
-		if param.Section == "reminder" {
+		if param.Section == "reminder" || param.Section == "version" {
 			continue
 		}
 		if param.Section != currentArch {
@@ -119,7 +119,10 @@ func GetOverrideSolution(fileName, noteFiles string) map[string]map[string]Solut
 	}
 
 	for _, param := range content.AllValues {
-		//check, if all note files used in the override file are available in /usr/share/saptune/note
+		//check, if all note files used in the override file are available in /var/lib/saptune/working/notes/
+		// ANGI TODO additional check in /usr/share/saptune/note and WARNING
+		// that the working area does not include the needed note for
+		// the solution, but the package store (and/or staging area) does.
 		notesOK := true
 		for _, noteID := range strings.Split(content.KeyValue[param.Section][param.Key].Value, "\t") {
 			if _, err := os.Stat(fmt.Sprintf("%s%s", noteFiles, noteID)); err != nil {

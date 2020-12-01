@@ -25,9 +25,9 @@ export PATH=${TRAVIS_HOME}/gopath/bin:$PATH
 export TRAVIS_BUILD_DIR=${TRAVIS_HOME}/gopath/src/github.com/SUSE/saptune
 
 mkdir -p /etc/saptune/override
-mkdir -p /usr/share/saptune
+mkdir -p /var/lib/saptune/working
 if [ ! -f /usr/share/saptune/solutions ]; then
-	ln -s /app/testdata/saptune-test-solutions /usr/share/saptune/solutions
+	ln -s /app/testdata/saptune-test-solutions /var/lib/saptune/working/solutions
 fi
 
 echo "go environment:"

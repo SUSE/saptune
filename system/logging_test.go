@@ -1,6 +1,7 @@
 package system
 
 import (
+	"os"
 	"testing"
 )
 
@@ -26,4 +27,5 @@ func TestLog(t *testing.T) {
 		t.Fatal("Error message not found in log file")
 	}
 	SwitchOffLogging()
+	os.Remove(logFile)
 }

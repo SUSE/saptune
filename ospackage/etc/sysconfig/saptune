@@ -32,3 +32,10 @@ NOTE_APPLY_ORDER=""
 #
 # Version of saptune
 SAPTUNE_VERSION="3"
+
+## Type:    boolean
+## Default: "false"
+#
+# Enable or disable staging of saptune internal Notes
+# Disabled by default. To enable use 'saptune staging enable'
+STAGING="false"

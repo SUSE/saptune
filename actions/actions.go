@@ -26,10 +26,24 @@ const (
 	footnote5          = "[5] expected value does not contain a supported scheduler"
 	footnote6          = "[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
 	footnote7          = "[7] parameter value is untouched by default"
+	footnote8          = "[8] cannot set Perf Bias because SecureBoot is enabled"
 )
 
-// NoteTuningSheets is the directory for the sap notes shipped with the satune package
-var NoteTuningSheets = "/usr/share/saptune/notes/"
+// PackageArea is the package area with all notes and solutions shiped by
+// the current installed saptune rpm
+var PackageArea = "/usr/share/saptune/"
+
+// WorkingArea is the working directory
+var WorkingArea = "/var/lib/saptune/working/"
+
+// StagingArea is the staging area
+var StagingArea = "/var/lib/saptune/staging/"
+
+// StagingSheets is the staging directory of the latest notes
+var StagingSheets = "/var/lib/saptune/staging/latest"
+
+// NoteTuningSheets is the working directory of available sap notes
+var NoteTuningSheets = "/var/lib/saptune/working/notes/"
 
 // OverrideTuningSheets is the directory for the override files
 var OverrideTuningSheets = "/etc/saptune/override/"
@@ -41,6 +55,8 @@ var ExtraTuningSheets = "/etc/saptune/extra/"
 var RPMVersion = "undef"
 
 // RPMDate is the date of package build
+// only used in individual build test packages, but NOT in our offical
+// built and released packages (not possible because of 'reproducible' builds)
 var RPMDate = "undef"
 
 // set 'unsupported' footnote regarding the architecture
@@ -63,6 +79,10 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 		setRedText = ""
 		resetTextColor = ""
 	}
+	// check for test packages
+	if RPMDate != "undef" {
+		system.InfoLog("ATTENTION: You are running a test version of saptune which is not supported for production use")
+	}
 
 	switch system.CliArg(1) {
 	case "daemon":
@@ -75,6 +95,8 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 		SolutionAction(system.CliArg(2), system.CliArg(3), stApp)
 	case "revert":
 		RevertAction(os.Stdout, system.CliArg(2), stApp)
+	case "staging":
+		StagingAction(system.CliArg(2), system.CliArgs(3), stApp)
 	default:
 		PrintHelpAndExit(os.Stdout, 1)
 	}
@@ -213,7 +235,7 @@ func PrintHelpAndExit(writer io.Writer, exitStatus int) {
 	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | enable | disable | enablestart | stopdisable ]
+  saptune service [ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | enabled ]
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
@@ -221,6 +243,9 @@ Tune system according to SAP and SUSE notes:
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify | enabled ]
   saptune solution [ apply | simulate | verify | revert ] SolutionName
+Staging control:
+   saptune staging [ status | enable | disable | is-enabled | list | diff ]
+   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call

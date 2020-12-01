@@ -128,7 +128,6 @@ func (vend INISettings) Initialise() (Note, error) {
 	vend.OverrideParams = make(map[string]string)
 	vend.Inform = make(map[string]string)
 	pc = LinuxPagingImprovements{}
-	//blck = param.BlockDeviceQueue{param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}}
 	blck = param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, BlockDeviceReadAheadKB: param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}}
 
 	for _, param := range ini.AllValues {

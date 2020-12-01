@@ -26,6 +26,9 @@ func ServiceAction(actionName, saptuneVersion string, tApp *app.App) {
 		ServiceActionStatus(os.Stdout, tApp, saptuneVersion)
 	case "stop":
 		ServiceActionStop(false)
+	case "restart", "reload":
+		ServiceActionRevert(tApp)
+		ServiceActionApply(tApp)
 	case "revert":
 		// This action name is only used by saptune service, hence it is not advertised to end user.
 		ServiceActionRevert(tApp)
@@ -49,6 +52,8 @@ func ServiceActionStart(enableService bool, tuneApp *app.App) {
 			system.ErrorExit("%v", err)
 		}
 	}
+	// release Lock, to prevent deadlock with systemd service 'saptune.service'
+	system.ReleaseSaptuneLock()
 	// enable and/or start 'saptune.service'
 	if enableService {
 		err = system.SystemctlEnableStart(SaptuneService)
@@ -66,7 +71,7 @@ func ServiceActionStart(enableService bool, tuneApp *app.App) {
 		system.InfoLog("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
 	}
 	if !system.SystemctlIsEnabled(SaptuneService) {
-		system.InfoLog("\nRemember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable saptune.service by running:\n    saptune service enable\n")
+		system.InfoLog("Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable saptune.service by running:\n    saptune service enable\n")
 	}
 }
 
@@ -124,7 +129,14 @@ func ServiceActionStatus(writer io.Writer, tuneApp *app.App, saptuneVersion stri
 	// print saptune version
 	system.InfoLog("current active saptune version is '%s'\n", saptuneVersion)
 	// print saptune rpm version and date
-	system.InfoLog("installed saptune version is '%s' from '%s'\n", RPMVersion, RPMDate)
+	// because of the need of 'reproducible' builds, we can not use a
+	// build date in the 'official' saptune binary, so 'RPMDate' will
+	// report 'undef'
+	if RPMDate == "undef" {
+		system.InfoLog("installed saptune version is '%s'\n", RPMVersion)
+	} else {
+		system.InfoLog("installed saptune version is '%s' from '%s'\n", RPMVersion, RPMDate)
+	}
 
 	// Check for any enabled note/solution
 	if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 {
@@ -148,6 +160,8 @@ func ServiceActionStatus(writer io.Writer, tuneApp *app.App, saptuneVersion stri
 func ServiceActionStop(disableService bool) {
 	var err error
 	system.InfoLog("Stopping 'saptune.service', this may take some time...")
+	// release Lock, to prevent deadlock with systemd service 'saptune.service'
+	system.ReleaseSaptuneLock()
 	// disable and/or stop 'saptune.service'
 	if disableService {
 		err = system.SystemctlDisableStop(SaptuneService)

@@ -50,6 +50,10 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		}
 	}
 
+	if thirdPartyTuningDir == "" {
+		return ret
+	}
+
 	// Collect those defined by 3rd party
 	_, files = system.ListDir(thirdPartyTuningDir, "3rd party tuning definitions")
 	for _, fileName := range files {

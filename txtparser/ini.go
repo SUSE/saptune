@@ -70,6 +70,8 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 		re = regexp.MustCompile(`# .*NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
 	case "category":
 		re = regexp.MustCompile(`# .*NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
+	case "date":
+		re = regexp.MustCompile(`# .*NOTE=.*VERSION=\d*\s*DATE=(.*)\s*NAME=.*"`)
 	default:
 		return ""
 	}
@@ -80,7 +82,7 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 	}
 	matches := re.FindStringSubmatch(string(content))
 	if len(matches) != 0 {
-		rval = fmt.Sprintf("%s", matches[1])
+		rval = fmt.Sprintf("%s", strings.TrimSpace(matches[1]))
 	}
 	return rval
 }

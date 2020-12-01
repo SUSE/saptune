@@ -27,7 +27,7 @@ func NoteAction(actionName, noteID, newNoteID string, tuneApp *app.App) {
 		NoteActionVerify(os.Stdout, noteID, tuneApp)
 	case "simulate":
 		NoteActionSimulate(os.Stdout, noteID, tuneApp)
-	case "customise":
+	case "customise", "customize":
 		NoteActionCustomise(noteID, tuneApp)
 	case "create":
 		NoteActionCreate(noteID, tuneApp)

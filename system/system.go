@@ -53,6 +53,16 @@ func CliArg(i int) string {
 	return ""
 }
 
+// CliArgs returns all remaining command line parameters starting with i,
+// or empty string if it is not specified.
+// ANGI TODO - enhance command line parsing for 'flags' like '--dryrun', '--force'
+func CliArgs(i int) []string {
+	if len(os.Args) >= i+1 {
+		return os.Args[i:]
+	}
+	return []string{}
+}
+
 // GetSolutionSelector returns the architecture string
 // needed to select the supported set os solutions
 func GetSolutionSelector() string {

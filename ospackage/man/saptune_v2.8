@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "July 2020" "" "System Optimisation For SAP"
+.TH saptune "8" "November 2020" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 2 and 3\fP)
 
@@ -27,7 +27,7 @@ ATTENTION: deprecated
 [ start | status | stop ]
 
 \fBsaptune service\fP
-[ start | status | stop | enable | disable | enablestart | stopdisable ]
+[ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
 
 \fBsaptune note\fP
 [ list | verify | enabled ]
@@ -43,6 +43,12 @@ rename NoteID newNoteID
 
 \fBsaptune solution\fP
 [ apply | simulate | verify | revert ] SolutionName
+
+\fBsaptune staging\fP
+[ status | enable | disable | is-enabled | list | diff ]
+
+\fBsaptune staging\fP
+[ analysis | diff | release ] [ NoteID | solutions | all ]
 
 \fBsaptune revert\fP
 all
@@ -90,6 +96,10 @@ Report the status of saptune service, the saptune version from \fI/etc/sysconfig
 .TP
 .B stop
 Stop saptune service and revert all optimisations that were previously applied by saptune. If the service is disabled, the tuning will no longer automatically activate upon boot.
+.TP
+.B restart
+Stop saptune service and revert all optimisations that were previously applied by saptune. And after that start saptune service and apply a set of optimisations to the system, if solutions or notes were selected during a previous call of saptune.
+.TP
 .B enable
 Enables the saptune service. To activate the tuning, the saptune service needs to be started. But as the service is now enabled, the tuning will automatically activated upon system boot.
 .TP
@@ -283,6 +293,85 @@ If a solution name is specified, saptune verifies the current running system aga
 .B revert
 Revert optimisation settings recommended by the SAP solution, and these settings will no longer be activated automatically upon system boot.
 
+.SH STAGING ACTIONS
+Staging is implemented to enable customers to control and release changes shipped by package updates to their working environment.
+.br
+The basic idea is, that Note definition files shipped by saptune in updates are not used by saptune for system tuning immediately. An administrator has to explicitly release the updates before being used by saptune. This allows customers to update saptune, even with changed Notes, without having changes in system behavior.
+
+Staging is disabled by default, as not every customer needs the feature and having it enabled by default would break the preveious behaviour. 
+
+Staging can be enable by '\fBsaptune staging enable\fP' (see desciption below)
+
+So now we will have 3 areas, where Note definition files and solution definitions shipped by saptune can reside:
+.br
+This is only related to Note definition files and solution definitions shipped by saptune. Custome definition files or override files are \fBNOT\fP affected.
+
+\fBPackage Area\fP
+.br
+Directory where the saptune package stores and maintains shipped Note definition files and solution definitions. This directory gets changed by RPM package operations solely.
+.br
+Currently this is \fB/usr/share/saptune/\fP.
+
+\fBWorking Area\fP
+.br
+Directory which contains configuration objects saptune note|solution|daemon|service will use. Only Notes and solutions from here can be applied.
+.br
+Currently this is \fB/var/lib/saptune/working/\fP.
+
+\fBStaging Area\fP
+.br
+Directory where configuration objects are stored, which are present in the package area but differ from the objects in the working area.
+.br
+Currently this is \fB/var/lib/saptune/staging/\fP.
+.br
+At the moment only the Notes from the last update are kept in \fB/var/lib/saptune/staging/latest\fP.
+.SS
+.TP
+.B status
+Displays the status of staging, basically the content of the variable STAGING in /etc/sysconfig/saptune.
+.TP
+.B is-enabled
+Returns the status of staging, basically the content of the variable STAGING in /etc/sysconfig/saptune, as exit code (0 == enabled, 1 == disabled).
+No output is generated as this is meant to be used in scripts.
+.TP
+.B enable|disable
+Enables or disables staging, by setting the variable STAGING in /etc/sysconfig/saptune. The result of the status change is displayed.
+
+Altering the setting does not changes the content of the staging and working directory.
+.br
+If a user disables staging an package updated might clean the staging area and update the working area.
+.TP
+.B list
+Lists all Notes and the solution definition which can be released from the staging area including name, description, version and release date.
+.br
+The solution definition is shown as a whole object. It is only possible to release the entire definition, but not single solutions.
+.br
+Lastly a hint is printed to remind the user that he has to release staged objects before he can use them and that it is possible to view the changes.
+.TP
+.B diff [NOTE|solutions]
+Shows the differences between the Note (or all Notes) or the solution definition in the staging area and the working area.
+.br
+For each Note in the staging area the output contains the values of all parameter which differ. This includes new or removed parameters as well as changes in the reminder section.
+.br
+For the Solution, all changed solutions are displayed with their differences.
+.br
+Lastly a hint is printed to remind the user that he has to release staged objects before he can use them.
+.TP
+.B analysis NOTE...|solutions|all
+Does an analysis of the requested Notes, the solution definition or everything in the staging area to warn the user about possible issues or additional steps to perform.
+.br
+Lastly a hint is printed to remind the user that he has to release staged objects before he can use them as well that he should check out the differences.
+.TP
+.B release NOTE...|solutions|all
+Releases the requested Notes, the solution definition or everything in the stages area.
+.br
+This means the Notes or the solution definition gets moved from the staging area to the working area. In case of a deleted Note, it will be removed from the working area.
+.br
+First the command will show an analysis of the objects going to be released to make the user aware of further needed actions or potential problems (for details see saptune staging dependencies).
+.br
+
+Because the release is irreversible, the user has to confirm the action.
+
 .SH REVERT ACTIONS
 .TP
 .B revert all
@@ -336,13 +425,31 @@ Even if editing an active vendor or customer specific note definition file on th
 .PP
 \fI/usr/share/saptune/notes\fP
 .RS 4
+part of the \fBPackage Area\fP
+.br
+the saptune SAP Note definitions, which are shipped by the saptune RPM package
+.br
+Please do not change the files located here. You will lose all your changes during a saptune package update.
+.RE
+.PP
+\fI/var/lib/saptune/working/notes\fP
+.RS 4
+part of the \fBWorking Area\fP
+.br
 the saptune SAP Note definitions, which can be listed by '\fBsaptune note list\fP'
 
 The files are named with the number of their corresponding SAP Note (==NoteID).
 .br
 A description of the syntax and the available tuning options can be found in saptune-note(5)
 .br
-Please do not change the files located here. You will lose all your changes during a saptune package update.
+Please do not change the files located here. You will lose all your changes during a '\fBsaptune staging release\fP' command. Use override files to change parameter values if needed.
+.RE
+.PP
+\fI/var/lib/saptune/staging/latests\fP
+.RS 4
+part of the \fBStaging Area\fP
+.br
+the saptune SAP Note or solution definitions, which are present in the Package Area but differ from the files in the Working Area.
 .RE
 .PP
 \fI/etc/sysconfig/saptune\fP
@@ -368,11 +475,22 @@ Or use '\fBsaptune note customize NoteID\fP' to do the job for you.
 .PP
 \fI/usr/share/saptune/solutions\fP
 .RS 4
+part of the \fBPackage Area\fP
+.br
+this file contains the saptune solution definitions, which are shipped by the saptune RPM package
+
+Please do not change as maintenance updates of package saptune will overwrite this file without preserving any custom changes.
+.RE
+.PP
+\fI/var/lib/saptune/working/solutions\fP
+.RS 4
+part of the \fBWorking Area\fP
+.br
 this file contains the saptune solution definitions, which can be listed by '\fBsaptune solution list\fP'
 .br
 At the moment saptune supports two architectures - \fIArchX86\fP for the x86 platform and \fIArchPPC64LE\fP for 64-bit PowerPC little endian platform - with different solution definitions.
 
-Please do not change as maintenance updates of package saptune will overwrite this file without preserving any custom changes.
+Please do not change as the command '\fBsaptune staging release\fP' may overwrite this file without preserving any custom changes.
 .RE
 .PP
 \fI/var/lib/saptune/saved_state/\fP
