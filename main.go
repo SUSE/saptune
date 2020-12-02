@@ -81,6 +81,9 @@ func main() {
 	// cleanup runtime file
 	note.CleanUpRun()
 
+	//check, running config exists
+	checkWorkingArea()
+
 	switch SaptuneVersion {
 	case "1":
 		cmd := exec.Command(saptuneV1, os.Args[1:]...)
@@ -138,5 +141,37 @@ func checkUpdateLeftOvers() {
 func checkForTuned() {
 	if system.SystemctlIsEnabled(TunedService) || system.SystemctlIsRunning(TunedService) {
 		system.WarningLog("ATTENTION: tuned service is enabled/active, so we may encounter conflicting tuning values")
+	}
+}
+
+// checkWorkingArea checks, if solution and note configs exist in the working
+// area
+// if not, copy the definition files from the package area into the working area
+// Should be covered by package installation but better safe than sorry
+func checkWorkingArea() {
+	if _, err := os.Stat(actions.NoteTuningSheets); os.IsNotExist(err) {
+		// missing working area /var/lib/saptune/working/notes/
+		system.WarningLog("missing the notes in the working area, so copy note definitions from package area to working area")
+		if err := os.MkdirAll(actions.NoteTuningSheets, 0755); err != nil {
+			system.ErrorExit("Problems creating directory '%s' - '%v'", actions.NoteTuningSheets, err)
+			return
+		}
+		packedNotes := fmt.Sprintf("%snotes/", actions.PackageArea)
+		_, files := system.ListDir(packedNotes, "")
+		for _, f := range files {
+			src := fmt.Sprintf("%s%s", packedNotes, f)
+			dest := fmt.Sprintf("%s%s", actions.NoteTuningSheets, f)
+			if err := system.CopyFile(src, dest); err != nil {
+				system.ErrorLog("Problems copying '%s' to '%s', continue with next file ...", src, dest)
+			}
+		}
+	}
+	workSolutions := fmt.Sprintf("%ssolutions", actions.WorkingArea)
+	if _, err := os.Stat(workSolutions); os.IsNotExist(err) {
+		system.WarningLog("missing solution file in the working area, so copy the solution definition from package area to working area")
+		packedSolutions := fmt.Sprintf("%ssolutions", actions.PackageArea)
+		if err := system.CopyFile(packedSolutions, workSolutions); err != nil {
+			system.ErrorLog("Problems copying '%s' to '%s', continue with next file ...", packedSolutions, workSolutions)
+		}
 	}
 }

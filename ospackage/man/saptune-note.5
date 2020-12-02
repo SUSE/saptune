@@ -15,13 +15,13 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "July 2020" "" "saptune note file format description"
+.TH "saptune-note" "5" "November 2020" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB2\fP
 .SH DESCRIPTION
 This man page documents the format of the Note definition files for saptune version \fB2\fP. If you still use version \fB1\fP of saptune please refer to the configuration files \fI/etc/sysconfig/saptune-note-*\fP
 
-The saptune Note definitions will be searched in \fI/usr/share/saptune/notes\fP for the saptune SAP Note definitions or \fI/etc/saptune/override\fP for customer specific changes to the saptune SAP Note definitions or \fI/etc/saptune/extra\fP for vendor or customer specific tuning definitions.
+The saptune Note definitions will be installed by the rpm in \fI/usr/share/saptune/notes\fP, but for the execution they will be searched in \fI/var/lib/saptune/working/notes\fP for the saptune SAP Note definitions or in \fI/etc/saptune/override\fP for customer specific changes to the saptune SAP Note definitions or in \fI/etc/saptune/extra\fP for vendor or customer specific tuning definitions.
 .br
 The \fBNote definition\fP files use the INI file format.
 .br
@@ -44,9 +44,9 @@ Supported tags are:
 .BI os= <os_version>
 to define a special \fIos version\fP
 .br
-Valid values for \fBos=\fP are the values from the \fBVERSION=\fP line of \fB/etc/os-release\fP, e.g. 12-SP5 or 15-SP1
+Valid values for \fBos=\fP are the values from the \fBVERSION=\fP line of \fB/etc/os-release\fP, e.g. 12-SP5, 12, 15 or 15-SP1
 .br
-To mark an entire major release the string 1[256]-* (wildcard) can be used.
+To mark an entire major release the string 1[25]-* (wildcard) can be used.
 .TP
 .BI arch= <hardware_architecture>
 to define a special \fIhardware architecture\fP:
@@ -358,14 +358,17 @@ That means, if there is no matching SLE version for the running OS and/or no mat
 
 \" section service
 .SH "[service]"
-The section "[service]" is dealing with starting and stopping services controlled by systemd.
+The section "[service]" is dealing with starting, enabling, disabling and stopping services controlled by systemd.
 .br
 The syntax for the entries are:
 .TP
-.BI <servicename>=<start|stop>
+.BI <servicename>= STRING
+.br
+where STRING is a list of valid values separated by '\fB,\fP', which are checked from left to right. The first entry of the pair 'start'/'stop' or 'enable'/'disable' will be used as new settings for the service.
+.br
 Valid services are those listed by the command '\fIsystemctl list-unit-files\fP'.
 .br
-Valid values are '\fBstart\fP' or '\fBstop\fP'.
+Valid values are '\fBstart\fP' or '\fBstop\fP', '\fBenable\fP' or '\fBdisable\fP'.
 .TP
 .BI Exceptions\ and\ Warnings:
 For the service \fBuuidd.socket\fP only '\fBstart\fP' is a valid value, because the uuidd.socket service is essential for a working SAP environment.
@@ -374,7 +377,7 @@ Concerning \fBsysstat.service\fP please be in mind: A running sysstat service ca
 .br
 See sar(1), sa2(8), sa1(8) for more information
 
-If a service is enabled or disabled by default or admin choice, saptune will NOT disable or enable this service. It will only start/stop the service. If such a service is started by systemd during a system reboot \fBafter\fP the start of saptune.service it will be possible that a service is stopped/running even if it was started/stopped by saptune.
+If a service is enabled or disabled by default or admin choice, saptune will NOT disable or enable this service, if only '\fBstart\fP' or '\fBstop\fP' is used. In this case it will only start/stop the service. If such a service is started by systemd during a system reboot \fBafter\fP the start of saptune.service it will be possible that a service is stopped/running even if it was started/stopped by saptune. To change this, the service can be additional enabled or disabled by using '\fBenable\fP' or '\fBdisable\fP' in the Note definition file.
 \" section sysctl
 .SH "[sysctl]"
 The section "[sysctl]" can be used to modify kernel parameters. The parameters available are those listed under /proc/sys/.

@@ -1,9 +1,9 @@
 # 2205917 - SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12
 # Description:    HANA DB settings
-# Version 58 from 23.03.2020 in English
+# Version 61 from 12.11.2020 in English
 
 [version]
-# SAP-NOTE=2205917 CATEGORY=HANA VERSION=58 DATE=23.03.2020 NAME="SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12"
+# SAP-NOTE=2205917 CATEGORY=HANA VERSION=61 DATE=12.11.2020 NAME="SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12"
 
 [login]
 # /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf UserTasksMax setting
@@ -31,8 +31,6 @@ THP=never
 # environment where many of the guest operating systems like XEN, KVM are
 # similar and are running on same host machine, this can result in significant
 # memory savings, the default value is set to 0.
-# ATTENTION: /usr/share/saptune/note/SUSE-GUIDE-01 will change it to 1, if
-# activated after note 2205917 or solution HANA
 #
 KSM=0
 

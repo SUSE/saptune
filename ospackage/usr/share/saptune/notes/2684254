@@ -1,9 +1,9 @@
 # 2684254 - SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
 # Description:    HANA DB settings
-# Version 5 from 03.01.2019 in English
+# Version 15 from 12.11.2020 in English
 
 [version]
-# SAP-NOTE=2684254 CATEGORY=HANA VERSION=5 DATE=03.01.2019 NAME="SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15"
+# SAP-NOTE=2684254 CATEGORY=HANA VERSION=15 DATE=12.11.2020 NAME="SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15"
 
 [vm]
 # Disable transparent hugepages (THP)
@@ -20,8 +20,6 @@ THP=never
 # environment where many of the guest operating systems like XEN, KVM are
 # similar and are running on same host machine, this can result in significant
 # memory savings, the default value is set to 0.
-# ATTENTION: /usr/share/saptune/note/SUSE-GUIDE-01 will change it to 1, if
-# activated after note 2205917 or solution HANA
 #
 KSM=0
 
@@ -87,6 +85,10 @@ kernel.numa_balancing=0
 # dependencies handled by saptune package installation
 libopenssl1_0_0 15 1.0.2n-3.3.1
 libssh2-1 15 1.8.0-2.35
+kernel-default 15-SP2 5.3.18-24.24.1
+
+[rpm:os=15:arch=ppc64le]
+kernel-default 4.12.14-150.14.2
 
 [grub]
 # /etc/default/grub GRUB_CMDLINE_LINUX_DEFAULT

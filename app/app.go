@@ -492,6 +492,12 @@ func (app *App) RevertAll(permanent bool) error {
 	otherNotes, err := app.State.List()
 	if err == nil {
 		for _, otherNoteID := range otherNotes {
+			// check, if empty state file exists
+			if content, err := ioutil.ReadFile(app.State.GetPathToNote(otherNoteID)); err == nil && len(content) == 0 {
+				// remove empty state file
+				_ = app.State.Remove(otherNoteID)
+				continue
+			}
 			if err := app.RevertNote(otherNoteID, permanent); err != nil {
 				allErrs = append(allErrs, err)
 			}

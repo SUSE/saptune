@@ -17,9 +17,10 @@ import (
 
 //constant definition
 const (
-	secBootOff   = "SecureBoot disabled"
-	notSupported = "System does not support Intel's performance bias setting"
-	cpuDirSys    = "devices/system/cpu"
+	efiNotSupported = "EFI variables are not supported on this system"
+	secBootOff      = "SecureBoot disabled"
+	notSupported    = "System does not support Intel's performance bias setting"
+	cpuDirSys       = "devices/system/cpu"
 )
 
 var cpuDir = "/sys/devices/system/cpu"
@@ -109,7 +110,7 @@ func SecureBootEnabled() bool {
 		return false
 	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-	if err != nil || (err == nil && strings.Contains(string(cmdOut), secBootOff)) {
+	if err != nil || (err == nil && (strings.Contains(string(cmdOut), secBootOff) || strings.Contains(string(cmdOut), efiNotSupported))) {
 		return false
 	}
 	return true

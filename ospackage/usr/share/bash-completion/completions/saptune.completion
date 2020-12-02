@@ -1,7 +1,9 @@
 # v1.4
 #
 #   saptune daemon [ start | status | stop ]
-#   saptune service [ start | status | stop | enable | disable | enablestart | stopdisable ]
+#   saptune service [ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
+#   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
+#   saptune staging [ diff | analysis | release ] [ NoteID... | solutions | all ]
 #   saptune note [ list | verify | enabled ]
 #   saptune note [ apply | simulate | verify | customise | revert | create | show | delete ] NoteID
 #   saptune note rename NoteID NoteID
@@ -27,7 +29,9 @@ _saptune() {
         2)  case "${prev}" in
                 daemon)     opts="start status stop"
                             ;;
-                service)    opts="start status stop enable disable enablestart stopdisable"
+                service)    opts="start status stop restart enable disable enablestart stopdisable"
+                            ;;
+		staging)    opts="status enable disable is-enabled list diff analysis release"
                             ;;
                 solution)   opts="list verify apply simulate revert enabled"
                             ;;
@@ -40,16 +44,18 @@ _saptune() {
             ;;
 
         3)  case "${prev}" in
-                apply|simulate|verify|customise|revert|create|show|delete|rename)
+                apply|simulate|verify|customise|revert|create|show|delete|rename|analysis|diff|release)
                         case "${COMP_WORDS[COMP_CWORD-2]}" in
-                            note)       opts=$((ls -1q /usr/share/saptune/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | cut -d '-' -f 1 | sed 's/\.conf$//') | tr '\n' ' ') 
+                            note)       opts=$((ls -1q /var/lib/saptune/working/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | cut -d '-' -f 1 | sed 's/\.conf$//') | tr '\n' ' ')
                                         ;;
                             solution)   case "$(uname -i)" in
 						x86_64)	pattern="^\[ArchX86\]$" ;;
 						?????)  pattern="^\[ArchPPC64LE\]$" ;;
 					            *)  pattern="%%%" ;; # impossible pattern
 					esac
-					opts=$(sed -n "/${pattern}/,/^\$/p" /usr/share/saptune/solutions |  grep '=' | cut -d '=' -f1 | tr '\n' ' ')
+					opts=$(sed -n "/${pattern}/,/^\$/p" /var/lib/saptune/working/solutions |  grep '=' | cut -d '=' -f1 | tr '\n' ' ')
+                                        ;;
+                            staging)       opts=$((ls -1q /var/lib/saptune/staging/latest/ | cut -d '-' -f 1 ) | tr '\n' ' ')
                                         ;;
                         esac
 			;;
