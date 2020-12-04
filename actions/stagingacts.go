@@ -195,17 +195,15 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 			for _, stageName := range stgFiles.AllStageFiles {
 				showAnalysis(writer, stageName)
 			}
-			// ANGI TODO - parse command line to set ForceFlag or DryRunFlag or other Flags
-			//if DryRunFlag {
-			//	system.ErrorExit("", 0)
-			//}
-			// ANGI TODO - parse command line to set ForceFlag or DryRunFlag or other Flags
-			// if !ForceFlag {
-			txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
-			if !readYesNo(txtConfirm, reader, writer) {
+			if system.IsFlagSet("dryrun") {
 				system.ErrorExit("", 0)
 			}
-			//}
+			if !system.IsFlagSet("force") {
+				txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
+				if !readYesNo(txtConfirm, reader, writer) {
+					system.ErrorExit("", 0)
+				}
+			}
 			errs := make([]error, 0, 0)
 			for _, stageName := range stgFiles.AllStageFiles {
 				stagingFile = stgFiles.StageAttributes[stageName]["sfilename"]
@@ -226,13 +224,21 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				system.ErrorExit("", 126)
 			}
 		default:
+			if system.IsFlagSet("dryrun") {
+				fmt.Printf("ANGI: dryrun aktive\n")
+			}
 			if stagingFile == "" {
 				system.ErrorExit("'%s' not found in staging area, nothing to do.", sName, 127)
 			}
 			showAnalysis(writer, sName)
-			txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
-			if !readYesNo(txtConfirm, reader, writer) {
+			if system.IsFlagSet("dryrun") {
 				system.ErrorExit("", 0)
+			}
+			if !system.IsFlagSet("force") {
+				txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
+				if !readYesNo(txtConfirm, reader, writer) {
+					system.ErrorExit("", 0)
+				}
 			}
 			if err := mvStageToWork(sName); err != nil {
 				system.ErrorExit("", 128)

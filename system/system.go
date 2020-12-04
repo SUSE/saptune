@@ -32,6 +32,9 @@ var OSExit = os.Exit
 // ErrorExitOut defines, which exit output function should be used
 var ErrorExitOut = ErrorLog
 
+// get saptune arguments and flags
+var saptArgs, saptFlags = ParseCliArgs()
+
 // BlockDev contains all key-value pairs of current avaliable
 // block devices in /sys/block
 type BlockDev struct {
@@ -47,20 +50,71 @@ func IsUserRoot() bool {
 // CliArg returns the i-th command line parameter,
 // or empty string if it is not specified.
 func CliArg(i int) string {
-	if len(os.Args) >= i+1 {
-		return os.Args[i]
+	if len(saptArgs) >= i+1 {
+		return saptArgs[i]
 	}
 	return ""
 }
 
 // CliArgs returns all remaining command line parameters starting with i,
 // or empty string if it is not specified.
-// ANGI TODO - enhance command line parsing for 'flags' like '--dryrun', '--force'
 func CliArgs(i int) []string {
-	if len(os.Args) >= i+1 {
-		return os.Args[i:]
+	if len(saptArgs) >= i+1 {
+		return saptArgs[i:]
 	}
 	return []string{}
+}
+
+// IsFlagSet returns true, if the flag is available on the command line
+// or false, if not
+func IsFlagSet(flag string) bool {
+	if saptFlags[flag] == "true" {
+		return true
+	}
+	return false
+}
+
+// ParseCliArgs parses the command line to identify special flags and the
+// 'normal' arguments
+// returns a map of Flags (set or not) and a slice containing the remaining
+// arguments
+// possible Flags - force, dryrun, help, version, output
+// on command line - --force, --dry-run or --dryrun, --help, --version, --out or --output
+// Only the Flag 'output' can have an argument (--out=json or --output=csv)
+func ParseCliArgs() ([]string, map[string]string) {
+	var isOutFlag = regexp.MustCompile(`-([\w-]+)=.*`)
+	var isOutArg = regexp.MustCompile(`--out.*=(\w+)`)
+	stArgs := []string{os.Args[0]}
+	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "output": "screen", "notSupported": ""}
+	for _, arg := range os.Args[1:] {
+		if strings.HasPrefix(arg, "--") || strings.HasPrefix(arg, "-") {
+			// flag handling
+			if isOutFlag.MatchString(arg) {
+				// --out=screen // --output=json
+				matches := isOutArg.FindStringSubmatch(arg)
+				if len(matches) > 0 {
+					stFlags["output"] = matches[1]
+				}
+				continue
+			}
+			switch arg {
+			case "--force", "-force":
+				stFlags["force"] = "true"
+			case "--dry-run", "-dry-run", "--dryrun", "-dryrun":
+				stFlags["dryrun"] = "true"
+			case "--help", "-help", "-h":
+				stFlags["help"] = "true"
+			case "--version", "-version":
+				stFlags["version"] = "true"
+			default:
+				stFlags["notSupported"] = "arg"
+			}
+			continue
+		}
+		// other args
+		stArgs = append(stArgs, arg)
+	}
+	return stArgs, stFlags
 }
 
 // GetSolutionSelector returns the architecture string
