@@ -224,9 +224,6 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				system.ErrorExit("", 126)
 			}
 		default:
-			if system.IsFlagSet("dryrun") {
-				fmt.Printf("ANGI: dryrun aktive\n")
-			}
 			if stagingFile == "" {
 				system.ErrorExit("'%s' not found in staging area, nothing to do.", sName, 127)
 			}
@@ -642,7 +639,7 @@ func PrintStageFields(writer io.Writer, stageName string, comparison map[string]
 	sortkeys := sortStageComparisonsOutput(comparison)
 
 	// setup table format values
-	fmtdash, fmtplus, format := setupStageTableFormat(comparison)
+	fmtdash, fmtplus, format, colwidth := setupStageTableFormat(comparison)
 
 	// print table header
 	fmt.Fprintf(writer, fmtdash)
@@ -652,7 +649,35 @@ func PrintStageFields(writer io.Writer, stageName string, comparison map[string]
 	for _, skey := range sortkeys {
 		// print table body
 		if skey == "reminder" {
-			fmt.Fprintf(writer, format, skey, "diff need to be done", "")
+			// reminder handling - split text into lines so that
+			// they fit the column width, more than one line for
+			// this parameter possible
+			wrappedWrkVal := system.WrapTxt(comparison[skey].wrkVal, colwidth)
+			wrappedStgVal := system.WrapTxt(comparison[skey].stgVal, colwidth)
+			wrkLines := len(wrappedWrkVal)
+			stgLines := len(wrappedStgVal)
+			if wrkLines > stgLines {
+				stgLine := ""
+				for w, wrkLine := range wrappedWrkVal {
+					if w < stgLines {
+						stgLine = wrappedStgVal[w]
+					} else {
+						stgLine = "-"
+					}
+					fmt.Fprintf(writer, format, skey, wrkLine, stgLine)
+				}
+			} else {
+				wrkLine := ""
+				for s, stgLine := range wrappedStgVal {
+					if s < wrkLines {
+						wrkLine = wrappedWrkVal[s]
+					} else {
+						wrkLine = "-"
+					}
+					fmt.Fprintf(writer, format, skey, wrkLine, stgLine)
+				}
+			}
+			//fmt.Fprintf(writer, format, skey, wrappedWrkVal, wrappedStgVal)
 		} else {
 			fmt.Fprintf(writer, format, skey, strings.Replace(comparison[skey].wrkVal, "\t", " ", -1), strings.Replace(comparison[skey].stgVal, "\t", " ", -1))
 		}
@@ -683,7 +708,7 @@ func sortStageComparisonsOutput(noteCompare map[string]stageComparison) []string
 }
 
 // setupStageTableFormat sets the format of the table columns dependent on the content
-func setupStageTableFormat(stageCompare map[string]stageComparison) (string, string, string) {
+func setupStageTableFormat(stageCompare map[string]stageComparison) (string, string, string, int) {
 	var fmtdash string
 	var fmtplus string
 	var format string
@@ -693,8 +718,12 @@ func setupStageTableFormat(stageCompare map[string]stageComparison) (string, str
 	fmtlen3 := 26
 
 	for skey, comparison := range stageCompare {
-		// ANGI TODO - reminder handling (split lines so that they fit the column width, more than one line for this parameter possible
 		// 1:parameter, 2:working, 3:staging
+		if skey == "reminder" {
+			// reminder section should not influence the
+			// column size
+			continue
+		}
 		if len(skey) > fmtlen1 {
 			fmtlen1 = len(skey)
 		}
@@ -704,6 +733,10 @@ func setupStageTableFormat(stageCompare map[string]stageComparison) (string, str
 		if len(comparison.stgVal) > fmtlen3 {
 			fmtlen3 = len(comparison.stgVal)
 		}
+	}
+	colwidth := fmtlen2
+	if fmtlen2 > fmtlen3 {
+		colwidth = fmtlen3
 	}
 
 	format = " %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s | %-" + strconv.Itoa(fmtlen3) + "s \n"
@@ -723,7 +756,7 @@ func setupStageTableFormat(stageCompare map[string]stageComparison) (string, str
 		}
 	}
 	fmtplus = fmtplus + "\n"
-	return fmtdash, fmtplus, format
+	return fmtdash, fmtplus, format, colwidth
 }
 
 // chkStageExit checks, if a staging action should be executed or not

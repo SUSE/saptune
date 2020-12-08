@@ -505,3 +505,31 @@ func OutIsTerm(writer *os.File) bool {
 	}
 	return true
 }
+
+// WrapTxt implements something like 'fold' command
+// A given text string will be wrapped at word borders into
+// lines of a given width
+func WrapTxt(text string, width int) (folded []string) {
+	words := strings.Fields(text)
+	if len(words) == 0 {
+		return
+	}
+	foldedTxt := words[0]
+	spaceLeft := width - len(foldedTxt)
+	for _, word := range words[1:] {
+		if word == "\n" {
+			foldedTxt += word
+			continue
+		}
+		if len(word)+1 > spaceLeft {
+			// fold; start next row
+			foldedTxt += "\n" + word
+			spaceLeft = width - len(word)
+		} else {
+			foldedTxt += " " + word
+			spaceLeft -= 1 + len(word)
+		}
+	}
+	folded = strings.Split(foldedTxt, "\n")
+	return
+}
