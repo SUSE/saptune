@@ -79,7 +79,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 
 		// print table header
 		if printHead != "" {
-			printHeadline(writer, header, noteID, tuningOptions)
+			printHeadline(writer, header, noteID, noteComparisons)
 			printTableHeader(writer, format, fmtlen0, fmtlen1, fmtlen2, fmtlen3, fmtlen4, printComparison)
 		}
 
@@ -172,12 +172,9 @@ func setupTableFormat(skeys []string, noteField string, noteCompare map[string]m
 }
 
 // printHeadline prints a headline for the table
-func printHeadline(writer io.Writer, header, id string, tuningOpts note.TuningOptions) {
+func printHeadline(writer io.Writer, header, id string, noteComparisons map[string]map[string]note.FieldComparison) {
 	if header != "NONE" {
-		nName := ""
-		if len(tuningOpts) > 0 {
-			nName = tuningOpts[id].Name()
-		}
+		nName := txtparser.GetINIFileDescriptiveName(noteComparisons[id]["ConfFilePath"].ActualValue.(string))
 		fmt.Fprintf(writer, "\n%s - %s \n\n", id, nName)
 	}
 }
@@ -235,7 +232,7 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 	// check inform map for special settings
 	// ANGI: future - check for 'nil', if using noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string) in general
 	if comparison.ReflectMapKey == "force_latency" && inform == "hasDiffs" {
-		compliant = "no [4]"
+		compliant = "no  [4]"
 		comment = comment + " [4]"
 		footnote[3] = footnote4
 	}

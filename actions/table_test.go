@@ -54,37 +54,87 @@ func TestSetWidthOfColums(t *testing.T) {
 
 func TestPrintNoteFields(t *testing.T) {
 	var printMatchText1 = `
-941735 -  
+941735 - Configuration drop in for simple tests
+			Version 1 from 09.07.2019  
 
-   SAPNote, Version | Parameter           | Expected             | Override  | Actual               | Compliant
---------------------+---------------------+----------------------+-----------+----------------------+-----------
-   941735,          | ShmFileSystemSizeMB | 1714                 |           | 488                  | no 
-   941735,          | kernel.shmmax       | 18446744073709551615 |           | 18446744073709551615 | yes
+   SAPNote, Version | Parameter                  | Expected             | Override  | Actual               | Compliant
+--------------------+----------------------------+----------------------+-----------+----------------------+-----------
+   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [5] [7]
+   941735, 1        | IO_SCHEDULER_sdc           |                      |           | bfq                  | no  [7]
+   941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
+   941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
+   941735, 1        | force_latency              | 70                   |           | all:none             | no  [4]
+   941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
+   941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
 
+ [1] setting is not supported by the system
+ [2] setting is not available on the system
+ [3] value is only checked, but NOT set
+ [4] cpu idle state settings differ
+ [5] expected value does not contain a supported scheduler
+ [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+ [7] parameter value is untouched by default
 
 `
 	var printMatchText2 = `
-941735 -  
+941735 - Configuration drop in for simple tests
+			Version 1 from 09.07.2019  
 
-   Parameter           | Value set            | Value expected       | Override  | Comment
------------------------+----------------------+----------------------+-----------+--------------
-   ShmFileSystemSizeMB | 488                  | 1714                 |           |   
-   kernel.shmmax       | 18446744073709551615 | 18446744073709551615 |           |   
+   Parameter                  | Value set            | Value expected       | Override  | Comment
+------------------------------+----------------------+----------------------+-----------+--------------
+   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [5] [7]
+   IO_SCHEDULER_sdc           | bfq                  |                      |           |  [7]
+   IO_SCHEDULER_vda           | all:none             | noop                 |           |  [1] [5]
+   ShmFileSystemSizeMB        | 488                  | 1714                 |           |   
+   force_latency              | all:none             | 70                   |           |  [1] [4]
+   grub:intel_idle.max_cstate | NA                   | 1                    |           |  [2] [3] [6]
+   kernel.shmmax              | 18446744073709551615 | 18446744073709551615 |           |   
 
+ [1] setting is not supported by the system
+ [2] setting is not available on the system
+ [3] value is only checked, but NOT set
+ [4] cpu idle state settings differ
+ [5] expected value does not contain a supported scheduler
+ [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+ [7] parameter value is untouched by default
 
 `
-	var printMatchText3 = `   SAPNote, Version | Parameter           | Expected             | Override  | Actual               | Compliant
---------------------+---------------------+----------------------+-----------+----------------------+-----------
-   941735,          | ShmFileSystemSizeMB | 1714                 |           | 488                  | no 
-   941735,          | kernel.shmmax       | 18446744073709551615 |           | 18446744073709551615 | yes
+	var printMatchText3 = `   SAPNote, Version | Parameter                  | Expected             | Override  | Actual               | Compliant
+--------------------+----------------------------+----------------------+-----------+----------------------+-----------
+   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [5] [7]
+   941735, 1        | IO_SCHEDULER_sdc           |                      |           | bfq                  | no  [7]
+   941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
+   941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
+   941735, 1        | force_latency              | 70                   |           | all:none             | no  [4]
+   941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
+   941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
 
+ [1] setting is not supported by the system
+ [2] setting is not available on the system
+ [3] value is only checked, but NOT set
+ [4] cpu idle state settings differ
+ [5] expected value does not contain a supported scheduler
+ [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+ [7] parameter value is untouched by default
 
 `
-	var printMatchText4 = `   Parameter           | Value set            | Value expected       | Override  | Comment
------------------------+----------------------+----------------------+-----------+--------------
-   ShmFileSystemSizeMB | 488                  | 1714                 |           |   
-   kernel.shmmax       | 18446744073709551615 | 18446744073709551615 |           |   
+	var printMatchText4 = `   Parameter                  | Value set            | Value expected       | Override  | Comment
+------------------------------+----------------------+----------------------+-----------+--------------
+   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [5] [7]
+   IO_SCHEDULER_sdc           | bfq                  |                      |           |  [7]
+   IO_SCHEDULER_vda           | all:none             | noop                 |           |  [1] [5]
+   ShmFileSystemSizeMB        | 488                  | 1714                 |           |   
+   force_latency              | all:none             | 70                   |           |  [1] [4]
+   grub:intel_idle.max_cstate | NA                   | 1                    |           |  [2] [3] [6]
+   kernel.shmmax              | 18446744073709551615 | 18446744073709551615 |           |   
 
+ [1] setting is not supported by the system
+ [2] setting is not available on the system
+ [3] value is only checked, but NOT set
+ [4] cpu idle state settings differ
+ [5] expected value does not contain a supported scheduler
+ [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+ [7] parameter value is untouched by default
 
 `
 	checkCorrectMessage := func(t *testing.T, got, want string) {
@@ -99,12 +149,24 @@ func TestPrintNoteFields(t *testing.T) {
 		}
 	}
 
-	fcomp1 := note.FieldComparison{ReflectFieldName: "ConfFilePath", ReflectMapKey: "", ActualValue: "/usr/share/saptune/notes/941735", ExpectedValue: "/usr/share/saptune/notes/941735", ActualValueJS: "/usr/share/saptune/notes/941735", ExpectedValueJS: "/usr/share/saptune/notes/941735", MatchExpectation: true}
+	//fcomp1 := note.FieldComparison{ReflectFieldName: "ConfFilePath", ReflectMapKey: "", ActualValue: "/usr/share/saptune/notes/941735", ExpectedValue: "/usr/share/saptune/notes/941735", ActualValueJS: "/usr/share/saptune/notes/941735", ExpectedValueJS: "/usr/share/saptune/notes/941735", MatchExpectation: true}
+	cfgFile := fmt.Sprintf("%ssimpleNote.conf", ExtraFilesInGOPATH)
+	fcomp1 := note.FieldComparison{ReflectFieldName: "ConfFilePath", ReflectMapKey: "", ActualValue: cfgFile, ExpectedValue: cfgFile, ActualValueJS: cfgFile, ExpectedValueJS: cfgFile, MatchExpectation: true}
 	fcomp2 := note.FieldComparison{ReflectFieldName: "ID", ReflectMapKey: "", ActualValue: "941735", ExpectedValue: "941735", ActualValueJS: "941735", ExpectedValueJS: "941735", MatchExpectation: true}
 	fcomp3 := note.FieldComparison{ReflectFieldName: "DescriptiveName", ReflectMapKey: "", ActualValue: "", ExpectedValue: "", ActualValueJS: "", ExpectedValueJS: "", MatchExpectation: true}
 	fcomp4 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "ShmFileSystemSizeMB", ActualValue: "488", ExpectedValue: "1714", ActualValueJS: "488", ExpectedValueJS: "1714", MatchExpectation: false}
 	fcomp5 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "kernel.shmmax", ActualValue: "18446744073709551615", ExpectedValue: "18446744073709551615", ActualValueJS: "18446744073709551615", ExpectedValueJS: "18446744073709551615", MatchExpectation: true}
-	map941735 := map[string]note.FieldComparison{"ConfFilePath": fcomp1, "ID": fcomp2, "DescriptiveName": fcomp3, "SysctlParams[ShmFileSystemSizeMB]": fcomp4, "SysctlParams[kernel.shmmax]": fcomp5}
+	fcomp6 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "IO_SCHEDULER_vda", ActualValue: "all:none", ExpectedValue: "noop", ActualValueJS: "all:none", ExpectedValueJS: "noop", MatchExpectation: false}
+	fcomp7 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "grub:intel_idle.max_cstate", ActualValue: "NA", ExpectedValue: "1", ActualValueJS: "NA", ExpectedValueJS: "1", MatchExpectation: false}
+	fcomp8 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "force_latency", ActualValue: "all:none", ExpectedValue: "70", ActualValueJS: "all:none", ExpectedValueJS: "70", MatchExpectation: false}
+	fcomp9 := note.FieldComparison{ReflectFieldName: "Inform", ReflectMapKey: "force_latency", ActualValue: "hasDiffs", ExpectedValue: "hasDiffs", ActualValueJS: "hasDiffs", ExpectedValueJS: "hasDiffs", MatchExpectation: true}
+	fcomp10 := note.FieldComparison{ReflectFieldName: "Inform", ReflectMapKey: "IO_SCHEDULER_vda", ActualValue: "NA", ExpectedValue: "NA", ActualValueJS: "NA", ExpectedValueJS: "NA", MatchExpectation: true}
+	fcomp11 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "IO_SCHEDULER_sdb", ActualValue: "all:none", ExpectedValue: "", ActualValueJS: "all:none", ExpectedValueJS: "", MatchExpectation: false}
+	fcomp12 := note.FieldComparison{ReflectFieldName: "Inform", ReflectMapKey: "IO_SCHEDULER_sdb", ActualValue: "NA", ExpectedValue: "", ActualValueJS: "NA", ExpectedValueJS: "", MatchExpectation: false}
+	fcomp13 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "IO_SCHEDULER_sdc", ActualValue: "bfq", ExpectedValue: "", ActualValueJS: "bfq", ExpectedValueJS: "", MatchExpectation: false}
+	fcomp14 := note.FieldComparison{ReflectFieldName: "Inform", ReflectMapKey: "IO_SCHEDULER_sdc", ActualValue: "", ExpectedValue: "bfq", ActualValueJS: "", ExpectedValueJS: "bfq", MatchExpectation: false}
+
+	map941735 := map[string]note.FieldComparison{"ConfFilePath": fcomp1, "ID": fcomp2, "DescriptiveName": fcomp3, "SysctlParams[ShmFileSystemSizeMB]": fcomp4, "SysctlParams[kernel.shmmax]": fcomp5, "SysctlParams[IO_SCHEDULER_vda]": fcomp6, "SysctlParams[grub:intel_idle.max_cstate]": fcomp7, "SysctlParams[force_latency]": fcomp8, "Inform[force_latency]": fcomp9, "Inform[IO_SCHEDULER_vda]": fcomp10, "SysctlParams[IO_SCHEDULER_sdb]": fcomp11, "Inform[IO_SCHEDULER_sdb]": fcomp12, "SysctlParams[IO_SCHEDULER_sdc]": fcomp13, "Inform[IO_SCHEDULER_sdc]": fcomp14}
 	noteComp := map[string]map[string]note.FieldComparison{"941735": map941735}
 
 	t.Run("verify with header", func(t *testing.T) {

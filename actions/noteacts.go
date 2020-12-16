@@ -39,6 +39,8 @@ func NoteAction(actionName, noteID, newNoteID string, tuneApp *app.App) {
 		NoteActionRename(os.Stdin, os.Stdout, noteID, newNoteID, NoteTuningSheets, ExtraTuningSheets, OverrideTuningSheets, tuneApp)
 	case "revert":
 		NoteActionRevert(os.Stdout, noteID, tuneApp)
+	case "applied":
+		NoteActionApplied(os.Stdout, tuneApp)
 	case "enabled":
 		NoteActionEnabled(os.Stdout, tuneApp)
 	default:
@@ -336,4 +338,16 @@ func NoteActionEnabled(writer io.Writer, tuneApp *app.App) {
 	if len(tuneApp.NoteApplyOrder) != 0 {
 		fmt.Fprintf(writer, "%s", strings.Join(tuneApp.NoteApplyOrder, " "))
 	}
+}
+
+// NoteActionApplied lists all applied Note definitions as list separated
+// by blanks
+func NoteActionApplied(writer io.Writer, tuneApp *app.App) {
+	var notesApplied string
+	for _, note := range tuneApp.NoteApplyOrder {
+		if _, ok := tuneApp.IsNoteApplied(note); ok {
+			notesApplied = fmt.Sprintf("%s%s ", notesApplied, note)
+		}
+	}
+	fmt.Fprintf(writer, "%s", strings.TrimSpace(notesApplied))
 }

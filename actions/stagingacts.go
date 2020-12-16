@@ -195,17 +195,15 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 			for _, stageName := range stgFiles.AllStageFiles {
 				showAnalysis(writer, stageName)
 			}
-			// ANGI TODO - parse command line to set ForceFlag or DryRunFlag or other Flags
-			//if DryRunFlag {
-			//	system.ErrorExit("", 0)
-			//}
-			// ANGI TODO - parse command line to set ForceFlag or DryRunFlag or other Flags
-			// if !ForceFlag {
-			txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
-			if !readYesNo(txtConfirm, reader, writer) {
+			if system.IsFlagSet("dryrun") {
 				system.ErrorExit("", 0)
 			}
-			//}
+			if !system.IsFlagSet("force") {
+				txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
+				if !readYesNo(txtConfirm, reader, writer) {
+					system.ErrorExit("", 0)
+				}
+			}
 			errs := make([]error, 0, 0)
 			for _, stageName := range stgFiles.AllStageFiles {
 				stagingFile = stgFiles.StageAttributes[stageName]["sfilename"]
@@ -230,9 +228,14 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				system.ErrorExit("'%s' not found in staging area, nothing to do.", sName, 127)
 			}
 			showAnalysis(writer, sName)
-			txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
-			if !readYesNo(txtConfirm, reader, writer) {
+			if system.IsFlagSet("dryrun") {
 				system.ErrorExit("", 0)
+			}
+			if !system.IsFlagSet("force") {
+				txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
+				if !readYesNo(txtConfirm, reader, writer) {
+					system.ErrorExit("", 0)
+				}
 			}
 			if err := mvStageToWork(sName); err != nil {
 				system.ErrorExit("", 128)
@@ -316,16 +319,16 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) {
 	txtNoteNotEnabled := txtPrefix + "Note is not enabled, no action required.\n"
 	txtSolEnabled := txtPrefix + "Note is part of the currently enabled solution '%s'.\n"
 	txtSolNotEnabled := txtPrefix + "Note is part of the not-enabled solution(s) '%s'\n"
-	//txtCustomSolEnabled := txtPrefix + "Note is part of the currently enabled custom solution '%s'.\n"
-	//txtCustomSolNotEnabled := txtPrefix + "Note is part of the not-enabled custom solution(s) '%s'.\n"
+	txtCustomSolEnabled := txtPrefix + "Note is part of the currently enabled custom solution '%s'.\n"
+	txtCustomSolNotEnabled := txtPrefix + "Note is part of the not-enabled custom solution '%s'.\n"
 
 	if flag == "deleted" {
 		txtOverrideExists = txtPrefix + "Override file exists and can be deleted.\n"
 		txtNoteEnabled = txtPrefix + "Note is enabled and must be reverted.\n"
 		txtSolEnabled = txtPrefix + "Note is part of the currently enabled solution '%s'. Release would break the solution!\n"
-		txtSolNotEnabled = txtPrefix + "Note is part of the not-enabled solution(s) '%s'. Release would break the solution(s)!\n"
-		//txtCustomSolEnabled = txtPrefix + "Note is part of the currently enabled custom solution '%s'. Release would break the solution!\n"
-		//txtCustomSolNotEnabled = txtPrefix + "Note is part of the not-enabled custom solution(s) '%s'. Release would break the solution!\n"
+		txtSolNotEnabled = txtPrefix + "Note is part of the not-enabled solution '%s'. Release would break the solution(s)!\n"
+		txtCustomSolEnabled = txtPrefix + "Note is part of the currently enabled custom solution '%s'. Release would break the solution!\n"
+		txtCustomSolNotEnabled = txtPrefix + "Note is part of the not-enabled custom solution '%s'. Release would break the solution!\n"
 
 		fmt.Fprintf(writer, txtDeleteNote, stageName)
 	}
@@ -343,11 +346,22 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) {
 	}
 	if stgFiles.StageAttributes[stageName]["inSolution"] != "" {
 		for _, sol := range strings.Split(stgFiles.StageAttributes[stageName]["inSolution"], ",") {
+			txtSEnabled := txtSolEnabled
+			txtSNotEnabled := txtSolNotEnabled
+			// check for custom solution
+			for _, csol := range strings.Split(stgFiles.StageAttributes[stageName]["inCustomSolution"], ",") {
+				if csol == sol {
+					//sol is a custom solution
+					txtSEnabled = txtCustomSolEnabled
+					txtSNotEnabled = txtCustomSolNotEnabled
+					break
+				}
+			}
 			sol = strings.TrimSpace(sol)
 			if sol == stgFiles.StageAttributes[stageName]["enabledSol"] {
-				fmt.Fprintf(writer, txtSolEnabled, sol)
+				fmt.Fprintf(writer, txtSEnabled, sol)
 			} else {
-				fmt.Fprintf(writer, txtSolNotEnabled, sol)
+				fmt.Fprintf(writer, txtSNotEnabled, sol)
 			}
 		}
 	}
@@ -486,6 +500,7 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 
 		// check if in a solution
 		noteInSols := ""
+		noteInCustomSols := ""
 		sols := []string{}
 		for sol := range tuneApp.AllSolutions {
 			sols = append(sols, sol)
@@ -500,11 +515,20 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 					} else {
 						noteInSols = fmt.Sprintf("%s, %s", noteInSols, sol)
 					}
+					// check for custom solution
+					if len(solution.CustomSolutions[system.GetSolutionSelector()][sol]) != 0 {
+						// sol is custom solution
+						if len(noteInCustomSols) == 0 {
+							noteInCustomSols = sol
+						} else {
+							noteInCustomSols = fmt.Sprintf("%s, %s", noteInCustomSols, sol)
+						}
+					}
 				}
 			}
 		}
 		stageMap["inSolution"] = noteInSols
-		// ANGI TODO - check for custom solution
+		stageMap["inCustomSolution"] = noteInCustomSols
 
 		stageConf.StageAttributes[stageName] = stageMap
 		stageConf.AllStageFiles = append(stageConf.AllStageFiles, stageName)
@@ -554,7 +578,7 @@ func diffStageObj(writer io.Writer, sName string) {
 		PrintStageFields(writer, sName, comparisons)
 	} else {
 		// paranoia log, should not be the case, because the saptune rpm takes care of this
-		system.InfoLog("no diffs in staging")
+		system.InfoLog("'%s' - no diffs in staging", sName)
 	}
 }
 
@@ -636,7 +660,7 @@ func PrintStageFields(writer io.Writer, stageName string, comparison map[string]
 	sortkeys := sortStageComparisonsOutput(comparison)
 
 	// setup table format values
-	fmtdash, fmtplus, format := setupStageTableFormat(comparison)
+	fmtdash, fmtplus, format, colwidth := setupStageTableFormat(comparison)
 
 	// print table header
 	fmt.Fprintf(writer, fmtdash)
@@ -646,7 +670,35 @@ func PrintStageFields(writer io.Writer, stageName string, comparison map[string]
 	for _, skey := range sortkeys {
 		// print table body
 		if skey == "reminder" {
-			fmt.Fprintf(writer, format, skey, "diff need to be done", "")
+			// reminder handling - split text into lines so that
+			// they fit the column width, more than one line for
+			// this parameter possible
+			wrappedWrkVal := system.WrapTxt(comparison[skey].wrkVal, colwidth)
+			wrappedStgVal := system.WrapTxt(comparison[skey].stgVal, colwidth)
+			wrkLines := len(wrappedWrkVal)
+			stgLines := len(wrappedStgVal)
+			if wrkLines > stgLines {
+				stgLine := ""
+				for w, wrkLine := range wrappedWrkVal {
+					if w < stgLines {
+						stgLine = wrappedStgVal[w]
+					} else {
+						stgLine = "-"
+					}
+					fmt.Fprintf(writer, format, skey, wrkLine, stgLine)
+				}
+			} else {
+				wrkLine := ""
+				for s, stgLine := range wrappedStgVal {
+					if s < wrkLines {
+						wrkLine = wrappedWrkVal[s]
+					} else {
+						wrkLine = "-"
+					}
+					fmt.Fprintf(writer, format, skey, wrkLine, stgLine)
+				}
+			}
+			//fmt.Fprintf(writer, format, skey, wrappedWrkVal, wrappedStgVal)
 		} else {
 			fmt.Fprintf(writer, format, skey, strings.Replace(comparison[skey].wrkVal, "\t", " ", -1), strings.Replace(comparison[skey].stgVal, "\t", " ", -1))
 		}
@@ -677,7 +729,7 @@ func sortStageComparisonsOutput(noteCompare map[string]stageComparison) []string
 }
 
 // setupStageTableFormat sets the format of the table columns dependent on the content
-func setupStageTableFormat(stageCompare map[string]stageComparison) (string, string, string) {
+func setupStageTableFormat(stageCompare map[string]stageComparison) (string, string, string, int) {
 	var fmtdash string
 	var fmtplus string
 	var format string
@@ -687,8 +739,12 @@ func setupStageTableFormat(stageCompare map[string]stageComparison) (string, str
 	fmtlen3 := 26
 
 	for skey, comparison := range stageCompare {
-		// ANGI TODO - reminder handling (split lines so that they fit the column width, more than one line for this parameter possible
 		// 1:parameter, 2:working, 3:staging
+		if skey == "reminder" {
+			// reminder section should not influence the
+			// column size
+			continue
+		}
 		if len(skey) > fmtlen1 {
 			fmtlen1 = len(skey)
 		}
@@ -698,6 +754,10 @@ func setupStageTableFormat(stageCompare map[string]stageComparison) (string, str
 		if len(comparison.stgVal) > fmtlen3 {
 			fmtlen3 = len(comparison.stgVal)
 		}
+	}
+	colwidth := fmtlen2
+	if fmtlen2 > fmtlen3 {
+		colwidth = fmtlen3
 	}
 
 	format = " %-" + strconv.Itoa(fmtlen1) + "s | %-" + strconv.Itoa(fmtlen2) + "s | %-" + strconv.Itoa(fmtlen3) + "s \n"
@@ -717,7 +777,7 @@ func setupStageTableFormat(stageCompare map[string]stageComparison) (string, str
 		}
 	}
 	fmtplus = fmtplus + "\n"
-	return fmtdash, fmtplus, format
+	return fmtdash, fmtplus, format, colwidth
 }
 
 // chkStageExit checks, if a staging action should be executed or not

@@ -11,7 +11,6 @@
 #   saptune solution [ apply | simulate | verify | revert ] SolutionName
 #   saptune revert all
 #   saptune version
-#   saptune --version
 #   saptune help
 
 _saptune() {
@@ -23,7 +22,7 @@ _saptune() {
     
     case ${COMP_CWORD} in 
 
-        1)  opts="daemon service solution note revert version --version help"
+        1)  opts="daemon service solution note revert version help"
             ;;
         
         2)  case "${prev}" in

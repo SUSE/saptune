@@ -39,8 +39,7 @@ func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 	if len(tuneApp.TuneForSolutions) > 0 {
 		// already one solution applied.
 		// do not apply another solution. Does not make sense
-		system.ErrorLog("There is already one solution applied. Applying another solution is NOT supported.")
-		system.ErrorExit("", 1)
+		system.ErrorExit("There is already one solution applied. Applying another solution is NOT supported.", 1)
 	}
 	removedAdditionalNotes, err := tuneApp.TuneSolution(solName)
 	if err != nil {
@@ -60,7 +59,7 @@ func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 	setColor := false
 	solutionSelector := system.GetSolutionSelector()
-	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, D denotes deprecated solutions):\n")
+	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):\n")
 	for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 		format := "\t%-18s -"
 		if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
@@ -70,6 +69,10 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 		if len(solution.OverrideSolutions[solutionSelector][solName]) != 0 {
 			//override solution
 			format = " O" + format
+		}
+		if len(solution.CustomSolutions[solutionSelector][solName]) != 0 {
+			//custom solution
+			format = " C" + format
 		}
 
 		solNotes := ""

@@ -4,12 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
-	"reflect"
-	"strconv"
 	"strings"
 	"syscall"
 	"testing"
@@ -47,22 +44,147 @@ func TestIsUserRoot(t *testing.T) {
 
 func TestCliArg(t *testing.T) {
 	os.Args = []string{"saptune", "note", "list"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
 
 	expected := "note"
 	actual := CliArg(1)
 	if actual != expected {
-		t.Errorf("Test failed, expected: '%s', got:  '%s'", expected, actual)
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
 	}
 	expected = "list"
 	actual = CliArg(2)
 	if actual != expected {
-		t.Errorf("Test failed, expected: '%s', got:  '%s'", expected, actual)
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
 	}
 	expected = ""
 	actual = CliArg(4)
 	if actual != expected {
-		t.Errorf("Test failed, expected: '%s', got:  '%s'", expected, actual)
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
 	}
+	expectedSlice := []string{"note", "list"}
+	actualSlice := CliArgs(1)
+	for i, arg := range actualSlice {
+		if arg != expectedSlice[i] {
+			t.Errorf("Test failed, expected: '%s', got: '%s'", expectedSlice[i], arg)
+		}
+	}
+	expectedSlice = []string{}
+	actualSlice = CliArgs(4)
+	if len(actualSlice) != 0 {
+		t.Errorf("Test failed, expected: '%v', got: '%v'", expectedSlice, actualSlice)
+	}
+
+	if IsFlagSet("force") {
+		t.Errorf("Test failed, expected 'force' flag as 'false', but got 'true'")
+	}
+	if IsFlagSet("dryrun") {
+		t.Errorf("Test failed, expected 'dryrun' flag as 'false', but got 'true'")
+	}
+	if IsFlagSet("help") {
+		t.Errorf("Test failed, expected 'help' flag as 'false', but got 'true'")
+	}
+	if IsFlagSet("version") {
+		t.Errorf("Test failed, expected 'version' flag as 'false', but got 'true'")
+	}
+	if IsFlagSet("output") {
+		t.Errorf("Test failed, expected 'output' flag as 'false', but got 'true'")
+	}
+	expected = "screen"
+	actual = GetOutTarget()
+	if actual != expected {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
+	}
+	if IsFlagSet("notsupported") {
+		t.Errorf("Test failed, expected 'notsupported' flag as 'false', but got 'true'")
+	}
+	if IsFlagSet("") {
+		t.Errorf("Test failed, expected 'notsupported' flag as 'false', but got 'true'")
+	}
+	// reset CLI flags and args
+	saptArgs = []string{}
+	saptFlags = map[string]string{}
+}
+
+func TestCliFlags(t *testing.T) {
+	os.Args = []string{"saptune", "note", "list", "--out=json", "--force", "--dryrun", "--help", "--version"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
+
+	if !IsFlagSet("force") {
+		t.Errorf("Test failed, expected 'force' flag as 'true', but got 'false'")
+	}
+	if !IsFlagSet("dryrun") {
+		t.Errorf("Test failed, expected 'dryrun' flag as 'true', but got 'false'")
+	}
+	if !IsFlagSet("help") {
+		t.Errorf("Test failed, expected 'help' flag as 'true', but got 'false'")
+	}
+	if !IsFlagSet("version") {
+		t.Errorf("Test failed, expected 'version' flag as 'true', but got 'false'")
+	}
+	if IsFlagSet("output") {
+		t.Errorf("Test failed, expected 'output' flag as 'false', but got 'true'")
+	}
+	expected := "json"
+	actual := GetOutTarget()
+	if actual != expected {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
+	}
+
+	// reset CLI flags and args
+	saptArgs = []string{}
+	saptFlags = map[string]string{}
+	os.Args = []string{"saptune", "-force"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
+	if !IsFlagSet("force") {
+		t.Errorf("Test failed, expected 'force' flag as 'true', but got 'false'")
+	}
+
+	// reset CLI flags and args
+	saptArgs = []string{}
+	saptFlags = map[string]string{}
+	os.Args = []string{"saptune", "-dry-run"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
+	if !IsFlagSet("dryrun") {
+		t.Errorf("Test failed, expected 'dryrun' flag as 'true', but got 'false'")
+	}
+
+	// reset CLI flags and args
+	saptArgs = []string{}
+	saptFlags = map[string]string{}
+	os.Args = []string{"saptune", "-help"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
+	if !IsFlagSet("help") {
+		t.Errorf("Test failed, expected 'help' flag as 'true', but got 'false'")
+	}
+
+	// reset CLI flags and args
+	saptArgs = []string{}
+	saptFlags = map[string]string{}
+	os.Args = []string{"saptune", "-h"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
+	if !IsFlagSet("help") {
+		t.Errorf("Test failed, expected 'help' flag as 'true', but got 'false'")
+	}
+
+	// reset CLI flags and args
+	saptArgs = []string{}
+	saptFlags = map[string]string{}
+	os.Args = []string{"saptune", "-version"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
+	if !IsFlagSet("version") {
+		t.Errorf("Test failed, expected 'version' flag as 'true', but got 'false'")
+	}
+
+	// reset CLI flags and args
+	saptArgs = []string{}
+	saptFlags = map[string]string{}
 }
 
 func TestGetSolutionSelector(t *testing.T) {
@@ -249,132 +371,11 @@ func TestCopyFile(t *testing.T) {
 	os.Remove(dst)
 }
 
-func TestBlockDeviceIsDisk(t *testing.T) {
-	if !BlockDeviceIsDisk("sda") {
-		t.Error("'sda' is wrongly reported as 'NOT a disk'")
-	}
-	if !BlockDeviceIsDisk("vda") {
-		t.Error("'vda' is wrongly reported as 'NOT a disk'")
-	}
-	if BlockDeviceIsDisk("sr0") {
-		t.Error("'sr0' is wrongly reported as 'a disk'")
-	}
-	//devs := []string{"sda", "vda", "sr0"}
-}
-
-func TestCollectBlockDeviceInfo(t *testing.T) {
-	_, sysDevs := ListDir("/sys/block", "the available block devices of the system")
-	if len(sysDevs) == 0 {
-		t.Skipf("skip test, seems there are no block devices avaialble, sysDevs is '%+v'\n", sysDevs)
-	}
-	collect := CollectBlockDeviceInfo()
-	if len(collect) == 0 {
-		t.Errorf("seems no block devices collected, collect is %+v'\n", collect)
-	}
-	for _, dev := range sysDevs {
-		found := false
-		for _, entry := range collect {
-			if dev == entry {
-				found = true
-				break
-			}
-		}
-		if !found {
-			if BlockDeviceIsDisk(dev) {
-				t.Errorf("'%s' is a disk, but not returned by 'CollectBlockDeviceInfo'\n", dev)
-			}
-		}
-	}
-	bdevFile := path.Join(SaptuneSectionDir, "/blockdev.run")
-	if _, err := os.Stat(bdevFile); os.IsNotExist(err) {
-		t.Errorf("file '%+s' missing\n", bdevFile)
-	}
-	_ = os.Remove(bdevFile)
-}
-
-func TestGetBlockDeviceInfo(t *testing.T) {
-	bdevConf := BlockDev{
-		AllBlockDevs:    make([]string, 0, 6),
-		BlockAttributes: make(map[string]map[string]string),
-	}
-	bdevConf.AllBlockDevs = []string{"sda", "sdb", "sdc"}
-	bdevConf.BlockAttributes["sda"] = map[string]string{"IO_SCHEDULER": "mq-deadline", "NRREQ": "32", "READ_AHEAD_KB": "512"}
-	bdevConf.BlockAttributes["sdb"] = map[string]string{"IO_SCHEDULER": "bfq", "NRREQ": "64", "READ_AHEAD_KB": "1024"}
-	bdevConf.BlockAttributes["sdc"] = map[string]string{"IO_SCHEDULER": "none", "NRREQ": "4", "READ_AHEAD_KB": "128"}
-
-	err := storeBlockDeviceInfo(bdevConf)
-	if err != nil {
-		t.Error("storing block device info failed")
-	}
-
-	blkDev, _ := GetBlockDeviceInfo()
-	eq := reflect.DeepEqual(bdevConf.AllBlockDevs, blkDev.AllBlockDevs)
-	if !eq {
-		t.Errorf("stored and read block devices differ- stored:'%+v' - read:'%+v'\n", bdevConf.AllBlockDevs, blkDev.AllBlockDevs)
-	}
-	for _, entry := range bdevConf.AllBlockDevs {
-		eq := reflect.DeepEqual(bdevConf.BlockAttributes[entry], blkDev.BlockAttributes[entry])
-		if !eq {
-			t.Errorf("stored and read entries differ - stored:'%+v' - read:'%+v'\n", bdevConf.BlockAttributes[entry], blkDev.BlockAttributes[entry])
-		}
-	}
-	bdevFile := path.Join(SaptuneSectionDir, "/blockdev.run")
-	_ = os.Remove(bdevFile)
-}
-
 func TestCalledFrom(t *testing.T) {
 	val := CalledFrom()
 	if !strings.Contains(val, "testing.go") {
 		t.Fatalf("called from '%s' instead of 'testing.go'\n", val)
 	}
-}
-
-func TestLock(t *testing.T) {
-	if saptuneIsLocked() {
-		_, err := os.Stat(stLockFile)
-		if os.IsNotExist(err) {
-			t.Errorf("saptune lock does NOT exists, but is reported as existing\n")
-		} else {
-			t.Errorf("saptune lock exists, but shouldn't\n")
-		}
-	}
-	SaptuneLock()
-	if !saptuneIsLocked() {
-		_, err := os.Stat(stLockFile)
-		if os.IsNotExist(err) {
-			t.Errorf("saptune should be locked, but isn't\n")
-		} else {
-			t.Errorf("saptune lock exists, but is reported as non-existing\n")
-		}
-	}
-	if !isOwnLock() {
-		pid := -1
-		p, err := ioutil.ReadFile(stLockFile)
-		if err == nil {
-			pid, _ = strconv.Atoi(string(p))
-		}
-		t.Errorf("wrong pid found in lock file: '%d' instead of '%d'\n", pid, os.Getpid())
-	}
-	ReleaseSaptuneLock()
-	if saptuneIsLocked() {
-		_, err := os.Stat(stLockFile)
-		if os.IsNotExist(err) {
-			t.Errorf("saptune lock does NOT exists, but is reported as existing\n")
-		} else {
-			t.Errorf("saptune lock exists, but shouldn't\n")
-			os.Remove(stLockFile)
-		}
-	}
-
-	sl, _ := os.OpenFile(stLockFile, os.O_CREATE|os.O_RDWR|os.O_EXCL, 0600)
-	fmt.Fprintf(sl, "")
-	saptuneIsLocked()
-	os.Remove(stLockFile)
-	sl, _ = os.OpenFile(stLockFile, os.O_CREATE|os.O_RDWR|os.O_EXCL, 0600)
-	fmt.Fprintf(sl, "%d", 4711)
-	saptuneIsLocked()
-	os.Remove(stLockFile)
-	ReleaseSaptuneLock()
 }
 
 func TestErrorExit(t *testing.T) {
@@ -441,5 +442,77 @@ func TestOutIsTerm(t *testing.T) {
 	termInfo, _ := termFile.Stat()
 	if !OutIsTerm(termFile) {
 		t.Errorf("file is a terminal, but reported as NOT a terminal - %+v\n", termInfo.Mode())
+	}
+}
+
+func TestWrapTxt(t *testing.T) {
+	testString := "This is a really long text, which does not make any sence, except that I need something for testing my new function.\n need some line feeds\n and a second one\n 12345 \n 678910\n"
+	expected := []string{"This is a really", "long text, which", "does not make any", "sence, except", "that I need", "something for", "testing my new", "function.", "need some line", "feeds", "and a second one", "12345", "678910", ""}
+	actual := WrapTxt(testString, 17)
+	if len(actual) != len(expected) {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
+	} else {
+		for i, line := range actual {
+			expectedLine := expected[i]
+			if line != expectedLine {
+				t.Errorf("Test failed, expected: '%s', got: '%s'", expectedLine, line)
+			}
+		}
+	}
+
+	testString = "ONLY_ON_WORD"
+	expected = []string{"ONLY_ON_WORD"}
+	actual = WrapTxt(testString, 17)
+	if len(actual) != len(expected) {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
+	} else {
+		for i, line := range actual {
+			expectedLine := expected[i]
+			if line != expectedLine {
+				t.Errorf("Test failed, expected: '%s', got: '%s'", expectedLine, line)
+			}
+		}
+	}
+
+	testString = " "
+	expected = []string{" "}
+	actual = WrapTxt(testString, 17)
+	if len(actual) != len(expected) {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
+	} else {
+		for i, line := range actual {
+			expectedLine := expected[i]
+			if line != expectedLine {
+				t.Errorf("Test failed, expected: '%s', got: '%s'", expectedLine, line)
+			}
+		}
+	}
+
+	testString = ""
+	expected = []string{""}
+	actual = WrapTxt(testString, 17)
+	if len(actual) != len(expected) {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
+	} else {
+		for i, line := range actual {
+			expectedLine := expected[i]
+			if line != expectedLine {
+				t.Errorf("Test failed, expected: '%s', got: '%s'", expectedLine, line)
+			}
+		}
+	}
+
+	testString = "\n"
+	expected = []string{"", ""}
+	actual = WrapTxt(testString, 17)
+	if len(actual) != len(expected) {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
+	} else {
+		for i, line := range actual {
+			expectedLine := expected[i]
+			if line != expectedLine {
+				t.Errorf("Test failed, expected: '%s', got: '%s'", expectedLine, line)
+			}
+		}
 	}
 }

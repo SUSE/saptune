@@ -44,12 +44,13 @@ func main() {
 		verboseSwitch = sconf.GetString("VERBOSE", "on")
 	}
 
-	if arg1 := system.CliArg(1); arg1 == "" || arg1 == "help" || arg1 == "--help" {
-		actions.PrintHelpAndExit(os.Stdout, 0)
-	}
-	if arg1 := system.CliArg(1); arg1 == "version" || arg1 == "--version" {
+	arg1 := system.CliArg(1)
+	if arg1 == "version" || system.IsFlagSet("version") {
 		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
 		system.ErrorExit("", 0)
+	}
+	if arg1 == "" || arg1 == "help" || system.IsFlagSet("help") {
+		actions.PrintHelpAndExit(os.Stdout, 0)
 	}
 
 	// All other actions require super user privilege
@@ -63,7 +64,7 @@ func main() {
 	// now system.ErrorExit can write to log and os.Stderr. No longer extra
 	// care is needed.
 
-	if arg1 := system.CliArg(1); arg1 == "lock" {
+	if arg1 == "lock" {
 		if arg2 := system.CliArg(2); arg2 == "remove" {
 			system.ReleaseSaptuneLock()
 			system.InfoLog("command line triggered remove of lock file '/var/run/.saptune.lock'\n")

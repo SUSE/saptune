@@ -48,6 +48,28 @@ var checkOut = func(t *testing.T, got, want string) {
 	}
 }
 
+var setUpSol = func(t *testing.T) {
+	t.Helper()
+	// prepare deprecated solution, custom solution and override
+	customSolutionFile := path.Join(TstFilesInGOPATH, "saptune-test-custom-sols")
+	ovsolutionFile := path.Join(TstFilesInGOPATH, "saptune-test-override-sols")
+	depecatedSolFile := path.Join(TstFilesInGOPATH, "saptune-test-deprecated-sols")
+	noteFiles := TstFilesInGOPATH + "/"
+	extraNoteFiles := TstFilesInGOPATH + "/extra/"
+	solution.CustomSolutions = solution.GetOtherSolution(customSolutionFile, noteFiles, extraNoteFiles)
+	solution.OverrideSolutions = solution.GetOtherSolution(ovsolutionFile, noteFiles, "")
+	solution.DeprecSolutions = solution.GetOtherSolution(depecatedSolFile, "", "")
+	solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheet)
+}
+
+var tearDownSol = func(t *testing.T) {
+	t.Helper()
+	solution.CustomSolutions = solution.GetOtherSolution("", "", "")
+	solution.OverrideSolutions = solution.GetOtherSolution("", "", "")
+	solution.DeprecSolutions = solution.GetOtherSolution("", "", "")
+	solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheet)
+}
+
 var setUp = func(t *testing.T) {
 	t.Helper()
 	// setup code

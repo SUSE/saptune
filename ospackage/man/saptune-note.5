@@ -15,13 +15,13 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "November 2020" "" "saptune note file format description"
+.TH "saptune-note" "5" "December 2020" "" "saptune note file format description"
 .SH NAME
-saptune\-note - Note definition files for saptune version \fB2\fP
+saptune\-note - Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
-This man page documents the format of the Note definition files for saptune version \fB2\fP. If you still use version \fB1\fP of saptune please refer to the configuration files \fI/etc/sysconfig/saptune-note-*\fP
+This man page documents the format of the Note definition files for saptune version \fB3\fP. If you still use version \fB1\fP of saptune please refer to the configuration files \fI/etc/sysconfig/saptune-note-*\fP
 
-The saptune Note definitions will be installed by the rpm in \fI/usr/share/saptune/notes\fP, but for the execution they will be searched in \fI/var/lib/saptune/working/notes\fP for the saptune SAP Note definitions or in \fI/etc/saptune/override\fP for customer specific changes to the saptune SAP Note definitions or in \fI/etc/saptune/extra\fP for vendor or customer specific tuning definitions.
+The saptune Note definitions will be installed by the rpm in \fI/usr/share/saptune/notes\fP (the \fBpackage area\fP), but for the execution they will be searched in \fI/var/lib/saptune/working/notes\fP (the \fBworking area\fP) for the saptune SAP Note definitions or in \fI/etc/saptune/override\fP for customer specific changes to the saptune SAP Note definitions or in \fI/etc/saptune/extra\fP for vendor or customer specific tuning definitions.
 .br
 The \fBNote definition\fP files use the INI file format.
 .br
@@ -107,6 +107,7 @@ NAME is the description of the Note, which will be displayed during the action '
 Attention: The note description from the field NAME must be placed in double quotes even if there are no spaces used inside the description.
 \" section block
 .SH "[block]"
+\" ANGI TODO - describe which devices are used as valid block devices
 The section "[block]" can contain the following options:
 .TP
 .BI IO_SCHEDULER= STRING
