@@ -14,9 +14,9 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "November 2020" "" "System Optimisation For SAP"
+.TH saptune "8" "December 2020" "" "System Optimisation For SAP"
 .SH NAME
-saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 2 and 3\fP)
+saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 3\fP)
 
 ATTENTION: If you still use version \fB1\fP of saptune please refer to man page  saptune_v1(8) instead.
 
@@ -266,32 +266,32 @@ If the Note is already applied, the command will be terminated with the informat
 .SH SOLUTION ACTIONS
 A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.
 .br
-The solution definitions can be found in the file \fI/usr/share/saptune/solutions\fP
+The solution definitions of saptune can be found in the file \fI/usr/share/saptune/solutions\fP or vendor/customer specific solution definitions can be found in the file \fI/etc/saptune/extra/sols/solutions\fP.
 
-It's not possible to combine solutions, there can only be\fBone\fP solution enabled.
+It's not possible to combine solutions, there can only be\fBone\fP solution enabled. But it is possible to change a soultion definition by using the override file in \fI/etc/saptune/override/solutions\fP or by creating a custom specific solution definition in the file \fI/etc/saptune/extra/sols/solutions\fP.
 .SS
 .TP
 .B apply
-Apply optimisation settings recommended by the SAP solution. These settings will be automatically activated upon system boot if the daemon is enabled.
+Apply optimisation settings recommended by the solution. These settings will be automatically activated upon system boot if the daemon is enabled.
 .TP
 .B list
-List all SAP solution names that saptune is capable of implementing.
+List all solution names that saptune is capable of implementing.
 .br
 The currently implemented solution is marked with '\fB*\fP' and is highlighted with green color. A deprecated solution is marked with '\fBD\fP'.
 .br
-If an \fBoverride\fP file exists for a solution, the solution is marked with '\fBO\fP'.
+If an \fBoverride\fP file exists for a solution, the solution is marked with '\fBO\fP'. A custom sprcific solution is marked with '\fBC\fP'.
 .TP
 .B enabled
 Print the current enabled solution.
 .TP
 .B simulate
-Show all notes that are associated with the specified SAP solution, and all changes that will be applied once the solution is activated.
+Show all notes that are associated with the specified solution, and all changes that will be applied once the solution is activated.
 .TP
 .B verify
-If a solution name is specified, saptune verifies the current running system against the recommended settings of the SAP solution. If solution name is not specified, saptune verifies all system parameters against all implemented solutions.
+If a solution name is specified, saptune verifies the current running system against the recommended settings of this solution. If the solution name is not specified, saptune verifies all system parameters against all implemented solutions.
 .TP
 .B revert
-Revert optimisation settings recommended by the SAP solution, and these settings will no longer be activated automatically upon system boot.
+Revert optimisation settings recommended by the solution, and these settings will no longer be activated automatically upon system boot.
 
 .SH STAGING ACTIONS
 Staging is implemented to enable customers to control and release changes shipped by package updates to their working environment.
@@ -421,6 +421,37 @@ So please always revert the note \fBbefore\fP renaming or removing it from the f
 Even if editing an active vendor or customer specific note definition file on the file system level, please do a revert of that note and then apply the Note again, to get the changes take effect.
 .PP
 
+.SS
+.RS 0
+customer specific solution definitions
+.br
+In addition to the vendor or customer specific note file definitions described previously saptune now supports vendor or customer specific \fBsolution definitions\fP by using the file \fI/etc/saptune/extra/sols/solutions\fP. All solutions found in \fI/etc/saptune/extra/sols/solutions\fP are listed when running '\fBsaptune solution list\fP'. All \fBsolution options\fP are available for these solutions.
+.SS
+.RS 0
+Syntax of the file:
+The content of the custom specific solution file should be written in a INI file style with sections headed by '[section_name]' keywords.
+.br
+At the moment saptune supports two architectures - \fIArchX86\fP for the x86 platform and \fIArchPPC64LE\fP for 64-bit PowerPC little endian platform for the solution definitions.
+.br
+So possible sections for solution definitions are [version] (see description of section [version] in saptune-note(5)) for a brief description of the solutions, and [ArchX86] and [ArchPPC64LE] for the solution definitions.
+.br
+The solution itself is described as a key-value pair, with key is the solution name and value is a list of note definition files separated by blanks. A solution is only valid and listed by '\fBsaptune solution list\fP', if all listed note definition files can be found in the working area or in \fI/etc/saptune/extra\fP.
+
+e.g. 
+[version]
+.br
+# SAP-NOTE=MY-CUSTOM-SOL CATEGORY=SOLUTION VERSION=1 DATE=15.12.2020 NAME="My custom specific solution definitions"
+[ArchX86]
+.br
+NEWSOL1 = 1980196 CUSTOMNOTE1 CUSTOMNOTE2
+.br
+NEWSOL2 = CUSTOMNOTE1 CUSTOMNOTE3 CUSTOMNOTE4
+.br
+[ArchPPC64LE]
+.br
+NEWSOL1 = 1980196 CUSTOMNOTE1 CUSTOMNOTE2
+.PP
+
 .SH FILES
 .PP
 \fI/usr/share/saptune/notes\fP
@@ -460,6 +491,13 @@ the central saptune configuration file containing the information about the curr
 \fI/etc/saptune/extra\fP
 .RS 4
 vendor or customer specific tuning definitions.
+.br
+Please see \fBVENDOR SUPPORT\fP above for more information.
+.RE
+.PP
+\fI/etc/saptune/extra/sols/solutions\fP
+.RS 4
+vendor or customer specific solution definition.
 .br
 Please see \fBVENDOR SUPPORT\fP above for more information.
 .RE

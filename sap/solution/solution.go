@@ -17,8 +17,10 @@ import (
 const (
 	SolutionSheet         = "/var/lib/saptune/working/solutions"
 	OverrideSolutionSheet = "/etc/saptune/override/solutions"
+	ExtraSolutionSheet    = "/etc/saptune/extra/sols/solutions"
 	DeprecSolutionSheet   = "/usr/share/saptune/solsdeprecated"
 	NoteTuningSheets      = "/var/lib/saptune/working/notes/"
+	ExtraTuningSheets     = "/etc/saptune/extra/"
 	ArchX86               = "amd64"      // ArchX86 is the GOARCH value for x86 platform.
 	ArchPPC64LE           = "ppc64le"    // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform.
 	ArchX86PC             = "amd64_PC"   // ArchX86 is the GOARCH value for x86 platform. PC indicates PageCache is available
@@ -37,10 +39,14 @@ var AllSolutions = GetSolutionDefintion(SolutionSheet)
 
 // OverrideSolutions contains a list of all available override solutions with
 // their related SAP Notes for all supported architectures
-var OverrideSolutions = GetOverrideSolution(OverrideSolutionSheet, NoteTuningSheets)
+var OverrideSolutions = GetOtherSolution(OverrideSolutionSheet, NoteTuningSheets, ExtraTuningSheets)
+
+// CustomSolutions contains a list of all available customer specific solutions
+// with their related SAP Notes for all supported architectures
+var CustomSolutions = GetOtherSolution(ExtraSolutionSheet, NoteTuningSheets, ExtraTuningSheets)
 
 // DeprecSolutions contains a list of all solutions witch are deprecated
-var DeprecSolutions = GetDeprecatedSolution(DeprecSolutionSheet)
+var DeprecSolutions = GetOtherSolution(DeprecSolutionSheet, "", "")
 
 // GetSolutionDefintion reads solution definition from file
 // build same structure for AllSolutions as before
@@ -65,21 +71,17 @@ func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
 			// start a new arch
 			if currentArch != "" {
 				// save previous arch settings
-				if system.IsPagecacheAvailable() {
-					sols[pcarch] = sol
+				if len(CustomSolutions) != 0 {
+					// add custom solutions for previous arch
+					for cKey, cVal := range CustomSolutions[arch] {
+						sol[cKey] = cVal
+					}
 				}
-				sols[arch] = sol
+				sols = storeSols(arch, pcarch, sol, sols)
 			}
 			currentArch = param.Section
 			sol = make(map[string]Solution)
-			switch currentArch {
-			case "ArchPPC64LE":
-				arch = "ppc64le"
-				pcarch = "ppc64le_PC"
-			case "ArchX86":
-				arch = "amd64"
-				pcarch = "amd64_PC"
-			}
+			arch, pcarch = setSolutionArch(currentArch)
 		}
 
 		// looking for override solution
@@ -88,146 +90,124 @@ func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
 		}
 		sol[param.Key] = strings.Split(param.Value, "\t")
 	}
-	switch currentArch {
-	case "ArchPPC64LE":
-		if system.IsPagecacheAvailable() {
-			sols[ArchPPC64LEPC] = sol
+	if arch != "" {
+		// add custom solutions for last arch
+		if len(CustomSolutions) != 0 {
+			for cKey, cVal := range CustomSolutions[arch] {
+				sol[cKey] = cVal
+			}
 		}
-		sols[ArchPPC64LE] = sol
-	case "ArchX86":
-		if system.IsPagecacheAvailable() {
-			sols[ArchX86PC] = sol
-		}
-		sols[ArchX86] = sol
 	}
+	sols = storeSols(arch, pcarch, sol, sols)
 	return sols
 }
 
-// GetOverrideSolution reads solution override definition from file
-// build same structure for AllSolutions as before
-// can be simplyfied later
-func GetOverrideSolution(fileName, noteFiles string) map[string]map[string]Solution {
+// GetOtherSolution reads override, custom or deprecated solution definition
+// from file
+func GetOtherSolution(fileName, noteFiles, extraFiles string) map[string]map[string]Solution {
 	sols := make(map[string]map[string]Solution)
 	sol := make(map[string]Solution)
 	currentArch := ""
 	arch := ""
 	pcarch := ""
-	// looking for override file
+	// looking for override or extra solution file
 	content, err := txtparser.ParseINIFile(fileName, false)
 	if err != nil {
 		return sols
 	}
 
 	for _, param := range content.AllValues {
-		//check, if all note files used in the override file are available in /var/lib/saptune/working/notes/
-		// ANGI TODO additional check in /usr/share/saptune/note and WARNING
-		// that the working area does not include the needed note for
-		// the solution, but the package store (and/or staging area) does.
-		notesOK := true
-		for _, noteID := range strings.Split(content.KeyValue[param.Section][param.Key].Value, "\t") {
-			if _, err := os.Stat(fmt.Sprintf("%s%s", noteFiles, noteID)); err != nil {
-				system.WarningLog("Definition for note '%s' used for solution '%s' in override file '%s' not found in %s", noteID, param.Key, fileName, noteFiles)
-				notesOK = false
+		if noteFiles != "" {
+			//check, if all note files used in the override or custom
+			// solution file are available in the working area or in
+			// /etc/saptune/extra
+			notesOK := true
+			notesOK = checkSolutionNotes(param, fileName, noteFiles, extraFiles)
+			if !notesOK {
+				// skip solution definition, because one or more notes
+				// referenced in the solution definition do not have
+				// a note configuration file on the system
+				continue
 			}
 		}
-		if !notesOK {
-			// skip solution definition, because one or more notes
-			// referenced in the solution definition do not have
-			// a note configuration file on the system
-			continue
-		}
 
-		if param.Section == "reminder" {
+		if param.Section == "reminder" || param.Section == "version" {
 			continue
 		}
 		if param.Section != currentArch {
 			// start a new arch
 			if currentArch != "" {
 				// save previous arch settings
-				if system.IsPagecacheAvailable() {
-					sols[pcarch] = sol
-				}
-				sols[arch] = sol
+				sols = storeSols(arch, pcarch, sol, sols)
 			}
 			currentArch = param.Section
 			sol = make(map[string]Solution)
-			switch currentArch {
-			case "ArchPPC64LE":
-				arch = "ppc64le"
-				pcarch = "ppc64le_PC"
-			case "ArchX86":
-				arch = "amd64"
-				pcarch = "amd64_PC"
-			}
+			arch, pcarch = setSolutionArch(currentArch)
 		}
 		sol[param.Key] = strings.Split(param.Value, "\t")
 	}
-	switch currentArch {
-	case "ArchPPC64LE":
-		if system.IsPagecacheAvailable() {
-			sols[ArchPPC64LEPC] = sol
-		}
-		sols[ArchPPC64LE] = sol
-	case "ArchX86":
-		if system.IsPagecacheAvailable() {
-			sols[ArchX86PC] = sol
-		}
-		sols[ArchX86] = sol
+	if currentArch != "" {
+		sols = storeSols(arch, pcarch, sol, sols)
 	}
 	return sols
 }
 
-// GetDeprecatedSolution reads solution deprecated definition from file
-func GetDeprecatedSolution(fileName string) map[string]map[string]string {
-	sols := make(map[string]map[string]string)
-	sol := make(map[string]string)
-	currentArch := ""
-	arch := ""
-	pcarch := ""
-	// looking for deprecated solution file
-	content, err := txtparser.ParseINIFile(fileName, false)
-	if err != nil {
-		return sols
-	}
-
-	for _, param := range content.AllValues {
-		if param.Section == "reminder" {
-			continue
-		}
-		if param.Section != currentArch {
-			// start a new arch
-			if currentArch != "" {
-				// save previous arch settings
-				if system.IsPagecacheAvailable() {
-					sols[pcarch] = sol
+// checkSolutionNotes checks, if all note files used in the override or custom
+// solution file are available in the working area or in /etc/saptune/extra
+func checkSolutionNotes(param txtparser.INIEntry, fileName, noteFiles, extraFiles string) bool {
+	noteState := true
+	// ANGI TODO additional check in /usr/share/saptune/note and WARNING
+	// that the working area does not include the needed note for
+	// the solution, but the package store (and/or staging area) does.
+	for _, noteID := range strings.Split(param.Value, "\t") {
+		// first check in the working area
+		if _, err := os.Stat(fmt.Sprintf("%s%s", noteFiles, noteID)); err != nil {
+			// noteID NOT found in working area
+			if extraFiles != "" {
+				// check for custom note files
+				if _, err := os.Stat(fmt.Sprintf("%s%s.conf", extraFiles, noteID)); err != nil {
+					// as the function most of the time is
+					// called before the logging is
+					// initialized use Fprintf instead to
+					// give customers a hint.
+					fmt.Fprintf(os.Stderr, "Attention: Definition for note '%s' used for solution '%s' in file '%s' not found in '%s' or '%s'\n", noteID, param.Key, fileName, noteFiles, extraFiles)
+					//system.WarningLog("Definition for note '%s' used for solution '%s' in file '%s' not found in %s", noteID, param.Key, fileName, extraFiles)
+					noteState = false
 				}
-				sols[arch] = sol
-			}
-			currentArch = param.Section
-			sol = make(map[string]string)
-			switch currentArch {
-			case "ArchPPC64LE":
-				arch = "ppc64le"
-				pcarch = "ppc64le_PC"
-			case "ArchX86":
-				arch = "amd64"
-				pcarch = "amd64_PC"
+			} else {
+				// as the function most of the time is called
+				// before the logging is initialized use
+				// Fprintf instead to give customers a hint.
+				fmt.Fprintf(os.Stderr, "Attention: Definition for note '%s' used for solution '%s' in file '%s' not found in '%s'\n", noteID, param.Key, fileName, noteFiles)
+				//system.WarningLog("Definition for note '%s' used for solution '%s' in file '%s' not found in %s", noteID, param.Key, fileName, noteFiles)
+				noteState = false
 			}
 		}
-		sol[param.Key] = param.Value
 	}
-	switch currentArch {
+	return noteState
+}
+
+// setSolutionArch sets arch and pcarch variables regarding the current
+// architecture read from the solution file
+func setSolutionArch(curArch string) (arch, pcarch string) {
+	switch curArch {
 	case "ArchPPC64LE":
-		if system.IsPagecacheAvailable() {
-			sols[ArchPPC64LEPC] = sol
-		}
-		sols[ArchPPC64LE] = sol
+		arch = "ppc64le"
+		pcarch = "ppc64le_PC"
 	case "ArchX86":
-		if system.IsPagecacheAvailable() {
-			sols[ArchX86PC] = sol
-		}
-		sols[ArchX86] = sol
+		arch = "amd64"
+		pcarch = "amd64_PC"
 	}
+	return
+}
+
+// storeSols stores the collected solutions in the solution map
+// related to the last current architecture read from the solution file
+func storeSols(arch, pcarch string, sol map[string]Solution, sols map[string]map[string]Solution) map[string]map[string]Solution {
+	if system.IsPagecacheAvailable() {
+		sols[pcarch] = sol
+	}
+	sols[arch] = sol
 	return sols
 }
 

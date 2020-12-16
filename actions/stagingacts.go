@@ -319,16 +319,16 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) {
 	txtNoteNotEnabled := txtPrefix + "Note is not enabled, no action required.\n"
 	txtSolEnabled := txtPrefix + "Note is part of the currently enabled solution '%s'.\n"
 	txtSolNotEnabled := txtPrefix + "Note is part of the not-enabled solution(s) '%s'\n"
-	//txtCustomSolEnabled := txtPrefix + "Note is part of the currently enabled custom solution '%s'.\n"
-	//txtCustomSolNotEnabled := txtPrefix + "Note is part of the not-enabled custom solution(s) '%s'.\n"
+	txtCustomSolEnabled := txtPrefix + "Note is part of the currently enabled custom solution '%s'.\n"
+	txtCustomSolNotEnabled := txtPrefix + "Note is part of the not-enabled custom solution '%s'.\n"
 
 	if flag == "deleted" {
 		txtOverrideExists = txtPrefix + "Override file exists and can be deleted.\n"
 		txtNoteEnabled = txtPrefix + "Note is enabled and must be reverted.\n"
 		txtSolEnabled = txtPrefix + "Note is part of the currently enabled solution '%s'. Release would break the solution!\n"
-		txtSolNotEnabled = txtPrefix + "Note is part of the not-enabled solution(s) '%s'. Release would break the solution(s)!\n"
-		//txtCustomSolEnabled = txtPrefix + "Note is part of the currently enabled custom solution '%s'. Release would break the solution!\n"
-		//txtCustomSolNotEnabled = txtPrefix + "Note is part of the not-enabled custom solution(s) '%s'. Release would break the solution!\n"
+		txtSolNotEnabled = txtPrefix + "Note is part of the not-enabled solution '%s'. Release would break the solution(s)!\n"
+		txtCustomSolEnabled = txtPrefix + "Note is part of the currently enabled custom solution '%s'. Release would break the solution!\n"
+		txtCustomSolNotEnabled = txtPrefix + "Note is part of the not-enabled custom solution '%s'. Release would break the solution!\n"
 
 		fmt.Fprintf(writer, txtDeleteNote, stageName)
 	}
@@ -346,11 +346,22 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) {
 	}
 	if stgFiles.StageAttributes[stageName]["inSolution"] != "" {
 		for _, sol := range strings.Split(stgFiles.StageAttributes[stageName]["inSolution"], ",") {
+			txtSEnabled := txtSolEnabled
+			txtSNotEnabled := txtSolNotEnabled
+			// check for custom solution
+			for _, csol := range strings.Split(stgFiles.StageAttributes[stageName]["inCustomSolution"], ",") {
+				if csol == sol {
+					//sol is a custom solution
+					txtSEnabled = txtCustomSolEnabled
+					txtSNotEnabled = txtCustomSolNotEnabled
+					break
+				}
+			}
 			sol = strings.TrimSpace(sol)
 			if sol == stgFiles.StageAttributes[stageName]["enabledSol"] {
-				fmt.Fprintf(writer, txtSolEnabled, sol)
+				fmt.Fprintf(writer, txtSEnabled, sol)
 			} else {
-				fmt.Fprintf(writer, txtSolNotEnabled, sol)
+				fmt.Fprintf(writer, txtSNotEnabled, sol)
 			}
 		}
 	}
@@ -489,6 +500,7 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 
 		// check if in a solution
 		noteInSols := ""
+		noteInCustomSols := ""
 		sols := []string{}
 		for sol := range tuneApp.AllSolutions {
 			sols = append(sols, sol)
@@ -503,11 +515,20 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 					} else {
 						noteInSols = fmt.Sprintf("%s, %s", noteInSols, sol)
 					}
+					// check for custom solution
+					if len(solution.CustomSolutions[system.GetSolutionSelector()][sol]) != 0 {
+						// sol is custom solution
+						if len(noteInCustomSols) == 0 {
+							noteInCustomSols = sol
+						} else {
+							noteInCustomSols = fmt.Sprintf("%s, %s", noteInCustomSols, sol)
+						}
+					}
 				}
 			}
 		}
 		stageMap["inSolution"] = noteInSols
-		// ANGI TODO - check for custom solution
+		stageMap["inCustomSolution"] = noteInCustomSols
 
 		stageConf.StageAttributes[stageName] = stageMap
 		stageConf.AllStageFiles = append(stageConf.AllStageFiles, stageName)
@@ -557,7 +578,7 @@ func diffStageObj(writer io.Writer, sName string) {
 		PrintStageFields(writer, sName, comparisons)
 	} else {
 		// paranoia log, should not be the case, because the saptune rpm takes care of this
-		system.InfoLog("no diffs in staging")
+		system.InfoLog("'%s' - no diffs in staging", sName)
 	}
 }
 

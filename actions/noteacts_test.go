@@ -55,7 +55,8 @@ Remember: if you wish to automatically activate the solution's tuning options af
 	t.Run("NoteActionSimulate", func(t *testing.T) {
 		var simulateMatchText = `If you run ` + "`saptune note apply simpleNote`" + `, the following changes will be applied to your system:
 
-simpleNote -  
+simpleNote - Configuration drop in for simple tests
+			Version 1 from 09.07.2019  
 
    Parameter                    | Value set   | Value expected  | Override  | Comment
 --------------------------------+-------------+-----------------+-----------+--------------
@@ -117,7 +118,8 @@ The running system is currently well-tuned according to all of the enabled notes
 	// Test NoteActionVerify
 	t.Run("NoteActionVerify", func(t *testing.T) {
 		var verifyMatchText = `
-simpleNote -  
+simpleNote - Configuration drop in for simple tests
+			Version 1 from 09.07.2019  
 
    SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
 --------------------+------------------------------+-------------+-----------+-------------+-----------
