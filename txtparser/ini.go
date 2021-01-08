@@ -158,7 +158,7 @@ func splitGrub(line string, kov []string) []string {
 }
 
 // chkSecTags checks, if the tags of a section are valid
-func chkSecTags(secFields []string) bool {
+func chkSecTags(secFields, blkDev []string) (bool, []string) {
 	ret := true
 	cnt := 0
 	for _, secTag := range secFields {
@@ -174,19 +174,23 @@ func chkSecTags(secFields []string) bool {
 		tagField := strings.Split(secTag, "=")
 		if len(tagField) != 2 {
 			system.WarningLog("wrong syntax of section tag '%s', skipping whole section '%v'. Please check. ", secTag, secFields)
-			return false
+			return false, blkDev
 		}
 		switch tagField[0] {
 		case "os":
 			ret = chkOsTags(tagField[1], secFields)
 		case "arch":
 			ret = chkArchTags(tagField[1], secFields)
+		case "vendor":
+			ret, blkDev = chkBlkTags("VENDOR", tagField[1], secFields, blkDev)
+		case "model":
+			ret, blkDev = chkBlkTags("MODEL", tagField[1], secFields, blkDev)
 		default:
 			system.WarningLog("skip unkown section tag '%v'.", secTag)
 			ret = false
 		}
 	}
-	return ret
+	return ret, blkDev
 }
 
 // chkOsTags checks if the os section tag is valid or not
@@ -237,6 +241,43 @@ func chkArchTags(tagField string, secFields []string) bool {
 	return ret
 }
 
+// chkBlkTags checks if the vendor or model section tag is valid or not
+// and returns a list of valid block devices
+func chkBlkTags(info, tagField string, secFields, actbdev []string) (bool, []string) {
+	ret := false
+	tagExpr := fmt.Sprintf(".*%s.*", tagField)
+	bdev := system.GetAvailBlockInfo(info, tagExpr)
+	if len(bdev) == 0 {
+		blkInfo := strings.ToLower(info)
+		// vendor or model does not match
+		system.WarningLog("%s '%s' in section definition '%v' does not match any available block device %s of the running system. Skipping whole section with all lines till next valid section definition", blkInfo, tagField, secFields, blkInfo)
+	} else {
+		if len(actbdev) == 0 {
+			bdev = actbdev
+		} else {
+			// as it is possible to have more than one tag in a
+			// section (vendor and module) we need the overlap for
+			// a valid result
+			// an former call has returned a list of valid block
+			// devices and this call also returned a list of valid
+			// block devices - get overlap or empty
+			newbdev := []string{}
+			for _, a := range actbdev {
+				for _, b := range bdev {
+					if a == b {
+						newbdev = append(newbdev, a)
+					}
+				}
+			}
+			bdev = newbdev
+			if len(newbdev) != 0 {
+				ret = true
+			}
+		}
+	}
+	return ret, bdev
+}
+
 // ParseINIFile read the content of the configuration file
 func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
 	content, err := system.ReadConfigFile(fileName, autoCreate)
@@ -254,6 +295,7 @@ func ParseINI(input string) *INIFile {
 	}
 
 	reminder := ""
+	bdevs := []string{}
 	skipSection := false
 	currentSection := ""
 	currentEntriesArray := make([]INIEntry, 0, 8)
@@ -288,11 +330,21 @@ func ParseINI(input string) *INIFile {
 				continue
 			}
 			sectionFields := strings.Split(currentSection, ":")
+
+			// moved block device colletion so that the info can be
+			// used inside the 'tag' checks
+			if sectionFields[0] == "block" && blckCnt == 0 {
+				system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
+				blckCnt = blckCnt + 1
+				// blockDev all valid block devices of the
+				// system regardless of any section tag
+				blockDev = system.CollectBlockDeviceInfo()
+			}
+			bdevs = blockDev
 			// len(sectionFields) == 1 - standard syntax [section], no os or arch check needed, chkOk = true
 			if len(sectionFields) > 1 {
 				// check of section tags needed
-				chkOk = chkSecTags(sectionFields)
-
+				chkOk, bdevs = chkSecTags(sectionFields, bdevs)
 			}
 			if chkOk {
 				currentSection = sectionFields[0]
@@ -351,12 +403,9 @@ func ParseINI(input string) *INIFile {
 				currentEntriesMap[entry.Key] = entry
 			}
 		} else if currentSection == "block" {
-			if blckCnt == 0 {
-				system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
-				blckCnt = blckCnt + 1
-				blockDev = system.CollectBlockDeviceInfo()
-			}
-			for _, bdev := range blockDev {
+			// bdevs contains all block devices valid for the
+			// current block section regarding to the used tags
+			for _, bdev := range bdevs {
 				entry := INIEntry{
 					Section:  currentSection,
 					Key:      fmt.Sprintf("%s_%s", kov[1], bdev),

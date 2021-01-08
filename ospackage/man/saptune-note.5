@@ -31,9 +31,9 @@ Lines starting with '[' indicate the begin of a new section.
 .SH SECTIONS
 A section starts with a '[section_name]' keyword in the first line, followed by lines with options and comments.
 
-It is possible to limit the scope of a section (e.g. to a special \fIhardware architecture\fP and/or a special \fIos version\fP) by adding tags to the section definition.
+It is possible to limit the scope of a section (e.g. to a special \fIhardware architecture\fP and/or a special \fIos version\fP or a special \fIblock device hardware\fP) by adding \fBtags\fP to the section definition.
 .br
-Tags are separated  by ':' and can appear in any order. Unsupported tags are considered an error and the whole section is ignored.
+Tags are separated by ':' and can appear in any order. Unsupported tags are considered an error and the whole section is ignored.
 
 The \fBsyntax\fP for such sections is:
 
@@ -58,6 +58,38 @@ Example:
 .br
 [sysctl:os=15-SP1:arch=ppc64le]
 
+.TP
+.BI vendor= <hardware vendor>
+to define a \fIhardware vendor\fP to match a special block device
+.br
+Currently only supported in \fB[block]\fP section
+.br
+Valid values for \fBvendor=\fP are the values found in \fB/sys/block/<dev>/device/vendor\fP or parts of the string available in this file.
+.br
+The value of the vendor tag is used as a regular expression \fB.*<value>.*\fP to match the content of the vendor file.
+.TP
+.BI model= <hardware model>
+to define a \fIhardware model\fP to match a special block device
+.br
+Currently only supported in \fB[block]\fP section
+.br
+Valid values for \fBmodel=\fP are the values found in \fB/sys/block/<dev>/device/model\fP or parts of the string available in this file.
+.br
+The value of the model tag is used as a regular expression \fB.*<value>.*\fP to match the content of the model file.
+
+.RE
+Example:
+.br
+[block:vendor=ATA]
+.br
+[block:model=QEMU HARDDISK]
+.br
+[block:vendor=FTS:model=PRAID EP420*]
+.br
+[block:vendor=FUJITSU:model=ETERNUS_]
+.br
+Attention: if the tag does not match any block device, no block device will be handled by saptune. e.g. '\fBsaptune note verify\fP' will list NO block devices.
+
 For processing a section the following rules apply:
 .IP \[bu]
 Only sections that match the system are processed. Sections without a tag are always used.
@@ -68,7 +100,7 @@ The order of the section within the file matter. Eache section and each line in 
 The rules apply for shipped Note definition files as well as for customer defined Note definition files. Tagged sections can be used in override files.
 
 \fBATTENTION:\fP To be clear - if there are more sections with the \fBsame\fP \fIsection_name\fP containing the \fBsame\fP \fIparameters\fP with \fBdifferent\fP \fIvalues\fP, the last valid section will win.
-.br
+
 So it's all about \fBorder\fP.
 
 The following section definitions are available and used in the saptune SAP Note definition files. Each of these sections can be used in a vendor or customer specific Note definition file placed in \fI/etc/saptune/extra\fP.
