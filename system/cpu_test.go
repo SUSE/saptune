@@ -14,11 +14,11 @@ func TestCheckCPUState(t *testing.T) {
 	tstEqualMap := map[string]string{"cpu0": "state0:0 state1:0 state2:0 state3:0 state4:0", "cpu1": "state0:0 state1:0 state2:0 state3:0 state4:0", "cpu2": "state0:0 state1:0 state2:0 state3:0 state4:0", "cpu3": "state0:0 state1:0 state2:0 state3:0 state4:0"}
 	tstDiffMap := map[string]string{"cpu0": "state0:0 state1:0 state2:0 state3:0 state4:0", "cpu1": "state0:0 state1:1 state2:0 state3:0 state4:0", "cpu2": "state0:0 state1:0 state2:1 state3:0 state4:0", "cpu3": "state0:0 state1:0 state2:0 state3:0 state4:1"}
 
-	differ := CheckCPUState(tstEqualMap)
+	differ := checkCPUState(tstEqualMap)
 	if differ {
 		t.Fatal(differ)
 	}
-	differ = CheckCPUState(tstDiffMap)
+	differ = checkCPUState(tstDiffMap)
 	if !differ {
 		t.Fatal(differ)
 	}
@@ -29,7 +29,7 @@ func TestSupportsPerfBias(t *testing.T) {
 		t.Skip("the test requires root access")
 	}
 
-	if !SupportsPerfBias() {
+	if !supportsPerfBias() {
 		t.Skip("System does not support Intel's performance bias setting. Skipping test")
 	}
 	cmdName := "/usr/bin/cpupower"
@@ -46,7 +46,7 @@ func TestGetPerfBias(t *testing.T) {
 		t.Skip("the test requires root access")
 	}
 	value := GetPerfBias()
-	if !SupportsPerfBias() {
+	if !supportsPerfBias() {
 		if value != "all:none" {
 			t.Fatal(value)
 		}
@@ -85,13 +85,13 @@ func TestIsValidGovernor(t *testing.T) {
 		t.Skip("directory '/sys/devices/system/cpu/cpu0/cpufreq' does not exist. System does not support scaling governor, skipping test")
 	}
 	gov, _ := GetSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
-	if !IsValidGovernor("cpu0", gov) {
+	if !isValidGovernor("cpu0", gov) {
 		t.Fatal(gov)
 	}
-	if IsValidGovernor("not_avail", gov) {
+	if isValidGovernor("not_avail", gov) {
 		t.Fatal(gov)
 	}
-	if IsValidGovernor("cpu0", "not_avail") {
+	if isValidGovernor("cpu0", "not_avail") {
 		t.Fatalf("governor 'not_avail' reported as supported, but shouldn't")
 	}
 }
@@ -209,7 +209,7 @@ func TestMissingCmd(t *testing.T) {
 	if err := SetPerfBias("all:15"); err != nil {
 		t.Fatal(err)
 	}
-	if SupportsPerfBias() {
+	if supportsPerfBias() {
 		t.Fatalf("reports supported, but shouldn't")
 	}
 	if err := SetGovernor("all:performance", ""); err != nil {
@@ -231,7 +231,7 @@ func TestCPUErrorCases(t *testing.T) {
 	if err := SetPerfBias("all:15"); err != nil {
 		t.Errorf("should return 'nil' and not '%v'\n", err)
 	}
-	if IsValidGovernor("cpu0", "performance") {
+	if isValidGovernor("cpu0", "performance") {
 		if err := SetGovernor("all:performance", ""); err == nil {
 			t.Error("should return an error and not 'nil'")
 		}
@@ -240,7 +240,7 @@ func TestCPUErrorCases(t *testing.T) {
 			t.Errorf("should return 'nil' and not '%v'\n", err)
 		}
 	}
-	if SupportsPerfBias() {
+	if supportsPerfBias() {
 		t.Error("reports supported, but shouldn't")
 	}
 	cpupowerCmd = oldCpupowerCmd

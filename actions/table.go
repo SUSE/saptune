@@ -213,6 +213,9 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 	if runtime.GOARCH == "ppc64le" {
 		footnote1 = footnote1IBM
 	}
+	if system.GetCSP() == "azure" {
+		footnote1 = footnote1AZR
+	}
 	switch comparison.ActualValue {
 	case "all:none":
 		compliant = compliant + " [1]"

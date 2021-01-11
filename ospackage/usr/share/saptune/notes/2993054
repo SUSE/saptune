@@ -1,0 +1,18 @@
+# 2993054 - Recommended settings for SAP systems on Linux running in Azure virtual machines
+# Description:    Azure settings
+# Version 1 from xx.xx.2021 in English
+
+[version]
+# SAP-NOTE=2993054 CATEGORY=LNX-AZR VERSION=1 DATE=xx.xx.2021 NAME="Recommended settings for SAP systems on Linux running in Azure virtual machines"
+
+[sysctl:csp=azure]
+net.ipv4.tcp_keepalive_time = 300
+net.ipv4.tcp_keepalive_intvl = 75
+net.ipv4.tcp_keepalive_probes = 9
+
+[reminder:csp=azure]
+# settings from SAP Note 1410736 are integrated in this SAP Note.
+#
+# parameters energy_perf_bias, governor and force_latency, which are mentioned
+# in the recommended OS settings for the SAP HANA databases, are not supported
+# on Azure virtual machines. A footnote will reminde during verify operation.

@@ -181,10 +181,10 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			ret = chkOsTags(tagField[1], secFields)
 		case "arch":
 			ret = chkArchTags(tagField[1], secFields)
-		case "vendor":
-			ret, blkDev = chkBlkTags("VENDOR", tagField[1], secFields, blkDev)
-		case "model":
-			ret, blkDev = chkBlkTags("MODEL", tagField[1], secFields, blkDev)
+		case "csp":
+			ret = chkCspTags(tagField[1], secFields)
+		case "vendor", "model":
+			ret, blkDev = chkBlkTags(tagField[0], tagField[1], secFields, blkDev)
 		default:
 			system.WarningLog("skip unkown section tag '%v'.", secTag)
 			ret = false
@@ -225,7 +225,7 @@ func chkOsTags(tagField string, secFields []string) bool {
 	return ret
 }
 
-// chkArchTags checks if the os section tag is valid or not
+// chkArchTags checks if the arch section tag is valid or not
 func chkArchTags(tagField string, secFields []string) bool {
 	ret := true
 	chkArch := runtime.GOARCH
@@ -241,16 +241,31 @@ func chkArchTags(tagField string, secFields []string) bool {
 	return ret
 }
 
+// chkCsp checks if the csp section tag is valid or not
+func chkCspTags(tagField string, secFields []string) bool {
+	ret := true
+	chkCsp := system.GetCSP()
+	if tagField != chkCsp {
+		// csp does not match
+		if chkCsp == "" {
+			chkCsp = "not a cloud"
+		}
+		system.WarningLog("cloud service provider '%s' in section definition '%v' does not match the cloud service provider of the running system ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, chkCsp)
+		ret = false
+	}
+	return ret
+}
+
 // chkBlkTags checks if the vendor or model section tag is valid or not
 // and returns a list of valid block devices
 func chkBlkTags(info, tagField string, secFields, actbdev []string) (bool, []string) {
 	ret := false
+	blkInfo := strings.ToUpper(info)
 	tagExpr := fmt.Sprintf(".*%s.*", tagField)
-	bdev := system.GetAvailBlockInfo(info, tagExpr)
+	bdev := system.GetAvailBlockInfo(blkInfo, tagExpr)
 	if len(bdev) == 0 {
-		blkInfo := strings.ToLower(info)
 		// vendor or model does not match
-		system.WarningLog("%s '%s' in section definition '%v' does not match any available block device %s of the running system. Skipping whole section with all lines till next valid section definition", blkInfo, tagField, secFields, blkInfo)
+		system.WarningLog("%s '%s' in section definition '%v' does not match any available block device %s of the running system. Skipping whole section with all lines till next valid section definition", info, tagField, secFields, info)
 	} else {
 		if len(actbdev) == 0 {
 			bdev = actbdev
