@@ -87,8 +87,22 @@ Example:
 [block:vendor=FTS:model=PRAID EP420*]
 .br
 [block:vendor=FUJITSU:model=ETERNUS_]
-.br
+
 Attention: if the tag does not match any block device, no block device will be handled by saptune. e.g. '\fBsaptune note verify\fP' will list NO block devices.
+
+.TP
+.BI pat= <pattern>
+to define a \fIpattern\fP to match a special block device
+.br
+Currently only supported in \fB[block]\fP section
+.br
+example:
+.br
+[block:pat=nvme] to match all \fI/sys/block/nvme.*\fP block devices
+.br
+[block:pat=sd[ab]] to match \fI/sys/block/sda\fP and \fI/sys/block/sdb\fP
+
+Attention: if the pattern does not match any block device, no block device will be handled by saptune. e.g. '\fBsaptune note verify\fP' will list NO block device. There will be NO Warning or Error message logged in such a case.
 
 .TP
 .BI csp= <cloud service provider>
@@ -118,7 +132,7 @@ The following section definitions are available and used in the saptune SAP Note
 
 List of supported sections:
 .br
-version, block, cpu, grub, limits, login, mem, pagecache, reminder, rpm, service, sysctl, vm
+version, block, cpu, grub, limits, login, mem, pagecache, reminder, rpm, service, sysctl, sys, vm
 
 See detailed description below:
 \" section version - Mandatory
@@ -429,6 +443,17 @@ The section "[sysctl]" can be used to modify kernel parameters. The parameters a
 Please write the section keyword '[sysctl]' in the first line and add the desired tunables in 'sysctl.conf' syntax.
 .TP
 .BI sysctl.parameter= VALUE
+\" section sys
+.SH "[sys]"
+The section "[sys]" can be used to modify parameters available under /sys/, if the related file is writable.
+.br
+The syntax for the sys.parameters is following the 'sysctl.conf' syntax. So it's the absolute filename without the prefixed /sys/ and all remaining '/' exchanged by '.'
+.br
+e.g. \fI/sys/module/watchdog/parameters/open_timeout\fP should be writen as \fBmodule.watchdog.parameters.open_timeout\fP
+.TP
+.BI sys.parameter= VALUE
+.br
+ATTENTION: saptune is NOT validating the value before trying to apply.
 \" section vm
 .SH "[vm]"
 The section "[vm]" manipulates \fI/sys/kernel/mm\fP switches.

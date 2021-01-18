@@ -216,6 +216,9 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 	if system.GetCSP() == "azure" {
 		footnote1 = footnote1AZR
 	}
+	if system.GetCSP() == "aws" {
+		footnote1 = footnote1AWS
+	}
 	switch comparison.ActualValue {
 	case "all:none":
 		compliant = compliant + " [1]"

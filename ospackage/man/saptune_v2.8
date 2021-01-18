@@ -266,9 +266,9 @@ If the Note is already applied, the command will be terminated with the informat
 .SH SOLUTION ACTIONS
 A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.
 .br
-The solution definitions of saptune can be found in the file \fI/usr/share/saptune/solutions\fP or vendor/customer specific solution definitions can be found in the file \fI/etc/saptune/extra/sols/solutions\fP.
+The solution definitions of saptune can be found in the file \fI/usr/share/saptune/solutions\fP or vendor/customer specific solution definitions can be found in the file \fI/etc/saptune/extra/solutions\fP.
 
-It's not possible to combine solutions, there can only be\fBone\fP solution enabled. But it is possible to change a soultion definition by using the override file in \fI/etc/saptune/override/solutions\fP or by creating a custom specific solution definition in the file \fI/etc/saptune/extra/sols/solutions\fP.
+It's not possible to combine solutions, there can only be\fBone\fP solution enabled. But it is possible to change a soultion definition by using the override file in \fI/etc/saptune/override/solutions\fP or by creating a custom specific solution definition in the file \fI/etc/saptune/extra/solutions\fP.
 .SS
 .TP
 .B apply
@@ -425,7 +425,7 @@ Even if editing an active vendor or customer specific note definition file on th
 .RS 0
 customer specific solution definitions
 .br
-In addition to the vendor or customer specific note file definitions described previously saptune now supports vendor or customer specific \fBsolution definitions\fP by using the file \fI/etc/saptune/extra/sols/solutions\fP. All solutions found in \fI/etc/saptune/extra/sols/solutions\fP are listed when running '\fBsaptune solution list\fP'. All \fBsolution options\fP are available for these solutions.
+In addition to the vendor or customer specific note file definitions described previously saptune now supports vendor or customer specific \fBsolution definitions\fP by using the file \fI/etc/saptune/extra/solutions\fP. All solutions found in \fI/etc/saptune/extra/solutions\fP are listed when running '\fBsaptune solution list\fP'. All \fBsolution options\fP are available for these solutions.
 .SS
 .RS 0
 Syntax of the file:
@@ -495,7 +495,7 @@ vendor or customer specific tuning definitions.
 Please see \fBVENDOR SUPPORT\fP above for more information.
 .RE
 .PP
-\fI/etc/saptune/extra/sols/solutions\fP
+\fI/etc/saptune/extra/solutions\fP
 .RS 4
 vendor or customer specific solution definition.
 .br

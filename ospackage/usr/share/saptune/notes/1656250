@@ -1,0 +1,21 @@
+# 1656250 - SAP on AWS: Support prerequisites - Linux Operating System IO Recommendations
+# Version 31 from 02.12.2020 in English
+
+[version]
+# SAP-NOTE=1656250 CATEGORY=LNX-AWS VERSION=31 DATE=02.12.2020 NAME="SAP on AWS: Support prerequisites - Linux Operating System IO Recommendations"
+
+[sys:csp=aws]
+# On linux operating systems the kernel parameter nvme_core.io_timeout controls
+# how long the operating system waits before it considers an IO request to be
+# failed. It should be set to 4294967295 or the maximum value that the
+# operating system allows.
+# /sys/module/nvme_core/parameters/io_timeout
+# kernel cmdline parameter nvme_core.io_timeout=4294967295
+module.nvme_core.parameters.io_timeout=4294967295
+
+[block:pat=nvme:csp=aws]
+# On linux operating systems the IO scheduler controls how the operating
+# systems interacts with storage volumes like AWS EBS. For optimal performance
+# on AWS it should be set to "none".
+# /sys/block/nvme*n1/queue/scheduler
+IO_SCHEDULER=none

@@ -183,11 +183,14 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			ret = chkArchTags(tagField[1], secFields)
 		case "csp":
 			ret = chkCspTags(tagField[1], secFields)
-		case "vendor", "model":
+		case "vendor", "model", "pat":
 			ret, blkDev = chkBlkTags(tagField[0], tagField[1], secFields, blkDev)
 		default:
 			system.WarningLog("skip unkown section tag '%v'.", secTag)
 			ret = false
+		}
+		if ret == false {
+			break
 		}
 	}
 	return ret, blkDev
@@ -257,23 +260,34 @@ func chkCspTags(tagField string, secFields []string) bool {
 }
 
 // chkBlkTags checks if the vendor or model section tag is valid or not
-// and returns a list of valid block devices
+// and returns a list of valid block devices or uses a special device
+// pattern to return a list of valid block devices
 func chkBlkTags(info, tagField string, secFields, actbdev []string) (bool, []string) {
 	ret := false
-	blkInfo := strings.ToUpper(info)
 	tagExpr := fmt.Sprintf(".*%s.*", tagField)
+	// vendor or model
+	blkInfo := strings.ToUpper(info)
+	if info == "pat" {
+		// pattern
+		blkInfo = info
+	}
 	bdev := system.GetAvailBlockInfo(blkInfo, tagExpr)
 	if len(bdev) == 0 {
-		// vendor or model does not match
+		// pattern, vendor or model does not match
 		system.WarningLog("%s '%s' in section definition '%v' does not match any available block device %s of the running system. Skipping whole section with all lines till next valid section definition", info, tagField, secFields, info)
 	} else {
+		// as it is possible to have more than one tag in a
+		// section (vendor and module) we need the overlap for
+		// a valid result
 		if len(actbdev) == 0 {
+			// paranoia, as this should never happens because of the 'if'
+			// 8 lines above
+			// a former call has returned an empty list of valid block
+			// devices. So we return an empty list even that this
+			// tag has returned a non-empty list.
 			bdev = actbdev
 		} else {
-			// as it is possible to have more than one tag in a
-			// section (vendor and module) we need the overlap for
-			// a valid result
-			// an former call has returned a list of valid block
+			// a former call has returned a list of valid block
 			// devices and this call also returned a list of valid
 			// block devices - get overlap or empty
 			newbdev := []string{}

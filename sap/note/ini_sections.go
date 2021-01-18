@@ -17,6 +17,7 @@ import (
 // section name definition
 const (
 	INISectionSysctl    = "sysctl"
+	INISectionSys       = "sys"
 	INISectionVM        = "vm"
 	INISectionCPU       = "cpu"
 	INISectionMEM       = "mem"

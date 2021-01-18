@@ -138,6 +138,8 @@ func (vend INISettings) Initialise() (Note, error) {
 		switch param.Section {
 		case INISectionSysctl:
 			vend.SysctlParams[param.Key], _ = system.GetSysctlString(param.Key)
+		case INISectionSys:
+			vend.SysctlParams[param.Key], _ = system.GetSysString(param.Key)
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = GetVMVal(param.Key)
 		case INISectionBlock:
@@ -227,6 +229,8 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionSysctl:
 			//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
 			//vend.SysctlParams[param.Key] = optimisedValue
+			vend.SysctlParams[param.Key] = OptSysctlVal(param.Operator, param.Key, vend.SysctlParams[param.Key], param.Value)
+		case INISectionSys:
 			vend.SysctlParams[param.Key] = OptSysctlVal(param.Operator, param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionVM:
 			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
@@ -359,6 +363,8 @@ func (vend INISettings) Apply() error {
 			// vm.dirty_ratio is set to 0 and vice versa
 			key, val := vend.getCounterPart(param.Key, revertValues)
 			errs = append(errs, system.SetSysctlString(key, val))
+		case INISectionSys:
+			errs = append(errs, system.SetSysString(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionVM:
 			errs = append(errs, SetVMVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionBlock:

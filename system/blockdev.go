@@ -185,11 +185,16 @@ func storeBlockDeviceInfo(obj BlockDev) error {
 func GetAvailBlockInfo(info, tag string) []string {
 	var blkDevConf *BlockDev
 	ret := []string{}
+	inf := ""
 	if blkDevConf == nil || (len(blkDevConf.AllBlockDevs) == 0 && len(blkDevConf.BlockAttributes) == 0) {
 		blkDevConf, _ = GetBlockDeviceInfo()
 	}
 	for _, entry := range blkDevConf.AllBlockDevs {
-		inf := blkDevConf.BlockAttributes[entry][info]
+		if info == "pat" {
+			inf = entry
+		} else {
+			inf = blkDevConf.BlockAttributes[entry][info]
+		}
 		if inf == "" {
 			continue
 		}

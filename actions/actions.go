@@ -21,6 +21,7 @@ const (
 	footnote1X86       = "[1] setting is not supported by the system"
 	footnote1IBM       = "[1] setting is not relevant for the system"
 	footnote1AZR       = "[1] setting is not available on Azure instances (see SAP Note 2993054)."
+	footnote1AWS       = "[1] setting is not available on AWS instances (see SAP Note 1656250)."
 	footnote2          = "[2] setting is not available on the system"
 	footnote3          = "[3] value is only checked, but NOT set"
 	footnote4          = "[4] cpu idle state settings differ"
