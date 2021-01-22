@@ -263,19 +263,3 @@ func TestGetINIFileVersionSectionEntry(t *testing.T) {
 		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, "")
 	}
 }
-
-func TestChkOsTags(t *testing.T) {
-	tag := "15-*"
-	secFields := []string{"rpm", "os=15-*", "arch=amd64"}
-
-	_ = system.CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr15"), "/etc/os-release")
-	ret := chkOsTags(tag, secFields)
-	if !ret {
-		t.Error("not matching os version")
-	}
-	_ = system.CopyFile("/etc/os-release_OrG", "/etc/os-release")
-	ret = chkOsTags(tag, secFields)
-	if ret {
-		t.Error("matching os version, but shouldn't")
-	}
-}

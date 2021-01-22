@@ -27,22 +27,22 @@ const (
 
 // dmidecode key files
 // /usr/sbin/dmidecode -s chassis-asset-tag
-var dmiChassisAssetTag = "/sys/devices/virtual/dmi/id/chassis_asset_tag"
+var dmiChassisAssetTag = "/sys/class/dmi/id/chassis_asset_tag"
 
 // /usr/sbin/dmidecode -s board-vendor
-var dmiBoardVendor = "/sys/devices/virtual/dmi/id/board_vendor"
+var dmiBoardVendor = "/sys/class/dmi/id/board_vendor"
 
 // /usr/sbin/dmidecode -s bios-vendor
-var dmiBiosVendor = "/sys/devices/virtual/dmi/id/bios_vendor"
+var dmiBiosVendor = "/sys/class/dmi/id/bios_vendor"
 
 // /usr/sbin/dmidecode -s bios-version
-var dmiBiosVersion = "/sys/devices/virtual/dmi/id/bios_version"
+var dmiBiosVersion = "/sys/class/dmi/id/bios_version"
 
 // /usr/sbin/dmidecode -s system-version
-var dmiSystemVersion = "/sys/devices/virtual/dmi/id/system_version"
+var dmiSystemVersion = "/sys/class/dmi/id/system_version"
 
 // /usr/sbin/dmidecode -s system-manufacturer
-var dmiSystemManufacturer = "/sys/devices/virtual/dmi/id/system-manufacturer"
+var dmiSystemManufacturer = "/sys/class/dmi/id/system-manufacturer"
 
 // CSP identifier
 var isAzureCat = regexp.MustCompile(`.*(7783-7084-3265-9085-8269-3286-77|MSFT AZURE VM).*`)
@@ -59,7 +59,7 @@ var isAlibaba = regexp.MustCompile(`.*[aA]libaba.*`)
 
 // GetCSP returns the identifier of the cloud service provider of the current
 // running system or an empty string, if the system does not belong to a CSP
-// use files in /sys/devices/virtual/id/ instead of dmidecode command
+// use files in /sys/class/dmi/id/ instead of dmidecode command
 func GetCSP() string {
 	csp := ""
 

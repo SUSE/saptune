@@ -13,7 +13,7 @@
 # kernel cmdline parameter nvme_core.io_timeout=4294967295
 module.nvme_core.parameters.io_timeout=4294967295
 
-[block:pat=nvme:csp=aws]
+[block:blkpat=nvme:csp=aws]
 # On linux operating systems the IO scheduler controls how the operating
 # systems interacts with storage volumes like AWS EBS. For optimal performance
 # on AWS it should be set to "none".

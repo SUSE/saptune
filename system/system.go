@@ -30,6 +30,9 @@ var ErrorExitOut = ErrorLog
 // get saptune arguments and flags
 var saptArgs, saptFlags = ParseCliArgs()
 
+// DmiID is the path to the dmidecode representation in the /sys filesystem
+var DmiID = "/sys/class/dmi/id"
+
 // IsUserRoot return true only if the current user is root.
 func IsUserRoot() bool {
 	return os.Getuid() == 0
@@ -354,4 +357,39 @@ func WrapTxt(text string, width int) (folded []string) {
 	}
 	folded = strings.Split(foldedTxt, "\n")
 	return
+}
+
+// GetDmiID return the content of /sys/devices/virtual/dmi/id/<file> or
+// an empty string
+func GetDmiID(file string) (string, error) {
+	var err error
+	var content []byte
+	ret := ""
+	fileName := fmt.Sprintf("%s/%s", DmiID, file)
+	if content, err = ioutil.ReadFile(fileName); err == nil {
+		ret = strings.TrimSpace(string(content))
+	}
+	return ret, err
+}
+
+// GetHWIdentity returns the hardwar vendor or model of the system
+// needs adaption, if the files to identify the hardware will change or
+// if we need to look at different files for different vendors
+// but the 'open' API GetDmiID exists for workarounds at customer side
+func GetHWIdentity(info string) (string, error) {
+	var err error
+	var content []byte
+	fileName := ""
+	ret := ""
+
+	switch info {
+	case "vendor":
+		fileName = fmt.Sprintf("%s/board_vendor", DmiID)
+	case "model":
+		fileName = fmt.Sprintf("%s/product_name", DmiID)
+	}
+	if content, err = ioutil.ReadFile(fileName); err == nil {
+		ret = strings.TrimSpace(string(content))
+	}
+	return ret, err
 }
