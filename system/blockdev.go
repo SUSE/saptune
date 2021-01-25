@@ -17,11 +17,12 @@ type BlockDev struct {
 	BlockAttributes map[string]map[string]string
 }
 
+var isVD = regexp.MustCompile(`^vd\w+$`)
+
 // BlockDeviceIsDisk checks, if a block device is a disk
 // /sys/block/*/device/type (TYPE_DISK / 0x00)
 // does not work for virtio block devices, needs workaround
 func BlockDeviceIsDisk(dev string) bool {
-	isVD := regexp.MustCompile(`^vd\w+$`)
 	fname := fmt.Sprintf("/sys/block/%s/device/type", dev)
 	dtype, err := ioutil.ReadFile(fname)
 	if err != nil || strings.TrimSpace(string(dtype)) != "0" {
@@ -134,12 +135,16 @@ func CollectBlockDeviceInfo() []string {
 		readahead, _ := GetSysString(path.Join("block", bdev, "queue", "read_ahead_kb"))
 		blockMap["READ_AHEAD_KB"] = readahead
 
-		// future use
-		// VENDOR, TYPE for FUJITSU udev replacement
-		// vend := GetDMIDecode(bdev, "VENDOR")
-		// blockMap["VENDOR"] = vendor
-		// blckType := GetDMIDecode(bdev, "TYPE")
-		// blockMap["TYPE""] = blckType
+		// VENDOR, MODEL e.g. for FUJITSU udev replacement
+		vendor := ""
+		model := ""
+		// virtio block devices do not have usefull values.
+		if !isVD.MatchString(bdev) {
+			vendor, _ = GetSysString(path.Join("block", bdev, "device", "vendor"))
+			model, _ = GetSysString(path.Join("block", bdev, "device", "model"))
+		}
+		blockMap["VENDOR"] = vendor
+		blockMap["MODEL"] = model
 		// ... more to come
 
 		// end of sys/block loop
@@ -173,4 +178,30 @@ func storeBlockDeviceInfo(obj BlockDev) error {
 		return ioutil.WriteFile(bdevFileName, content, 0644)
 	}
 	return nil
+}
+
+// GetAvailBlockInfo returns a list of all block devices matching a special
+// tag regarding block device info like VENDOR or MODEL
+func GetAvailBlockInfo(info, tag string) []string {
+	var blkDevConf *BlockDev
+	ret := []string{}
+	inf := ""
+	if blkDevConf == nil || (len(blkDevConf.AllBlockDevs) == 0 && len(blkDevConf.BlockAttributes) == 0) {
+		blkDevConf, _ = GetBlockDeviceInfo()
+	}
+	for _, entry := range blkDevConf.AllBlockDevs {
+		if info == "pat" {
+			inf = entry
+		} else {
+			inf = blkDevConf.BlockAttributes[entry][info]
+		}
+		if inf == "" {
+			continue
+		}
+		match, _ := regexp.MatchString(tag, inf)
+		if match {
+			ret = append(ret, entry)
+		}
+	}
+	return ret
 }

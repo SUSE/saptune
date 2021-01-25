@@ -31,9 +31,12 @@ Lines starting with '[' indicate the begin of a new section.
 .SH SECTIONS
 A section starts with a '[section_name]' keyword in the first line, followed by lines with options and comments.
 
-It is possible to limit the scope of a section (e.g. to a special \fIhardware architecture\fP and/or a special \fIos version\fP) by adding tags to the section definition.
+It is possible to limit the scope of a section (e.g. to a special \fIhardware architecture\fP and/or a special \fIos version\fP, a special \fIblock device hardware\fP or a \fIcloud service provider\fP) by adding \fBtags\fP to the section definition.
 .br
-Tags are separated  by ':' and can appear in any order. Unsupported tags are considered an error and the whole section is ignored.
+Tags are separated by ':' and can appear in any order. Unsupported tags are considered an error and the whole section is ignored.
+.br
+For some tags the value of the tag is treated as a string and used as a regular expression to match the content of the respective source. This is mentioned in the description of the possible tags below. As a reference https://golang.org/pkg/regexp/#MatchString can be used to see, what additional expressions may be possible inside the tag value. But attention, only some basic ones are really supprted (like 'sd[ab]' for block devices).
+
 
 The \fBsyntax\fP for such sections is:
 
@@ -58,6 +61,100 @@ Example:
 .br
 [sysctl:os=15-SP1:arch=ppc64le]
 
+.TP
+.BI vendor= <hardware vendor>
+to define a special \fIsystem hardware vendor\fP
+.br
+Valid values for \fBvendor=\fP are the values found in \fB/sys/class/dmi/board_vendor\fP or parts of the string available in this file.
+.br
+The value of the vendor tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the vendor file.
+.TP
+.BI model= <hardware model>
+to define a special \fIsystem hardware model\fP
+.br
+Valid values for \fBmodel=\fP are the values found in \fB/sys/class/dmi/product_name\fP or parts of the string available in this file.
+.br
+The value of the model tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the model file.
+
+.RE
+Example:
+.br
+[sysctl:vendor=FUJITSU:model=RX4770 M*]
+
+.TP
+.BI csp= <cloud service provider>
+to define a special \fIcloud service provider\fP
+.br
+Valid values for \fBcsp=\fP are \fBazure\fP and \fBaws\fP
+
+.RE
+Example:
+.br
+[sysctl:csp=azure]
+
+.TP
+.BI DMI interface tag: <filename>= <file content>
+.br
+Additional every filename from \fI/sys/class/dmi/id/\fP can be used as a tag.
+.br
+This way it's possible to restrict a section to a special hardware vendor or hardware model regarding the bios, the chassis, the board or anything else provided by the DMI interface.
+.br
+The value of the DMI interface tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the file in \fI/sys/class/dmi/id/<filename>\fP.
+
+.RE
+Example:
+.br
+[sysctl:bios_vendor=Dell]
+
+Attention: if the pattern does not match any filename in \fI/sys/class/dmi/id\fP, the section will be skipped as unknown.
+
+.TP
+For the following 3 tags we have special rules:
+.br
+This tags have different effects regarding the section they are used. In all sections except the \fB[block]\fP section they are used the same way all other tags are used to restrict the section to be only valid on a system which includes this special sort of block device.
+.br
+But used in the \fB[block]\fP section they mean that all the settings available in this section will \fBonly\fP apply to block devices, which match the tag value. So you can restrict the settings to dedicated block devices.
+.TP
+.BI blkvendor= <block device hardware vendor>
+to define a \fIhardware vendor\fP to match a special block device
+.br
+Valid values for \fBblkvendor=\fP are the values found in \fB/sys/block/<dev>/device/vendor\fP or parts of the string available in this file.
+.br
+The value of the blkvendor tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the vendor file.
+.TP
+.BI blkmodel= <block device hardware model>
+to define a \fIhardware model\fP to match a special block device
+.br
+Valid values for \fBblkmodel=\fP are the values found in \fB/sys/block/<dev>/device/model\fP or parts of the string available in this file.
+.br
+The value of the blkmodel tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the model file.
+
+.RE
+Example:
+.br
+[block:blkvendor=ATA]
+.br
+[block:blkmodel=QEMU HARDDISK]
+.br
+[block:blkvendor=FTS:blkmodel=PRAID EP420*]
+.br
+[block:blkvendor=FUJITSU:blkmodel=ETERNUS_]
+
+Attention: if the tag does not match any block device, no block device will be handled by saptune. e.g. '\fBsaptune note verify\fP' will list NO block devices.
+
+.TP
+.BI blkpat= <pattern>
+to define a \fIpattern\fP to match a special block device in \fI/sys/block/\fP
+.br
+example:
+.br
+[block:blkpat=nvme] to match all \fI/sys/block/nvme.*\fP block devices
+.br
+[block:blkpat=sd[ab]] to match \fI/sys/block/sda\fP and \fI/sys/block/sdb\fP
+
+Attention: if the pattern does not match any block device, no block device will be handled by saptune. e.g. '\fBsaptune note verify\fP' will list NO block device. There will be NO Warning or Error message logged in such a case.
+
+
 For processing a section the following rules apply:
 .IP \[bu]
 Only sections that match the system are processed. Sections without a tag are always used.
@@ -68,14 +165,14 @@ The order of the section within the file matter. Eache section and each line in 
 The rules apply for shipped Note definition files as well as for customer defined Note definition files. Tagged sections can be used in override files.
 
 \fBATTENTION:\fP To be clear - if there are more sections with the \fBsame\fP \fIsection_name\fP containing the \fBsame\fP \fIparameters\fP with \fBdifferent\fP \fIvalues\fP, the last valid section will win.
-.br
+
 So it's all about \fBorder\fP.
 
 The following section definitions are available and used in the saptune SAP Note definition files. Each of these sections can be used in a vendor or customer specific Note definition file placed in \fI/etc/saptune/extra\fP.
 
 List of supported sections:
 .br
-version, block, cpu, grub, limits, login, mem, pagecache, reminder, rpm, service, sysctl, vm
+version, block, cpu, grub, limits, login, mem, pagecache, reminder, rpm, service, sysctl, sys, vm
 
 See detailed description below:
 \" section version - Mandatory
@@ -386,6 +483,17 @@ The section "[sysctl]" can be used to modify kernel parameters. The parameters a
 Please write the section keyword '[sysctl]' in the first line and add the desired tunables in 'sysctl.conf' syntax.
 .TP
 .BI sysctl.parameter= VALUE
+\" section sys
+.SH "[sys]"
+The section "[sys]" can be used to modify parameters available under /sys/, if the related file is writable.
+.br
+The syntax for the sys.parameters is following the 'sysctl.conf' syntax. So it's the absolute filename without the prefixed /sys/ and all remaining '/' exchanged by '.'
+.br
+e.g. \fI/sys/module/watchdog/parameters/open_timeout\fP should be writen as \fBmodule.watchdog.parameters.open_timeout\fP
+.TP
+.BI sys.parameter= VALUE
+.br
+ATTENTION: saptune is NOT validating the value before trying to apply.
 \" section vm
 .SH "[vm]"
 The section "[vm]" manipulates \fI/sys/kernel/mm\fP switches.

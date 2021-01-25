@@ -17,7 +17,7 @@ import (
 const (
 	SolutionSheet         = "/var/lib/saptune/working/solutions"
 	OverrideSolutionSheet = "/etc/saptune/override/solutions"
-	ExtraSolutionSheet    = "/etc/saptune/extra/sols/solutions"
+	ExtraSolutionSheet    = "/etc/saptune/extra/solutions"
 	DeprecSolutionSheet   = "/usr/share/saptune/solsdeprecated"
 	NoteTuningSheets      = "/var/lib/saptune/working/notes/"
 	ExtraTuningSheets     = "/etc/saptune/extra/"

@@ -57,6 +57,9 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 	// Collect those defined by 3rd party
 	_, files = system.ListDir(thirdPartyTuningDir, "3rd party tuning definitions")
 	for _, fileName := range files {
+		if fileName == "solutions" {
+			continue
+		}
 		// ignore left over files (BOBJ and ASE definition files) from
 		// the migration of saptune version 1 to saptune version 2
 		if fileName == "SAP_BOBJ-SAP_Business_OBJects.conf" || fileName == "SAP_ASE-SAP_Adaptive_Server_Enterprise.conf" {

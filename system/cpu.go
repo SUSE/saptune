@@ -75,15 +75,11 @@ func GetPerfBias() string {
 // SetPerfBias set CPU performance configuration to the system using 'cpupower' command
 func SetPerfBias(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "set", "-b", value)
+	if !canSetPerfBias() {
+		return nil
+	}
+
 	cpu := ""
-	if !SupportsPerfBias() {
-		WarningLog(notSupported)
-		return nil
-	}
-	if SecureBootEnabled() {
-		WarningLog("Cannot set Perf Bias when SecureBoot is enabled, skipping")
-		return nil
-	}
 	for k, entry := range strings.Fields(value) {
 		fields := strings.Split(entry, ":")
 		if fields[0] != "all" {
@@ -100,7 +96,23 @@ func SetPerfBias(value string) error {
 	return nil
 }
 
-// SecureBootEnabled check, if the system is in lock-down mode
+// canSetPerfBias checks, if Perf Bias can be set
+func canSetPerfBias() bool {
+	setPerf := true
+	if GetCSP() == "azure" {
+		WarningLog("Setting Perf Bias is not supported on '%s'\n", CSPAzureLong)
+		setPerf = false
+	} else if SecureBootEnabled() {
+		WarningLog("Cannot set Perf Bias when SecureBoot is enabled, skipping")
+		setPerf = false
+	} else if !supportsPerfBias() {
+		WarningLog(notSupported)
+		setPerf = false
+	}
+	return setPerf
+}
+
+// SecureBootEnabled checks, if the system is in lock-down mode
 func SecureBootEnabled() bool {
 	cmdName := "/usr/bin/mokutil"
 	cmdArgs := []string{"--sb-state"}
@@ -116,8 +128,8 @@ func SecureBootEnabled() bool {
 	return true
 }
 
-// SupportsPerfBias check, if the system will support CPU performance settings
-func SupportsPerfBias() bool {
+// supportsPerfBias check, if the system will support CPU performance settings
+func supportsPerfBias() bool {
 	cmdName := cpupowerCmd
 	cmdArgs := []string{"info", "-b"}
 
@@ -178,18 +190,12 @@ func GetGovernor() map[string]string {
 // to the system using 'cpupower' command
 func SetGovernor(value, info string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "frequency-set", "-g", value)
+	if !canSetGov(value, info) {
+		return nil
+	}
+
 	cpu := ""
 	tst := ""
-	cmdName := cpupowerCmd
-
-	if value == "all:none" || info == "notSupported" {
-		WarningLog("governor settings not supported by the system")
-		return nil
-	}
-	if !CmdIsAvailable(cmdName) {
-		WarningLog("command '%s' not found", cmdName)
-		return nil
-	}
 	for k, entry := range strings.Fields(value) {
 		fields := strings.Split(entry, ":")
 		if fields[0] != "all" {
@@ -199,7 +205,7 @@ func SetGovernor(value, info string) error {
 			cpu = fields[0]
 			tst = "cpu0"
 		}
-		if !IsValidGovernor(tst, fields[1]) {
+		if !isValidGovernor(tst, fields[1]) {
 			WarningLog("'%s' is not a valid governor, skipping.", fields[1])
 			continue
 		}
@@ -212,8 +218,24 @@ func SetGovernor(value, info string) error {
 	return nil
 }
 
-// IsValidGovernor check, if the system will support CPU frequency settings
-func IsValidGovernor(cpu, gov string) bool {
+// canSetGov checks, if the governor can be set
+func canSetGov(value, info string) bool {
+	setGov := true
+	if GetCSP() == "azure" {
+		WarningLog("Setting governor is not supported on '%s'\n", CSPAzureLong)
+		setGov = false
+	} else if value == "all:none" || info == "notSupported" {
+		WarningLog("governor settings not supported by the system")
+		setGov = false
+	} else if !CmdIsAvailable(cpupowerCmd) {
+		WarningLog("command '%s' not found", cpupowerCmd)
+		setGov = false
+	}
+	return setGov
+}
+
+// isValidGovernor check, if the system will support CPU frequency settings
+func isValidGovernor(cpu, gov string) bool {
 	val, err := ioutil.ReadFile(path.Join(cpuDir, cpu, "/cpufreq/scaling_available_governors"))
 	if err == nil && strings.Contains(string(val), gov) {
 		return true
@@ -274,7 +296,7 @@ func GetFLInfo() (string, string, bool) {
 		}
 	}
 	// check, if all cpus have the same state settings
-	cpuStateDiffer = CheckCPUState(cpuStateMap)
+	cpuStateDiffer = checkCPUState(cpuStateMap)
 
 	if !stateDisabled {
 		// start value for force latency, if no states are disabled
@@ -293,8 +315,7 @@ func GetFLInfo() (string, string, bool) {
 func SetForceLatency(value, savedStates, info string, revert bool) error {
 	oldState := ""
 
-	if value == "all:none" || info == "notSupported" {
-		WarningLog("latency settings not supported by the system")
+	if !canSetForceLatency(value, info) {
 		return nil
 	}
 
@@ -353,9 +374,23 @@ func SetForceLatency(value, savedStates, info string, revert bool) error {
 	return err
 }
 
-// CheckCPUState checks, if all cpus have the same state settings
+// canSetForceLatency checks, if Force Latency can be set
+func canSetForceLatency(value, info string) bool {
+	setLatency := true
+	if GetCSP() == "azure" {
+		WarningLog("latency settings are not supported on '%s'\n", CSPAzureLong)
+		setLatency = false
+	}
+	if value == "all:none" || info == "notSupported" {
+		WarningLog("latency settings not supported by the system")
+		setLatency = false
+	}
+	return setLatency
+}
+
+// checkCPUState checks, if all cpus have the same state settings
 // returns true, if the cpu states differ
-func CheckCPUState(csMap map[string]string) bool {
+func checkCPUState(csMap map[string]string) bool {
 	ret := false
 	oldcpuState := ""
 	for _, cpuState := range csMap {

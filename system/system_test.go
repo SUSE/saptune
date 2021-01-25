@@ -516,3 +516,50 @@ func TestWrapTxt(t *testing.T) {
 		}
 	}
 }
+
+func TestGetDmiID(t *testing.T) {
+	DmiID = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata")
+	expected := "SUSE saptune"
+	file := "product_name"
+	dmi, _ := GetDmiID(file)
+	if dmi != "SUSE saptune" {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, dmi)
+	}
+	file = "product_hugo"
+	expected = ""
+	dmi, _ = GetDmiID(file)
+	if dmi != expected {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, dmi)
+	}
+	file = "no_dmi_file_found"
+	dmi, err := GetDmiID(file)
+	if err == nil {
+		t.Errorf("file '%s' exists, but shouldn't", file)
+	}
+	DmiID = "/sys/class/dmi/id"
+}
+
+func TestGetHWIdentity(t *testing.T) {
+	DmiID = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata")
+	expected := "SUSE HW"
+	info := "vendor"
+	hwvend, _ := GetHWIdentity(info)
+	if hwvend != expected {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, hwvend)
+	}
+
+	info = "model"
+	expected = "SUSE saptune"
+	hwvend, _ = GetHWIdentity(info)
+	if hwvend != expected {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, hwvend)
+	}
+
+	info = "hugo"
+	expected = ""
+	hwvend, _ = GetHWIdentity(info)
+	if hwvend != expected {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, hwvend)
+	}
+	DmiID = "/sys/class/dmi/id"
+}

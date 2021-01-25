@@ -5,7 +5,6 @@ import (
 	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"regexp"
-	"runtime"
 	"strings"
 )
 
@@ -157,86 +156,6 @@ func splitGrub(line string, kov []string) []string {
 	return kov
 }
 
-// chkSecTags checks, if the tags of a section are valid
-func chkSecTags(secFields []string) bool {
-	ret := true
-	cnt := 0
-	for _, secTag := range secFields {
-		if cnt == 0 {
-			// skip section name
-			cnt = cnt + 1
-			continue
-		}
-		if secTag == "" {
-			// support empty tags
-			continue
-		}
-		tagField := strings.Split(secTag, "=")
-		if len(tagField) != 2 {
-			system.WarningLog("wrong syntax of section tag '%s', skipping whole section '%v'. Please check. ", secTag, secFields)
-			return false
-		}
-		switch tagField[0] {
-		case "os":
-			ret = chkOsTags(tagField[1], secFields)
-		case "arch":
-			ret = chkArchTags(tagField[1], secFields)
-		default:
-			system.WarningLog("skip unkown section tag '%v'.", secTag)
-			ret = false
-		}
-	}
-	return ret
-}
-
-// chkOsTags checks if the os section tag is valid or not
-func chkOsTags(tagField string, secFields []string) bool {
-	ret := true
-	osWild := regexp.MustCompile(`(.*)-(\*)`)
-	osw := osWild.FindStringSubmatch(tagField)
-	if len(osw) != 3 {
-		if tagField != system.GetOsVers() {
-			// os version does not match
-			system.WarningLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
-			ret = false
-		}
-	} else if osw[2] == "*" {
-		// wildcard
-		switch osw[1] {
-		case "15":
-			if !system.IsSLE15() {
-				system.WarningLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
-				ret = false
-			}
-		case "12":
-			if !system.IsSLE12() {
-				system.WarningLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
-				ret = false
-			}
-		default:
-			system.WarningLog("unsupported os version '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", tagField, secFields)
-			ret = false
-		}
-	}
-	return ret
-}
-
-// chkArchTags checks if the os section tag is valid or not
-func chkArchTags(tagField string, secFields []string) bool {
-	ret := true
-	chkArch := runtime.GOARCH
-	if chkArch == "amd64" {
-		// map architecture to 'uname -i' output
-		chkArch = "x86_64"
-	}
-	if tagField != chkArch {
-		// arch does not match
-		system.WarningLog("system architecture '%s' in section definition '%v' does not match the architecture of the running system '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, chkArch)
-		ret = false
-	}
-	return ret
-}
-
 // ParseINIFile read the content of the configuration file
 func ParseINIFile(fileName string, autoCreate bool) (*INIFile, error) {
 	content, err := system.ReadConfigFile(fileName, autoCreate)
@@ -254,6 +173,7 @@ func ParseINI(input string) *INIFile {
 	}
 
 	reminder := ""
+	bdevs := []string{}
 	skipSection := false
 	currentSection := ""
 	currentEntriesArray := make([]INIEntry, 0, 8)
@@ -288,11 +208,21 @@ func ParseINI(input string) *INIFile {
 				continue
 			}
 			sectionFields := strings.Split(currentSection, ":")
+
+			// moved block device colletion so that the info can be
+			// used inside the 'tag' checks
+			if sectionFields[0] == "block" && blckCnt == 0 {
+				system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
+				blckCnt = blckCnt + 1
+				// blockDev all valid block devices of the
+				// system regardless of any section tag
+				blockDev = system.CollectBlockDeviceInfo()
+			}
+			bdevs = blockDev
 			// len(sectionFields) == 1 - standard syntax [section], no os or arch check needed, chkOk = true
 			if len(sectionFields) > 1 {
 				// check of section tags needed
-				chkOk = chkSecTags(sectionFields)
-
+				chkOk, bdevs = chkSecTags(sectionFields, bdevs)
 			}
 			if chkOk {
 				currentSection = sectionFields[0]
@@ -351,12 +281,9 @@ func ParseINI(input string) *INIFile {
 				currentEntriesMap[entry.Key] = entry
 			}
 		} else if currentSection == "block" {
-			if blckCnt == 0 {
-				system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
-				blckCnt = blckCnt + 1
-				blockDev = system.CollectBlockDeviceInfo()
-			}
-			for _, bdev := range blockDev {
+			// bdevs contains all block devices valid for the
+			// current block section regarding to the used tags
+			for _, bdev := range bdevs {
 				entry := INIEntry{
 					Section:  currentSection,
 					Key:      fmt.Sprintf("%s_%s", kov[1], bdev),

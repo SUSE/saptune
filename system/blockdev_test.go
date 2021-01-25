@@ -79,3 +79,49 @@ func TestGetBlockDeviceInfo(t *testing.T) {
 	bdevFile := path.Join(SaptuneSectionDir, "/blockdev.run")
 	_ = os.Remove(bdevFile)
 }
+
+func TestGetAvailBlockInfo(t *testing.T) {
+	bdevConf := BlockDev{
+		AllBlockDevs:    make([]string, 0, 6),
+		BlockAttributes: make(map[string]map[string]string),
+	}
+	bdevConf.AllBlockDevs = []string{"sda", "sdb", "sdc"}
+	bdevConf.BlockAttributes["sda"] = map[string]string{"IO_SCHEDULER": "mq-deadline", "NRREQ": "32", "READ_AHEAD_KB": "512", "VALID_SCHEDS": "[none] mq-deadline kyber bfq", "MODEL": "QEMU HARDDISK", "VENDOR": "QEMU"}
+	bdevConf.BlockAttributes["sdb"] = map[string]string{"IO_SCHEDULER": "bfq", "NRREQ": "64", "READ_AHEAD_KB": "1024", "VALID_SCHEDS": "[none] mq-deadline kyber bfq", "MODEL": "QEMU HARDDISK", "VENDOR": "ATA"}
+	bdevConf.BlockAttributes["sdc"] = map[string]string{"IO_SCHEDULER": "none", "NRREQ": "4", "READ_AHEAD_KB": "128", "VALID_SCHEDS": "[none] mq-deadline kyber bfq", "MODEL": "", "VENDOR": "TESTER"}
+
+	err := storeBlockDeviceInfo(bdevConf)
+	if err != nil {
+		t.Error("storing block device info failed")
+	}
+
+	info := "MODEL"
+	tag := ".*QEMU HARDDISK.*"
+	val := []string{"sda", "sdb"}
+	bdev := GetAvailBlockInfo(info, tag)
+	eq := reflect.DeepEqual(bdev, val)
+	if !eq {
+		t.Errorf("expected:'%+v' - actual:'%+v'\n", val, bdev)
+	}
+
+	info = "VENDOR"
+	tag = ".*ATA.*"
+	val = []string{"sdb"}
+	bdev = GetAvailBlockInfo(info, tag)
+	eq = reflect.DeepEqual(bdev, val)
+	if !eq {
+		t.Errorf("expected:'%+v' - actual:'%+v'\n", val, bdev)
+	}
+
+	info = "HUGO"
+	tag = ".*TESTER.*"
+	val = []string{}
+	bdev = GetAvailBlockInfo(info, tag)
+	eq = reflect.DeepEqual(bdev, val)
+	if !eq {
+		t.Errorf("expected:'%+v' - actual:'%+v'\n", val, bdev)
+	}
+
+	bdevFile := path.Join(SaptuneSectionDir, "/blockdev.run")
+	_ = os.Remove(bdevFile)
+}
