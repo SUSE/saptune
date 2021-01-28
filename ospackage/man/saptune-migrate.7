@@ -1,5 +1,5 @@
 .\"/*
-.\" * Copyright (c) 2017-2020 SUSE LLC.
+.\" * Copyright (c) 2017-2021 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Sören Schmidt, Angela Briel
 .\" *
@@ -15,12 +15,12 @@
 .\" */
 .\"
 
-.TH "saptune-migrate" "7" "July 2020" "" "migration from saptune version 1 to saptune version 2/3"
+.TH "saptune-migrate" "7" "January 2021" "" "migration from saptune version 1 to saptune version 3"
 .SH NAME
-saptune\-migration \- migration of saptune version 1 to saptune version 2/3
+saptune\-migration \- migration of saptune version 1 to saptune version 3
 
 .SH DESCRIPTION
-As there are too many logical and structural changes between the saptune versions 1 and 2 the migration has to be planned carefully and performed manually.
+As there are too many logical and structural changes between the saptune versions 1 and 3 the migration has to be planned carefully and performed manually.
 
 To determine the current version please run 'saptune version'.
 
@@ -28,7 +28,7 @@ The section MIGRATION will guide you through it step by step. The sections SOLUT
 
 .SH FILES TO REMOVE AFTER MIGRATION
 
-The package update from version 1 to version 2/3 creates or copies some files during post install to allows this smooth migration. But after finishing the migration these files should be removed manually.
+The package update from version 1 to version 3 creates or copies some files during post install to allows this smooth migration. But after finishing the migration these files should be removed manually.
 
 .BI /etc/saptune/extra/SAP_BOBJ-SAP_Business_OBJects.conf
 .PP
@@ -42,7 +42,7 @@ and the directory
 
 .SH IMPORTANT
 
-\fBOnly a migration from version 1 to version 2/3 is supported!\fP
+\fBOnly a migration from version 1 to version 3 is supported!\fP
 
 .SH SOLUTIONS
 
@@ -51,7 +51,7 @@ The following solutions are shipped:
 tab(:) box;
 c | l | l
 l | l | l.
-SOLUTION:Version 1:Version 2/3
+SOLUTION:Version 1:Version 3
 _
 BOBJ:T{
 1275776* 1557506** 1984787 SAP_BOBJ
@@ -100,9 +100,9 @@ T}:T{
 T}
 .TE
 
-*   SAP Note \fB1275776\fP has been rewritten and therefore removed in version 2/3.
+*   SAP Note \fB1275776\fP has been rewritten and therefore removed in version 3.
 .HP 4
-** SAP Note \fB1557506\fP has been removed from the solutions in version 2/3 because it is only required in a few workload specific use cases.
+** SAP Note \fB1557506\fP has been removed from the solutions in version 3 because it is only required in a few workload specific use cases.
 .PP
 Note: In version 1 the solutions BOBJ and SAP-ASE were not available on ppc64 little-endian.
 
@@ -128,16 +128,16 @@ l | l l l
 l | l l l
 l | l l l
 l | l | l | l.
-SAP Note:v1:v2:comment
+SAP Note:v1:v3:comment
 _
 941735:no:yes:T{
-newly introduced in version 2/3
+newly introduced in version 3
 T}
 _
 1275776:yes*:no:T{
 This SAP Note has been rewritten and no longer contains any settings.
 .br
-recommendations and therefore has been removed from version 2/3.
+recommendations and therefore has been removed from version 3.
 .br
 The SAP Note is still part of version 1 with the former recommendations.
 T}
@@ -166,54 +166,54 @@ To replace 1275776, you can use:
 T}
 _
 1410736:no:yes:T{
-newly introduced in version 2/3
+newly introduced in version 3
 T}
 _
 1557506:yes:yes:T{
-In version 2 only the HANA formula is used.
+In version 3 only the HANA formula is used.
 T}
 _
 1680803:no:yes:T{
-newly introduced in version 2/3
+newly introduced in version 3
 T}
 _
 1771258:no:yes:T{
-newly introduced in version 2/3
+newly introduced in version 3
 T}
 _
 1805750:no:yes:T{
-newly introduced in version 2/3
+newly introduced in version 3
 T}
 _
 1980196:no:yes:T{
-newly introduced in version 2/3
+newly introduced in version 3
 T}
 _
 1984787:yes**:yes:T{
 .br
-In version 2 DefaultUserTaskMax is set/removed at SAP Note apply and a reboot is no longer required.
+In version 3 DefaultUserTaskMax is set/removed at SAP Note apply and a reboot is no longer required.
 T}
 _
 2161991:yes**:yes:T{
-same defaults between version 1 and 2
+same defaults between version 1 and 3
 T}
 _
 2205917:yes*:yes:T{
 In version 1 the configuration was partially hard coded and partially done by tuned (always enabled regardless if note was active or not!)
 .br
-In version 2/3 this done by saptune itself.
+In version 3 this done by saptune itself.
 T}
 _
 2382421:no:yes:T{
-newly introduced in version 2/3
+newly introduced in version 3
 T}
 _
 2534844:no:yes:T{
-newly introduced in version 2/3
+newly introduced in version 3
 T}
 _
 SAP_ASE:yes:no:T{
-Has been replaced by \fB1680803\fP in version 2/3. The same defaults, but 1680803 also covers
+Has been replaced by \fB1680803\fP in version 3. The same defaults, but 1680803 also covers
 .br
 net.ipv4.tcp_keepalive_intvl and
 .br
@@ -221,7 +221,7 @@ net.ipv4.tcp_keepalive_time.
 T}
 _
 SAP_BOBJ:yes:yes:T{
-no changes between version 1 and 2
+no changes between version 1 and 3
 T}
 _
 SUSE-GUIDE-01:yes:no:T{
@@ -241,7 +241,7 @@ In version 1 part of configuration was hard coded or configurable via /etc/sysco
 .br
 Due to tuned CPU tuning (see SAP Note 2205917) was always active.
 
-In version 2/3 everything can be configured via an override file in /etc/saptune/override/.
+In version 3 everything can be configured via an override file in /etc/saptune/override/.
 .br
 For details and defaults read the configuration in the corresponding Note definition files in /usr/share/saptune/notes/.
 
@@ -297,38 +297,38 @@ Version 1 of saptune uses the following configurations:
 
 .SS Migration Planning:
 
-Before starting the migration, familiarize yourself with saptune version 2/3.
-Please read the man pages of saptune_v2(8) and saptune-note(5).
+Before starting the migration, familiarize yourself with saptune version 3.
+Please read the man pages of saptune(8) and saptune-note(5).
 .br
 
-Solutions of version 2/3 can encompass more SAP Notes then in version 1.
+Solutions of version 3 can encompass more SAP Notes then in version 1.
 .br
 Please check section SOLUTIONS for details. You might want to deselect some SAP Notes, change or disable parameters.
 
-SAP notes are more comprehensive in version 2/3.
+SAP notes are more comprehensive in version 3.
 .br
 Please check section SAP NOTES for details. You might want to change or disable parameters.
 
-Some SAP notes have been removed in version 2/3.
+Some SAP notes have been removed in version 3.
 .br
 Please check section SAP NOTES for details. You might want to add your own configuration file.
 
-In version 1 multiple solutions can be applied, in saptune version 2/3 only one at the same time.
+In version 1 multiple solutions can be applied, in saptune version 3 only one at the same time.
 .br
 If you had multiple solutions in the past, choose the most suitable one and add additional notes.
 
 Version 1 has changed system parameters only when the current value was lower.
 .br
-Version 2 will set the parameter always to the configured value, no matter the current value.
+Version 3 will set the parameter always to the configured value, no matter the current value.
 .br
 
 .SS Migration Steps:
 
-The following steps describe the easisest way to migrate from version 1 to version 2/3.
+The following steps describe the easisest way to migrate from version 1 to version 3.
 
 .nr step 1 1
 .IP \n[step]. 4
-Determine current solutions and SAP Notes for version 1 and plan the ones for version 2/3.
+Determine current solutions and SAP Notes for version 1 and plan the ones for version 3.
 
     Use these commands to get a list of selected solutions and notes.
 
@@ -336,11 +336,11 @@ Determine current solutions and SAP Notes for version 1 and plan the ones for ve
         saptune note list
 
     Use the sections SOLUTIONS and SAP NOTES above to familiarize yourself with the changes and create a list
-    of the solution and SAP Notes you are going to use with version 2/3.
+    of the solution and SAP Notes you are going to use with version 3.
 .IP \n+[step].
 (Skip, if saptune defaults are acceptable) Check each chosen SAP Note and former configuration.
 
-    Verify that the shipped defaults of version 2/3 meet your requirements.
+    Verify that the shipped defaults of version 3 meet your requirements.
 
     \fBSince saptune is running in version 1 prior to migration you cannot use 'saptune note show' yet. Please check the files in /usr/share/saptune/notes/ directly.\fP
 
@@ -361,18 +361,18 @@ Revert *all* solutions and notes.
         TUNE_FOR_NOTES=""
         NOTE_APPLY_ORDER=""
 .IP \n+[step].
-Change saptune version variable to "2".
+Change saptune version variable to "3".
 
-    Open /etc/sysconfig/saptune in an editor and set the variable SAPTUNE_VERSION from "1" to "2".
+    Open /etc/sysconfig/saptune in an editor and set the variable SAPTUNE_VERSION from "1" to "3".
 .IP \n+[step].
 Remove the configuration directory /etc/tuned/saptune/.
 
     During the package upgrade a comatibility configuration /etc/tuned/saptune/ was created, which
-    has to be removed to run version 2/3 properly.
+    has to be removed to run version 3 properly.
 
     It is possible that it was created manually in the past to alter the configuration.
     In this case verify the configuration and extend your future saptune configuration (step 2).
-    Saptune version 2/3 performs all tuning settings itself and no longer uses tuned for tuning.
+    Saptune version 3 performs all tuning settings itself and no longer uses tuned for tuning.
 
     The line "#stv1tov2#" is in inidicator that the configuration file was created by the update process
     and not manually.
@@ -409,9 +409,9 @@ Remove files which are not needed anymore.
     - Remove all entries in /etc/sysctl.conf or files in /etc/sysctl.d/*.conf which are handled by saptune.
       Consider moving SAP-related settings from there to a saptune extra file.
 .IP \n+[step].
-Restart tuned.
+Restart saptune.service.
 
-    systemctl restart tuned.service
+    systemctl restart saptune.service
 .IP \n+[step].
 Apply the new configuration.
 
@@ -443,7 +443,7 @@ Use saptune verify to check your configuration:
 
     saptune note verify
 .IP \n+[step].
-Check the log file /var/log/tuned/tuned.log for any errors.
+Check the log file /var/log/saptune/saptune.log for any errors.
 .IP \n+[step].
 (Optional) Do a reboot and verify  that everything works as expected.
 
@@ -454,7 +454,7 @@ Please verify, that any configuration management system or scripts which interac
 
 .SH SEE ALSO
 .NF
-saptune-note(5) saptune(8) saptune_v1(8) saptune_v2(8) tuned(8) tuned-adm(8)
+saptune-note(5) saptune(8) tuned(8) tuned-adm(8)
 
 .SH AUTHOR
 .NF
