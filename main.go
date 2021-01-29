@@ -125,15 +125,15 @@ func main() {
 // saptune version 1 to saptune version 2
 func checkUpdateLeftOvers() {
 	// check for the /etc/tuned/saptune/tuned.conf file created during
-	// the package update from saptune v1 to saptune v2
+	// the package update from saptune v1 to saptune v2/3
 	// give a Warning but go ahead tuning the system
 	if system.CheckForPattern("/etc/tuned/saptune/tuned.conf", "#stv1tov2#") {
-		system.WarningLog("found file '/etc/tuned/saptune/tuned.conf' left over from the migration of saptune version 1 to saptune version 2. Please check and remove this file as it may work against the settings of some SAP Notes. For more information refer to the man page saptune-migrate(7)")
+		system.WarningLog("found file '/etc/tuned/saptune/tuned.conf' left over from the migration of saptune version 1 to saptune version 3. Please check and remove this file as it may work against the settings of some SAP Notes. For more information refer to the man page saptune-migrate(7)")
 	}
 
 	// check if old solution or notes are applied
 	if tuneApp != nil && (len(tuneApp.NoteApplyOrder) == 0 && (len(tuneApp.TuneForNotes) != 0 || len(tuneApp.TuneForSolutions) != 0)) {
-		system.ErrorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'. Seems there were some steps missed during the migration from saptune version 1 to version 2. Please check. Refer to saptune-migrate(7) for more information")
+		system.ErrorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'. Seems there were some steps missed during the migration from saptune version 1 to version 3. Please check. Refer to saptune-migrate(7) for more information")
 	}
 }
 
