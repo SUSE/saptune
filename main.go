@@ -141,7 +141,7 @@ func checkUpdateLeftOvers() {
 // a warning message
 func checkForTuned() {
 	if system.SystemctlIsEnabled(TunedService) || system.SystemctlIsRunning(TunedService) {
-		system.WarningLog("ATTENTION: tuned service is enabled/active, so we may encounter conflicting tuning values")
+		system.WarningLog("ATTENTION: tuned service is active, so we may encounter conflicting tuning values")
 	}
 }
 

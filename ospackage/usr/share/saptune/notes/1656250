@@ -1,8 +1,8 @@
-# 1656250 - SAP on AWS: Support prerequisites - Linux Operating System IO Recommendations
+# 1656250 - SAP on AWS: Support prerequisites - only Linux Operating System IO Recommendations
 # Version 31 from 02.12.2020 in English
 
 [version]
-# SAP-NOTE=1656250 CATEGORY=LNX-AWS VERSION=31 DATE=02.12.2020 NAME="SAP on AWS: Support prerequisites - Linux Operating System IO Recommendations"
+# SAP-NOTE=1656250 CATEGORY=LNX-AWS VERSION=31 DATE=02.12.2020 NAME="SAP on AWS: Support prerequisites - only Linux Operating System IO Recommendations"
 
 [sys:csp=aws]
 # On linux operating systems the kernel parameter nvme_core.io_timeout controls

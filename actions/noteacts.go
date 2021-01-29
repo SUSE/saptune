@@ -94,7 +94,11 @@ func NoteActionList(writer io.Writer, tuneApp *app.App, tOptions note.TuningOpti
 		} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
 			format = " " + setGreenText + "+" + format + resetTextColor
 		}
-		fmt.Fprintf(writer, format, noteID, noteObj.Name())
+		// handle special highlighting in Note description
+		// like the 'only' in SAP Note 1656250
+		bonly := " " + setBoldText + "only" + resetTextColor + " "
+		nname := strings.Replace(noteObj.Name(), " only ", bonly, 1)
+		fmt.Fprintf(writer, format, noteID, nname)
 	}
 	tuneApp.PrintNoteApplyOrder(writer)
 	rememberMessage(writer)

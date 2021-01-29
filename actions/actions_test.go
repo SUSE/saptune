@@ -118,7 +118,7 @@ Parameters tuned by the notes and solutions have been successfully reverted.
 	errExitMatchText := fmt.Sprintf(`saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
+  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | enabled ]
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
@@ -231,7 +231,7 @@ func TestPrintHelpAndExit(t *testing.T) {
 	errExitMatchText := fmt.Sprintf(`saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
+  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | enabled ]
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
