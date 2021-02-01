@@ -51,6 +51,9 @@ func TestDaemonActions(t *testing.T) {
 	setupSaptuneService(t)
 	testService := "saptune.service"
 
+/*
+	// ANGI TODO - need to clarify the problems with tuned.service
+	// and 'Job for tuned.service canceled.'
 	// Test DaemonActionStart
 	t.Run("DaemonActionStart", func(t *testing.T) {
 		DaemonAction("start", saptuneVersion, sApp)
@@ -58,13 +61,18 @@ func TestDaemonActions(t *testing.T) {
 			t.Errorf("'%s' not started", testService)
 		}
 	})
+*/
 	// Test DaemonActionStatus
 	t.Run("DaemonActionStatus", func(t *testing.T) {
+		ServiceActionStart(false, sApp)
 		DaemonAction("status", saptuneVersion, sApp)
 	})
 	// Test DaemonActionStop
 	t.Run("DaemonActionStop", func(t *testing.T) {
 		DaemonAction("stop", saptuneVersion, sApp)
+		if system.SystemctlIsEnabled(testService) {
+			t.Errorf("'%s' not disabled", testService)
+		}
 		if system.SystemctlIsRunning(testService) {
 			t.Errorf("'%s' not stopped", testService)
 		}
@@ -139,8 +147,25 @@ func TestServiceActions(t *testing.T) {
 
 	// Test ServiceActionStatus
 	t.Run("ServiceActionStatus", func(t *testing.T) {
-		var serviceStatusMatchText = `The system has been tuned for the following solutions and notes:	sol1	2205917
+		var serviceStatusMatchText = `
+Service 'sapconf.service' is NOT available
+Service 'tuned.service' is disabled and running.
+Currently active tuned profile is 'balanced'
+
+The system has been configured for the following solutions: ' sol1' and notes: ' 2205917'
 current order of enabled notes is: 2205917
+
+currently NO notes applied
+
+current active saptune version is '3'
+installed saptune version is 'undef'
+
+Staging is disabled
+Content of StagingArea: 
+
+Service 'saptune.service' is disabled and running.
+Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
+    saptune service enable
 
 `
 		ServiceActionStart(false, sApp)
@@ -150,6 +175,15 @@ current order of enabled notes is: 2205917
 		checkOut(t, txt, serviceStatusMatchText)
 		ServiceActionStop(false)
 	})
+
+/*
+	// ANGI TODO - need to clarify the problems with tuned.service
+	// and 'Job for tuned.service canceled.'
+	// Test ServiceActionTakeover
+	t.Run("ServiceActionTakeover", func(t *testing.T) {
+		ServiceActionTakeover(sApp)
+	})
+*/
 
 	teardownSaptuneService(t)
 }

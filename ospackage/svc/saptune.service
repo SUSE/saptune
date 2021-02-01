@@ -6,7 +6,7 @@ After=syslog.target systemd-sysctl.service network.target tuned.service
 Type=oneshot
 RemainAfterExit=true
 ExecStart=/usr/sbin/saptune service apply
-ExecReload=/usr/sbin/saptune service restart
+ExecReload=/usr/sbin/saptune service reload
 ExecStop=/usr/sbin/saptune service revert
 
 [Install]

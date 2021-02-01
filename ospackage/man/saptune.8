@@ -27,7 +27,7 @@ ATTENTION: deprecated
 [ start | status | stop ]
 
 \fBsaptune service\fP
-[ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
+[ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 
 \fBsaptune note\fP
 [ list | verify | enabled ]
@@ -77,40 +77,117 @@ We decided to have only ONE solution applied, but multiple Notes. Each Note is a
 .SS
 .TP
 .B start
-As saptune no longer uses tuned, this action is internally linked to 'saptune service start'. See description below
+As saptune no longer uses tuned, this action is internally linked to 'saptune service takeover'. See description below
 .TP
 .B status
 As saptune no longer uses tuned, this action is internally linked to 'saptune service status'. See description below
 .TP
 .B stop
-As saptune no longer uses tuned, this action is internally linked to 'saptune service stop'. See description below
+As saptune no longer uses tuned, this action is internally linked to 'saptune service disablestop'. See description below
 
 .SH SERVICE ACTIONS
 .SS
 .TP
 .B start
 Start saptune service and apply a set of optimisations to the system, if solutions or notes were selected during a previous call of saptune. If the service is enabled, the tuning will be automatically activated upon system boot.
+.br
+It redirects to '\fIsystemctl start saptune.service\fP'
+.br
+Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
+
+It will fail in case sapconf.service is running or has exited or save state files are present.
+
+If the action was successfully the exit code is 0, otherwise 1.
 .TP
 .B status
-Report the status of saptune service, the saptune version from \fI/etc/sysconfig/saptune\fP and the rpm version and build date from the current installed saptune package.
+Reports the following status information on stdout:
+.RS 5
+.IP \[bu] 2
+status of sapconf.service (running/stopped, enabled/disabled)
+.IP \[bu]
+status of tuned (running/stopped, enabled/disabled, profile)
+.IP \[bu]
+applied/configured Solution and Notes
+.IP \[bu]
+all selected Notes in applied order
+.IP \[bu]
+all objects in staging area
+.IP \[bu]
+configured saptune major version (from \fI/etc/sysconfig/saptune\fP)
+.IP \[bu]
+saptune package version
+.IP \[bu]
+status of saptune.service (running/stopped, enabled/disabled)
+
+This information is not logged, but only printed to stdout.
+
+If saptune.service is not running(stopped) the exit code is 1, if the system is '\fBnot tuned\fP' - which means no Note or Solution is enabled - the exit code is 3, otherwise the exit code is 0.
+.SS
 .TP
 .B stop
 Stop saptune service and revert all optimisations that were previously applied by saptune. If the service is disabled, the tuning will no longer automatically activate upon boot.
+.br
+It redirects to '\fIsystemctl stop saptune.service\fP'
+.br
+Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
+
+If the action was successfully the exit code is 0, otherwise 1.
 .TP
 .B restart
-Stop saptune service and revert all optimisations that were previously applied by saptune. And after that start saptune service and apply a set of optimisations to the system, if solutions or notes were selected during a previous call of saptune.
+Revert all optimisations that were previously applied by saptune. And after that apply a set of optimisations to the system, if solutions or notes were selected during a previous call of saptune.
+.br
+It redirects to '\fIsystemctl restart saptune.service\fP'
+.br
+Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
+
+If the action was successfully the exit code is 0, otherwise 1.
 .TP
 .B enable
 Enables the saptune service. To activate the tuning, the saptune service needs to be started. But as the service is now enabled, the tuning will automatically activated upon system boot.
+.br
+It redirects to '\fIsystemctl enable saptune.service\fP'
+.br
+Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
+
+It will fail in case sapconf.service is running or has exited or save state files are present.
+
+If the action was successfully the exit code is 0, otherwise 1.
 .TP
 .B disable
 Disable the saptune service. To revert all optimisations that were previously applied by saptune, the saptune service needs to be stopped. But as the service is now disabled, the tuning will no longer automatically activated upon system boot.
+.br
+It redirects to '\fIsystemctl disable saptune.service\fP'
+.br
+Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
+
+If the action was successfully the exit code is 0, otherwise 1.
 .TP
 .B enablestart
 Enables and start the saptune service and apply a set of optimisations to the system, if solutions or notes were selected during a previous call of saptune. As the service is now enabled, the tuning will automatically activated upon system boot.
+.br
+Calls '\fIsystemctl enable saptune.service\fP' and '\fIsystemctl start saptune.service\fP' in this order.
+.br
+Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
+
+If the action was successfully the exit code is 0, otherwise 1.
 .TP
-.B stopdisable
-Stop and disable the saptune service and revert all optimisations that were previously applied by saptune. As the service is now disabled, the tuning will no longer automatically activated upon system boot.
+.B disablestop
+Disable and stop the saptune service and revert all optimisations that were previously applied by saptune. As the service is now disabled, the tuning will no longer automatically activated upon system boot.
+.br
+Calls '\fIsystemctl disable saptune.service\fP' and '\fIsystemctl stop saptune.service\fP' in this order.
+.br
+Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
+
+If the action was successfully the exit code is 0, otherwise 1.
+.TP
+.B takeover
+This action is meant to start and enable saptune service where competing services like sapconf and/or tuned get stopped and disabled. This is the modern replacement for the obsolete '\fIsaptune daemon start\fP'
+.br
+Calls '\fIsystemctl enablestart saptune.service\fP' after stopping and disabling sapconf.service and tuned.service.
+.br
+Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
+
+If the action was successfully the exit code is 0, otherwise 1.
 
 .SH NOTE ACTIONS
 Note denotes either a SAP Note, a vendor specific tuning definition or SUSE recommendation article.

@@ -1,7 +1,7 @@
 # v1.4
 #
 #   saptune daemon [ start | status | stop ]
-#   saptune service [ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
+#   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 #   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
 #   saptune staging [ diff | analysis | release ] [ NoteID... | solutions | all ]
 #   saptune note [ list | verify | enabled ]
@@ -28,7 +28,7 @@ _saptune() {
         2)  case "${prev}" in
                 daemon)     opts="start status stop"
                             ;;
-                service)    opts="start status stop restart enable disable enablestart stopdisable"
+                service)    opts="start status stop restart takeover enable disable enablestart disablestop"
                             ;;
 		staging)    opts="status enable disable is-enabled list diff analysis release"
                             ;;

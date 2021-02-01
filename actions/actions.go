@@ -70,15 +70,17 @@ var tuningOptions = note.GetTuningOptions(NoteTuningSheets, ExtraTuningSheets)
 // set colors for the table and list output
 var setGreenText = "\033[32m"
 var setRedText = "\033[31m"
+var setBoldText = "\033[1m"
 var resetTextColor = "\033[0m"
 
 // SelectAction selects the choosen action depending on the first command line
 // argument
 func SelectAction(stApp *app.App, saptuneVers string) {
-	// switch off color, if Stdout is not a terminal
+	// switch off color and highlighting, if Stdout is not a terminal
 	if !system.OutIsTerm(os.Stdout) {
 		setGreenText = ""
 		setRedText = ""
+		setBoldText = ""
 		resetTextColor = ""
 	}
 	// check for test packages
@@ -109,11 +111,17 @@ func RevertAction(writer io.Writer, actionName string, tuneApp *app.App) {
 	if actionName != "all" {
 		PrintHelpAndExit(writer, 1)
 	}
-	fmt.Fprintf(writer, "Reverting all notes and solutions, this may take some time...\n")
+	reportSuc := false
+	if len(tuneApp.NoteApplyOrder) != 0 {
+		reportSuc = true
+		fmt.Fprintf(writer, "Reverting all notes and solutions, this may take some time...\n")
+	}
 	if err := tuneApp.RevertAll(true); err != nil {
 		system.ErrorExit("Failed to revert notes: %v", err)
 	}
-	fmt.Fprintf(writer, "Parameters tuned by the notes and solutions have been successfully reverted.\n")
+	if reportSuc {
+		fmt.Fprintf(writer, "Parameters tuned by the notes and solutions have been successfully reverted.\n")
+	}
 }
 
 // rememberMessage prints a reminder message
@@ -237,7 +245,7 @@ func PrintHelpAndExit(writer io.Writer, exitStatus int) {
 	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | enable | disable | enablestart | stopdisable ]
+  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | enabled ]
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
