@@ -30,7 +30,7 @@ ATTENTION: deprecated
 [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 
 \fBsaptune note\fP
-[ list | verify | enabled ]
+[ list | verify | enabled | applied ]
 
 \fBsaptune note\fP
 [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
@@ -218,6 +218,9 @@ If an \fBoverride\fP file exists for a NoteID, the note is marked with '\fBO\fP'
 .TP
 .B enabled
 Print all current enabled notes as a list separated by blanks.
+.TP
+.B applied
+Print all current applied notes as a list separated by blanks.
 .TP
 .B verify
 If a Note ID is specified, saptune verifies the current running system against the recommendations specified in the Note. If Note ID is not specified, saptune verifies all system parameters against all implemented Notes. As a result you will see a table containing the following columns

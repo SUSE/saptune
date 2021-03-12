@@ -204,7 +204,8 @@ func TestNoteActionCreate(t *testing.T) {
 	buffer := bytes.Buffer{}
 	tstwriter = &buffer
 
-	editor = "/usr/bin/echo"
+	oldEditor := os.Getenv("EDITOR")
+	os.Setenv("EDITOR", "/usr/bin/echo")
 
 	newTuningOpts := note.GetTuningOptions("", ExtraFilesInGOPATH)
 	nApp := app.InitialiseApp(TstFilesInGOPATH, "", newTuningOpts, AllTestSolutions)
@@ -237,6 +238,7 @@ func TestNoteActionCreate(t *testing.T) {
 		t.Errorf("can't find just created file '%s'", fname)
 	}
 	os.Remove(fname)
+	os.Setenv("EDITOR", oldEditor)
 }
 
 func TestNoteActionRenameShowDelete(t *testing.T) {

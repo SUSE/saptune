@@ -1,6 +1,7 @@
 package system
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,6 +14,7 @@ import (
 	"runtime"
 	"strings"
 	"syscall"
+	"time"
 )
 
 // SaptuneSectionDir defines saptunes saved state directory
@@ -248,6 +250,69 @@ func ReadConfigFile(fileName string, autoCreate bool) ([]byte, error) {
 	return content, err
 }
 
+// EditFile copies a source file to another name and opens this copy in an
+// editor defined by environment variable "EDITOR" or in 'vim'
+func EditFile(srcFile, destFile string) error {
+	editor := os.Getenv("EDITOR")
+	// copy source to destintion
+	if err := CopyFile(srcFile, destFile); err != nil {
+		ErrorLog("Problems while copying '%s' to '%s' - %v", srcFile, destFile, err)
+		return err
+	}
+	if editor == "" {
+		editor = "/usr/bin/vim" // launch vim by default
+	}
+	cmd := exec.Command(editor, destFile)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		ErrorLog("Failed to launch editor %s: %v", editor, err)
+	}
+	return err
+}
+
+// ChkMD5Pair checks, if the md5sum of 2 files are equal
+func ChkMD5Pair(srcFile, destFile string) bool {
+	ret := false
+	chkSumSrc, err := GetMD5Hash(srcFile)
+	if err != nil {
+		ErrorLog("Failed to get md5 checksum of file '%s': %v", srcFile, err)
+	}
+	chkSumDest, err := GetMD5Hash(destFile)
+	if err != nil {
+		ErrorLog("Failed to get md5 checksum of file '%s': %v", destFile, err)
+	}
+	if chkSumSrc == chkSumDest && chkSumSrc != "" {
+		ret = true
+	}
+	return ret
+}
+
+// GetMD5Hash generate the md5sum of a file
+func GetMD5Hash(file string) (string, error) {
+	md5Sum := ""
+	// open file for reading
+	f, err := os.Open(file)
+	if err != nil {
+		return md5Sum, err
+	}
+	defer f.Close()
+
+	// create a new hash, which is a writer interface
+	hash := md5.New()
+
+	// copy the file in the hash interface
+	if _, err := io.Copy(hash, f); err != nil {
+		return md5Sum, err
+	}
+	// hash and print as string. Pass nil since the data is not coming
+	// in as a slice argument but is coming through the writer interface
+	md5Sum = fmt.Sprintf("%x", hash.Sum(nil))
+	return md5Sum, nil
+}
+
 // CopyFile from source to destination
 func CopyFile(srcFile, destFile string) error {
 	var src, dst *os.File
@@ -392,4 +457,12 @@ func GetHWIdentity(info string) (string, error) {
 		ret = strings.TrimSpace(string(content))
 	}
 	return ret, err
+}
+
+// Watch prints the current time
+func Watch() string {
+	t := time.Now()
+	//watch := fmt.Sprintf("%s", t.Format(time.UnixDate))
+	watch := fmt.Sprintf("%s", t.Format("2006/01/02 15:04:05.99999999"))
+	return watch
 }

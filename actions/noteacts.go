@@ -8,13 +8,11 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"sort"
 	"strings"
 )
 
 var templateFile = "/usr/share/saptune/NoteTemplate.conf"
-var editor = os.Getenv("EDITOR")
 
 // NoteAction  Note actions like apply, revert, verify asm.
 func NoteAction(actionName, noteID, newNoteID string, tuneApp *app.App) {
@@ -168,21 +166,20 @@ func NoteActionCustomise(noteID string, tuneApp *app.App) {
 		editFileName = ovFileName
 	}
 
-	if editor == "" {
-		editor = "/usr/bin/vim" // launch vim by default
+	// for 'create' the source and destination file are the same
+	// other than in 'customise'
+	changed, err := note.EditNoteFile(editFileName, editFileName, noteID)
+	if err != nil {
+		system.ErrorExit("Problems while editing note definition file '%s' - %v",  editFileName, err)
 	}
-	cmd := exec.Command(editor, editFileName)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Env = os.Environ()
-	if err := cmd.Run(); err != nil {
-		system.ErrorExit("Failed to start launch editor %s: %v", editor, err)
-	}
-	if _, ok := tuneApp.IsNoteApplied(noteID); !ok {
-		system.InfoLog("Do not forget to apply the just edited Note to get your changes to take effect\n")
-	} else { // noteID already applied
-		system.InfoLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
+	if changed {
+		if _, ok := tuneApp.IsNoteApplied(noteID); !ok {
+			system.InfoLog("Do not forget to apply the just edited Note to get your changes to take effect\n")
+		} else { // noteID already applied
+			system.InfoLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
+		}
+	} else {
+		system.WarningLog("nothing changed during the editor session, so no update of the note definition file '%s'", editFileName)
 	}
 	// if syscall.Exec returns 'nil' the execution of the program ends immediately
 	// changed syscall.Exec to exec.Command because of the new 'lock' handling
@@ -204,22 +201,13 @@ func NoteActionCreate(noteID string, tuneApp *app.App) {
 	if _, err := os.Stat(extraFileName); err == nil {
 		system.ErrorExit("Note '%s' already exists in %s. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, ExtraTuningSheets, noteID)
 	}
-	//if _, err := os.Stat(extraFileName); os.IsNotExist(err) {
-	//copy template file
-	err := system.CopyFile(templateFile, extraFileName)
+
+	changed, err := note.EditNoteFile(templateFile, extraFileName, noteID)
 	if err != nil {
-		system.ErrorExit("Problems while copying '%s' to '%s' - %v", templateFile, extraFileName, err)
+		system.ErrorExit("Problems while editing note definition file '%s' - %v",  extraFileName, err)
 	}
-	if editor == "" {
-		editor = "/usr/bin/vim" // launch vim by default
-	}
-	cmd := exec.Command(editor, extraFileName)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Env = os.Environ()
-	if err := cmd.Run(); err != nil {
-		system.ErrorExit("Failed to start launch editor %s: %v", editor, err)
+	if !changed {
+		system.WarningLog("nothing changed during the editor session, so no new, custome specific note definition file will be created.")
 	}
 }
 
