@@ -319,7 +319,7 @@ func CopyFile(srcFile, destFile string) error {
 	var err error
 	if src, err = os.Open(srcFile); err == nil {
 		defer src.Close()
-		if dst, err = os.OpenFile(destFile, os.O_RDWR|os.O_CREATE, 0644); err == nil {
+		if dst, err = os.OpenFile(destFile, os.O_TRUNC|os.O_RDWR|os.O_CREATE, 0644); err == nil {
 			defer dst.Close()
 			if _, err = io.Copy(dst, src); err == nil {
 				// flush file content from  memory to disk

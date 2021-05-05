@@ -250,3 +250,11 @@ func GetTunedAdmProfile() string {
 	}
 	return matches[1]
 }
+
+// IsSapconfActive checks, if sapconf is active
+func IsSapconfActive(sapconf string) bool {
+	if SystemctlIsEnabled(sapconf) || SystemctlIsRunning(sapconf) || CmdIsAvailable("/var/lib/sapconf/act_profile") || CmdIsAvailable("/run/sapconf/active") {
+		return true
+	}
+	return false
+}

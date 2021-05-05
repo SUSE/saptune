@@ -67,7 +67,7 @@ func main() {
 	if arg1 == "lock" {
 		if arg2 := system.CliArg(2); arg2 == "remove" {
 			system.ReleaseSaptuneLock()
-			system.InfoLog("command line triggered remove of lock file '/var/run/.saptune.lock'\n")
+			system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
 			system.ErrorExit("", 0)
 		} else {
 			actions.PrintHelpAndExit(os.Stdout, 0)
@@ -79,8 +79,11 @@ func main() {
 	system.SaptuneLock()
 	defer system.ReleaseSaptuneLock()
 
-	// cleanup runtime file
+	// cleanup runtime files
 	note.CleanUpRun()
+	// additional clear ignore flag for the sapconf/saptune service deadlock
+	os.Remove("/run/.saptune.ignore")
+
 
 	//check, running config exists
 	checkWorkingArea()
