@@ -21,7 +21,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 8, 8)
+	footnote := make([]string, 9, 9)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -262,6 +262,12 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 		compliant = compliant + " [8]"
 		comment = comment + " [8]"
 		footnote[7] = footnote8
+	}
+	var isMsect = regexp.MustCompile(`^MAX_SECTORS_KB_\w+$`)
+	if isMsect.MatchString(comparison.ReflectMapKey) && inform == "limited" {
+		compliant = compliant + " [9]"
+		comment = comment + " [9]"
+		footnote[8] = footnote9
 	}
 
 	return compliant, comment, footnote

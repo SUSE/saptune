@@ -29,6 +29,7 @@ const (
 	footnote6          = "[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
 	footnote7          = "[7] parameter value is untouched by default"
 	footnote8          = "[8] cannot set Perf Bias because SecureBoot is enabled"
+	footnote9          = "[9] expected value limited to 'max_hw_sectors_kb'"
 )
 
 // PackageArea is the package area with all notes and solutions shiped by
