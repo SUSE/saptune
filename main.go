@@ -84,7 +84,6 @@ func main() {
 	// additional clear ignore flag for the sapconf/saptune service deadlock
 	os.Remove("/run/.saptune.ignore")
 
-
 	//check, running config exists
 	checkWorkingArea()
 

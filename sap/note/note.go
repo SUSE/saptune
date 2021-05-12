@@ -129,7 +129,7 @@ func EditNoteFile(srcFileName, destFileName, noteID string) (bool, error) {
 	if err = system.EditFile(srcFileName, tmpFile); err != nil {
 		// clean up before exit
 		os.Remove(tmpFile)
-		system.ErrorLog("Problems while editing note definition file '%s' - %v",  destFileName, err)
+		system.ErrorLog("Problems while editing note definition file '%s' - %v", destFileName, err)
 		return changed, err
 	}
 	// check if something was changed in the file

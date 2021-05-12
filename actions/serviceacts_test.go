@@ -56,7 +56,7 @@ func TestDaemonActions(t *testing.T) {
 	// and 'Job for tuned.service canceled.'
 	// Test DaemonActionStart
 	t.Run("DaemonActionStart", func(t *testing.T) {
-		DaemonAction("start", saptuneVersion, sApp)
+		DaemonAction(os.Stdout, "start", saptuneVersion, sApp)
 		if !system.SystemctlIsRunning(testService) {
 			t.Errorf("'%s' not started", testService)
 		}
@@ -64,12 +64,49 @@ func TestDaemonActions(t *testing.T) {
 */
 	// Test DaemonActionStatus
 	t.Run("DaemonActionStatus", func(t *testing.T) {
+		var daemonStatusMatchText = `
+Service 'sapconf.service' is NOT available.
+Service 'tuned.service' is disabled and running.
+Currently active tuned profile is: 'balanced'
+
+The system has been configured for the following solutions: ' sol1' and notes: ' 2205917'
+current order of enabled notes is: 2205917
+
+Currently NO notes applied.
+
+Current active saptune version is '3'.
+Installed saptune version is 'undef'.
+
+Staging is disabled.
+Content of StagingArea: 
+
+Service 'saptune.service' is disabled and running.
+Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
+ 'saptune service enable'.
+
+`
 		ServiceActionStart(false, sApp)
-		DaemonAction("status", saptuneVersion, sApp)
+
+		oldOSExit := system.OSExit
+		defer func() { system.OSExit = oldOSExit }()
+		system.OSExit = tstosExit
+		oldErrorExitOut := system.ErrorExitOut
+		defer func() { system.ErrorExitOut = oldErrorExitOut }()
+		system.ErrorExitOut = tstErrorExitOut
+		buffer := bytes.Buffer{}
+		errExitbuffer := bytes.Buffer{}
+		tstwriter = &errExitbuffer
+		DaemonAction(&buffer, "status", saptuneVersion, sApp)
+		txt := buffer.String()
+		checkOut(t, txt, daemonStatusMatchText)
+		errExOut := errExitbuffer.String()
+		if errExOut != "" {
+			t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+		}
 	})
 	// Test DaemonActionStop
 	t.Run("DaemonActionStop", func(t *testing.T) {
-		DaemonAction("stop", saptuneVersion, sApp)
+		DaemonAction(os.Stdout, "stop", saptuneVersion, sApp)
 		if system.SystemctlIsEnabled(testService) {
 			t.Errorf("'%s' not disabled", testService)
 		}
@@ -148,31 +185,45 @@ func TestServiceActions(t *testing.T) {
 	// Test ServiceActionStatus
 	t.Run("ServiceActionStatus", func(t *testing.T) {
 		var serviceStatusMatchText = `
-Service 'sapconf.service' is NOT available
+Service 'sapconf.service' is NOT available.
 Service 'tuned.service' is disabled and running.
-Currently active tuned profile is 'balanced'
+Currently active tuned profile is: 'balanced'
 
 The system has been configured for the following solutions: ' sol1' and notes: ' 2205917'
 current order of enabled notes is: 2205917
 
-currently NO notes applied
+Currently NO notes applied.
 
-current active saptune version is '3'
-installed saptune version is 'undef'
+Current active saptune version is '3'.
+Installed saptune version is 'undef'.
 
-Staging is disabled
+Staging is disabled.
 Content of StagingArea: 
 
 Service 'saptune.service' is disabled and running.
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
-    saptune service enable
+ 'saptune service enable'.
 
 `
 		ServiceActionStart(false, sApp)
+
+		oldOSExit := system.OSExit
+		defer func() { system.OSExit = oldOSExit }()
+		system.OSExit = tstosExit
+		oldErrorExitOut := system.ErrorExitOut
+		defer func() { system.ErrorExitOut = oldErrorExitOut }()
+		system.ErrorExitOut = tstErrorExitOut
 		buffer := bytes.Buffer{}
+		errExitbuffer := bytes.Buffer{}
+		tstwriter = &errExitbuffer
 		ServiceActionStatus(&buffer, sApp, saptuneVersion)
 		txt := buffer.String()
 		checkOut(t, txt, serviceStatusMatchText)
+		errExOut := errExitbuffer.String()
+		if errExOut != "" {
+			t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+		}
+
 		ServiceActionStop(false)
 	})
 

@@ -170,7 +170,7 @@ func NoteActionCustomise(noteID string, tuneApp *app.App) {
 	// other than in 'customise'
 	changed, err := note.EditNoteFile(editFileName, editFileName, noteID)
 	if err != nil {
-		system.ErrorExit("Problems while editing note definition file '%s' - %v",  editFileName, err)
+		system.ErrorExit("Problems while editing note definition file '%s' - %v", editFileName, err)
 	}
 	if changed {
 		if _, ok := tuneApp.IsNoteApplied(noteID); !ok {
@@ -204,7 +204,7 @@ func NoteActionCreate(noteID string, tuneApp *app.App) {
 
 	changed, err := note.EditNoteFile(templateFile, extraFileName, noteID)
 	if err != nil {
-		system.ErrorExit("Problems while editing note definition file '%s' - %v",  extraFileName, err)
+		system.ErrorExit("Problems while editing note definition file '%s' - %v", extraFileName, err)
 	}
 	if !changed {
 		system.WarningLog("nothing changed during the editor session, so no new, custome specific note definition file will be created.")

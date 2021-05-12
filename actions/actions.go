@@ -91,7 +91,7 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 
 	switch system.CliArg(1) {
 	case "daemon":
-		DaemonAction(system.CliArg(2), saptuneVers, stApp)
+		DaemonAction(os.Stdout, system.CliArg(2), saptuneVers, stApp)
 	case "service":
 		ServiceAction(system.CliArg(2), saptuneVers, stApp)
 	case "note":
