@@ -9,7 +9,7 @@ import (
 )
 
 // saptune lock file
-var stLockFile = "/var/run/.saptune.lock"
+var stLockFile = "/run/.saptune.lock"
 
 // isOwnLock return true, if lock file is from the current running process
 // pid inside the lock file is the pid of current running saptune instance

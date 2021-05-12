@@ -9,11 +9,12 @@ import (
 )
 
 // BlockDeviceQueue is the data structure for block devices
-// for schedulers, IO nr_request and read_ahead_kb changes
+// for schedulers, IO nr_request, read_ahead_kb and max_sectors_kb changes
 type BlockDeviceQueue struct {
 	BlockDeviceSchedulers
 	BlockDeviceNrRequests
 	BlockDeviceReadAheadKB
+	BlockDeviceMaxSectorsKB
 }
 
 var blkDev *system.BlockDev
@@ -196,6 +197,70 @@ func (rakb BlockDeviceReadAheadKB) Apply(blkdev interface{}) error {
 			continue
 		}
 		errs = append(errs, system.SetSysInt(path.Join("block", name, "queue", "read_ahead_kb"), readahead))
+	}
+	err := sap.PrintErrors(errs)
+	return err
+	*/
+	return nil
+}
+
+// BlockDeviceMaxSectorsKB changes the max_sectors_kb value on all block devices
+type BlockDeviceMaxSectorsKB struct {
+	MaxSectorsKB map[string]int
+}
+
+// Inspect retrieves the current max_sectors_kb from the system
+func (mskb BlockDeviceMaxSectorsKB) Inspect() (Parameter, error) {
+	if len(mskb.MaxSectorsKB) != 0 {
+		// inspect needs to run only once per saptune call
+		return mskb, nil
+	}
+	if blkDev == nil || (len(blkDev.AllBlockDevs) == 0 && len(blkDev.BlockAttributes) == 0) {
+		blkDev, _ = system.GetBlockDeviceInfo()
+	}
+	newMSKB := BlockDeviceMaxSectorsKB{MaxSectorsKB: make(map[string]int)}
+	for _, entry := range blkDev.AllBlockDevs {
+		maxsector := blkDev.BlockAttributes[entry]["MAX_SECTORS_KB"]
+		if maxsector != "" {
+			ival, _ := strconv.Atoi(maxsector)
+			if ival >= 0 {
+				newMSKB.MaxSectorsKB[entry] = ival
+			}
+		}
+	}
+	return newMSKB, nil
+}
+
+// Optimise gets the expected max_sectors_kb value from the configuration
+func (mskb BlockDeviceMaxSectorsKB) Optimise(newMaxSectorsKBValue interface{}) (Parameter, error) {
+	newMSKB := BlockDeviceMaxSectorsKB{MaxSectorsKB: make(map[string]int)}
+	for k := range mskb.MaxSectorsKB {
+		newMSKB.MaxSectorsKB[k] = newMaxSectorsKBValue.(int)
+	}
+	return newMSKB, nil
+}
+
+// Apply sets the new max_sectors_kb value in the system
+func (mskb BlockDeviceMaxSectorsKB) Apply(blkdev interface{}) error {
+	bdev := blkdev.(string)
+	maxsector := mskb.MaxSectorsKB[bdev]
+	maxHWsector, _ := system.GetSysInt(path.Join("block", bdev, "queue", "max_hw_sectors_kb"))
+	if maxsector > maxHWsector {
+		system.WarningLog("value '%v' for 'max_sectors_kb' for device '%s' is bigger than the value '%v' for 'max_hw_sectors_kb'. Limit to '%v'.", maxsector, bdev, maxHWsector, maxHWsector)
+		maxsector = maxHWsector
+	}
+	err := system.SetSysInt(path.Join("block", bdev, "queue", "max_sectors_kb"), maxsector)
+	if err != nil {
+		system.WarningLog("skipping device '%s', not valid for setting 'max_sectors_kb' to '%v'", bdev, maxsector)
+	}
+	/* for future use
+	errs := make([]error, 0, 0)
+	for name, maxsector := range mskb.MaxSectorsKB {
+		if !IsValidforMaxSectorsKB(name, strconv.Itoa(maxsector)) {
+			system.WarningLog("skipping device '%s', not valid for setting 'max_sectors_kb' to '%v'", name, maxsector)
+			continue
+		}
+		errs = append(errs, system.SetSysInt(path.Join("block", name, "queue", "max_sectors_kb"), maxsector))
 	}
 	err := sap.PrintErrors(errs)
 	return err

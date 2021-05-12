@@ -4,7 +4,7 @@
 #   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 #   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
 #   saptune staging [ diff | analysis | release ] [ NoteID... | solutions | all ]
-#   saptune note [ list | verify | enabled ]
+#   saptune note [ list | verify | enabled | applied ]
 #   saptune note [ apply | simulate | verify | customise | revert | create | show | delete ] NoteID
 #   saptune note rename NoteID NoteID
 #   saptune solution [ list | verify | enabled ]
@@ -34,7 +34,7 @@ _saptune() {
                             ;;
                 solution)   opts="list verify apply simulate revert enabled"
                             ;;
-                note)       opts="list verify apply simulate customise revert create show delete rename enabled"
+                note)       opts="list verify apply simulate customise revert create show delete rename enabled applied"
                             ;;
 		revert)	    opts="all"	
 			    ;;

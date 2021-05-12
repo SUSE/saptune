@@ -198,4 +198,6 @@ net.ipv4.tcp_tw_recycle =
 
 [reminder]
 # SAP HANA Parameters - all '.ini' file changes - not handled by saptune
+# WARNING - on systems with iSCSI devices the setting of 'net.ipv4.tcp_syn_retries = 8'
+# may result in deferred faulty message of iSCSI paths.
 #

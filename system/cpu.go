@@ -160,6 +160,8 @@ func GetGovernor() map[string]string {
 	for _, entry := range dirCont {
 		if isCPU.MatchString(entry.Name()) {
 			if _, err = os.Stat(path.Join(cpuDir, entry.Name(), "cpufreq", "scaling_governor")); os.IsNotExist(err) {
+				tmpfile := path.Join(cpuDir, entry.Name(), "cpufreq", "scaling_governor")
+				WarningLog("Unable to identify the current scaling governor for CPU '%s', missing file '%s'. Check you intel_pstate.", entry.Name(), tmpfile)
 				// os.Stat needs cpuDir as path - including /sys
 				gov = ""
 			} else {

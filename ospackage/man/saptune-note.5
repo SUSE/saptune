@@ -233,6 +233,13 @@ Device mappers often benefit from a high read_ahead_kb value.
 Increasing the read_ahead_kb value might improve performance in environments where sequential reading of large files takes place.
 .br
 When set, the value of read_ahead_kb for \fBall\fP block devices on the system will be switched to the chosen value
+.TP
+.BI MAX_SECTORS_KB= INT
+disk max_sectors_kb (queue/max_sectors_kb) defines the maximum number of kilobytes that the block layer will allow for a filesystem request. Must be smaller than or equal to the maximum size allowed by the hardware (queue/max_hw_sectors_kb).
+.br
+When set, the value of max_sectors_kb for \fBall\fP block devices on the system will be switched to the chosen value.
+.br
+If the value is higher than 'max_hw_sectors_kb' it will be limited to 'max_hw_sectors_kb' and a footnote is displayed.
 \" section cpu
 .SH "[cpu]"
 The section "[cpu]" manipulates files in \fI/sys/devices/system/cpu/cpu*\fP.

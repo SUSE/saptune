@@ -110,5 +110,7 @@ transparent_hugepage=never
 [reminder]
 # IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!
 
+#IBM EnergyScale for POWER9 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!
+
 # Intel Cluster-On-Die (COD) / sub-NUMA clustering technology
 # HANA is not supported neither on Intel Cluster-On-Die (COD) technology nor on sub-NUMA clustering technology.

@@ -135,6 +135,9 @@ func CollectBlockDeviceInfo() []string {
 		readahead, _ := GetSysString(path.Join("block", bdev, "queue", "read_ahead_kb"))
 		blockMap["READ_AHEAD_KB"] = readahead
 
+		maxsectkb, _ := GetSysString(path.Join("block", bdev, "queue", "max_sectors_kb"))
+		blockMap["MAX_SECTORS_KB"] = maxsectkb
+
 		// VENDOR, MODEL e.g. for FUJITSU udev replacement
 		vendor := ""
 		model := ""

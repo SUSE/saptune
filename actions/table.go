@@ -21,7 +21,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 8, 8)
+	footnote := make([]string, 9, 9)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -39,40 +39,18 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 		comment = ""
 		keyFields := strings.Split(skey, "§")
 		key := keyFields[1]
-		printHead = ""
-		if keyFields[0] != noteID {
-			if noteID == "" {
-				printHead = "yes"
-			}
-			noteID = keyFields[0]
-			//noteField = fmt.Sprintf("%s, %s", noteID, txtparser.GetINIFileVersion(noteComparisons[noteID]["ConfFilePath"].ActualValue.(string)))
-			noteField = fmt.Sprintf("%s, %s", noteID, txtparser.GetINIFileVersionSectionEntry(noteComparisons[noteID]["ConfFilePath"].ActualValue.(string), "version"))
-		}
-
+		printHead, noteID, noteField = getNoteAndVersion(keyFields[0], noteID, noteField, noteComparisons)
 		override = strings.Replace(noteComparisons[noteID][fmt.Sprintf("%s[%s]", "OverrideParams", key)].ExpectedValueJS, "\t", " ", -1)
 		comparison := noteComparisons[noteID][fmt.Sprintf("%s[%s]", "SysctlParams", key)]
 		if comparison.ReflectMapKey == "reminder" {
 			reminder[noteID] = reminder[noteID] + comparison.ExpectedValueJS
 			continue
 		}
-		if !comparison.MatchExpectation {
-			hasDiff = true
-			compliant = "no "
-		} else {
-			compliant = "yes"
-		}
-		if comparison.ActualValue.(string) == "all:none" {
-			compliant = " - "
-		}
+		// set compliant information according to the comparison result
+		hasDiff, compliant = setCompliant(comparison, hasDiff)
 
 		// check inform map for special settings
-		inform := ""
-		if noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue != nil {
-			inform = noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string)
-			if inform == "" && noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ExpectedValue != nil {
-				inform = noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ExpectedValue.(string)
-			}
-		}
+		inform := getInformSettings(noteID, noteComparisons, comparison)
 
 		// prepare footnote
 		compliant, comment, footnote = prepareFootnote(comparison, compliant, comment, inform, footnote)
@@ -263,6 +241,12 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 		comment = comment + " [8]"
 		footnote[7] = footnote8
 	}
+	var isMsect = regexp.MustCompile(`^MAX_SECTORS_KB_\w+$`)
+	if isMsect.MatchString(comparison.ReflectMapKey) && inform == "limited" {
+		compliant = compliant + " [9]"
+		comment = comment + " [9]"
+		footnote[8] = footnote9
+	}
 
 	return compliant, comment, footnote
 }
@@ -285,6 +269,46 @@ func printTableFooter(writer io.Writer, header string, footnote []string, remind
 			fmt.Fprintf(writer, "%s\n", setRedText+reminderHead+reminde+resetTextColor)
 		}
 	}
+}
+
+// getNoteAndVersion sets printHead, noteID, noteField for the next table row
+func getNoteAndVersion(kField, nID, nField string, nComparisons map[string]map[string]note.FieldComparison) (string, string, string) {
+	pHead := ""
+	if kField != nID {
+		if nID == "" {
+			pHead = "yes"
+		}
+		nID = kField
+		nField = fmt.Sprintf("%s, %s", nID, txtparser.GetINIFileVersionSectionEntry(nComparisons[nID]["ConfFilePath"].ActualValue.(string), "version"))
+	}
+	return pHead, nID, nField
+}
+
+// setCompliant sets compliant information according to the comparison result
+func setCompliant(comparison note.FieldComparison, hasd bool) (bool, string) {
+	comp := ""
+	if !comparison.MatchExpectation {
+		hasd = true
+		comp = "no "
+	} else {
+		comp = "yes"
+	}
+	if comparison.ActualValue.(string) == "all:none" {
+		comp = " - "
+	}
+	return hasd, comp
+}
+
+// getInformSettings checks inform map for special settings
+func getInformSettings(nID string, nComparisons map[string]map[string]note.FieldComparison, comparison note.FieldComparison) string {
+	inf := ""
+	if nComparisons[nID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue != nil {
+		inf = nComparisons[nID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string)
+		if inf == "" && nComparisons[nID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ExpectedValue != nil {
+			inf = nComparisons[nID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ExpectedValue.(string)
+		}
+	}
+	return inf
 }
 
 // setWidthOfColums sets the width of the columns for verify and simulate

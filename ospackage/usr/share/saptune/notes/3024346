@@ -1,0 +1,23 @@
+# 3024346 - Linux Kernel Settings for NetApp NFS
+# Version 3 from 17.02.2021 in English
+# See TR-4290/TR-4435.
+
+[version]
+# SAP-NOTE=3024346 CATEGORY=Consulting VERSION=3 DATE=17.02.2021 NAME="Linux Kernel Settings for NetApp NFS"
+
+[sysctl]
+net.core.rmem_max = 16777216
+net.core.wmem_max = 16777216
+net.ipv4.tcp_rmem = 4096 131072 16777216
+net.ipv4.tcp_wmem = 4096 16384  16777216
+net.core.netdev_max_backlog = 300000
+net.ipv4.tcp_slow_start_after_idle=0
+net.ipv4.tcp_no_metrics_save = 1
+net.ipv4.tcp_moderate_rcvbuf = 1
+net.ipv4.tcp_window_scaling = 1
+net.ipv4.tcp_timestamps = 1
+net.ipv4.tcp_sack = 1
+
+[reminder] 
+# NFS version 3 requires to limit the max TCP Slot Table entries.
+# Therefore add "options sunrpc tcp_max_slot_table_entries=128" into file "/etc/modprobe.d/sunrpc.conf"

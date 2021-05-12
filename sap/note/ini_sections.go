@@ -96,6 +96,7 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 
 var isSched = regexp.MustCompile(`^IO_SCHEDULER_\w+$`)
 var isNrreq = regexp.MustCompile(`^NRREQ_\w+$`)
+var isMsect = regexp.MustCompile(`^MAX_SECTORS_KB_\w+$`)
 var isRahead = regexp.MustCompile(`^READ_AHEAD_KB_\w+$`)
 
 // GetBlkVal initialise the block device structure with the current
@@ -103,6 +104,8 @@ var isRahead = regexp.MustCompile(`^READ_AHEAD_KB_\w+$`)
 func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) {
 	newQueue := make(map[string]string)
 	newReq := make(map[string]int)
+	newRah := make(map[string]int)
+	newMse := make(map[string]int)
 	retVal := ""
 	info := ""
 
@@ -124,13 +127,21 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 		retVal = strconv.Itoa(newReq[strings.TrimPrefix(key, "NRREQ_")])
 		cur.BlockDeviceNrRequests = newNrR.(param.BlockDeviceNrRequests)
 	case isRahead.MatchString(key):
-		newRah, err := cur.BlockDeviceReadAheadKB.Inspect()
+		newRahead, err := cur.BlockDeviceReadAheadKB.Inspect()
 		if err != nil {
 			return "", info, err
 		}
-		newReq = newRah.(param.BlockDeviceReadAheadKB).ReadAheadKB
-		retVal = strconv.Itoa(newReq[strings.TrimPrefix(key, "READ_AHEAD_KB_")])
-		cur.BlockDeviceReadAheadKB = newRah.(param.BlockDeviceReadAheadKB)
+		newRah = newRahead.(param.BlockDeviceReadAheadKB).ReadAheadKB
+		retVal = strconv.Itoa(newRah[strings.TrimPrefix(key, "READ_AHEAD_KB_")])
+		cur.BlockDeviceReadAheadKB = newRahead.(param.BlockDeviceReadAheadKB)
+	case isMsect.MatchString(key):
+		newMsect, err := cur.BlockDeviceMaxSectorsKB.Inspect()
+		if err != nil {
+			return "", info, err
+		}
+		newMse = newMsect.(param.BlockDeviceMaxSectorsKB).MaxSectorsKB
+		retVal = strconv.Itoa(newMse[strings.TrimPrefix(key, "MAX_SECTORS_KB_")])
+		cur.BlockDeviceMaxSectorsKB = newMsect.(param.BlockDeviceMaxSectorsKB)
 	}
 	return retVal, info, nil
 }
@@ -183,6 +194,19 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 		ival, _ := strconv.Atoi(sval)
 		opt, _ := cur.BlockDeviceReadAheadKB.Optimise(ival)
 		cur.BlockDeviceReadAheadKB = opt.(param.BlockDeviceReadAheadKB)
+	case isMsect.MatchString(key):
+		ival, _ := strconv.Atoi(sval)
+		dname := regexp.MustCompile(`^MAX_SECTORS_KB_(\w+)$`)
+		bdev := dname.FindStringSubmatch(key)
+		maxHWsector, _ := system.GetSysInt(path.Join("block", bdev[1], "queue", "max_hw_sectors_kb"))
+		if ival > maxHWsector {
+			system.WarningLog("value '%v' for 'max_sectors_kb' for device '%s' is bigger than the value '%v' for 'max_hw_sectors_kb'. Limit to '%v'.", ival, bdev[1], maxHWsector, maxHWsector)
+			ival = maxHWsector
+			sval = strconv.Itoa(maxHWsector)
+			info = "limited"
+		}
+		opt, _ := cur.BlockDeviceMaxSectorsKB.Optimise(ival)
+		cur.BlockDeviceMaxSectorsKB = opt.(param.BlockDeviceMaxSectorsKB)
 	}
 	return sval, info
 }
@@ -215,6 +239,15 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 			cur.BlockDeviceReadAheadKB.ReadAheadKB[strings.TrimPrefix(key, "READ_AHEAD_KB_")] = ival
 		}
 		err = cur.BlockDeviceReadAheadKB.Apply(strings.TrimPrefix(key, "READ_AHEAD_KB_"))
+		if err != nil {
+			return err
+		}
+	case isMsect.MatchString(key):
+		if revert {
+			ival, _ := strconv.Atoi(value)
+			cur.BlockDeviceMaxSectorsKB.MaxSectorsKB[strings.TrimPrefix(key, "MAX_SECTORS_KB_")] = ival
+		}
+		err = cur.BlockDeviceMaxSectorsKB.Apply(strings.TrimPrefix(key, "MAX_SECTORS_KB_"))
 		if err != nil {
 			return err
 		}

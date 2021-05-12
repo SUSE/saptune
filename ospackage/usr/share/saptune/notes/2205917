@@ -144,3 +144,4 @@ transparent_hugepage=never
 
 [reminder]
 # IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!
+# IBM EnergyScale for POWER9 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!

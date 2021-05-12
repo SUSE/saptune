@@ -204,13 +204,14 @@ func TestNoteActionCreate(t *testing.T) {
 	buffer := bytes.Buffer{}
 	tstwriter = &buffer
 
-	editor = "/usr/bin/echo"
+	oldEditor := os.Getenv("EDITOR")
+	os.Setenv("EDITOR", "/usr/bin/echo")
 
 	newTuningOpts := note.GetTuningOptions("", ExtraFilesInGOPATH)
 	nApp := app.InitialiseApp(TstFilesInGOPATH, "", newTuningOpts, AllTestSolutions)
 	// test with missing template file
 	nID := "hugo"
-	createMatchText := fmt.Sprintf("ERROR: Problems while copying '/usr/share/saptune/NoteTemplate.conf' to '/etc/saptune/extra/hugo.conf' - open /usr/share/saptune/NoteTemplate.conf: no such file or directory\n")
+	createMatchText := fmt.Sprintf("ERROR: Problems while editing note definition file '/etc/saptune/extra/hugo.conf' - open /usr/share/saptune/NoteTemplate.conf: no such file or directory\n")
 	NoteActionCreate(nID, nApp)
 	if tstRetErrorExit != 1 {
 		t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
@@ -233,10 +234,11 @@ func TestNoteActionCreate(t *testing.T) {
 	}
 	txt = buffer.String()
 	checkOut(t, txt, createMatchText)
-	if _, err := os.Stat(fname); os.IsNotExist(err) {
-		t.Errorf("can't find just created file '%s'", fname)
+	if _, err := os.Stat(fname); err == nil {
+		t.Errorf("found a created file '%s' even that no input was provided to the editor", fname)
 	}
 	os.Remove(fname)
+	os.Setenv("EDITOR", oldEditor)
 }
 
 func TestNoteActionRenameShowDelete(t *testing.T) {
