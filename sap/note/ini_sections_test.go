@@ -203,11 +203,11 @@ func TestOptLimitsVal(t *testing.T) {
 //SetLimitsVal apply and revert
 
 func TestGetVMVal(t *testing.T) {
-	val := GetVMVal("THP")
+	val, _ := GetVMVal("THP")
 	if val != "always" && val != "madvise" && val != "never" {
 		t.Errorf("wrong value '%+v' for THP.\n", val)
 	}
-	val = GetVMVal("KSM")
+	val, _ = GetVMVal("KSM")
 	if val != "1" && val != "0" {
 		t.Errorf("wrong value '%+v' for KSM.\n", val)
 	}
@@ -238,7 +238,7 @@ func TestOptVMVal(t *testing.T) {
 
 func TestSetVMVal(t *testing.T) {
 	newval := ""
-	oldval := GetVMVal("THP")
+	oldval, _ := GetVMVal("THP")
 	if oldval == "never" {
 		newval = "always"
 	} else {
@@ -248,7 +248,7 @@ func TestSetVMVal(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	val := GetVMVal("THP")
+	val, _ := GetVMVal("THP")
 	if val != newval {
 		t.Error(val)
 	}
@@ -258,7 +258,7 @@ func TestSetVMVal(t *testing.T) {
 		t.Error(err)
 	}
 
-	oldval = GetVMVal("KSM")
+	oldval, _ = GetVMVal("KSM")
 	if oldval == "0" {
 		newval = "1"
 	} else {
@@ -268,7 +268,7 @@ func TestSetVMVal(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	val = GetVMVal("KSM")
+	val, _ = GetVMVal("KSM")
 	if val != newval {
 		t.Error(val)
 	}

@@ -459,6 +459,22 @@ func GetHWIdentity(info string) (string, error) {
 	return ret, err
 }
 
+// GetFiles returns the files from a directory as map
+// skip directories
+func GetFiles(dir string) map[string]string {
+	files := make(map[string]string)
+	entries, err := ioutil.ReadDir(dir)
+	if err != nil {
+		WarningLog("failed to read %s - %v", dir, err)
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			files[entry.Name()] = entry.Name()
+		}
+	}
+	return files
+}
+
 // Watch prints the current time
 func Watch() string {
 	t := time.Now()

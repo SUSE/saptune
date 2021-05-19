@@ -22,11 +22,6 @@ type ParameterNotes struct {
 	AllNotes []ParameterNoteEntry
 }
 
-// SaptuneParameterStateDir defines the directory where to store the
-// parameter state files
-// separated from the note state file directory
-const SaptuneParameterStateDir = "/var/lib/saptune/parameter"
-
 // GetPathToParameter returns path to the serialised parameter state file.
 func GetPathToParameter(param string) string {
 	return path.Join(SaptuneParameterStateDir, param)

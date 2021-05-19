@@ -21,7 +21,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 9, 9)
+	footnote := make([]string, 10, 10)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -127,7 +127,7 @@ func setupTableFormat(skeys []string, noteField string, noteCompare map[string]m
 		noteID := keyFields[0]
 		comparisons := noteCompare[noteID]
 		for _, comparison := range comparisons {
-			if comparison.ReflectMapKey == "reminder" {
+			if comparison.ReflectMapKey == "reminder" || comparison.ReflectFieldName == "Inform" {
 				continue
 			}
 			if printComp {
@@ -154,6 +154,8 @@ func printHeadline(writer io.Writer, header, id string, noteComparisons map[stri
 	if header != "NONE" {
 		nName := txtparser.GetINIFileDescriptiveName(noteComparisons[id]["ConfFilePath"].ActualValue.(string))
 		fmt.Fprintf(writer, "\n%s - %s \n\n", id, nName)
+	} else {
+		fmt.Fprintf(writer, "\n")
 	}
 }
 
@@ -212,20 +214,6 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 		comment = comment + " [3]"
 		footnote[2] = footnote3
 	}
-
-	// check inform map for special settings
-	// ANGI: future - check for 'nil', if using noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string) in general
-	if comparison.ReflectMapKey == "force_latency" && inform == "hasDiffs" {
-		compliant = "no  [4]"
-		comment = comment + " [4]"
-		footnote[3] = footnote4
-	}
-	var isSched = regexp.MustCompile(`^IO_SCHEDULER_\w+$`)
-	if isSched.MatchString(comparison.ReflectMapKey) && inform == "NA" {
-		compliant = compliant + " [5]"
-		comment = comment + " [5]"
-		footnote[4] = footnote5
-	}
 	if strings.Contains(comparison.ReflectMapKey, "grub") {
 		compliant = compliant + " [6]"
 		comment = comment + " [6]"
@@ -241,14 +229,67 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 		comment = comment + " [8]"
 		footnote[7] = footnote8
 	}
-	var isMsect = regexp.MustCompile(`^MAX_SECTORS_KB_\w+$`)
-	if isMsect.MatchString(comparison.ReflectMapKey) && inform == "limited" {
+	// check inform map for special settings
+	compliant, comment, footnote = chkInfo(comparison.ReflectMapKey, compliant, comment, inform, footnote)
+	return compliant, comment, footnote
+}
+
+// chkInfo checks inform map for special settings in the footnote
+func chkInfo(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
+	// ANGI: future - check for 'nil', if using noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string) in general
+	if mapKey == "force_latency" && info == "hasDiffs" {
+		compliant = "no  [4]"
+		comment = comment + " [4]"
+		footnote[3] = footnote4
+	}
+	if system.IsSched.MatchString(mapKey) && strings.Contains(info, "NA") {
+		compliant = compliant + " [5]"
+		comment = comment + " [5]"
+		footnote[4] = footnote5
+	}
+	if system.IsMsect.MatchString(mapKey) && strings.Contains(info, "limited") {
 		compliant = compliant + " [9]"
 		comment = comment + " [9]"
 		footnote[8] = footnote9
 	}
-
+	if (system.IsSched.MatchString(mapKey) || system.IsNrreq.MatchString(mapKey) || system.IsRahead.MatchString(mapKey) || system.IsMsect.MatchString(mapKey)) && info != "" {
+		// check for double defined parameters
+		sect := regexp.MustCompile(`.*\[\w+\].*`)
+		inf := strings.Split(info, "§")
+		if len(inf) > 1 {
+			if inf[0] != "limited" && inf[0] != "NA" {
+				info = inf[0]
+			} else {
+				info = inf[1]
+			}
+		}
+		if info != "limited" && info != "NA" && sect.MatchString(info) {
+			compliant = compliant + " [10]"
+			comment = comment + " [10]"
+			footnote[9] = writeFN(footnote[9], footnote10, info, "SECT")
+		}
+	}
+	if (strings.Contains(mapKey, "THP") || strings.Contains(mapKey, "KSM")) && info != "" {
+		compliant = compliant + " [10]"
+		comment = comment + " [10]"
+		footnote[9] = writeFN(footnote[9], footnote10, info, "SECT")
+	}
+	if strings.Contains(mapKey, "sys") && info != "" {
+		compliant = compliant + " [10]"
+		comment = comment + " [10]"
+		footnote[9] = writeFN(footnote[9], footnote10, info, "SECT")
+	}
 	return compliant, comment, footnote
+}
+
+// writeFN customizes the text for footnotes by replacing strings/placeholder
+func writeFN(footnote, fntxt, info, pat string) string {
+	if footnote == "" {
+		footnote = strings.Replace(fntxt, pat, info, 1)
+	} else {
+		footnote = footnote + "\n " + strings.Replace(fntxt, pat, info, 1)
+	}
+	return footnote
 }
 
 // printTableFooter prints the footer of the table

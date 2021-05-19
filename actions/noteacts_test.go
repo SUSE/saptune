@@ -93,7 +93,8 @@ Remember: if you wish to automatically activate the solution's tuning options af
 
 	// Test VerifyAllParameters
 	t.Run("VerifyAllParameters", func(t *testing.T) {
-		var verifyMatchText = `   SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
+		var verifyMatchText = `
+   SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
 --------------------+------------------------------+-------------+-----------+-------------+-----------
    simpleNote, 1    | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
 

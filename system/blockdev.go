@@ -17,6 +17,18 @@ type BlockDev struct {
 	BlockAttributes map[string]map[string]string
 }
 
+// IsSched matches block device scheduler tag
+var IsSched = regexp.MustCompile(`^IO_SCHEDULER_\w+$`)
+
+// IsNrreq matches block device nrreq tag
+var IsNrreq = regexp.MustCompile(`^NRREQ_\w+$`)
+
+// IsRahead matches block device read_ahead_kb tag
+var IsRahead = regexp.MustCompile(`^READ_AHEAD_KB_\w+$`)
+
+// IsMsect matches block device max_sectors_kb tag
+var IsMsect = regexp.MustCompile(`^MAX_SECTORS_KB_\w+$`)
+
 var isVD = regexp.MustCompile(`^vd\w+$`)
 
 // devices like /dev/nvme0n1 are the NVME storage namespaces: the devices you
