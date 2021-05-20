@@ -23,6 +23,9 @@ type Operator string
 // RegexKeyOperatorValue breaks up a line into key, operator, value.
 var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`)
 
+// regKey gives the parameter part of the line from the note definition file
+var regKey = regexp.MustCompile(`(.*)\s*[<=>]+\s*["']*.*?["']*$`)
+
 // counter to control the [login] section info message
 var loginCnt = 0
 
@@ -94,24 +97,16 @@ func splitLineIntoKOV(curSection, line string) []string {
 	if curSection == "rpm" {
 		kov = splitRPM(line)
 	} else {
-		kov = RegexKeyOperatorValue.FindStringSubmatch(line)
-		if curSection == "grub" {
-			kov = splitGrub(line, kov)
-		} else if curSection == "service" {
-			kov = splitService(line, kov)
+		// check for unsupported '/' in the parameter name
+		param := regKey.FindStringSubmatch(line)
+		if len(param) > 0 && strings.Contains(param[1], "/") {
+			system.WarningLog("line '%v' contains an unsupported parameter syntax. Skipping line", line)
+			return nil
 		}
-	}
-	return kov
-}
-
-// splitService split line of section service into the needed syntax
-func splitService(line string, kov []string) []string {
-	if len(kov) == 0 {
-		// seams to be a single option and not
-		// a key=value pair
-		kov = []string{line, "systemd:" + line, "=", "unsupported"}
-	} else {
-		kov[1] = "systemd:" + kov[1]
+		kov = RegexKeyOperatorValue.FindStringSubmatch(line)
+		if curSection == "grub" || curSection == "sys" || curSection == "service" {
+			kov = splitSectLine(curSection, line, kov)
+		}
 	}
 	return kov
 }
@@ -144,14 +139,21 @@ func splitRPM(line string) []string {
 	return kov
 }
 
-// splitGrub split line of section grub into the needed syntax
-func splitGrub(line string, kov []string) []string {
+// splitSectLine split line of section 'sect' into the needed syntax
+func splitSectLine(sect, line string, kov []string) []string {
+	if sect == "service" {
+		sect = "systemd"
+	}
 	if len(kov) == 0 {
 		// seams to be a single option and not
 		// a key=value pair
-		kov = []string{line, "grub:" + line, "=", line}
+		if sect == "grub" {
+			kov = []string{line, sect + ":" + line, "=", line}
+		} else {
+			kov = []string{line, sect + ":" + line, "=", "unsupported"}
+		}
 	} else {
-		kov[1] = "grub:" + kov[1]
+		kov[1] = sect + ":" + kov[1]
 	}
 	return kov
 }
@@ -244,6 +246,7 @@ func ParseINI(input string) *INIFile {
 			}
 			continue
 		}
+
 		// Break apart a line into key, operator, value.
 		kov := splitLineIntoKOV(currentSection, line)
 		if kov == nil {

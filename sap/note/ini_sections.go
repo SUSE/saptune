@@ -92,12 +92,48 @@ func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) strin
 	return strings.TrimSpace(allFieldsS)
 }
 
-// section [block]
+// section [sys]
 
-var isSched = regexp.MustCompile(`^IO_SCHEDULER_\w+$`)
-var isNrreq = regexp.MustCompile(`^NRREQ_\w+$`)
-var isMsect = regexp.MustCompile(`^MAX_SECTORS_KB_\w+$`)
-var isRahead = regexp.MustCompile(`^READ_AHEAD_KB_\w+$`)
+// GetSysVal reads the sys system value
+func GetSysVal(key string) (string, string) {
+	info := ""
+	keyFields := strings.Split(key, ":")
+	if len(keyFields) > 1 {
+		key = keyFields[1]
+	}
+	val, _ := system.GetSysString(key)
+	if strings.ContainsAny(val, "[]") {
+		val, _ = system.GetSysChoice(key)
+	}
+	if val == "" {
+		val = "NA"
+	}
+	return val, info
+}
+
+// OptSysVal optimises a sys parameter value
+func OptSysVal(operator txtparser.Operator, key, actval, cfgval string) string {
+	syskey := key
+	keyFields := strings.Split(key, ":")
+	if len(keyFields) > 1 {
+		syskey = keyFields[1]
+	}
+	val := OptSysctlVal(operator, syskey, actval, cfgval)
+	return val
+}
+
+// SetSysVal applies the settings to the system
+func SetSysVal(key, value string) error {
+	syskey := key
+	keyFields := strings.Split(key, ":")
+	if len(keyFields) > 1 {
+		syskey = keyFields[1]
+	}
+	err := system.SetSysString(syskey, value)
+	return err
+}
+
+// section [block]
 
 // GetBlkVal initialise the block device structure with the current
 // system settings
@@ -110,7 +146,7 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 	info := ""
 
 	switch {
-	case isSched.MatchString(key):
+	case system.IsSched.MatchString(key):
 		newIOQ, err := cur.BlockDeviceSchedulers.Inspect()
 		if err != nil {
 			return "", info, err
@@ -118,7 +154,7 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 		newQueue = newIOQ.(param.BlockDeviceSchedulers).SchedulerChoice
 		retVal = newQueue[strings.TrimPrefix(key, "IO_SCHEDULER_")]
 		cur.BlockDeviceSchedulers = newIOQ.(param.BlockDeviceSchedulers)
-	case isNrreq.MatchString(key):
+	case system.IsNrreq.MatchString(key):
 		newNrR, err := cur.BlockDeviceNrRequests.Inspect()
 		if err != nil {
 			return "", info, err
@@ -126,7 +162,7 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 		newReq = newNrR.(param.BlockDeviceNrRequests).NrRequests
 		retVal = strconv.Itoa(newReq[strings.TrimPrefix(key, "NRREQ_")])
 		cur.BlockDeviceNrRequests = newNrR.(param.BlockDeviceNrRequests)
-	case isRahead.MatchString(key):
+	case system.IsRahead.MatchString(key):
 		newRahead, err := cur.BlockDeviceReadAheadKB.Inspect()
 		if err != nil {
 			return "", info, err
@@ -134,7 +170,7 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 		newRah = newRahead.(param.BlockDeviceReadAheadKB).ReadAheadKB
 		retVal = strconv.Itoa(newRah[strings.TrimPrefix(key, "READ_AHEAD_KB_")])
 		cur.BlockDeviceReadAheadKB = newRahead.(param.BlockDeviceReadAheadKB)
-	case isMsect.MatchString(key):
+	case system.IsMsect.MatchString(key):
 		newMsect, err := cur.BlockDeviceMaxSectorsKB.Inspect()
 		if err != nil {
 			return "", info, err
@@ -155,7 +191,7 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 	}
 	sval := cfgval
 	switch {
-	case isSched.MatchString(key):
+	case system.IsSched.MatchString(key):
 		// ANGI TODO - support different scheduler per device or
 		// all devices with same scheduler (oval="all none")
 		oval := ""
@@ -180,21 +216,21 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 			opt, _ := cur.BlockDeviceSchedulers.Optimise(oval)
 			cur.BlockDeviceSchedulers = opt.(param.BlockDeviceSchedulers)
 		}
-	case isNrreq.MatchString(key):
+	case system.IsNrreq.MatchString(key):
 		if sval == "0" {
 			sval = "1024"
 		}
 		ival, _ := strconv.Atoi(sval)
 		opt, _ := cur.BlockDeviceNrRequests.Optimise(ival)
 		cur.BlockDeviceNrRequests = opt.(param.BlockDeviceNrRequests)
-	case isRahead.MatchString(key):
+	case system.IsRahead.MatchString(key):
 		if sval == "0" {
 			sval = "512"
 		}
 		ival, _ := strconv.Atoi(sval)
 		opt, _ := cur.BlockDeviceReadAheadKB.Optimise(ival)
 		cur.BlockDeviceReadAheadKB = opt.(param.BlockDeviceReadAheadKB)
-	case isMsect.MatchString(key):
+	case system.IsMsect.MatchString(key):
 		ival, _ := strconv.Atoi(sval)
 		dname := regexp.MustCompile(`^MAX_SECTORS_KB_(\w+)$`)
 		bdev := dname.FindStringSubmatch(key)
@@ -216,7 +252,7 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 	var err error
 
 	switch {
-	case isSched.MatchString(key):
+	case system.IsSched.MatchString(key):
 		if revert {
 			cur.BlockDeviceSchedulers.SchedulerChoice[strings.TrimPrefix(key, "IO_SCHEDULER_")] = value
 		}
@@ -224,7 +260,7 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 		if err != nil {
 			return err
 		}
-	case isNrreq.MatchString(key):
+	case system.IsNrreq.MatchString(key):
 		if revert {
 			ival, _ := strconv.Atoi(value)
 			cur.BlockDeviceNrRequests.NrRequests[strings.TrimPrefix(key, "NRREQ_")] = ival
@@ -233,7 +269,7 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 		if err != nil {
 			return err
 		}
-	case isRahead.MatchString(key):
+	case system.IsRahead.MatchString(key):
 		if revert {
 			ival, _ := strconv.Atoi(value)
 			cur.BlockDeviceReadAheadKB.ReadAheadKB[strings.TrimPrefix(key, "READ_AHEAD_KB_")] = ival
@@ -242,7 +278,7 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 		if err != nil {
 			return err
 		}
-	case isMsect.MatchString(key):
+	case system.IsMsect.MatchString(key):
 		if revert {
 			ival, _ := strconv.Atoi(value)
 			cur.BlockDeviceMaxSectorsKB.MaxSectorsKB[strings.TrimPrefix(key, "MAX_SECTORS_KB_")] = ival
@@ -332,8 +368,9 @@ func SetLimitsVal(key, noteID, value string, revert bool) error {
 
 // GetVMVal initialise the memory management structure with the current
 // system settings
-func GetVMVal(key string) string {
+func GetVMVal(key string) (string, string) {
 	var val string
+	info := ""
 	switch key {
 	case "THP":
 		val, _ = system.GetSysChoice(SysKernelTHPEnabled)
@@ -341,7 +378,7 @@ func GetVMVal(key string) string {
 		ksmval, _ := system.GetSysInt(SysKSMRun)
 		val = strconv.Itoa(ksmval)
 	}
-	return val
+	return val, info
 }
 
 // OptVMVal optimises the memory management structure with the settings
@@ -691,6 +728,8 @@ func OptServiceVal(key, cfgval string) string {
 // SetServiceVal applies the settings to the system
 func SetServiceVal(key, value string) error {
 	var err error
+	// for compatibility to saptune v2 (revert!)
+	// v2 - servicename, v3 - systemd:servicename
 	serviceKey := key
 	keyFields := strings.Split(key, ":")
 	if len(keyFields) == 2 {

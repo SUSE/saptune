@@ -59,21 +59,23 @@ func TestPrintNoteFields(t *testing.T) {
 
    SAPNote, Version | Parameter                  | Expected             | Override  | Actual               | Compliant
 --------------------+----------------------------+----------------------+-----------+----------------------+-----------
-   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [5] [7]
+   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [7] [5]
    941735, 1        | IO_SCHEDULER_sdc           |                      |           | bfq                  | no  [7]
+   941735, 1        | IO_SCHEDULER_sdd           |                      |           | bfq                  | no  [7] [10]
    941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
    941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
    941735, 1        | force_latency              | 70                   |           | all:none             | no  [4]
    941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
    941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
 
- [1] setting is not supported by the system
- [2] setting is not available on the system
- [3] value is only checked, but NOT set
- [4] cpu idle state settings differ
- [5] expected value does not contain a supported scheduler
- [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
- [7] parameter value is untouched by default
+  [1] setting is not supported by the system
+  [2] setting is not available on the system
+  [3] value is only checked, but NOT set
+  [4] cpu idle state settings differ
+  [5] expected value does not contain a supported scheduler
+  [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+  [7] parameter value is untouched by default
+ [10] parameter is defined twice, see section [sys] 'sys:block.sdd.queue.scheduler' from the other applied notes
 
 `
 	var printMatchText2 = `
@@ -82,59 +84,67 @@ func TestPrintNoteFields(t *testing.T) {
 
    Parameter                  | Value set            | Value expected       | Override  | Comment
 ------------------------------+----------------------+----------------------+-----------+--------------
-   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [5] [7]
+   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [7] [5]
    IO_SCHEDULER_sdc           | bfq                  |                      |           |  [7]
+   IO_SCHEDULER_sdd           | bfq                  |                      |           |  [7] [10]
    IO_SCHEDULER_vda           | all:none             | noop                 |           |  [1] [5]
    ShmFileSystemSizeMB        | 488                  | 1714                 |           |   
    force_latency              | all:none             | 70                   |           |  [1] [4]
    grub:intel_idle.max_cstate | NA                   | 1                    |           |  [2] [3] [6]
    kernel.shmmax              | 18446744073709551615 | 18446744073709551615 |           |   
 
- [1] setting is not supported by the system
- [2] setting is not available on the system
- [3] value is only checked, but NOT set
- [4] cpu idle state settings differ
- [5] expected value does not contain a supported scheduler
- [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
- [7] parameter value is untouched by default
+  [1] setting is not supported by the system
+  [2] setting is not available on the system
+  [3] value is only checked, but NOT set
+  [4] cpu idle state settings differ
+  [5] expected value does not contain a supported scheduler
+  [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+  [7] parameter value is untouched by default
+ [10] parameter is defined twice, see section [sys] 'sys:block.sdd.queue.scheduler' from the other applied notes
 
 `
-	var printMatchText3 = `   SAPNote, Version | Parameter                  | Expected             | Override  | Actual               | Compliant
+	var printMatchText3 = `
+   SAPNote, Version | Parameter                  | Expected             | Override  | Actual               | Compliant
 --------------------+----------------------------+----------------------+-----------+----------------------+-----------
-   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [5] [7]
+   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [7] [5]
    941735, 1        | IO_SCHEDULER_sdc           |                      |           | bfq                  | no  [7]
+   941735, 1        | IO_SCHEDULER_sdd           |                      |           | bfq                  | no  [7] [10]
    941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
    941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
    941735, 1        | force_latency              | 70                   |           | all:none             | no  [4]
    941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
    941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
 
- [1] setting is not supported by the system
- [2] setting is not available on the system
- [3] value is only checked, but NOT set
- [4] cpu idle state settings differ
- [5] expected value does not contain a supported scheduler
- [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
- [7] parameter value is untouched by default
+  [1] setting is not supported by the system
+  [2] setting is not available on the system
+  [3] value is only checked, but NOT set
+  [4] cpu idle state settings differ
+  [5] expected value does not contain a supported scheduler
+  [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+  [7] parameter value is untouched by default
+ [10] parameter is defined twice, see section [sys] 'sys:block.sdd.queue.scheduler' from the other applied notes
 
 `
-	var printMatchText4 = `   Parameter                  | Value set            | Value expected       | Override  | Comment
+	var printMatchText4 = `
+   Parameter                  | Value set            | Value expected       | Override  | Comment
 ------------------------------+----------------------+----------------------+-----------+--------------
-   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [5] [7]
+   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [7] [5]
    IO_SCHEDULER_sdc           | bfq                  |                      |           |  [7]
+   IO_SCHEDULER_sdd           | bfq                  |                      |           |  [7] [10]
    IO_SCHEDULER_vda           | all:none             | noop                 |           |  [1] [5]
    ShmFileSystemSizeMB        | 488                  | 1714                 |           |   
    force_latency              | all:none             | 70                   |           |  [1] [4]
    grub:intel_idle.max_cstate | NA                   | 1                    |           |  [2] [3] [6]
    kernel.shmmax              | 18446744073709551615 | 18446744073709551615 |           |   
 
- [1] setting is not supported by the system
- [2] setting is not available on the system
- [3] value is only checked, but NOT set
- [4] cpu idle state settings differ
- [5] expected value does not contain a supported scheduler
- [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
- [7] parameter value is untouched by default
+  [1] setting is not supported by the system
+  [2] setting is not available on the system
+  [3] value is only checked, but NOT set
+  [4] cpu idle state settings differ
+  [5] expected value does not contain a supported scheduler
+  [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+  [7] parameter value is untouched by default
+ [10] parameter is defined twice, see section [sys] 'sys:block.sdd.queue.scheduler' from the other applied notes
 
 `
 	checkCorrectMessage := func(t *testing.T, got, want string) {
@@ -165,8 +175,10 @@ func TestPrintNoteFields(t *testing.T) {
 	fcomp12 := note.FieldComparison{ReflectFieldName: "Inform", ReflectMapKey: "IO_SCHEDULER_sdb", ActualValue: "NA", ExpectedValue: "", ActualValueJS: "NA", ExpectedValueJS: "", MatchExpectation: false}
 	fcomp13 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "IO_SCHEDULER_sdc", ActualValue: "bfq", ExpectedValue: "", ActualValueJS: "bfq", ExpectedValueJS: "", MatchExpectation: false}
 	fcomp14 := note.FieldComparison{ReflectFieldName: "Inform", ReflectMapKey: "IO_SCHEDULER_sdc", ActualValue: "", ExpectedValue: "bfq", ActualValueJS: "", ExpectedValueJS: "bfq", MatchExpectation: false}
+	fcomp15 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "IO_SCHEDULER_sdd", ActualValue: "bfq", ExpectedValue: "", ActualValueJS: "bfq", ExpectedValueJS: "", MatchExpectation: false}
+	fcomp16 := note.FieldComparison{ReflectFieldName: "Inform", ReflectMapKey: "IO_SCHEDULER_sdd", ActualValue: "", ExpectedValue: "[sys] 'sys:block.sdd.queue.scheduler' from the other applied notes", ActualValueJS: "", ExpectedValueJS: "[sys] 'sys:block.sdd.queue.scheduler' from the other applied notes", MatchExpectation: false}
 
-	map941735 := map[string]note.FieldComparison{"ConfFilePath": fcomp1, "ID": fcomp2, "DescriptiveName": fcomp3, "SysctlParams[ShmFileSystemSizeMB]": fcomp4, "SysctlParams[kernel.shmmax]": fcomp5, "SysctlParams[IO_SCHEDULER_vda]": fcomp6, "SysctlParams[grub:intel_idle.max_cstate]": fcomp7, "SysctlParams[force_latency]": fcomp8, "Inform[force_latency]": fcomp9, "Inform[IO_SCHEDULER_vda]": fcomp10, "SysctlParams[IO_SCHEDULER_sdb]": fcomp11, "Inform[IO_SCHEDULER_sdb]": fcomp12, "SysctlParams[IO_SCHEDULER_sdc]": fcomp13, "Inform[IO_SCHEDULER_sdc]": fcomp14}
+	map941735 := map[string]note.FieldComparison{"ConfFilePath": fcomp1, "ID": fcomp2, "DescriptiveName": fcomp3, "SysctlParams[ShmFileSystemSizeMB]": fcomp4, "SysctlParams[kernel.shmmax]": fcomp5, "SysctlParams[IO_SCHEDULER_vda]": fcomp6, "SysctlParams[grub:intel_idle.max_cstate]": fcomp7, "SysctlParams[force_latency]": fcomp8, "Inform[force_latency]": fcomp9, "Inform[IO_SCHEDULER_vda]": fcomp10, "SysctlParams[IO_SCHEDULER_sdb]": fcomp11, "Inform[IO_SCHEDULER_sdb]": fcomp12, "SysctlParams[IO_SCHEDULER_sdc]": fcomp13, "Inform[IO_SCHEDULER_sdc]": fcomp14, "SysctlParams[IO_SCHEDULER_sdd]": fcomp15, "Inform[IO_SCHEDULER_sdd]": fcomp16}
 	noteComp := map[string]map[string]note.FieldComparison{"941735": map941735}
 
 	t.Run("verify with header", func(t *testing.T) {

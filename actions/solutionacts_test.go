@@ -57,6 +57,7 @@ Remember: if you wish to automatically activate the solution's tuning options af
 	// Test SolutionActionSimulate
 	t.Run("SolutionActionSimulate", func(t *testing.T) {
 		var simulateMatchText = `If you run ` + "`saptune solution apply sol1`" + `, the following changes will be applied to your system:
+
    Parameter                    | Value set   | Value expected  | Override  | Comment
 --------------------------------+-------------+-----------------+-----------+--------------
    net.ipv4.ip_local_port_range | 32768 60999 | 31768 61999     |           |   
@@ -95,7 +96,8 @@ Remember: if you wish to automatically activate the solution's tuning options af
 	// Test SolutionActionVerify
 	// need to run after 'Test SolutionActionApply'
 	t.Run("SolutionActionVerify", func(t *testing.T) {
-		var verifyMatchText = `   SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
+		var verifyMatchText = `
+   SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
 --------------------+------------------------------+-------------+-----------+-------------+-----------
    simpleNote, 1    | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
 

@@ -24,7 +24,7 @@ const OverrideTuningSheets = "/etc/saptune/override/"
 var ini *txtparser.INIFile
 var pc = LinuxPagingImprovements{}
 
-var blck = param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, BlockDeviceReadAheadKB: param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}}
+var blck = param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, BlockDeviceReadAheadKB: param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}, BlockDeviceMaxSectorsKB: param.BlockDeviceMaxSectorsKB{MaxSectorsKB: make(map[string]int)}}
 var isLimitSoft = regexp.MustCompile(`LIMIT_.*_soft_memlock`)
 var isLimitHard = regexp.MustCompile(`LIMIT_.*_hard_memlock`)
 var flstates = ""
@@ -102,7 +102,7 @@ func (vend INISettings) Name() string {
 
 // Initialise retrieves the current parameter values from the system
 func (vend INISettings) Initialise() (Note, error) {
-	ini, err := vend.getSectionInfo(false)
+	ini, err := vend.getSectionInfo("sns", false)
 	if err != nil {
 		// Parse the configuration file
 		ini, err = txtparser.ParseINIFile(vend.ConfFilePath, false)
@@ -119,8 +119,16 @@ func (vend INISettings) Initialise() (Note, error) {
 
 	// looking for override file
 	override := false
-	ow, err := txtparser.ParseINIFile(path.Join(OverrideTuningSheets, vend.ID), false)
-	if err == nil {
+	ow, err := vend.getSectionInfo("ovw", false)
+	if err != nil {
+		// Parse the override file
+		ow, err = txtparser.ParseINIFile(path.Join(OverrideTuningSheets, vend.ID), false)
+		if err == nil {
+			// write section data to section runtime file
+			_ = vend.storeSectionInfo(ow, "ovw", true)
+			override = true
+		}
+	} else {
 		override = true
 	}
 	// Read current parameter values
@@ -128,7 +136,7 @@ func (vend INISettings) Initialise() (Note, error) {
 	vend.OverrideParams = make(map[string]string)
 	vend.Inform = make(map[string]string)
 	pc = LinuxPagingImprovements{}
-	blck = param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, BlockDeviceReadAheadKB: param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}}
+	blck = param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, BlockDeviceReadAheadKB: param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}, BlockDeviceMaxSectorsKB: param.BlockDeviceMaxSectorsKB{MaxSectorsKB: make(map[string]int)}}
 
 	for _, param := range ini.AllValues {
 		if override && len(ow.KeyValue[param.Section]) != 0 {
@@ -139,9 +147,9 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionSysctl:
 			vend.SysctlParams[param.Key], _ = system.GetSysctlString(param.Key)
 		case INISectionSys:
-			vend.SysctlParams[param.Key], _ = system.GetSysString(param.Key)
+			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetSysVal(param.Key)
 		case INISectionVM:
-			vend.SysctlParams[param.Key] = GetVMVal(param.Key)
+			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetVMVal(param.Key)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key], _ = GetBlkVal(param.Key, &blck)
 		case INISectionLimits:
@@ -190,7 +198,7 @@ func (vend INISettings) Optimise() (Note, error) {
 	scheds := ""
 
 	// read saved section data == config data from configuration file
-	ini, err := vend.getSectionInfo(false)
+	ini, err := vend.getSectionInfo("sns", false)
 	if err != nil {
 		// fallback, parse the configuration file
 		ini, err = txtparser.ParseINIFile(vend.ConfFilePath, false)
@@ -218,7 +226,7 @@ func (vend INISettings) Optimise() (Note, error) {
 			// use value from override file instead of the value
 			// from the sap note (ConfFile)
 			if vend.OverrideParams[param.Key] == "untouched" {
-				if isSched.MatchString(param.Key) {
+				if system.IsSched.MatchString(param.Key) {
 					scheds = "untouched"
 				}
 				continue
@@ -231,12 +239,15 @@ func (vend INISettings) Optimise() (Note, error) {
 			//vend.SysctlParams[param.Key] = optimisedValue
 			vend.SysctlParams[param.Key] = OptSysctlVal(param.Operator, param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionSys:
-			vend.SysctlParams[param.Key] = OptSysctlVal(param.Operator, param.Key, vend.SysctlParams[param.Key], param.Value)
+			vend.Inform[param.Key] = vend.chkDoubles(param.Key, vend.Inform[param.Key])
+			vend.SysctlParams[param.Key] = OptSysVal(param.Operator, param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionVM:
+			vend.Inform[param.Key] = vend.chkDoubles(param.Key, vend.Inform[param.Key])
 			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = OptBlkVal(param.Key, param.Value, &blck, blckOK)
-			if isSched.MatchString(param.Key) {
+			vend.Inform[param.Key] = vend.chkDoubles(param.Key, vend.Inform[param.Key])
+			if system.IsSched.MatchString(param.Key) {
 				scheds = param.Value
 			}
 		case INISectionLimits:
@@ -318,7 +329,7 @@ func (vend INISettings) Apply() error {
 		revertValues = true
 	}
 
-	ini, err = vend.getSectionInfo(revertValues)
+	ini, err = vend.getSectionInfo("sns", revertValues)
 	if err != nil {
 		// fallback, reading info from config file
 		ini, err = txtparser.ParseINIFile(vend.ConfFilePath, false)
@@ -364,7 +375,7 @@ func (vend INISettings) Apply() error {
 			key, val := vend.getCounterPart(param.Key, revertValues)
 			errs = append(errs, system.SetSysctlString(key, val))
 		case INISectionSys:
-			errs = append(errs, system.SetSysString(param.Key, vend.SysctlParams[param.Key]))
+			errs = append(errs, SetSysVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionVM:
 			errs = append(errs, SetVMVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionBlock:
@@ -485,6 +496,8 @@ func (vend INISettings) storeSectionInfo(obj *txtparser.INIFile, file string, ov
 	iniFileName := ""
 	if file == "run" {
 		iniFileName = fmt.Sprintf("%s/%s.run", SaptuneSectionDir, vend.ID)
+	} else if file == "ovw" {
+		iniFileName = fmt.Sprintf("%s/over_%s.run", SaptuneSectionDir, vend.ID)
 	} else {
 		iniFileName = fmt.Sprintf("%s/%s.sections", SaptuneSectionDir, vend.ID)
 	}
@@ -503,10 +516,12 @@ func (vend INISettings) storeSectionInfo(obj *txtparser.INIFile, file string, ov
 
 // getSectionInfo reads content of stored INIFile information.
 // Return the content as INIFile
-func (vend INISettings) getSectionInfo(fileSelect bool) (*txtparser.INIFile, error) {
+func (vend INISettings) getSectionInfo(initype string, fileSelect bool) (*txtparser.INIFile, error) {
 	iniFileName := ""
 	if fileSelect {
 		iniFileName = fmt.Sprintf("%s/%s.sections", SaptuneSectionDir, vend.ID)
+	} else if initype == "ovw" {
+		iniFileName = fmt.Sprintf("%s/over_%s.run", SaptuneSectionDir, vend.ID)
 	} else {
 		iniFileName = fmt.Sprintf("%s/%s.run", SaptuneSectionDir, vend.ID)
 	}
@@ -593,4 +608,102 @@ func (vend INISettings) handleInitOverride(key, val, section string, op txtparse
 		}
 	}
 	return key, val, op
+}
+
+// chkDoubles checks for double defined parameters
+// till now for /sys parameter settings
+// like KSM, THP and /sys/block/*/queue
+func (vend INISettings) chkDoubles(key, info string) string {
+	paramFiles := system.GetFiles(SaptuneParameterStateDir)
+
+	syskey := key
+	inf := ""
+	searchParam, sect := getSysSearchParam(syskey)
+	sParam := strings.TrimPrefix(searchParam, "sys:")
+	matchTxt := "[" + sect + "] '" + sParam
+
+	if vend.SysctlParams[searchParam] != "" {
+		// defined in same note definition file
+		inf = matchTxt + "' of note " + vend.ID
+	} else if _, exists := paramFiles[sParam]; exists {
+		// defined in another note definition file
+		inf = matchTxt + "' from the other applied notes"
+	}
+	if inf != "" {
+		system.WarningLog("'%s' is defined twice, see section %s", syskey, inf)
+		if info != "" {
+			info = info + "§" + inf
+		} else {
+			info = inf
+		}
+	}
+	return info
+}
+
+// getSysSearchParam returns the search pattern for a given sys key
+// and the conterpart section
+func getSysSearchParam(syskey string) (string, string) {
+	searchParam := ""
+	sect := ""
+	// THP
+	thp := "sys:kernel.mm.transparent_hugepage.enabled"
+	// KSM
+	ksm := "sys:kernel.mm.ksm.run"
+	// blkdev
+	sched := regexp.MustCompile(`block.*queue\.scheduler$`)
+	nrreq := regexp.MustCompile(`block.*queue\.nr_requests$`)
+	rakb := regexp.MustCompile(`block.*queue\.read_ahead_kb$`)
+	mskb := regexp.MustCompile(`block.*queue\.max_sectors_kb$`)
+	dev := regexp.MustCompile(`block\.(.*)\.queue\..*$`)
+	d := dev.FindStringSubmatch(syskey)
+	bdev := ""
+	if len(d) > 0 {
+		bdev = d[1]
+	} else {
+		dev = regexp.MustCompile(`.*_(\w+)$`)
+		d = dev.FindStringSubmatch(syskey)
+		if len(d) > 0 {
+			bdev = d[1]
+		}
+	}
+
+	switch {
+	case syskey == "THP":
+		searchParam = thp
+		sect = "sys"
+	case syskey == thp:
+		searchParam = "THP"
+		sect = "vm"
+	case syskey == "KSM":
+		searchParam = ksm
+		sect = "sys"
+	case syskey == ksm:
+		searchParam = "KSM"
+		sect = "vm"
+	case system.IsSched.MatchString(syskey):
+		searchParam = "sys:block." + bdev + ".queue.scheduler"
+		sect = "sys"
+	case sched.MatchString(syskey):
+		searchParam = "IO_SCHEDULER_" + bdev
+		sect = "block"
+	case system.IsNrreq.MatchString(syskey):
+		searchParam = "sys:block." + bdev + ".queue.nr_requests"
+		sect = "sys"
+	case nrreq.MatchString(syskey):
+		searchParam = "NRREQ_" + bdev
+		sect = "block"
+	case system.IsRahead.MatchString(syskey):
+		searchParam = "sys:block." + bdev + ".queue.read_ahead_kb"
+		sect = "sys"
+	case rakb.MatchString(syskey):
+		searchParam = "READ_AHEAD_KB_" + bdev
+		sect = "block"
+	case system.IsMsect.MatchString(syskey):
+		searchParam = "sys:block." + bdev + ".queue.max_sectors_kb"
+		sect = "sys"
+	case mskb.MatchString(syskey):
+		searchParam = "MAX_SECTORS_KB_" + bdev
+		sect = "block"
+	}
+	return searchParam, sect
 }

@@ -18,18 +18,19 @@ const (
 	TunedService       = "tuned.service"
 	exitSaptuneStopped = 1
 	exitNotTuned       = 3
-	footnote1X86       = "[1] setting is not supported by the system"
-	footnote1IBM       = "[1] setting is not relevant for the system"
-	footnote1AZR       = "[1] setting is not available on Azure instances (see SAP Note 2993054)."
-	footnote1AWS       = "[1] setting is not available on AWS instances (see SAP Note 1656250)."
-	footnote2          = "[2] setting is not available on the system"
-	footnote3          = "[3] value is only checked, but NOT set"
-	footnote4          = "[4] cpu idle state settings differ"
-	footnote5          = "[5] expected value does not contain a supported scheduler"
-	footnote6          = "[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
-	footnote7          = "[7] parameter value is untouched by default"
-	footnote8          = "[8] cannot set Perf Bias because SecureBoot is enabled"
-	footnote9          = "[9] expected value limited to 'max_hw_sectors_kb'"
+	footnote1X86       = " [1] setting is not supported by the system"
+	footnote1IBM       = " [1] setting is not relevant for the system"
+	footnote1AZR       = " [1] setting is not available on Azure instances (see SAP Note 2993054)."
+	footnote1AWS       = " [1] setting is not available on AWS instances (see SAP Note 1656250)."
+	footnote2          = " [2] setting is not available on the system"
+	footnote3          = " [3] value is only checked, but NOT set"
+	footnote4          = " [4] cpu idle state settings differ"
+	footnote5          = " [5] expected value does not contain a supported scheduler"
+	footnote6          = " [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
+	footnote7          = " [7] parameter value is untouched by default"
+	footnote8          = " [8] cannot set Perf Bias because SecureBoot is enabled"
+	footnote9          = " [9] expected value limited to 'max_hw_sectors_kb'"
+	footnote10         = "[10] parameter is defined twice, see section SECT"
 )
 
 // PackageArea is the package area with all notes and solutions shiped by
