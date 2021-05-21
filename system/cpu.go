@@ -359,11 +359,11 @@ func SetForceLatency(value, savedStates, info string, revert bool) error {
 						// apply
 						oldState, _ = GetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"))
 						// save old latency states for 'revert'
-						if lat >= flval {
+						if lat > flval {
 							// set new latency states
 							err = SetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"), "1")
 						}
-						if lat < flval && oldState == "1" {
+						if lat <= flval && oldState == "1" {
 							// reset previous set latency state
 							err = SetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"), "0")
 						}

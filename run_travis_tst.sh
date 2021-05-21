@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# this tests do not need any HA/cluster stuff, so remove the repo
+echo "zypper remove unneeded repo"
+zypper rr network:ha-clustering:Factory
+
 echo "zypper in ..."
 #/bin/systemctl start dbus -> does not work any longer
 # additional libs needed to get 'tuned' working
@@ -20,6 +24,7 @@ cd ${TRAVIS_HOME}/gopath/src/github.com/SUSE
 if [ ! -f saptune ]; then
 	ln -s /app saptune
 fi
+export GO111MODULE="off"
 export GOPATH=${TRAVIS_HOME}/gopath
 export PATH=${TRAVIS_HOME}/gopath/bin:$PATH
 export TRAVIS_BUILD_DIR=${TRAVIS_HOME}/gopath/src/github.com/SUSE/saptune
