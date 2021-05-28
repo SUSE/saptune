@@ -21,7 +21,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 10, 10)
+	footnote := make([]string, 11, 11)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -278,6 +278,14 @@ func chkInfo(mapKey, compliant, comment, info string, footnote []string) (string
 		compliant = compliant + " [10]"
 		comment = comment + " [10]"
 		footnote[9] = writeFN(footnote[9], footnote10, info, "SECT")
+	}
+	// check if the sysctl parameter is additional set in a sysctl system
+	// configuration file
+	if strings.HasPrefix(info, "sysctl config file ") {
+		// sysctl info
+		compliant = compliant + " [11]"
+		comment = comment + " [11]"
+		footnote[10] = writeFN(footnote[10], footnote11, info, "SYSCTLLIST")
 	}
 	return compliant, comment, footnote
 }

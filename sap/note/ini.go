@@ -145,6 +145,7 @@ func (vend INISettings) Initialise() (Note, error) {
 
 		switch param.Section {
 		case INISectionSysctl:
+			vend.Inform[param.Key] = ""
 			vend.SysctlParams[param.Key], _ = system.GetSysctlString(param.Key)
 		case INISectionSys:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetSysVal(param.Key)
@@ -237,6 +238,7 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionSysctl:
 			//optimisedValue, err := CalculateOptimumValue(param.Operator, vend.SysctlParams[param.Key], param.Value)
 			//vend.SysctlParams[param.Key] = optimisedValue
+			vend.Inform[param.Key] = system.ChkForSysctlDoubles(param.Key)
 			vend.SysctlParams[param.Key] = OptSysctlVal(param.Operator, param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionSys:
 			vend.Inform[param.Key] = vend.chkDoubles(param.Key, vend.Inform[param.Key])
@@ -645,10 +647,6 @@ func (vend INISettings) chkDoubles(key, info string) string {
 func getSysSearchParam(syskey string) (string, string) {
 	searchParam := ""
 	sect := ""
-	// THP
-	thp := "sys:kernel.mm.transparent_hugepage.enabled"
-	// KSM
-	ksm := "sys:kernel.mm.ksm.run"
 	// blkdev
 	sched := regexp.MustCompile(`block.*queue\.scheduler$`)
 	nrreq := regexp.MustCompile(`block.*queue\.nr_requests$`)
@@ -669,15 +667,15 @@ func getSysSearchParam(syskey string) (string, string) {
 
 	switch {
 	case syskey == "THP":
-		searchParam = thp
+		searchParam = "sys:" + system.SysKernelTHPEnabled
 		sect = "sys"
-	case syskey == thp:
+	case syskey == "sys:"+system.SysKernelTHPEnabled:
 		searchParam = "THP"
 		sect = "vm"
 	case syskey == "KSM":
-		searchParam = ksm
+		searchParam = "sys:" + system.SysKSMRun
 		sect = "sys"
-	case syskey == ksm:
+	case syskey == "sys:"+system.SysKSMRun:
 		searchParam = "KSM"
 		sect = "vm"
 	case system.IsSched.MatchString(syskey):

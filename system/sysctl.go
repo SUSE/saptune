@@ -15,54 +15,112 @@ import (
 const (
 	SysctlPagecacheLimitMB          = "vm.pagecache_limit_mb"
 	SysctlPagecacheLimitIgnoreDirty = "vm.pagecache_limit_ignore_dirty"
-	SysctlNumaBalancing             = "kernel.numa_balancing"
-	SysctlShmall                    = "kernel.shmall"
-	SysctlShmax                     = "kernel.shmmax"
-	SysctlShmni                     = "kernel.shmmni"
-	SysctlMaxMapCount               = "vm.max_map_count"
-	SysctlSem                       = "kernel.sem"
-	SysctlNumberHugepages           = "vm.nr_hugepages"
-	SysctlSwappines                 = "vm.swappiness"
-	SysctlVFSCachePressure          = "vm.vfs_cache_pressure"
-	SysctlOvercommitMemory          = "vm.overcommit_memory"
-	SysctlOvercommitRatio           = "vm.overcommit_ratio"
 	SysctlDirtyRatio                = "vm.dirty_ratio"
 	SysctlDirtyBackgroundRatio      = "vm.dirty_background_ratio"
-	SysctlNetReadMemMax             = "net.core.rmem_max"
-	SysctlNetWriteMemMax            = "net.core.wmem_max"
-	SysctlNetMaxBacklog             = "net.core.netdev_max_backlog"
-	SysctlNetMaxconn                = "net.core.somaxconn"
-	SysctlTCPReadMem                = "net.ipv4.tcp_rmem"
-	SysctlTCPWriteMem               = "net.ipv4.tcp_wmem"
-	SysctlTCPTimestamps             = "net.ipv4.tcp_timestamps"
-	SysctlTCPSack                   = "net.ipv4.tcp_sack"
-	SysctlTCPDsack                  = "net.ipv4.tcp_dsack"
-	SysctlTCPFack                   = "net.ipv4.tcp_fack"
-	SysctlTCPFragLowThreshold       = "net.ipv4.ipfrag_low_thresh"
-	SysctlTCPFragHighThreshold      = "net.ipv4.ipfrag_high_thresh"
-	SysctlTCPMaxSynBacklog          = "net.ipv4.tcp_max_syn_backlog"
-	SysctlTCPSynackRetries          = "net.ipv4.tcp_synack_retries"
-	SysctpTCPRetries2               = "net.ipv4.tcp_retries2"
-	SysctlTCPKeepaliveTime          = "net.ipv4.tcp_keepalive_time"
-	SysctlTCPKeepaliveProbes        = "net.ipv4.tcp_keepalive_probes"
-	SysctlTCPKeepaliveInterval      = "net.ipv4.tcp_keepalive_intvl"
-	SysctlTCPTWRecycle              = "net.ipv4.tcp_tw_recycle"
-	SysctlTCPTWReuse                = "net.ipv4.tcp_tw_reuse"
-	SysctlTCPFinTimeout             = "net.ipv4.tcp_fin_timeout"
-	SysctlTCPMTUProbing             = "net.ipv4.tcp_mtu_probing"
-	SysctlTCPSynCookies             = "net.ipv4.tcp_syncookies"
-	SysctlIPAcceptSourceRoute       = "net.ipv4.conf.all.accept_source_route"
-	SysctlIPAcceptRedirects         = "net.ipv4.conf.all.accept_redirects"
-	SysctlIPRPFilter                = "net.ipv4.conf.all.rp_filter"
-	SysctlIPIgnoreICMPBroadcasts    = "net.ipv4.icmp_echo_ignore_broadcasts"
-	SysctlIPIgnoreICMPBogusError    = "net.ipv4.icmp_ignore_bogus_error_responses"
-	SysctlIPLogMartians             = "net.ipv4.conf.all.log_martians"
-	SysctlRandomizeVASpace          = "kernel.randomize_va_space"
-	SysctlKptrRestrict              = "kernel.kptr_restrict"
-	SysctlProtectHardlinks          = "fs.protected_hardlinks"
-	SysctlProtectSymlinks           = "fs.protected_symlinks"
-	SysctlRunChildFirst             = "kernel.sched_child_runs_first"
+	SysKernelTHPEnabled             = "kernel.mm.transparent_hugepage.enabled"
+	SysKSMRun                       = "kernel.mm.ksm.run"
 )
+
+// sysctlDirs contains all locations sysctl is searching for parameter settings.
+// see comment in /etc/sysctl.conf and man page sysctl.conf(5)
+var sysctlDirs = []string{"/etc/sysctl.conf", "/run/sysctl.d/", "/etc/sysctl.d/", "/usr/local/lib/sysctl.d/", "/usr/lib/sysctl.d/", "/lib/sysctl.d/", "/boot/"}
+
+var sysctlParms = sysctlDefined{}
+
+// sysctlEntry contains the 'sysctl config filename - value' pair
+type sysctlEntry struct {
+	File  string
+	Value string
+}
+
+// sysctlConf contains a list of all files-value pairs for the related
+// sysctl parameter
+type sysctlConf []sysctlEntry
+
+// sysctlDefined contains all sysctl parameter, which are defined in the
+// sysctl config files of the system
+type sysctlDefined map[string]sysctlConf
+
+// ChkForSysctlDoubles checks if the given sysctl parameter is additional set
+// in a sysctl system configuration file
+func ChkForSysctlDoubles(param string) string {
+	info := ""
+	if len(sysctlParms[param]) > 0 {
+		// found double
+		for _, entries := range sysctlParms[param] {
+			txt := entries.File + "(" + entries.Value + ")"
+			if info == "" {
+				info = "sysctl config file " + txt
+			} else {
+				info = info + ", " + txt
+			}
+		}
+		WarningLog("Parameter '%s' additional defined in the following %s.", param, info)
+	}
+	return info
+}
+
+// CollectGlobalSysctls collects all sysctl parameters defined in all
+// of the sysctl.conf related files
+func CollectGlobalSysctls() {
+	for _, file := range sysctlDirs {
+		// check all config files mentioned in /etc/sysctl.conf and
+		// the sysctl.conf(5) man page
+		info, err := os.Stat(file)
+		if err != nil {
+			// file or directory does not exist
+			continue
+		}
+		fileList := []string{file}
+		if info.IsDir() {
+			fileList = []string{}
+			for f := range GetFiles(file) {
+				if (file == "/boot/" && !strings.HasPrefix(f, "sysctl.conf-")) && !strings.HasSuffix(f, ".conf") {
+					// wrong file name format, skip file
+					continue
+				}
+				fileList = append(fileList, file+f)
+			}
+		}
+		for _, sfile := range fileList {
+			sconf, err := parseSysctlConfFile(sfile)
+			if err != nil {
+				// skip file
+				continue
+			}
+			for param := range sconf {
+				sysctlcnf := append(sysctlParms[param], sconf[param])
+				sysctlParms[param] = sysctlcnf
+			}
+		}
+	}
+}
+
+// parseSysctlConfFile parses a special sysctl config file and returns
+// the key-value pairs of the contained sysctl parameters
+func parseSysctlConfFile(file string) (map[string]sysctlEntry, error) {
+	entries := make(map[string]sysctlEntry)
+	content, err := ReadConfigFile(file, false)
+	if err != nil {
+		return nil, err
+	}
+	for _, line := range strings.Split(string(content), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "#") {
+			// Line is a comment
+			continue
+		}
+		if eqChar := strings.IndexRune(line, '='); eqChar != -1 {
+			// Line is a key-value pair
+			key := strings.TrimSpace(line[0:eqChar])
+			entries[key] = sysctlEntry{
+				File:  file,
+				Value: strings.Trim(strings.TrimSpace(line[eqChar+1:]), `"`),
+			}
+		}
+	}
+	return entries, nil
+}
 
 // GetSysctlString read a sysctl key and return the string value.
 func GetSysctlString(parameter string) (string, error) {

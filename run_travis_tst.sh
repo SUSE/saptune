@@ -53,6 +53,10 @@ loginctl --no-pager
 echo "exchange /etc/os-release"
 cp /etc/os-release /etc/os-release_OrG
 
+# for some sysctl tests
+echo "vm.pagecache_limit_ignore_dirty = 1" > /etc/sysctl.d/saptune_test.conf
+echo "vm.pagecache_limit_ignore_dirty = 1" > /etc/sysctl.d/saptune_test2.conf
+
 echo "run go tests"
 go test -v -coverprofile=c.out -cover ./...
 exitErr=$?

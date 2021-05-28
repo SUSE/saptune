@@ -101,3 +101,23 @@ func TestIsPagecacheAvailable(t *testing.T) {
 		t.Log("pagecache setting NOT available")
 	}
 }
+
+func TestGlobalSysctls(t *testing.T) {
+	//var sysctlParms = sysctlDefined{}
+	expTxt := "sysctl config file /etc/sysctl.d/saptune_test.conf(1), /etc/sysctl.d/saptune_test2.conf(1)"
+	expTxt2 := "sysctl config file /etc/sysctl.d/saptune_test2.conf(1), /etc/sysctl.d/saptune_test.conf(1)"
+	CollectGlobalSysctls()
+	info := ChkForSysctlDoubles("vm.nr_hugepages")
+	if info != "" {
+		t.Errorf("got '%s' instead of expected empty string\n", info)
+	}
+	info = ChkForSysctlDoubles("vm.pagecache_limit_ignore_dirty")
+	if info == "" {
+		t.Error("got empty string instead of expected text")
+	}
+	// as the order of the sysctl files are not predictive and not important
+	// for the code use 2 text pattern for the comparison
+	if info != expTxt && info != expTxt2 {
+		t.Errorf("got '%s' instead of expected text '%s'\n", info, expTxt)
+	}
+}

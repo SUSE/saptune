@@ -31,6 +31,7 @@ const (
 	footnote8          = " [8] cannot set Perf Bias because SecureBoot is enabled"
 	footnote9          = " [9] expected value limited to 'max_hw_sectors_kb'"
 	footnote10         = "[10] parameter is defined twice, see section SECT"
+	footnote11         = "[11] parameter is additional defined in SYSCTLLIST"
 )
 
 // PackageArea is the package area with all notes and solutions shiped by
