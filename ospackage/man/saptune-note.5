@@ -428,6 +428,8 @@ Add one line for each SLE version a package should be checked for, even if the p
 .br
 The SLE version has to be noted in the same format as the '\fBVERSION=\fP' entry in \fI/etc/os-release\fP.
 
+To address all SLE versions and service packs the keyword '\fBall\fP' can be used instead of a dedicated SLE version.
+
 e.g
 .br
 systemd 12-SP2 228-142.1
@@ -437,6 +439,8 @@ sapinit-systemd-compat 12 1.0-2.1
 sapinit-systemd-compat 12-SP1 1.0-2.1
 .br
 util-linux 12-SP1 2.25-22.1
+.br
+bzip2 all 1.0.8
 
 Only the lines where the SLE version is matching the running system OS are checked and displayed during the 'verify' and 'simulate' option.
 .br

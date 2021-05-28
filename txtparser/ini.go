@@ -34,6 +34,9 @@ var blckCnt = 0
 
 var blockDev = make([]string, 0, 10)
 
+// counter to control the [sysctl] section
+var sysctlCnt = 0
+
 // INIEntry contains a single key-value pair in INI file.
 type INIEntry struct {
 	Section  string
@@ -211,6 +214,11 @@ func ParseINI(input string) *INIFile {
 			}
 			sectionFields := strings.Split(currentSection, ":")
 
+			// collect system wide sysctl settings
+			if sectionFields[0] == "sysctl" && sysctlCnt == 0 {
+				sysctlCnt = sysctlCnt + 1
+				system.CollectGlobalSysctls()
+			}
 			// moved block device colletion so that the info can be
 			// used inside the 'tag' checks
 			if sectionFields[0] == "block" && blckCnt == 0 {

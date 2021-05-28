@@ -30,8 +30,6 @@ const (
 	INISectionRpm       = "rpm"
 	INISectionGrub      = "grub"
 	INISectionReminder  = "reminder"
-	SysKernelTHPEnabled = "kernel/mm/transparent_hugepage/enabled"
-	SysKSMRun           = "kernel/mm/ksm/run"
 
 	// LoginConfDir is the path to systemd's logind configuration directory under /etc.
 	LogindConfDir = "/etc/systemd/logind.conf.d"
@@ -373,9 +371,9 @@ func GetVMVal(key string) (string, string) {
 	info := ""
 	switch key {
 	case "THP":
-		val, _ = system.GetSysChoice(SysKernelTHPEnabled)
+		val, _ = system.GetSysChoice(system.SysKernelTHPEnabled)
 	case "KSM":
-		ksmval, _ := system.GetSysInt(SysKSMRun)
+		ksmval, _ := system.GetSysInt(system.SysKSMRun)
 		val = strconv.Itoa(ksmval)
 	}
 	return val, info
@@ -405,10 +403,10 @@ func SetVMVal(key, value string) error {
 	var err error
 	switch key {
 	case "THP":
-		err = system.SetSysString(SysKernelTHPEnabled, value)
+		err = system.SetSysString(system.SysKernelTHPEnabled, value)
 	case "KSM":
 		ksmval, _ := strconv.Atoi(value)
-		err = system.SetSysInt(SysKSMRun, ksmval)
+		err = system.SetSysInt(system.SysKSMRun, ksmval)
 	}
 	return err
 }
