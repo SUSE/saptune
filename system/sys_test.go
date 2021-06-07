@@ -88,3 +88,137 @@ func TestTestSysString(t *testing.T) {
 		t.Fatal("writing to an non existent sys key")
 	}
 }
+
+func TestGetSysSearchParam(t *testing.T) {
+	skey := "sys:kernel.mm.transparent_hugepage.enabled"
+	mtch := "THP"
+	msect := "vm"
+	searchParam, sect := GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "THP"
+	mtch = "sys:kernel.mm.transparent_hugepage.enabled"
+	msect = "sys"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "sys:kernel.mm.ksm.run"
+	mtch = "KSM"
+	msect = "vm"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "KSM"
+	mtch = "sys:kernel.mm.ksm.run"
+	msect = "sys"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "IO_SCHEDULER_sdc"
+	mtch = "sys:block.sdc.queue.scheduler"
+	msect = "sys"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "sys:block.sdc.queue.scheduler"
+	mtch = "IO_SCHEDULER_sdc"
+	msect = "block"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "NRREQ_sdb"
+	mtch = "sys:block.sdb.queue.nr_requests"
+	msect = "sys"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "sys:block.sdb.queue.nr_requests"
+	mtch = "NRREQ_sdb"
+	msect = "block"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "READ_AHEAD_KB_sdd"
+	mtch = "sys:block.sdd.queue.read_ahead_kb"
+	msect = "sys"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "sys:block.sdd.queue.read_ahead_kb"
+	mtch = "READ_AHEAD_KB_sdd"
+	msect = "block"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "MAX_SECTORS_KB_sde"
+	mtch = "sys:block.sde.queue.max_sectors_kb"
+	msect = "sys"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+
+	skey = "sys:block.sde.queue.max_sectors_kb"
+	mtch = "MAX_SECTORS_KB_sde"
+	msect = "block"
+	searchParam, sect = GetSysSearchParam(skey)
+	if searchParam != mtch {
+		t.Errorf("expected '%s', got '%s'\n", mtch, searchParam)
+	}
+	if sect != msect {
+		t.Errorf("expected '%s', got '%s'\n", msect, sect)
+	}
+}

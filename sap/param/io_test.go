@@ -267,6 +267,88 @@ func TestReadAheadKB(t *testing.T) {
 	t.Logf("reverted - '%+v'\n", rev)
 }
 
+func TestMaxSectorsKB(t *testing.T) {
+	inspected, err := BlockDeviceMaxSectorsKB{}.Inspect()
+	if err != nil {
+		t.Error(err, inspected)
+	}
+	t.Logf("inspected - '%+v'\n", inspected)
+	if len(inspected.(BlockDeviceMaxSectorsKB).MaxSectorsKB) == 0 {
+		t.Skip("the test case will not continue because inspection result turns out empty")
+	}
+	for name, maxsectorkb := range inspected.(BlockDeviceMaxSectorsKB).MaxSectorsKB {
+		if name == "" || maxsectorkb < 0 {
+			t.Error(inspected)
+		}
+	}
+	oldvals := BlockDeviceMaxSectorsKB{MaxSectorsKB: make(map[string]int)}
+	t.Logf("oldvals - '%+v'\n", oldvals)
+	for name, maxsectorkb := range inspected.(BlockDeviceMaxSectorsKB).MaxSectorsKB {
+		oldvals.MaxSectorsKB[name] = maxsectorkb
+	}
+	t.Logf("oldvals - '%+v'\n", oldvals)
+	optimised, err := inspected.Optimise(132)
+	if err != nil {
+		t.Error(err)
+	}
+	t.Logf("optimised - '%+v'\n", optimised)
+	if len(optimised.(BlockDeviceMaxSectorsKB).MaxSectorsKB) == 0 {
+		t.Error(optimised)
+	}
+	for name, maxsectorkb := range optimised.(BlockDeviceMaxSectorsKB).MaxSectorsKB {
+		if name == "" || maxsectorkb < 0 {
+			t.Error(optimised)
+		}
+	}
+	// apply
+	for _, bdev := range blockDev {
+		err = optimised.Apply(bdev)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	// refresh block device information
+	_ = system.CollectBlockDeviceInfo()
+	blkDev = &system.BlockDev{
+		AllBlockDevs:    make([]string, 0, 64),
+		BlockAttributes: make(map[string]map[string]string),
+	}
+
+	// check
+	applied, err := BlockDeviceMaxSectorsKB{}.Inspect()
+	if err != nil {
+		t.Error(err, applied)
+	}
+	t.Logf("applied - '%+v'\n", applied)
+	if len(applied.(BlockDeviceMaxSectorsKB).MaxSectorsKB) == 0 {
+		t.Log("inspection result turns out empty")
+	}
+	for name, maxsectorkb := range applied.(BlockDeviceMaxSectorsKB).MaxSectorsKB {
+		if name == "" || maxsectorkb != 132 {
+			t.Error(applied)
+		}
+	}
+
+	// reset original values
+	for _, bdev := range blockDev {
+		err = oldvals.Apply(bdev)
+		if err != nil {
+			t.Error(err)
+		}
+	}
+
+	// refresh block device information
+	_ = system.CollectBlockDeviceInfo()
+	blkDev = &system.BlockDev{
+		AllBlockDevs:    make([]string, 0, 64),
+		BlockAttributes: make(map[string]map[string]string),
+	}
+
+	rev, _ := BlockDeviceMaxSectorsKB{}.Inspect()
+	t.Logf("reverted - '%+v'\n", rev)
+}
+
 func TestIsValidScheduler(t *testing.T) {
 	scheduler := ""
 	dirCont, err := ioutil.ReadDir("/sys/block")

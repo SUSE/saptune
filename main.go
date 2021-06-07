@@ -80,7 +80,7 @@ func main() {
 	defer system.ReleaseSaptuneLock()
 
 	// cleanup runtime files
-	note.CleanUpRun()
+	system.CleanUpRun()
 	// additional clear ignore flag for the sapconf/saptune service deadlock
 	os.Remove("/run/.saptune.ignore")
 

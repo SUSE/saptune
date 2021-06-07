@@ -59,7 +59,7 @@ func TestPrintNoteFields(t *testing.T) {
 
    SAPNote, Version | Parameter                  | Expected             | Override  | Actual               | Compliant
 --------------------+----------------------------+----------------------+-----------+----------------------+-----------
-   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [7] [5]
+   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [5] [7]
    941735, 1        | IO_SCHEDULER_sdc           |                      |           | bfq                  | no  [7]
    941735, 1        | IO_SCHEDULER_sdd           |                      |           | bfq                  | no  [7] [10]
    941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
@@ -84,7 +84,7 @@ func TestPrintNoteFields(t *testing.T) {
 
    Parameter                  | Value set            | Value expected       | Override  | Comment
 ------------------------------+----------------------+----------------------+-----------+--------------
-   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [7] [5]
+   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [5] [7]
    IO_SCHEDULER_sdc           | bfq                  |                      |           |  [7]
    IO_SCHEDULER_sdd           | bfq                  |                      |           |  [7] [10]
    IO_SCHEDULER_vda           | all:none             | noop                 |           |  [1] [5]
@@ -106,7 +106,7 @@ func TestPrintNoteFields(t *testing.T) {
 	var printMatchText3 = `
    SAPNote, Version | Parameter                  | Expected             | Override  | Actual               | Compliant
 --------------------+----------------------------+----------------------+-----------+----------------------+-----------
-   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [7] [5]
+   941735, 1        | IO_SCHEDULER_sdb           |                      |           | all:none             |  -  [1] [5] [7]
    941735, 1        | IO_SCHEDULER_sdc           |                      |           | bfq                  | no  [7]
    941735, 1        | IO_SCHEDULER_sdd           |                      |           | bfq                  | no  [7] [10]
    941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
@@ -128,7 +128,7 @@ func TestPrintNoteFields(t *testing.T) {
 	var printMatchText4 = `
    Parameter                  | Value set            | Value expected       | Override  | Comment
 ------------------------------+----------------------+----------------------+-----------+--------------
-   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [7] [5]
+   IO_SCHEDULER_sdb           | all:none             |                      |           |  [1] [5] [7]
    IO_SCHEDULER_sdc           | bfq                  |                      |           |  [7]
    IO_SCHEDULER_sdd           | bfq                  |                      |           |  [7] [10]
    IO_SCHEDULER_vda           | all:none             | noop                 |           |  [1] [5]

@@ -199,7 +199,30 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 	if system.GetCSP() == "aws" {
 		footnote1 = footnote1AWS
 	}
-	switch comparison.ActualValue {
+	// set footnote for unsupported or not available parameter [1],[2]
+	compliant, comment, footnote = setUsNa(comparison.ActualValue.(string), compliant, comment, footnote)
+	// set footnote for rpm or grub parameter [3],[6]
+	compliant, comment, footnote = setRpmGrub(comparison.ReflectMapKey, compliant, comment, footnote)
+	// set footnote for diffs in force_latency parameter [4]
+	compliant, comment, footnote = setFLdiffs(comparison.ReflectMapKey, compliant, comment, inform, footnote)
+	// set footnote for unsupported scheduler [5]
+	compliant, comment, footnote = setUnSched(comparison.ReflectMapKey, compliant, comment, inform, footnote)
+	// set footnote for untouched parameter [7]
+	compliant, comment, footnote = setUntouched(comparison.ExpectedValue.(string), compliant, comment, footnote)
+	// set footnote for secure boot [8]
+	compliant, comment, footnote = setSecBoot(comparison.ReflectMapKey, compliant, comment, footnote)
+	// set footnote for limited parameter value [9]
+	compliant, comment, footnote = setLimited(comparison.ReflectMapKey, compliant, comment, inform, footnote)
+	// set footnote for double defined parameters [10]
+	compliant, comment, footnote = setDouble(comparison.ReflectMapKey, compliant, comment, inform, footnote)
+	// set footnote for system wide (global) defines sysctl parameter [11]
+	compliant, comment, footnote = setSysctlGlobal(compliant, comment, inform, footnote)
+	return compliant, comment, footnote
+}
+
+// setUsNa sets footnote for unsupported or not available parameter
+func setUsNa(actVal, compliant, comment string, footnote []string) (string, string, []string) {
+	switch actVal {
 	case "all:none":
 		compliant = compliant + " [1]"
 		comment = comment + " [1]"
@@ -209,49 +232,76 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 		comment = comment + " [2]"
 		footnote[1] = footnote2
 	}
-	if strings.Contains(comparison.ReflectMapKey, "rpm") || strings.Contains(comparison.ReflectMapKey, "grub") {
+	return compliant, comment, footnote
+}
+
+// setRpmGrub sets footnote for rpm or grub parameter
+func setRpmGrub(mapKey, compliant, comment string, footnote []string) (string, string, []string) {
+	if strings.Contains(mapKey, "rpm") || strings.Contains(mapKey, "grub") {
 		compliant = compliant + " [3]"
 		comment = comment + " [3]"
 		footnote[2] = footnote3
 	}
-	if strings.Contains(comparison.ReflectMapKey, "grub") {
+	if strings.Contains(mapKey, "grub") {
 		compliant = compliant + " [6]"
 		comment = comment + " [6]"
 		footnote[5] = footnote6
 	}
-	if comparison.ExpectedValue == "" {
+	return compliant, comment, footnote
+}
+
+// setUntouched sets footnote for untouched parameter
+func setUntouched(expVal, compliant, comment string, footnote []string) (string, string, []string) {
+	if expVal == "" {
 		compliant = compliant + " [7]"
 		comment = comment + " [7]"
 		footnote[6] = footnote7
 	}
-	if comparison.ReflectMapKey == "energy_perf_bias" && system.SecureBootEnabled() {
+	return compliant, comment, footnote
+}
+
+// setSecBoot sets footnote for secure boot affected parameter
+func setSecBoot(mapKey, compliant, comment string, footnote []string) (string, string, []string) {
+	if mapKey == "energy_perf_bias" && system.SecureBootEnabled() {
 		compliant = compliant + " [8]"
 		comment = comment + " [8]"
 		footnote[7] = footnote8
 	}
-	// check inform map for special settings
-	compliant, comment, footnote = chkInfo(comparison.ReflectMapKey, compliant, comment, inform, footnote)
 	return compliant, comment, footnote
 }
 
-// chkInfo checks inform map for special settings in the footnote
-func chkInfo(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
-	// ANGI: future - check for 'nil', if using noteComparisons[noteID][fmt.Sprintf("%s[%s]", "Inform", comparison.ReflectMapKey)].ActualValue.(string) in general
+// setFLdiffs sets footnote for diffs in force_latency parameter
+func setFLdiffs(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
 	if mapKey == "force_latency" && info == "hasDiffs" {
 		compliant = "no  [4]"
 		comment = comment + " [4]"
 		footnote[3] = footnote4
 	}
+	return compliant, comment, footnote
+}
+
+// setUnSched sets footnote for unsupported scheduler
+func setUnSched(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
 	if system.IsSched.MatchString(mapKey) && strings.Contains(info, "NA") {
 		compliant = compliant + " [5]"
 		comment = comment + " [5]"
 		footnote[4] = footnote5
 	}
+	return compliant, comment, footnote
+}
+
+// setLimit sets footnote for limited parameter value
+func setLimited(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
 	if system.IsMsect.MatchString(mapKey) && strings.Contains(info, "limited") {
 		compliant = compliant + " [9]"
 		comment = comment + " [9]"
 		footnote[8] = footnote9
 	}
+	return compliant, comment, footnote
+}
+
+// setDouble sets footnote for double defined sys parameters
+func setDouble(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
 	if (system.IsSched.MatchString(mapKey) || system.IsNrreq.MatchString(mapKey) || system.IsRahead.MatchString(mapKey) || system.IsMsect.MatchString(mapKey)) && info != "" {
 		// check for double defined parameters
 		sect := regexp.MustCompile(`.*\[\w+\].*`)
@@ -279,6 +329,11 @@ func chkInfo(mapKey, compliant, comment, info string, footnote []string) (string
 		comment = comment + " [10]"
 		footnote[9] = writeFN(footnote[9], footnote10, info, "SECT")
 	}
+	return compliant, comment, footnote
+}
+
+// setSysctlGlobal sets footnote for global defined sysctl parameters
+func setSysctlGlobal(compliant, comment, info string, footnote []string) (string, string, []string) {
 	// check if the sysctl parameter is additional set in a sysctl system
 	// configuration file
 	if strings.HasPrefix(info, "sysctl config file ") {
