@@ -10,6 +10,7 @@ import (
 	"github.com/SUSE/saptune/txtparser"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 // constant definitions
@@ -22,8 +23,8 @@ const (
 
 var tuneApp *app.App                             // application configuration and tuning states
 var tuningOptions note.TuningOptions             // Collection of tuning options from SAP notes and 3rd party vendors.
-var debugSwitch = os.Getenv("SAPTUNE_DEBUG")     // Switch Debug on ("1") or off ("0" - default)
-var verboseSwitch = os.Getenv("SAPTUNE_VERBOSE") // Switch verbose mode on ("on" - default) or off ("off")
+// Switch to control log reaction
+var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debug": os.Getenv("SAPTUNE_DEBUG")}
 
 // SaptuneVersion is the saptune version from /etc/sysconfig/saptune
 var SaptuneVersion = ""
@@ -36,12 +37,14 @@ func main() {
 		system.ErrorExit("", 1)
 	}
 	SaptuneVersion = sconf.GetString("SAPTUNE_VERSION", "")
-	// check, if DEBUG is set in /etc/sysconfig/saptune
-	if debugSwitch == "" {
-		debugSwitch = sconf.GetString("DEBUG", "0")
+	// Switch Debug on ("1") or off ("0" - default)
+	// Switch verbose mode on ("on" - default) or off ("off")
+	// check, if DEBUG or VERBOSE is set in /etc/sysconfig/saptune
+	if logSwitch["debug"] == "" {
+		logSwitch["debug"] = sconf.GetString("DEBUG", "0")
 	}
-	if verboseSwitch == "" {
-		verboseSwitch = sconf.GetString("VERBOSE", "on")
+	if logSwitch["verbose"] == "" {
+		logSwitch["verbose"] = sconf.GetString("VERBOSE", "on")
 	}
 
 	arg1 := system.CliArg(1)
@@ -60,9 +63,10 @@ func main() {
 	}
 
 	// activate logging
-	system.LogInit(logFile, debugSwitch, verboseSwitch)
+	system.LogInit(logFile, logSwitch)
 	// now system.ErrorExit can write to log and os.Stderr. No longer extra
 	// care is needed.
+	system.LogOnlyLog("INFO", "saptune started with '%s'", strings.Join(os.Args, " "))
 
 	if arg1 == "lock" {
 		if arg2 := system.CliArg(2); arg2 == "remove" {
@@ -121,6 +125,7 @@ func main() {
 	}
 	checkForTuned()
 	actions.SelectAction(tuneApp, SaptuneVersion)
+	system.ErrorExit("", 0)
 }
 
 // checkUpdateLeftOvers checks for left over files from the migration of

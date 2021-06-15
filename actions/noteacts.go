@@ -37,6 +37,8 @@ func NoteAction(actionName, noteID, newNoteID string, tuneApp *app.App) {
 		NoteActionRename(os.Stdin, os.Stdout, noteID, newNoteID, NoteTuningSheets, ExtraTuningSheets, OverrideTuningSheets, tuneApp)
 	case "revert":
 		NoteActionRevert(os.Stdout, noteID, tuneApp)
+	case "revertall":
+		RevertAction(os.Stdout, "all", tuneApp)
 	case "applied":
 		NoteActionApplied(os.Stdout, tuneApp)
 	case "enabled":

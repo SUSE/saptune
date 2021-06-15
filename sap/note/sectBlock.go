@@ -108,15 +108,7 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 		cur.BlockDeviceReadAheadKB = opt.(param.BlockDeviceReadAheadKB)
 	case system.IsMsect.MatchString(key):
 		ival, _ := strconv.Atoi(sval)
-		dname := regexp.MustCompile(`^MAX_SECTORS_KB_(\w+)$`)
-		bdev := dname.FindStringSubmatch(key)
-		maxHWsector, _ := system.GetSysInt(path.Join("block", bdev[1], "queue", "max_hw_sectors_kb"))
-		if ival > maxHWsector {
-			system.WarningLog("value '%v' for 'max_sectors_kb' for device '%s' is bigger than the value '%v' for 'max_hw_sectors_kb'. Limit to '%v'.", ival, bdev[1], maxHWsector, maxHWsector)
-			ival = maxHWsector
-			sval = strconv.Itoa(maxHWsector)
-			info = "limited"
-		}
+		ival, sval, info = chkMaxHWsector(key, sval)
 		opt, _ := cur.BlockDeviceMaxSectorsKB.Optimise(ival)
 		cur.BlockDeviceMaxSectorsKB = opt.(param.BlockDeviceMaxSectorsKB)
 	}
@@ -156,7 +148,7 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 		}
 	case system.IsMsect.MatchString(key):
 		if revert {
-			ival, _ := strconv.Atoi(value)
+			ival, _, _ := chkMaxHWsector(key, value)
 			cur.BlockDeviceMaxSectorsKB.MaxSectorsKB[strings.TrimPrefix(key, "MAX_SECTORS_KB_")] = ival
 		}
 		err = cur.BlockDeviceMaxSectorsKB.Apply(strings.TrimPrefix(key, "MAX_SECTORS_KB_"))
@@ -165,4 +157,21 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 		}
 	}
 	return err
+}
+
+// chkMaxHWsector checks, if the given value for max_sector_kb exceeds
+// max_hw_sector_kb
+func chkMaxHWsector(key, val string) (int, string, string) {
+	info := ""
+	ival, _ := strconv.Atoi(val)
+	dname := regexp.MustCompile(`^MAX_SECTORS_KB_(\w+)$`)
+	bdev := dname.FindStringSubmatch(key)
+	maxHWsector, _ := system.GetSysInt(path.Join("block", bdev[1], "queue", "max_hw_sectors_kb"))
+	if ival > maxHWsector {
+		system.WarningLog("value '%v' for 'max_sectors_kb' for device '%s' is bigger than the value '%v' for 'max_hw_sectors_kb'. Limit to '%v'.", ival, bdev[1], maxHWsector, maxHWsector)
+		ival = maxHWsector
+		val = strconv.Itoa(maxHWsector)
+		info = "limited"
+	}
+	return ival, val, info
 }
