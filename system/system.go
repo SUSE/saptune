@@ -26,7 +26,7 @@ var OSExit = os.Exit
 // ErrorExitOut defines, which exit output function should be used
 var ErrorExitOut = ErrorLog
 
-// InfoOut defines, which info output function should be used
+// LOout defines, which log output function should be used
 var LOout = LogOnlyLog
 
 // get saptune arguments and flags

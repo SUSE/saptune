@@ -16,6 +16,7 @@ const (
 	INISectionSysctl    = "sysctl"
 	INISectionSys       = "sys"
 	INISectionVM        = "vm"
+	INISectionFS        = "filesystem"
 	INISectionCPU       = "cpu"
 	INISectionMEM       = "mem"
 	INISectionBlock     = "block"
@@ -103,6 +104,8 @@ func (vend INISettings) Initialise() (Note, error) {
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetSysVal(param.Key)
 		case INISectionVM:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetVMVal(param.Key)
+		case INISectionFS:
+			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetFSVal(param.Key, param.Value)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key], _ = GetBlkVal(param.Key, &blck)
 		case INISectionLimits:
@@ -189,6 +192,8 @@ func (vend INISettings) Optimise() (Note, error) {
 		case INISectionVM:
 			vend.Inform[param.Key] = vend.chkDoubles(param.Key, vend.Inform[param.Key])
 			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
+		case INISectionFS:
+			vend.SysctlParams[param.Key] = OptFSVal(param.Key, param.Value)
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = OptBlkVal(param.Key, param.Value, &blck, blckOK)
 			vend.Inform[param.Key] = vend.chkDoubles(param.Key, vend.Inform[param.Key])
@@ -277,7 +282,7 @@ func (vend INISettings) Apply() error {
 		// handle note 1805750
 		param.Key, param.Value = vend.handleID1805750(param.Key, param.Value)
 		switch param.Section {
-		case INISectionVersion, INISectionRpm, INISectionGrub, INISectionReminder:
+		case INISectionVersion, INISectionRpm, INISectionGrub, INISectionFS, INISectionReminder:
 			// These parameters are only checked, but not applied.
 			// So nothing to do during apply and no need for revert
 			continue

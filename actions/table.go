@@ -21,7 +21,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 11, 11)
+	footnote := make([]string, 12, 12)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -217,6 +217,8 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 	compliant, comment, footnote = setDouble(comparison.ReflectMapKey, compliant, comment, inform, footnote)
 	// set footnote for system wide (global) defines sysctl parameter [11]
 	compliant, comment, footnote = setSysctlGlobal(compliant, comment, inform, footnote)
+	// set footnote for filesystem options [12]
+	compliant, comment, footnote = setFSOptions(comparison, compliant, comment, inform, footnote)
 	return compliant, comment, footnote
 }
 
@@ -341,6 +343,23 @@ func setSysctlGlobal(compliant, comment, info string, footnote []string) (string
 		compliant = compliant + " [11]"
 		comment = comment + " [11]"
 		footnote[10] = writeFN(footnote[10], footnote11, info, "SYSCTLLIST")
+	}
+	return compliant, comment, footnote
+}
+
+// setFSOptions sets footnote for not matching filesystem options
+func setFSOptions(comparison note.FieldComparison, compliant, comment, info string, footnote []string) (string, string, []string) {
+	// check if there are mount points with wrong FS option settings
+	if strings.Contains(comparison.ReflectMapKey, "xfsopt_") {
+		if info != "" {
+			// fs option info
+			compliant = compliant + " [12]"
+			comment = comment + " [12]"
+			footnote[11] = writeFN(footnote[11], footnote12, info, "FSOPT")
+		}
+		if comparison.ActualValue.(string) == "NA" {
+			compliant = strings.Replace(compliant, "no ", " - ", 1)
+		}
 	}
 	return compliant, comment, footnote
 }

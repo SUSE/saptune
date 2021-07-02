@@ -120,6 +120,26 @@ func GetFiles(dir string) map[string]string {
 	return files
 }
 
+// ListDir list directory content and returns a slice for the directory names
+// and a slice for the file names.
+func ListDir(dirPath, logMsg string) (dirNames, fileNames []string) {
+	entries, err := ioutil.ReadDir(dirPath)
+	if err != nil && logMsg != "" {
+		// Not a fatal error
+		WarningLog("failed to read %s - %v", logMsg, err)
+	}
+	dirNames = make([]string, 0, 0)
+	fileNames = make([]string, 0, 0)
+	for _, entry := range entries {
+		if entry.IsDir() {
+			dirNames = append(dirNames, entry.Name())
+		} else {
+			fileNames = append(fileNames, entry.Name())
+		}
+	}
+	return
+}
+
 // CleanUpRun cleans up runtime files
 func CleanUpRun() {
 	var runfile = regexp.MustCompile(`.*\.run$`)

@@ -24,10 +24,14 @@ cd ${TRAVIS_HOME}/gopath/src/github.com/SUSE
 if [ ! -f saptune ]; then
 	ln -s /app saptune
 fi
-export GO111MODULE="off"
+export GO111MODULE=off
 export GOPATH=${TRAVIS_HOME}/gopath
 export PATH=${TRAVIS_HOME}/gopath/bin:$PATH
 export TRAVIS_BUILD_DIR=${TRAVIS_HOME}/gopath/src/github.com/SUSE/saptune
+
+echo "PATH is $PATH, GOPATH is $GOPATH, TRAVIS_HOME is $TRAVIS_HOME"
+echo "ls -l /etc/saptune/*"
+ls -l /etc/saptune/*
 
 mkdir -p /etc/saptune/override
 mkdir -p /var/lib/saptune/working

@@ -7,8 +7,8 @@ import (
 
 func TestGetSysVal(t *testing.T) {
 	val, inf := GetSysVal("sys:kernel/mm/ksm/run")
-	if val != "1" {
-		t.Logf("expected '1', got '%s'\n", val)
+	if val != "0" {
+		t.Logf("expected '0', got '%s'\n", val)
 	}
 	if inf != "" {
 		t.Errorf("expected '', got '%s'\n", inf)

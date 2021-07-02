@@ -223,7 +223,7 @@ func ParseINI(input string) *INIFile {
 				sysctlCnt = sysctlCnt + 1
 				system.CollectGlobalSysctls()
 			}
-			// moved block device colletion so that the info can be
+			// moved block device collection so that the info can be
 			// used inside the 'tag' checks
 			// blockDev will be set only ONCE per saptune call
 			blckCnt, blockDev = blockDevCollect(sectionFields, blockDev, blckCnt)
@@ -266,6 +266,11 @@ func ParseINI(input string) *INIFile {
 		}
 		// handle UserTaskMax on SLE15
 		next, loginCnt = handleUserTaskMax(loginCnt, kov)
+		if next {
+			continue
+		}
+		// write the filesystem section data
+		next, currentEntriesArray, currentEntriesMap = writeFSSectionData(currentSection, kov, currentEntriesArray, currentEntriesMap)
 		if next {
 			continue
 		}
@@ -330,7 +335,49 @@ func handleUserTaskMax(lc int, kov []string) (bool, int) {
 	return next, lc
 }
 
-// ANGI TODO: check, ob evtl. Pointer für curEntriesArray und curEntriesMap besser wären
+// writeFSSectionData adds the values from the filesystem section to the
+// data structures
+func writeFSSectionData(curSec string, kov []string, curEntriesArray []INIEntry, curEntriesMap map[string]INIEntry) (bool, []INIEntry, map[string]INIEntry) {
+	next := true
+	if curSec != "filesystem" {
+		return false, curEntriesArray, curEntriesMap
+	}
+
+	switch kov[1] {
+	case "xfs_options":
+		if kov[3] == "" {
+			// empty xfs_options - 'untouched'
+			key := "xfsopt_*"
+			entry := INIEntry{
+				Section:  curSec,
+				Key:      key,
+				Operator: Operator(kov[2]),
+				Value:    kov[3],
+			}
+			curEntriesArray = append(curEntriesArray, entry)
+			curEntriesMap[entry.Key] = entry
+			return next, curEntriesArray, curEntriesMap
+		}
+		for _, option := range strings.Split(kov[3], ",") {
+			option = strings.TrimSpace(option)
+			opt := strings.TrimLeft(option, "+-")
+			key := fmt.Sprintf("xfsopt_%s", opt)
+
+			entry := INIEntry{
+				Section:  curSec,
+				Key:      key,
+				Operator: Operator(kov[2]),
+				Value:    option,
+			}
+			curEntriesArray = append(curEntriesArray, entry)
+			curEntriesMap[entry.Key] = entry
+		}
+	default:
+		system.WarningLog("unsupported parameter name '%s' for section '%s'", kov[1], curSec)
+	}
+	return next, curEntriesArray, curEntriesMap
+}
+
 // writeLimitSectionData adds the values from the limit section to the
 // data structures
 func writeLimitSectionData(curSec string, kov []string, curEntriesArray []INIEntry, curEntriesMap map[string]INIEntry) (bool, []INIEntry, map[string]INIEntry) {

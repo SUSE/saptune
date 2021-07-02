@@ -21,8 +21,8 @@ const (
 	exitNotYetTuned = 5
 )
 
-var tuneApp *app.App                             // application configuration and tuning states
-var tuningOptions note.TuningOptions             // Collection of tuning options from SAP notes and 3rd party vendors.
+var tuneApp *app.App                 // application configuration and tuning states
+var tuningOptions note.TuningOptions // Collection of tuning options from SAP notes and 3rd party vendors.
 // Switch to control log reaction
 var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debug": os.Getenv("SAPTUNE_DEBUG")}
 
