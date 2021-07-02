@@ -15,7 +15,12 @@ func GetCurrentLogins() []string {
 		WarningLog("command '%s' not found", cmdName)
 		return uID
 	}
-	if IsSystemRunning() {
+	running, err := IsSystemRunning()
+	if err != nil {
+		ErrorLog("%v - Failed to call command systemctl", err)
+		return uID
+	}
+	if running {
 		cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 		if err != nil {
 			WarningLog("failed to invoke external command '%s %v': %v, output: %s", cmdName, cmdArgs, err, string(cmdOut))

@@ -9,9 +9,11 @@ func TestSystemctl(t *testing.T) {
 	if !CmdIsAvailable("/usr/bin/systemctl") {
 		t.Skip("command '/usr/bin/systemctl' not available. Skip tests")
 	}
-	if !IsSystemRunning() {
+	running, _ := IsSystemRunning()
+	if !running {
 		_, _ = exec.Command("/usr/bin/systemctl", "reset-failed").CombinedOutput()
-		if !IsSystemRunning() {
+		running, _ = IsSystemRunning()
+		if !running {
 			t.Skip("command '/usr/bin/systemctl is-system-running' reports errors. Skip daemon tests")
 		}
 	}
