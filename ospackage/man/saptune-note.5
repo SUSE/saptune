@@ -304,9 +304,9 @@ where STRING is a list of valid mount options separated by '\fB,\fP'
 .br
 A prefix '-' for the option indicates, that the option should NOT be available on any 'xfs' filesystem. A prefix '+' or no prefix for the option indicates, that the option should be available on any 'xfs' filesystem.
 
-For the check first the \fBmounted\fP filessystems of the requested filesystem type (for now only 'xfs') will be read from \fI/proc/mounts\fP and separated in a list with mount points containing the option and another list with mount points NOT containing the option.
+For the check first the \fBmounted\fP filesystems of the requested filesystem type (for now only 'xfs') will be read from \fI/proc/mounts\fP and separated in a list with mount points containing the option and another list with mount points NOT containing the option.
 .br
-Then the defined filessystems of the requested filesystem type (for now only 'xfs') will be read from \fI/etc/fstab\fP, skipping the already mounted mount points and split the remaining entries in a list with mount points containing the option and another list with mount points NOT containing the option.
+Then the defined filesystems of the requested filesystem type (for now only 'xfs') will be read from \fI/etc/fstab\fP, skipping the already mounted mount points and split the remaining entries in a list with mount points containing the option and another list with mount points NOT containing the option.
 .br
 At least combine the lists from proc and fstab to get one list of mount points containing the option and another list with mount points NOT containing the option.
 
@@ -314,7 +314,7 @@ To decide, if a mount point contains the option or not, we use a simple string c
 .br
 Attention: But with one exception
 .br
-If a NOT mounted filessystems contains the \fB'defaults'\fP entry in \fI/etc/fstab\fP we register this mount point as 'containing the option', if the option should be available (+option), or as 'NOT containing the option', if the option should NOT be available (-option), as we are unable to determine, which 'real' options are hidden by the 'defaults' and we do not want to have a NOT compliant Note only because of this situation.
+If a NOT mounted filesystems contains the \fB'defaults'\fP entry in \fI/etc/fstab\fP we register this mount point as 'containing the option', if the option should be available (+option), or as 'NOT containing the option', if the option should NOT be available (-option), as we are unable to determine, which 'real' options are hidden by the 'defaults' and we do not want to have a NOT compliant Note only because of this situation.
 \" section grub
 .SH "[grub]"
 The section "[grub]" is checking kernel command line settings for grub.
