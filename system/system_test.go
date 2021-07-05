@@ -12,8 +12,6 @@ import (
 	"testing"
 )
 
-var readFileMatchText = `Only a test for read file
-`
 var tstRetErrorExit = -1
 var tstosExit = func(val int) {
 	tstRetErrorExit = val
@@ -233,7 +231,7 @@ func TestGetOsVers(t *testing.T) {
 		}
 	} else {
 		switch actualVal {
-		case "12", "12-SP1", "12-SP2", "12-SP3", "12-SP4", "12-SP5", "15", "15-SP1", "15-SP2":
+		case "12", "12-SP1", "12-SP2", "12-SP3", "12-SP4", "12-SP5", "15", "15-SP1", "15-SP2", "15-SP3":
 			t.Logf("expected OS version '%s' found\n", actualVal)
 		default:
 			t.Logf("unexpected OS version '%s'\n", actualVal)
@@ -295,82 +293,6 @@ func TestCheckForPattern(t *testing.T) {
 	}
 }
 
-func TestGetServiceName(t *testing.T) {
-	value := GetServiceName("sysstat")
-	if value != "sysstat.service" {
-		t.Errorf("found service '%s' instead of 'sysstat.service'\n", value)
-	}
-	value = GetServiceName("sysstat.service")
-	if value != "sysstat.service" {
-		t.Errorf("found service '%s' instead of 'sysstat.service'\n", value)
-	}
-	value = GetServiceName("UnkownService")
-	if value != "" {
-		t.Errorf("found service '%s' instead of 'UnkownService'\n", value)
-	}
-}
-
-func TestGetAvailServices(t *testing.T) {
-	// test with missing command
-	services = map[string]string{"": ""}
-	cmdName := "/usr/bin/systemctl"
-	savName := "/usr/bin/systemctl_SAVE"
-	if err := os.Rename(cmdName, savName); err != nil {
-		t.Error(err)
-	}
-	value := GetAvailServices()
-	if value != nil && len(value) != 0 {
-		t.Error("found services")
-	}
-	service := GetServiceName("sysstat")
-	if service != "" {
-		t.Errorf("found service '%s' instead of 'UnkownService'\n", service)
-	}
-	if err := os.Rename(savName, cmdName); err != nil {
-		t.Error(err)
-	}
-}
-
-func TestReadConfigFile(t *testing.T) {
-	content, err := ReadConfigFile("/file_does_not_exist", true)
-	if string(content) != "" {
-		t.Error(content, err)
-	}
-	os.Remove("/file_does_not_exist")
-	content, err = ReadConfigFile("/file_does_not_exist", false)
-	if string(content) != "" || err == nil {
-		t.Error(content, err)
-	}
-	//content, err = ReadConfigFile("/app/testdata/tstfile", false)
-	content, err = ReadConfigFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/tstfile"), false)
-	if string(content) != readFileMatchText || err != nil {
-		t.Error(string(content), err)
-	}
-}
-
-func TestCopyFile(t *testing.T) {
-	//src := "/app/testdata/tstfile"
-	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/tstfile")
-	dst := "/tmp/saptune_tstfile"
-	err := CopyFile(src, dst)
-	if err != nil {
-		t.Error(err)
-	}
-	content, err := ReadConfigFile(dst, false)
-	if string(content) != readFileMatchText || err != nil {
-		t.Error(string(content), err)
-	}
-	err = CopyFile("/file_does_not_exist", dst)
-	if err == nil {
-		t.Errorf("copied from non existing file")
-	}
-	err = CopyFile(src, "/tmp/saptune_test/saptune_tstfile")
-	if err == nil {
-		t.Errorf("copied to non existing file")
-	}
-	os.Remove(dst)
-}
-
 func TestCalledFrom(t *testing.T) {
 	val := CalledFrom()
 	if !strings.Contains(val, "testing.go") {
@@ -406,7 +328,7 @@ func TestErrorExit(t *testing.T) {
 	// error is '*exec.ExitError'
 	cmd := exec.Command("/usr/bin/false")
 	err := cmd.Run()
-	t.Logf("command failed with error '%v'\n", err)
+	t.Logf("%s: command failed with error '%v'\n", Watch(), err)
 	if err != nil {
 		ErrorExit("command failed with error '%v'\n", err)
 	}

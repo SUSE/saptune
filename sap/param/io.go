@@ -244,11 +244,6 @@ func (mskb BlockDeviceMaxSectorsKB) Optimise(newMaxSectorsKBValue interface{}) (
 func (mskb BlockDeviceMaxSectorsKB) Apply(blkdev interface{}) error {
 	bdev := blkdev.(string)
 	maxsector := mskb.MaxSectorsKB[bdev]
-	maxHWsector, _ := system.GetSysInt(path.Join("block", bdev, "queue", "max_hw_sectors_kb"))
-	if maxsector > maxHWsector {
-		system.WarningLog("value '%v' for 'max_sectors_kb' for device '%s' is bigger than the value '%v' for 'max_hw_sectors_kb'. Limit to '%v'.", maxsector, bdev, maxHWsector, maxHWsector)
-		maxsector = maxHWsector
-	}
 	err := system.SetSysInt(path.Join("block", bdev, "queue", "max_sectors_kb"), maxsector)
 	if err != nil {
 		system.WarningLog("skipping device '%s', not valid for setting 'max_sectors_kb' to '%v'", bdev, maxsector)

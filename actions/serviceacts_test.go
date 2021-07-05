@@ -51,17 +51,16 @@ func TestDaemonActions(t *testing.T) {
 	setupSaptuneService(t)
 	testService := "saptune.service"
 
-/*
 	// ANGI TODO - need to clarify the problems with tuned.service
 	// and 'Job for tuned.service canceled.'
 	// Test DaemonActionStart
-	t.Run("DaemonActionStart", func(t *testing.T) {
-		DaemonAction(os.Stdout, "start", saptuneVersion, sApp)
-		if !system.SystemctlIsRunning(testService) {
-			t.Errorf("'%s' not started", testService)
-		}
-	})
-*/
+	//t.Run("DaemonActionStart", func(t *testing.T) {
+	//	DaemonAction(os.Stdout, "start", saptuneVersion, sApp)
+	//	if !system.SystemctlIsRunning(testService) {
+	//		t.Errorf("'%s' not started", testService)
+	//	}
+	//})
+
 	// Test DaemonActionStatus
 	t.Run("DaemonActionStatus", func(t *testing.T) {
 		var daemonStatusMatchText = `
@@ -227,14 +226,12 @@ Remember: if you wish to automatically activate the note's and solution's tuning
 		ServiceActionStop(false)
 	})
 
-/*
 	// ANGI TODO - need to clarify the problems with tuned.service
 	// and 'Job for tuned.service canceled.'
 	// Test ServiceActionTakeover
-	t.Run("ServiceActionTakeover", func(t *testing.T) {
-		ServiceActionTakeover(sApp)
-	})
-*/
+	//t.Run("ServiceActionTakeover", func(t *testing.T) {
+	//	ServiceActionTakeover(sApp)
+	//})
 
 	teardownSaptuneService(t)
 }

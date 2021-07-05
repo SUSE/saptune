@@ -32,6 +32,7 @@ const (
 	footnote9          = " [9] expected value limited to 'max_hw_sectors_kb'"
 	footnote10         = "[10] parameter is defined twice, see section SECT"
 	footnote11         = "[11] parameter is additional defined in SYSCTLLIST"
+	footnote12         = "[12] option FSOPT"
 )
 
 // PackageArea is the package area with all notes and solutions shiped by
@@ -250,7 +251,7 @@ Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
-  saptune note [ list | verify | enabled ]
+  saptune note [ list | verify | revertall | enabled | applied ]
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:

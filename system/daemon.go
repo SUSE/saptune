@@ -30,7 +30,11 @@ func SystemctlDisable(thing string) error {
 
 // SystemctlRestart call systemctl restart on thing.
 func SystemctlRestart(thing string) error {
-	if IsSystemRunning() {
+	running, err := IsSystemRunning()
+	if err != nil {
+		return ErrorLog("%v - Failed to call systemctl restart on %s", err, thing)
+	}
+	if running {
 		if out, err := exec.Command(systemctlCmd, "restart", thing).CombinedOutput(); err != nil {
 			return ErrorLog("%v - Failed to call systemctl restart on %s - %s", err, thing, string(out))
 		}
@@ -40,7 +44,11 @@ func SystemctlRestart(thing string) error {
 
 // SystemctlReloadTryRestart call systemctl reload on thing.
 func SystemctlReloadTryRestart(thing string) error {
-	if IsSystemRunning() {
+	running, err := IsSystemRunning()
+	if err != nil {
+		return ErrorLog("%v - Failed to call systemctl reload-or-try-restart on %s", err, thing)
+	}
+	if running {
 		if out, err := exec.Command(systemctlCmd, "reload-or-try-restart", thing).CombinedOutput(); err != nil {
 			return ErrorLog("%v - Failed to call systemctl reload-or-try-restart on %s - %s", err, thing, string(out))
 		}
@@ -50,7 +58,11 @@ func SystemctlReloadTryRestart(thing string) error {
 
 // SystemctlStart call systemctl start on thing.
 func SystemctlStart(thing string) error {
-	if IsSystemRunning() {
+	running, err := IsSystemRunning()
+	if err != nil {
+		return ErrorLog("%v - Failed to call systemctl start on %s", err, thing)
+	}
+	if running {
 		if out, err := exec.Command(systemctlCmd, "start", thing).CombinedOutput(); err != nil {
 			return ErrorLog("%v - Failed to call systemctl start on %s - %s", err, thing, string(out))
 		}
@@ -60,7 +72,11 @@ func SystemctlStart(thing string) error {
 
 // SystemctlStop call systemctl stop on thing.
 func SystemctlStop(thing string) error {
-	if IsSystemRunning() {
+	running, err := IsSystemRunning()
+	if err != nil {
+		return ErrorLog("%v - Failed to call systemctl stop on %s", err, thing)
+	}
+	if running {
 		if out, err := exec.Command(systemctlCmd, "stop", thing).CombinedOutput(); err != nil {
 			return ErrorLog("%v - Failed to call systemctl stop on %s - %s", err, thing, string(out))
 		}
@@ -108,9 +124,12 @@ func SystemctlIsRunning(thing string) bool {
 // IsSystemRunning returns true, if 'is-system-running' reports 'running'
 // or 'starting'. In all other cases it returns false, which means: do not
 // call 'start' or 'restart' to prevent 'Transaction is destructive' messages
-func IsSystemRunning() bool {
+func IsSystemRunning() (bool, error) {
 	match := false
-	out, err := exec.Command("/usr/bin/systemctl", "is-system-running").CombinedOutput()
+	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
+	if err != nil {
+		return match, ErrorLog("%v - Failed to call systemctl is-system-running", err)
+	}
 	DebugLog("IsSystemRunning - /usr/bin/systemctl is-system-running : '%+v %s'", err, string(out))
 	for _, line := range strings.Split(string(out), "\n") {
 		if strings.TrimSpace(line) == "starting" || strings.TrimSpace(line) == "running" || strings.TrimSpace(line) == "degraded" {
@@ -119,7 +138,7 @@ func IsSystemRunning() bool {
 			break
 		}
 	}
-	return match
+	return match, nil
 }
 
 // IsServiceAvailable checks, if a systemd service is available on the system

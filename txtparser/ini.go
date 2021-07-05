@@ -26,10 +26,13 @@ var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.
 // regKey gives the parameter part of the line from the note definition file
 var regKey = regexp.MustCompile(`(.*)\s*[<=>]+\s*["']*.*?["']*$`)
 
+var saptuneSectionDir = system.SaptuneSectionDir
+
 // counter to control the [login] section info message
 var loginCnt = 0
 
 // counter to control the [block] section detected warning
+// and the block device collection
 var blckCnt = 0
 
 var blockDev = make([]string, 0, 10)
@@ -180,6 +183,7 @@ func ParseINI(input string) *INIFile {
 	reminder := ""
 	bdevs := []string{}
 	skipSection := false
+	next := false
 	currentSection := ""
 	currentEntriesArray := make([]INIEntry, 0, 8)
 	currentEntriesMap := make(map[string]INIEntry)
@@ -219,16 +223,15 @@ func ParseINI(input string) *INIFile {
 				sysctlCnt = sysctlCnt + 1
 				system.CollectGlobalSysctls()
 			}
-			// moved block device colletion so that the info can be
+			// moved block device collection so that the info can be
 			// used inside the 'tag' checks
-			if sectionFields[0] == "block" && blckCnt == 0 {
-				system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
-				blckCnt = blckCnt + 1
-				// blockDev all valid block devices of the
-				// system regardless of any section tag
-				blockDev = system.CollectBlockDeviceInfo()
-			}
+			// blockDev will be set only ONCE per saptune call
+			blckCnt, blockDev = blockDevCollect(sectionFields, blockDev, blckCnt)
+			// bdevs may be changed by the 'tag' checks (chkSecTags),
+			// so reset 'bdevs' back to 'all available'
+			// block devices (blockDev)
 			bdevs = blockDev
+
 			// len(sectionFields) == 1 - standard syntax [section], no os or arch check needed, chkOk = true
 			if len(sectionFields) > 1 {
 				// check of section tags needed
@@ -261,82 +264,39 @@ func ParseINI(input string) *INIFile {
 			// Skip comments, empty, and irregular lines.
 			continue
 		}
-		if kov[1] == "UserTasksMax" && system.IsSLE15() {
-			if loginCnt == 0 {
-				system.InfoLog("UserTasksMax setting no longer supported on SLE15 releases. Leaving system's default unchanged.")
-			}
-			loginCnt = loginCnt + 1
+		// handle UserTaskMax on SLE15
+		next, loginCnt = handleUserTaskMax(loginCnt, kov)
+		if next {
 			continue
 		}
-		if currentSection == "limits" {
-			for _, limits := range strings.Split(kov[3], ",") {
-				limits = strings.TrimSpace(limits)
-				lim := strings.Fields(limits)
-				key := ""
-				if len(lim) == 0 {
-					// empty LIMITS parameter means
-					// override file is setting all limits to 'untouched'
-					// or a wrong limits entry in an 'extra' file
-					key = fmt.Sprintf("%s_NA", kov[1])
-					limits = "NA"
-				} else {
-					key = fmt.Sprintf("LIMIT_%s_%s_%s", lim[0], lim[1], lim[2])
-				}
-				entry := INIEntry{
-					Section:  currentSection,
-					Key:      key,
-					Operator: Operator(kov[2]),
-					Value:    limits,
-				}
-				currentEntriesArray = append(currentEntriesArray, entry)
-				currentEntriesMap[entry.Key] = entry
-			}
-		} else if currentSection == "block" {
-			// bdevs contains all block devices valid for the
-			// current block section regarding to the used tags
-			for _, bdev := range bdevs {
-				entry := INIEntry{
-					Section:  currentSection,
-					Key:      fmt.Sprintf("%s_%s", kov[1], bdev),
-					Operator: Operator(kov[2]),
-					Value:    kov[3],
-				}
-				currentEntriesArray = append(currentEntriesArray, entry)
-				currentEntriesMap[entry.Key] = entry
-			}
-		} else {
-			// handle tunables with more than one value
-			value := strings.Replace(kov[3], " ", "\t", -1)
-			entry := INIEntry{
-				Section:  currentSection,
-				Key:      kov[1],
-				Operator: Operator(kov[2]),
-				Value:    value,
-			}
-			currentEntriesArray = append(currentEntriesArray, entry)
-			currentEntriesMap[entry.Key] = entry
+		// write the filesystem section data
+		next, currentEntriesArray, currentEntriesMap = writeFSSectionData(currentSection, kov, currentEntriesArray, currentEntriesMap)
+		if next {
+			continue
 		}
+		// write the limit section data
+		next, currentEntriesArray, currentEntriesMap = writeLimitSectionData(currentSection, kov, currentEntriesArray, currentEntriesMap)
+		if next {
+			continue
+		}
+		// write the block section data
+		next, currentEntriesArray, currentEntriesMap = writeBlockSectionData(currentSection, bdevs, kov, currentEntriesArray, currentEntriesMap)
+		if next {
+			continue
+		}
+		// handle tunables with more than one value
+		currentEntriesArray, currentEntriesMap = writeMultiValueData(currentSection, kov, currentEntriesArray, currentEntriesMap)
 	}
+	// data from all sections collected
+	// save reminder section, if available
 	if reminder != "" {
-		// save reminder section
 		// Save previous section
 		if currentSection != "" {
 			ret.KeyValue[currentSection] = currentEntriesMap
 			ret.AllValues = append(ret.AllValues, currentEntriesArray...)
 		}
-		// Start the reminder section
-		currentEntriesArray = make([]INIEntry, 0, 8)
-		currentEntriesMap = make(map[string]INIEntry)
-		currentSection = "reminder"
-
-		entry := INIEntry{
-			Section:  "reminder",
-			Key:      "reminder",
-			Operator: "",
-			Value:    reminder,
-		}
-		currentEntriesArray = append(currentEntriesArray, entry)
-		currentEntriesMap[entry.Key] = entry
+		// write the reminder section data
+		currentEntriesArray, currentEntriesMap, currentSection = writeReminderSectionData(reminder)
 	}
 
 	// Save last section
@@ -345,4 +305,162 @@ func ParseINI(input string) *INIFile {
 		ret.AllValues = append(ret.AllValues, currentEntriesArray...)
 	}
 	return ret
+}
+
+// blockDevCollect collects the block device infos
+// should be done only ONCE because it's time consuming on really large systems
+func blockDevCollect(sectFields, bDev []string, bCnt int) (int, []string) {
+	// collect the block device infos only ONCE
+	if sectFields[0] == "block" && bCnt == 0 {
+		system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
+		bCnt = bCnt + 1
+		// blockDev all valid block devices of the
+		// system regardless of any section tag
+		bDev = system.CollectBlockDeviceInfo()
+	}
+	return bCnt, bDev
+}
+
+// handleUserTaskMax handles UserTasksMax settings on SLE15
+func handleUserTaskMax(lc int, kov []string) (bool, int) {
+	// ANGI TODO: needs rework with SLE16, ongoing discussion
+	next := false
+	if kov[1] == "UserTasksMax" && system.IsSLE15() {
+		if lc == 0 {
+			system.InfoLog("UserTasksMax setting no longer supported on SLE15 releases. Leaving system's default unchanged.")
+		}
+		lc = lc + 1
+		next = true
+	}
+	return next, lc
+}
+
+// writeFSSectionData adds the values from the filesystem section to the
+// data structures
+func writeFSSectionData(curSec string, kov []string, curEntriesArray []INIEntry, curEntriesMap map[string]INIEntry) (bool, []INIEntry, map[string]INIEntry) {
+	next := true
+	if curSec != "filesystem" {
+		return false, curEntriesArray, curEntriesMap
+	}
+
+	switch kov[1] {
+	case "xfs_options":
+		if kov[3] == "" {
+			// empty xfs_options - 'untouched'
+			key := "xfsopt_*"
+			entry := INIEntry{
+				Section:  curSec,
+				Key:      key,
+				Operator: Operator(kov[2]),
+				Value:    kov[3],
+			}
+			curEntriesArray = append(curEntriesArray, entry)
+			curEntriesMap[entry.Key] = entry
+			return next, curEntriesArray, curEntriesMap
+		}
+		for _, option := range strings.Split(kov[3], ",") {
+			option = strings.TrimSpace(option)
+			opt := strings.TrimLeft(option, "+-")
+			key := fmt.Sprintf("xfsopt_%s", opt)
+
+			entry := INIEntry{
+				Section:  curSec,
+				Key:      key,
+				Operator: Operator(kov[2]),
+				Value:    option,
+			}
+			curEntriesArray = append(curEntriesArray, entry)
+			curEntriesMap[entry.Key] = entry
+		}
+	default:
+		system.WarningLog("unsupported parameter name '%s' for section '%s'", kov[1], curSec)
+	}
+	return next, curEntriesArray, curEntriesMap
+}
+
+// writeLimitSectionData adds the values from the limit section to the
+// data structures
+func writeLimitSectionData(curSec string, kov []string, curEntriesArray []INIEntry, curEntriesMap map[string]INIEntry) (bool, []INIEntry, map[string]INIEntry) {
+	next := true
+	if curSec != "limits" {
+		return false, curEntriesArray, curEntriesMap
+	}
+	for _, limits := range strings.Split(kov[3], ",") {
+		limits = strings.TrimSpace(limits)
+		lim := strings.Fields(limits)
+		key := ""
+		if len(lim) == 0 {
+			// empty LIMITS parameter means
+			// override file is setting all limits to 'untouched'
+			// or a wrong limits entry in an 'extra' file
+			key = fmt.Sprintf("%s_NA", kov[1])
+			limits = "NA"
+		} else {
+			key = fmt.Sprintf("LIMIT_%s_%s_%s", lim[0], lim[1], lim[2])
+		}
+		entry := INIEntry{
+			Section:  curSec,
+			Key:      key,
+			Operator: Operator(kov[2]),
+			Value:    limits,
+		}
+		curEntriesArray = append(curEntriesArray, entry)
+		curEntriesMap[entry.Key] = entry
+	}
+	return next, curEntriesArray, curEntriesMap
+}
+
+// writeBlockSectionData adds the values from the block section to the
+// data structures
+func writeBlockSectionData(curSec string, bdevs, kov []string, curEntriesArray []INIEntry, curEntriesMap map[string]INIEntry) (bool, []INIEntry, map[string]INIEntry) {
+	next := true
+	if curSec != "block" {
+		return false, curEntriesArray, curEntriesMap
+	}
+	// bdevs contains all block devices valid for the
+	// current block section regarding to the used tags
+	for _, bdev := range bdevs {
+		entry := INIEntry{
+			Section:  curSec,
+			Key:      fmt.Sprintf("%s_%s", kov[1], bdev),
+			Operator: Operator(kov[2]),
+			Value:    kov[3],
+		}
+		curEntriesArray = append(curEntriesArray, entry)
+		curEntriesMap[entry.Key] = entry
+	}
+	return next, curEntriesArray, curEntriesMap
+}
+
+// writeMultiValueData handles tunables with more than one value
+func writeMultiValueData(curSec string, kov []string, curEntriesArray []INIEntry, curEntriesMap map[string]INIEntry) ([]INIEntry, map[string]INIEntry) {
+	value := strings.Replace(kov[3], " ", "\t", -1)
+	entry := INIEntry{
+		Section:  curSec,
+		Key:      kov[1],
+		Operator: Operator(kov[2]),
+		Value:    value,
+	}
+	curEntriesArray = append(curEntriesArray, entry)
+	curEntriesMap[entry.Key] = entry
+	return curEntriesArray, curEntriesMap
+}
+
+// writeReminderSectionData adds the values from the reminder section to the
+// end of the data structures
+func writeReminderSectionData(rem string) ([]INIEntry, map[string]INIEntry, string) {
+	// Start the reminder section
+	curEntriesArray := make([]INIEntry, 0, 8)
+	curEntriesMap := make(map[string]INIEntry)
+	curSection := "reminder"
+
+	entry := INIEntry{
+		Section:  "reminder",
+		Key:      "reminder",
+		Operator: "",
+		Value:    rem,
+	}
+	curEntriesArray = append(curEntriesArray, entry)
+	curEntriesMap[entry.Key] = entry
+	return curEntriesArray, curEntriesMap, curSection
 }

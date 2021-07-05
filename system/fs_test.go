@@ -1,10 +1,6 @@
 package system
 
 import (
-	"io/ioutil"
-	"os"
-	"path"
-	"reflect"
 	"testing"
 )
 
@@ -204,28 +200,5 @@ func TestMountPointGetFileSystemSizeMB(t *testing.T) {
 	}
 	if size := mount.GetFileSystemSizeMB(); size < 30 {
 		t.Fatal(size)
-	}
-}
-
-func TestListDir(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tmpDir)
-	if err := os.Mkdir(path.Join(tmpDir, "aDir"), 0700); err != nil {
-		t.Fatal(err)
-	}
-	if file, err := os.OpenFile(path.Join(tmpDir, "aFile"), os.O_CREATE, 0600); err != nil {
-		t.Fatal(err)
-	} else if err := file.Close(); err != nil {
-		t.Fatal(err)
-	}
-	dirs, files := ListDir(tmpDir, "")
-	if !reflect.DeepEqual(dirs, []string{"aDir"}) {
-		t.Fatal(dirs)
-	}
-	if !reflect.DeepEqual(files, []string{"aFile"}) {
-		t.Fatal(files)
 	}
 }

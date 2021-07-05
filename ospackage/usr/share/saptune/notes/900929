@@ -1,0 +1,16 @@
+# 900929 - Linux: STORAGE_PARAMETERS_WRONG_SET and "mmap() failed"
+# Version 7 from 31.07.2017 in English
+
+[version]
+# SAP-NOTE=900929 CATEGORY=LINUX VERSION=7 DATE=31.07.2017 NAME="Linux: STORAGE_PARAMETERS_WRONG_SET and 'mmap() failed'"
+
+[sysctl]
+# vm.max_map_count
+# The value is the maximum number of memory map areas a process may have.
+# Memory map areas are used as a side-effect of calling malloc, directly by
+# mmap and mprotect, and also when loading shared libraries.
+# vm.max_map_count should be set to MAX_INT (2147483647)
+#
+# SAP Note 1980196, 900929, HANA Administration Guide
+#
+vm.max_map_count=2147483647

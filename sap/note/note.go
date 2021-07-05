@@ -232,7 +232,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 				} else if key.String() == "force_latency" && comparisons[ckey].ReflectFieldName == "SysctlParams" {
 					valApplyList = append(valApplyList, comparisons[ckey].ReflectMapKey)
 				}
-				if !comparisons[ckey].MatchExpectation {
+				if !comparisons[ckey].MatchExpectation && fieldName == "SysctlParams" {
 					// a parameter, which is not supported
 					// by the system ("all:none") should not
 					// influence the compare result
@@ -252,6 +252,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 			}
 		} else {
 			// Compare ordinary field value
+			// ConfFilePath, ID, DescriptiveName
 			comparisons[fieldName] = cmpFieldValue(i, fieldName, refActualNote, refExpectedNote)
 			if !comparisons[fieldName].MatchExpectation {
 				allMatch = false

@@ -13,6 +13,9 @@ import (
 
 var mountOptionSeparator = regexp.MustCompile("[[:space:]]*,[[:space:]]*")
 
+// IsXFSOption matches xfs options
+var IsXFSOption = regexp.MustCompile(`^xfsopt_\w+$`)
+
 // MountPoint Represent a mount point entry in /proc/mounts or /etc/fstab
 type MountPoint struct {
 	Device     string
@@ -50,6 +53,40 @@ func (mounts MountPoints) GetByMountPoint(mountPoint string) (MountPoint, bool) 
 		}
 	}
 	return MountPoint{}, false
+}
+
+// GetByMountOption find a mount point with special mount option.
+// returns a list of mount points containing the option and a second list
+// with mount points missing the option.
+func (mounts MountPoints) GetByMountOption(fstype, mountOption, chkDflt string) ([]string, []string) {
+	var found bool
+	var dflt bool
+	mntOK := []string{}
+	mntNok := []string{}
+	for _, mount := range mounts {
+		if mount.Type == fstype {
+			found = false
+			dflt = false
+			for _, opt := range mount.Options {
+				if opt == mountOption {
+					found = true
+					mntOK = append(mntOK, mount.MountPoint)
+					break
+				}
+				if opt == "defaults" {
+					dflt = true
+				}
+			}
+			if !found {
+				if dflt && chkDflt == "chkOK" {
+					mntOK = append(mntOK, mount.MountPoint)
+				} else {
+					mntNok = append(mntNok, mount.MountPoint)
+				}
+			}
+		}
+	}
+	return mntOK, mntNok
 }
 
 // ParseMounts return all mount points defined in the input text.
@@ -121,21 +158,54 @@ func RemountSHM(newSizeMB uint64) error {
 	return nil
 }
 
-// ListDir list directory content.
-func ListDir(dirPath, logMsg string) (dirNames, fileNames []string) {
-	entries, err := ioutil.ReadDir(dirPath)
-	if err != nil && logMsg != "" {
-		// Not a fatal error
-		WarningLog("failed to read %s - %v", logMsg, err)
+// GetMountOpts checks if oint points with the given type exists and contain
+// the needed/not needed option.
+// Returns a list of mount point containing the option and alist of mount
+// point NOT containing the option
+func GetMountOpts(mustExist bool, fstype, fsopt string) ([]string, []string) {
+	mntOk := []string{}
+	mntNok := []string{}
+	// Find out mount options
+	chkdflt := "noChk"
+	// check the mounted FS
+	mountProcOk, mountProcNok := ParseProcMounts().GetByMountOption(fstype, fsopt, chkdflt)
+	if mustExist {
+		chkdflt = "chkOK"
+	} else {
+		chkdflt = "chkNOK"
 	}
-	dirNames = make([]string, 0, 0)
-	fileNames = make([]string, 0, 0)
-	for _, entry := range entries {
-		if entry.IsDir() {
-			dirNames = append(dirNames, entry.Name())
-		} else {
-			fileNames = append(fileNames, entry.Name())
+	// check /etc/fstab to get the not mounted FS as well
+	mountFSTOk, mountFSTNok := ParseFstab().GetByMountOption(fstype, fsopt, chkdflt)
+	mntOk = getMounts(mountProcOk, mountFSTOk)
+	mntNok = getMounts(mountProcNok, mountFSTNok)
+	return mntOk, mntNok
+}
+
+// getMounts combines the mounted and not mounted FS
+func getMounts(neededProcMnts, mntsFromFstab []string) []string {
+	// initialize with the mounted FS
+	mntRet := neededProcMnts
+	for _, mnt := range mntsFromFstab {
+		// search for not mounted FS, which are NOK/OK
+		// and append them to the needed mounts
+		found := isMntAvail(mnt, neededProcMnts)
+		if !found {
+			mntRet = append(mntRet, mnt)
 		}
 	}
-	return
+	return mntRet
+}
+
+// isMntAvail checks, if a given mount point is available in a pool of
+// mount points.
+// returns true, if the mount point exists in the pool, otherwise false
+func isMntAvail(mntPt string, poolOfMnts []string) bool {
+	ret := false
+	for _, mnt := range poolOfMnts {
+		if mntPt == mnt {
+			ret = true
+			break
+		}
+	}
+	return ret
 }

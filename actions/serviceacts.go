@@ -443,6 +443,9 @@ func DaemonAction(writer io.Writer, actionName, saptuneVersion string, tuneApp *
 	if actionName == "start" {
 		serviceAction = "takeover"
 	}
+	if actionName == "stop" {
+		serviceAction = "disablestop"
+	}
 	system.WarningLog("ATTENTION: the argument 'daemon' is deprecated!. saptune will forward the request to 'saptune service %s'.\nFor the future please use 'saptune service %s'.", serviceAction, serviceAction)
 	switch actionName {
 	case "start":
@@ -450,7 +453,7 @@ func DaemonAction(writer io.Writer, actionName, saptuneVersion string, tuneApp *
 	case "status":
 		ServiceActionStatus(writer, tuneApp, saptuneVersion)
 	case "stop":
-		// stopdisable
+		// disablestop
 		ServiceActionStop(true)
 	default:
 		PrintHelpAndExit(os.Stdout, 1)
