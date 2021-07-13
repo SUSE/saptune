@@ -611,14 +611,14 @@ At the moment saptune supports two architectures - \fIArchX86\fP for the x86 pla
 Please do not change as the command '\fBsaptune staging release\fP' may overwrite this file without preserving any custom changes.
 .RE
 .PP
-\fI/var/lib/saptune/saved_state/\fP
-\fI/var/lib/saptune/parameter/\fP
+\fI/run/saptune/saved_state/\fP
+\fI/run/saptune/parameter/\fP
 .RS 4
 saptune was designed to preserve the state of the system before starting the SAP specific tuning, so that it will be possible to restore this previous state of the system, if the SAP specific tuning is no longer needed or should be changed.
 
-This system state is saved during the 'apply' operation of saptune in the saptune internal used files in /var/lib/saptune/saved_state and /var/lib/saptune/parameter. The content of these files highly depends on the previous state of the system.
+This system state is saved during the 'apply' operation of saptune in the saptune internal used files in /run/saptune/saved_state and /run/saptune/parameter. The content of these files highly depends on the previous state of the system.
 .br
-If the values are applied by saptune, no further monitoring of the system parameters are done, so changes of saptune relevant parameters will not be observed. If a SAP Note or a SAP solution should be reverted, then first the values read from the /var/lib/saptune/saved_state and /var/lib/saptune/parameter files will be applied to the system to restore the previous system state and then the corresponding save_state file will be removed.
+If the values are applied by saptune, no further monitoring of the system parameters are done, so changes of saptune relevant parameters will not be observed. If a SAP Note or a SAP solution should be reverted, then first the values read from the /run/saptune/saved_state and /run/saptune/parameter files will be applied to the system to restore the previous system state and then the corresponding save_state file will be removed.
 
 Please do not change or remove files in this directory. The knowledge about the previous system state gets lost and the revert functionality of saptune will be destructed. So you will lose the capability to revert back the tunings saptune has done.
 .RE

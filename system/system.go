@@ -15,7 +15,7 @@ import (
 )
 
 // SaptuneSectionDir defines saptunes saved state directory
-const SaptuneSectionDir = "/var/lib/saptune/sections"
+const SaptuneSectionDir = "/run/saptune/sections"
 
 // map to hold the current available systemd services
 var services map[string]string

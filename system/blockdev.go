@@ -55,7 +55,7 @@ func BlockDeviceIsDisk(dev string) bool {
 }
 
 // GetBlockDeviceInfo reads content of stored block device information.
-// content stored in SaptuneSectionDir (/var/lib/saptune/sections)
+// content stored in SaptuneSectionDir (/run/saptune/sections)
 // as blockdev.run
 // Return the content as BlockDev
 func GetBlockDeviceInfo() (*BlockDev, error) {

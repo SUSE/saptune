@@ -60,11 +60,11 @@ func TestState(t *testing.T) {
 	note2 := Note2{Int: 1}
 
 	n1file := state.GetPathToNote("1")
-	if n1file != "/tmp/saptune-test/var/lib/saptune/saved_state/1" {
+	if n1file != "/tmp/saptune-test/run/saptune/saved_state/1" {
 		t.Fatal(n1file)
 	}
 	n2file := state.GetPathToNote("2")
-	if n2file != "/tmp/saptune-test/var/lib/saptune/saved_state/2" {
+	if n2file != "/tmp/saptune-test/run/saptune/saved_state/2" {
 		t.Fatal(n2file)
 	}
 

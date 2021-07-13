@@ -26,9 +26,11 @@ SAPTUNE_SYSCONFIG=/etc/sysconfig/saptune
 CUSTOM_TUNED_CONF=/etc/tuned/saptune/tuned.conf
 
 OVERRIDEDIR=/etc/saptune/override
-SAVEDSTATEDIR=/var/lib/saptune/saved_state
-PARAMETERSTATEDIR=/var/lib/saptune/parameter
-SECTIONSTATEDIR=/var/lib/saptune/sections
+OLD_SAVEDSTATEDIR=/var/lib/saptune/saved_state
+SAVEDSTATEDIR=/run/saptune/saved_state
+OLD_PARAMETERSTATEDIR=/var/lib/saptune/parameter
+PARAMETERSTATEDIR=/run/saptune/parameter
+SECTIONSTATEDIR=/run/saptune/sections
 
 WORKINGAREA=/var/lib/saptune/working
 STAGINGAREA=/var/lib/saptune/staging
@@ -277,6 +279,17 @@ cleanup_savestates() {
     sle_vers=$(sed -n "s%.*baseversion>\(.*\)</base.*%\1%p" /etc/products.d/baseproduct)
     [[ $sle_vers != 12 ]] && rm -f /var/lib/saptune/parameter/UserTasksMax
     [[ $sle_vers != 12 ]] && rm -f /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf
+
+    # move saved state files to /run
+    if [ ! -d /run/saptune ]; then
+        mkdir -p /run/saptune
+    fi
+    if [ -d "$OLD_PARAMETERSTATEDIR" ]; then
+        mv "$OLD_PARAMETERSTATEDIR" "$PARAMETERSTATEDIR"
+    fi
+    if [ -d "$OLD_SAVEDSTATEDIR" ]; then
+        mv "$OLD_SAVEDSTATEDIR" "$SAVEDSTATEDIR"
+    fi
 }
 
 copy_packednotes2staging() {

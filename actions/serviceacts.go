@@ -184,11 +184,13 @@ func ServiceActionStatus(writer io.Writer, tuneApp *app.App, saptuneVersion stri
 	saptuneStopped = printSaptuneStatus(writer, saptuneStopped)
 
 	fmt.Fprintln(writer, "")
-	if notTuned {
-		system.ErrorExit("", exitNotTuned)
-	}
+	// order of exit codes important for yast2 module!
+	// first 'stopped', then 'notTuned', then 'ok'
 	if saptuneStopped {
 		system.ErrorExit("", exitSaptuneStopped)
+	}
+	if notTuned {
+		system.ErrorExit("", exitNotTuned)
 	}
 }
 

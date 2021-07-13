@@ -12,10 +12,10 @@ import (
 )
 
 func cleanUp() {
-	var parameterStateDir = "/var/lib/saptune/parameter"
+	var parameterStateDir = "/run/saptune/parameter"
 	os.RemoveAll(parameterStateDir)
 	defer os.RemoveAll(parameterStateDir)
-	var saptuneSectionDir = "/var/lib/saptune/sections"
+	var saptuneSectionDir = "/run/saptune/sections"
 	os.RemoveAll(saptuneSectionDir)
 	defer os.RemoveAll(saptuneSectionDir)
 }

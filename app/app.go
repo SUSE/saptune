@@ -181,7 +181,7 @@ func (app *App) NoteSanityCheck() error {
 		// check the state file will NOT work in case that the apply
 		// was done with a previous saptune version where NO section
 		// file handling exists
-		fileName := fmt.Sprintf("/var/lib/saptune/sections/%s.sections", note)
+		fileName := fmt.Sprintf("/run/saptune/sections/%s.sections", note)
 		// check, if empty state file exists
 		if content, err := ioutil.ReadFile(app.State.GetPathToNote(note)); err == nil && len(content) == 0 {
 			// remove empty state file
@@ -308,16 +308,19 @@ func (app *App) TuneNote(noteID string) error {
 	// Save current state for the Note in any case
 	currentState, err := aNote.Initialise()
 	if err != nil {
-		return fmt.Errorf("Failed to examine system for the current status of note %s - %v", noteID, err)
+		system.ErrorLog("Failed to examine system for the current status of note %s - %v", noteID, err)
+		return err
 	}
 	forceApply := handleCounterParts(&currentState)
-	if err = app.State.Store(noteID, currentState, false); err != nil {
-		return fmt.Errorf("Failed to save current state of note %s - %v", noteID, err)
+	if err = app.State.Store(noteID, currentState, true); err != nil {
+		system.ErrorLog("Failed to save current state of note %s - %v", noteID, err)
+		return err
 	}
 
 	optimised, err := currentState.Optimise()
 	if err != nil {
-		return fmt.Errorf("Failed to calculate optimised parameters for note %s - %v", noteID, err)
+		system.ErrorLog("Failed to calculate optimised parameters for note %s - %v", noteID, err)
+		return err
 	}
 	if len(valApplyList) != 0 {
 		optimised = optimised.(note.INISettings).SetValuesToApply(valApplyList)
@@ -329,7 +332,8 @@ func (app *App) TuneNote(noteID string) error {
 		return nil
 	}
 	if err := optimised.Apply(); err != nil {
-		return fmt.Errorf("Failed to apply note %s - %v", noteID, err)
+		system.ErrorLog("Failed to apply note %s - %v", noteID, err)
+		return err
 	}
 
 	return nil
