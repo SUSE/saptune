@@ -235,7 +235,7 @@ and then please double check your input and /etc/sysconfig/saptune`, name)
 }
 
 // handleCounterParts will save the counterpart values of parameters
-func handleCounterParts(currentState *note.Note) bool {
+func handleCounterParts(currentState interface{}) bool {
 	forceApply := false
 	if reflect.TypeOf(currentState).String() == "note.INISettings" {
 		// in case of vm.dirty parameters save additionally the
@@ -312,7 +312,7 @@ func (app *App) TuneNote(noteID string) error {
 		system.ErrorLog("Failed to examine system for the current status of note %s - %v", noteID, err)
 		return err
 	}
-	forceApply := handleCounterParts(&currentState)
+	forceApply := handleCounterParts(currentState)
 	if err = app.State.Store(noteID, currentState, true); err != nil {
 		system.ErrorLog("Failed to save current state of note %s - %v", noteID, err)
 		return err
