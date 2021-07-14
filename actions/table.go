@@ -31,7 +31,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	sortkeys := sortNoteComparisonsOutput(noteComparisons)
 
 	// setup table format values
-	fmtlen0, fmtlen1, fmtlen2, fmtlen3, fmtlen4, format := setupTableFormat(sortkeys, noteField, noteComparisons, printComparison)
+	fmtlen0, fmtlen1, fmtlen2, fmtlen3, fmtlen4, format := setupTableFormat(sortkeys, noteComparisons, printComparison)
 
 	// print
 	noteID := ""
@@ -103,7 +103,7 @@ func sortNoteComparisonsOutput(noteCompare map[string]map[string]note.FieldCompa
 }
 
 // setupTableFormat sets the format of the table columns dependent on the content
-func setupTableFormat(skeys []string, noteField string, noteCompare map[string]map[string]note.FieldComparison, printComp bool) (int, int, int, int, int, string) {
+func setupTableFormat(skeys []string, noteCompare map[string]map[string]note.FieldComparison, printComp bool) (int, int, int, int, int, string) {
 	var fmtlen0, fmtlen1, fmtlen2, fmtlen3, fmtlen4 int
 	format := "\t%s : %s\n"
 	// define start values for the column width
@@ -125,6 +125,7 @@ func setupTableFormat(skeys []string, noteField string, noteCompare map[string]m
 	for _, skey := range skeys {
 		keyFields := strings.Split(skey, "§")
 		noteID := keyFields[0]
+		noteField := fmt.Sprintf("%s, %s", noteID, txtparser.GetINIFileVersionSectionEntry(noteCompare[noteID]["ConfFilePath"].ActualValue.(string), "version"))
 		comparisons := noteCompare[noteID]
 		for _, comparison := range comparisons {
 			if comparison.ReflectMapKey == "reminder" || comparison.ReflectFieldName == "Inform" {

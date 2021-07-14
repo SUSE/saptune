@@ -56,7 +56,7 @@ type INIFile struct {
 
 // GetINIFileDescriptiveName return the descriptive name of the Note
 func GetINIFileDescriptiveName(fileName string) string {
-	var re = regexp.MustCompile(`# .*NOTE=.*VERSION=(\d*)\s*DATE=(.*)\s*NAME="([^"]*)"`)
+	var re = regexp.MustCompile(`# .*NOTE=.*VERSION=([\w.+-_]+)\s*DATE=(.*)\s*NAME="([^"]*)"`)
 	rval := ""
 	content, err := ioutil.ReadFile(fileName)
 	if err != nil {
@@ -72,16 +72,16 @@ func GetINIFileDescriptiveName(fileName string) string {
 // GetINIFileVersionSectionEntry returns the field 'entryName' from the version
 // section of the Note configuration file
 func GetINIFileVersionSectionEntry(fileName, entryName string) string {
-	var re = regexp.MustCompile(`# .*NOTE=.*TEST=(\d*)\s*DATE=.*"`)
+	var re = regexp.MustCompile(`# .*NOTE=.*TEST=([\w.+-_]+)\s*DATE=.*"`)
 	switch entryName {
 	case "version":
-		re = regexp.MustCompile(`# .*NOTE=.*VERSION=(\d*)\s*DATE=.*"`)
+		re = regexp.MustCompile(`# .*NOTE=.*VERSION=([\w.+-_]+)\s*DATE=.*"`)
 	case "category":
 		re = regexp.MustCompile(`# .*NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
 	case "date":
-		re = regexp.MustCompile(`# .*NOTE=.*VERSION=\d*\s*DATE=(.*)\s*NAME=.*"`)
+		re = regexp.MustCompile(`# .*NOTE=.*VERSION=[\w.+-_]+\s*DATE=(.*)\s*NAME=.*"`)
 	case "name":
-		re = regexp.MustCompile(`# .*NOTE=.*VERSION=\d*\s*DATE=.*\s*NAME="([^"]*)"`)
+		re = regexp.MustCompile(`# .*NOTE=.*VERSION=[\w.+-_]+\s*DATE=.*\s*NAME="([^"]*)"`)
 	default:
 		return ""
 	}
