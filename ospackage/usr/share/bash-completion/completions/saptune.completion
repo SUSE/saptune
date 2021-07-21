@@ -44,7 +44,7 @@ _saptune() {
             ;;
 
         3)  case "${prev}" in
-                apply|simulate|verify|customise|revert|create|show|delete|rename|analysis|diff|release)
+                apply|simulate|verify|customise|revert|show|delete|rename|analysis|diff|release)
                         case "${COMP_WORDS[COMP_CWORD-2]}" in
                             note)       opts=$((ls -1q /var/lib/saptune/working/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | sed 's/\.conf$//') | tr '\n' ' ')
                                         ;;
