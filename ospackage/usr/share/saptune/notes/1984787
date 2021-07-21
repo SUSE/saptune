@@ -81,7 +81,3 @@ vm.dirty_bytes=629145600
 #
 vm.dirty_background_bytes=314572800
 
-
-[reminder]
-# systemd drop-in configuration file: for SLES12GA and SLES12SP1 handled by saptune package installation
-# installation of uuid daemon: handled by saptune package installation

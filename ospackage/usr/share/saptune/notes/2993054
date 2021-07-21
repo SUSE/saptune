@@ -11,8 +11,8 @@ net.ipv4.tcp_keepalive_intvl = 75
 net.ipv4.tcp_keepalive_probes = 9
 
 [reminder:csp=azure]
-# settings from SAP Note 1410736 are integrated in this SAP Note.
+# Settings from SAP Note 1410736 are integrated in this SAP Note.
 #
-# parameters energy_perf_bias, governor and force_latency, which are mentioned
+# Parameters energy_perf_bias, governor and force_latency, which are mentioned
 # in the recommended OS settings for the SAP HANA databases, are not supported
-# on Azure virtual machines. A footnote will reminde during verify operation.
+# on Azure virtual machines. A footnote will show up during verify operation.
