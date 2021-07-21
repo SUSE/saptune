@@ -19,7 +19,7 @@ var paramNote3 = ParameterNoteEntry{
 
 func TestGetPathToParameter(t *testing.T) {
 	val := GetPathToParameter("FILENAME4TEST")
-	if val != "/var/lib/saptune/parameter/FILENAME4TEST" {
+	if val != "/run/saptune/parameter/FILENAME4TEST" {
 		t.Fatalf("parameter file name: %v.\n", val)
 	}
 }

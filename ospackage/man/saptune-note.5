@@ -56,11 +56,11 @@ to define a special \fIhardware architecture\fP:
 .br
 Valid values for \fBarch=\fP are the output from \fBuname -i\fP
 
-.RE
+.RS 4 
 Example:
 .br
 [sysctl:os=15-SP1:arch=ppc64le]
-
+.RE
 .TP
 .BI vendor= <hardware vendor>
 to define a special \fIsystem hardware vendor\fP
@@ -76,22 +76,22 @@ Valid values for \fBmodel=\fP are the values found in \fB/sys/class/dmi/product_
 .br
 The value of the model tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the model file.
 
-.RE
+.RS 4
 Example:
 .br
 [sysctl:vendor=FUJITSU:model=RX4770 M*]
-
+.RE
 .TP
 .BI csp= <cloud service provider>
 to define a special \fIcloud service provider\fP
 .br
 Valid values for \fBcsp=\fP are \fBazure\fP and \fBaws\fP
 
-.RE
+.RS 4
 Example:
 .br
 [sysctl:csp=azure]
-
+.RE
 .TP
 .BI DMI interface tag: <filename>= <file content>
 .br
@@ -101,14 +101,14 @@ This way it's possible to restrict a section to a special hardware vendor or har
 .br
 The value of the DMI interface tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the file in \fI/sys/class/dmi/id/<filename>\fP.
 
-.RE
+Attention: if the pattern does not match any filename in \fI/sys/class/dmi/id\fP, the section will be skipped as unknown.
+
+.RS 4
 Example:
 .br
 [sysctl:bios_vendor=Dell]
+.RE
 
-Attention: if the pattern does not match any filename in \fI/sys/class/dmi/id\fP, the section will be skipped as unknown.
-
-.TP
 For the following 3 tags we have special rules:
 .br
 This tags have different effects regarding the section they are used. In all sections except the \fB[block]\fP section they are used the same way all other tags are used to restrict the section to be only valid on a system which includes this special sort of block device.
@@ -129,7 +129,9 @@ Valid values for \fBblkmodel=\fP are the values found in \fB/sys/block/<dev>/dev
 .br
 The value of the blkmodel tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the model file.
 
-.RE
+Attention: if the tag does not match any block device, no block device will be handled by saptune. e.g. '\fBsaptune note verify\fP' will list NO block devices.
+
+.RS 4
 Example:
 .br
 [block:blkvendor=ATA]
@@ -139,20 +141,20 @@ Example:
 [block:blkvendor=FTS:blkmodel=PRAID EP420*]
 .br
 [block:blkvendor=FUJITSU:blkmodel=ETERNUS_]
-
-Attention: if the tag does not match any block device, no block device will be handled by saptune. e.g. '\fBsaptune note verify\fP' will list NO block devices.
-
+.RE
 .TP
 .BI blkpat= <pattern>
 to define a \fIpattern\fP to match a special block device in \fI/sys/block/\fP
-.br
+
+Attention: if the pattern does not match any block device, no block device will be handled by saptune. e.g. '\fBsaptune note verify\fP' will list NO block device. There will be NO Warning or Error message logged in such a case.
+
+.RS 4
 example:
 .br
 [block:blkpat=nvme] to match all \fI/sys/block/nvme.*\fP block devices
 .br
 [block:blkpat=sd[ab]] to match \fI/sys/block/sda\fP and \fI/sys/block/sdb\fP
-
-Attention: if the pattern does not match any block device, no block device will be handled by saptune. e.g. '\fBsaptune note verify\fP' will list NO block device. There will be NO Warning or Error message logged in such a case.
+.RE
 
 
 For processing a section the following rules apply:
@@ -195,7 +197,7 @@ The <noteId> must be a text string without spaces, which will be used as the uni
 
 The CATEGORY is for future use. So we do not have defined CATEGORIES at the moment. It must be a text string without spaces.
 
-VERSION is a number that should indicate how many changes are done for this Note definition in the past. Only digits are allowed.
+VERSION is a number that should indicate how many changes are done for this Note definition in the past. Allowed are digits, upper-case and lower-case letters, dots, underscores, minus and plus signs.
 
 DATE is the date of the last changes.
 

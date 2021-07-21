@@ -47,6 +47,36 @@ func EditFile(srcFile, destFile string) error {
 	return err
 }
 
+// EditAndCheckFile creates or modify note or solution definition files
+// using an editor
+func EditAndCheckFile(srcFileName, destFileName, defName, defType string) (bool, error) {
+	var err error
+	changed := false
+	tmpFile := fmt.Sprintf("/tmp/%s.sttemp", defName)
+	if err = EditFile(srcFileName, tmpFile); err != nil {
+		// clean up before exit
+		os.Remove(tmpFile)
+		ErrorLog("Problems while editing %s definition file '%s' - %v", defType, destFileName, err)
+		return changed, err
+	}
+	// check if something was changed in the file
+	if !ChkMD5Pair(srcFileName, tmpFile) {
+		// template and temporary file differ, so something was
+		// written/changed during the editor session
+		// copy temporary file to extra location
+		if err = CopyFile(tmpFile, destFileName); err != nil {
+			// clean up before exit
+			os.Remove(tmpFile)
+			ErrorLog("Problems writing %s definition file '%s' - %v", defType, destFileName, err)
+			return changed, err
+		}
+		changed = true
+	}
+	// remove no longer needed temporary file
+	os.Remove(tmpFile)
+	return changed, err
+}
+
 // ChkMD5Pair checks, if the md5sum of 2 files are equal
 func ChkMD5Pair(srcFile, destFile string) bool {
 	ret := false
@@ -110,7 +140,7 @@ func GetFiles(dir string) map[string]string {
 	files := make(map[string]string)
 	entries, err := ioutil.ReadDir(dir)
 	if err != nil {
-		WarningLog("failed to read %s - %v", dir, err)
+		DebugLog("failed to read %s - %v", dir, err)
 	}
 	for _, entry := range entries {
 		if !entry.IsDir() {

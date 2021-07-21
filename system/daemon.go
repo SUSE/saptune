@@ -14,17 +14,31 @@ var actTunedProfile = "/etc/tuned/active_profile"
 
 // SystemctlEnable call systemctl enable on thing.
 func SystemctlEnable(thing string) error {
-	if out, err := exec.Command(systemctlCmd, "enable", thing).CombinedOutput(); err != nil {
+	out, err := exec.Command(systemctlCmd, "enable", thing).CombinedOutput()
+	if err != nil {
 		return ErrorLog("%v - Failed to call systemctl enable on %s - %s", err, thing, string(out))
 	}
+	DebugLog("SystemctlEnable - /usr/bin/systemctl enable '%s' : '%+v %s'", thing, err, string(out))
+	return nil
+}
+
+// SystemctlStatus call systemctl status on thing.
+func SystemctlStatus(thing string) error {
+	out, err := exec.Command(systemctlCmd, "status", thing).CombinedOutput()
+	if err != nil {
+		return ErrorLog("%v - Failed to call systemctl status on %s - %s", err, thing, string(out))
+	}
+	InfoLog("SystemctlStatus - '%+v'\n", string(out))
 	return nil
 }
 
 // SystemctlDisable call systemctl disable on thing.
 func SystemctlDisable(thing string) error {
-	if out, err := exec.Command(systemctlCmd, "disable", thing).CombinedOutput(); err != nil {
+	out, err := exec.Command(systemctlCmd, "disable", thing).CombinedOutput()
+	if err != nil {
 		return ErrorLog("%v - Failed to call systemctl disable on %s - %s", err, thing, string(out))
 	}
+	DebugLog("SystemctlDisable - /usr/bin/systemctl disable '%s' : '%+v %s'", thing, err, string(out))
 	return nil
 }
 
@@ -35,9 +49,11 @@ func SystemctlRestart(thing string) error {
 		return ErrorLog("%v - Failed to call systemctl restart on %s", err, thing)
 	}
 	if running {
-		if out, err := exec.Command(systemctlCmd, "restart", thing).CombinedOutput(); err != nil {
+		out, err := exec.Command(systemctlCmd, "restart", thing).CombinedOutput()
+		if err != nil {
 			return ErrorLog("%v - Failed to call systemctl restart on %s - %s", err, thing, string(out))
 		}
+		DebugLog("SystemctlRestart( - /usr/bin/systemctl restart '%s' : '%+v %s'", thing, err, string(out))
 	}
 	return nil
 }
@@ -49,9 +65,11 @@ func SystemctlReloadTryRestart(thing string) error {
 		return ErrorLog("%v - Failed to call systemctl reload-or-try-restart on %s", err, thing)
 	}
 	if running {
-		if out, err := exec.Command(systemctlCmd, "reload-or-try-restart", thing).CombinedOutput(); err != nil {
+		out, err := exec.Command(systemctlCmd, "reload-or-try-restart", thing).CombinedOutput()
+		if err != nil {
 			return ErrorLog("%v - Failed to call systemctl reload-or-try-restart on %s - %s", err, thing, string(out))
 		}
+		DebugLog("SystemctlReloadTryRestart( - /usr/bin/systemctl reload-or-try-restart '%s' : '%+v %s'", thing, err, string(out))
 	}
 	return nil
 }
@@ -63,9 +81,11 @@ func SystemctlStart(thing string) error {
 		return ErrorLog("%v - Failed to call systemctl start on %s", err, thing)
 	}
 	if running {
-		if out, err := exec.Command(systemctlCmd, "start", thing).CombinedOutput(); err != nil {
+		out, err := exec.Command(systemctlCmd, "start", thing).CombinedOutput()
+		if err != nil {
 			return ErrorLog("%v - Failed to call systemctl start on %s - %s", err, thing, string(out))
 		}
+		DebugLog("SystemctlStart - /usr/bin/systemctl start '%s' : '%+v %s'", thing, err, string(out))
 	}
 	return nil
 }
@@ -77,9 +97,11 @@ func SystemctlStop(thing string) error {
 		return ErrorLog("%v - Failed to call systemctl stop on %s", err, thing)
 	}
 	if running {
-		if out, err := exec.Command(systemctlCmd, "stop", thing).CombinedOutput(); err != nil {
+		out, err := exec.Command(systemctlCmd, "stop", thing).CombinedOutput()
+		if err != nil {
 			return ErrorLog("%v - Failed to call systemctl stop on %s - %s", err, thing, string(out))
 		}
+		DebugLog("SystemctlStop - /usr/bin/systemctl stop '%s' : '%+v %s'", thing, err, string(out))
 	}
 	return nil
 }
@@ -127,9 +149,6 @@ func SystemctlIsRunning(thing string) bool {
 func IsSystemRunning() (bool, error) {
 	match := false
 	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
-	if err != nil {
-		return match, ErrorLog("%v - Failed to call systemctl is-system-running", err)
-	}
 	DebugLog("IsSystemRunning - /usr/bin/systemctl is-system-running : '%+v %s'", err, string(out))
 	for _, line := range strings.Split(string(out), "\n") {
 		if strings.TrimSpace(line) == "starting" || strings.TrimSpace(line) == "running" || strings.TrimSpace(line) == "degraded" {
@@ -137,6 +156,9 @@ func IsSystemRunning() (bool, error) {
 			match = true
 			break
 		}
+	}
+	if !match && err != nil {
+		return match, ErrorLog("%v - Failed to call systemctl is-system-running", err)
 	}
 	return match, nil
 }

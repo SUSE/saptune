@@ -106,6 +106,7 @@ func (vend INISettings) Initialise() (Note, error) {
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetVMVal(param.Key)
 		case INISectionFS:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetFSVal(param.Key, param.Value)
+			continue
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key], _ = GetBlkVal(param.Key, &blck)
 		case INISectionLimits:
@@ -194,6 +195,7 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
 		case INISectionFS:
 			vend.SysctlParams[param.Key] = OptFSVal(param.Key, param.Value)
+			continue
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = OptBlkVal(param.Key, param.Value, &blck, blckOK)
 			vend.Inform[param.Key] = vend.chkDoubles(param.Key, vend.Inform[param.Key])

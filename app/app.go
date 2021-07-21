@@ -156,6 +156,33 @@ func (app *App) IsNoteApplied(noteID string) (string, bool) {
 	return rval, ret
 }
 
+// IsSolutionApplied returns true, if the solution is (partial) applied
+// or false, if not
+func (app *App) IsSolutionApplied(sol string) (string, bool) {
+	state := ""
+	ret := false
+	if len(app.TuneForSolutions) != 0 {
+		if app.TuneForSolutions[0] == sol {
+			noteOK := 0
+			noteCnt := 0
+			for _, note := range app.AllSolutions[sol] {
+				noteCnt = noteCnt + 1
+				if _, ok := app.IsNoteApplied(note); ok {
+					noteOK = noteOK + 1
+				}
+			}
+			if noteOK == noteCnt {
+				ret = true
+				state = "fully"
+			} else if noteOK != 0 {
+				ret = true
+				state = "partial"
+			}
+		}
+	}
+	return state, ret
+}
+
 // NoteSanityCheck checks, if for all notes listed in
 // NoteApplyOrder and TuneForNotes a note definition file exists.
 // if not, remove the NoteID from the variables, save the new config and
@@ -181,7 +208,7 @@ func (app *App) NoteSanityCheck() error {
 		// check the state file will NOT work in case that the apply
 		// was done with a previous saptune version where NO section
 		// file handling exists
-		fileName := fmt.Sprintf("/var/lib/saptune/sections/%s.sections", note)
+		fileName := fmt.Sprintf("/run/saptune/sections/%s.sections", note)
 		// check, if empty state file exists
 		if content, err := ioutil.ReadFile(app.State.GetPathToNote(note)); err == nil && len(content) == 0 {
 			// remove empty state file
@@ -235,7 +262,7 @@ and then please double check your input and /etc/sysconfig/saptune`, name)
 }
 
 // handleCounterParts will save the counterpart values of parameters
-func handleCounterParts(currentState *note.Note) bool {
+func handleCounterParts(currentState interface{}) bool {
 	forceApply := false
 	if reflect.TypeOf(currentState).String() == "note.INISettings" {
 		// in case of vm.dirty parameters save additionally the
@@ -306,18 +333,22 @@ func (app *App) TuneNote(noteID string) error {
 	}
 
 	// Save current state for the Note in any case
+	// override existing saved_state file, if available
 	currentState, err := aNote.Initialise()
 	if err != nil {
-		return fmt.Errorf("Failed to examine system for the current status of note %s - %v", noteID, err)
+		system.ErrorLog("Failed to examine system for the current status of note %s - %v", noteID, err)
+		return err
 	}
-	forceApply := handleCounterParts(&currentState)
-	if err = app.State.Store(noteID, currentState, false); err != nil {
-		return fmt.Errorf("Failed to save current state of note %s - %v", noteID, err)
+	forceApply := handleCounterParts(currentState)
+	if err = app.State.Store(noteID, currentState, true); err != nil {
+		system.ErrorLog("Failed to save current state of note %s - %v", noteID, err)
+		return err
 	}
 
 	optimised, err := currentState.Optimise()
 	if err != nil {
-		return fmt.Errorf("Failed to calculate optimised parameters for note %s - %v", noteID, err)
+		system.ErrorLog("Failed to calculate optimised parameters for note %s - %v", noteID, err)
+		return err
 	}
 	if len(valApplyList) != 0 {
 		optimised = optimised.(note.INISettings).SetValuesToApply(valApplyList)
@@ -329,7 +360,8 @@ func (app *App) TuneNote(noteID string) error {
 		return nil
 	}
 	if err := optimised.Apply(); err != nil {
-		return fmt.Errorf("Failed to apply note %s - %v", noteID, err)
+		system.ErrorLog("Failed to apply note %s - %v", noteID, err)
+		return err
 	}
 
 	return nil

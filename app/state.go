@@ -10,7 +10,7 @@ import (
 )
 
 // SaptuneStateDir defines saptunes saved state directory
-const SaptuneStateDir = "/var/lib/saptune/saved_state"
+const SaptuneStateDir = "/run/saptune/saved_state"
 
 // State stores and manages serialised note states.
 type State struct {

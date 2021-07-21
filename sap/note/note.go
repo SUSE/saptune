@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
-	"os"
 	"path"
 	"reflect"
 	"sort"
@@ -25,7 +24,7 @@ import (
 // SaptuneParameterStateDir defines the directory where to store the
 // parameter state files
 // separated from the note state file directory
-const SaptuneParameterStateDir = "/var/lib/saptune/parameter"
+const SaptuneParameterStateDir = "/run/saptune/parameter"
 
 // Note defines the structure and actions for a SAP Note
 // An SAP note consisting of a series of tunable parameters that can be
@@ -63,7 +62,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 	// Collect those defined by 3rd party
 	_, files = system.ListDir(thirdPartyTuningDir, "3rd party tuning definitions")
 	for _, fileName := range files {
-		if fileName == "solutions" || strings.HasSuffix(fileName, ".solution") {
+		if fileName == "solutions" || strings.HasSuffix(fileName, ".sol") {
 			continue
 		}
 		// ignore left over files (BOBJ and ASE definition files) from
@@ -124,35 +123,6 @@ func (opts *TuningOptions) GetSortedIDs() (ret []string) {
 	}
 	sort.Strings(ret)
 	return
-}
-
-// EditNoteFile creates or modify note definition files using an editor
-func EditNoteFile(srcFileName, destFileName, noteID string) (bool, error) {
-	var err error
-	changed := false
-	tmpFile := fmt.Sprintf("/tmp/%s.sttemp", noteID)
-	if err = system.EditFile(srcFileName, tmpFile); err != nil {
-		// clean up before exit
-		os.Remove(tmpFile)
-		system.ErrorLog("Problems while editing note definition file '%s' - %v", destFileName, err)
-		return changed, err
-	}
-	// check if something was changed in the file
-	if !system.ChkMD5Pair(srcFileName, tmpFile) {
-		// template and temporary file differ, so something was
-		// written/changed during the editor session
-		// copy temporary file to extra location
-		if err = system.CopyFile(tmpFile, destFileName); err != nil {
-			// clean up before exit
-			os.Remove(tmpFile)
-			system.ErrorLog("Problems writing note definition file '%s' - %v", destFileName, err)
-			return changed, err
-		}
-		changed = true
-	}
-	// remove no longer needed temporary file
-	os.Remove(tmpFile)
-	return changed, err
 }
 
 // FieldComparison records the actual value versus expected value for

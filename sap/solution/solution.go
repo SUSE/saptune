@@ -15,16 +15,16 @@ import (
 
 // solution constant definitions
 const (
-	SolutionSheet         = "/var/lib/saptune/working/solutions"
-	OverrideSolutionSheet = "/etc/saptune/override/solutions"
-	ExtraSolutionSheet    = "/etc/saptune/extra/solutions"
-	DeprecSolutionSheet   = "/usr/share/saptune/solsdeprecated"
-	NoteTuningSheets      = "/var/lib/saptune/working/notes/"
-	ExtraTuningSheets     = "/etc/saptune/extra/"
-	ArchX86               = "amd64"      // ArchX86 is the GOARCH value for x86 platform.
-	ArchPPC64LE           = "ppc64le"    // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform.
-	ArchX86PC             = "amd64_PC"   // ArchX86 is the GOARCH value for x86 platform. PC indicates PageCache is available
-	ArchPPC64LEPC         = "ppc64le_PC" // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform. PC indicates PageCache is available
+	ShippedSolSheets       = "/usr/share/saptune/sols/"
+	OverrideSolutionSheets = "/etc/saptune/override/"
+	DeprecSolutionSheets   = "/usr/share/saptune/deprecated/"
+	SolutionSheets         = "/var/lib/saptune/working/sols/"
+	NoteTuningSheets       = "/var/lib/saptune/working/notes/"
+	ExtraTuningSheets      = "/etc/saptune/extra/"
+	ArchX86                = "amd64"      // ArchX86 is the GOARCH value for x86 platform.
+	ArchPPC64LE            = "ppc64le"    // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform.
+	ArchX86PC              = "amd64_PC"   // ArchX86 is the GOARCH value for x86 platform. PC indicates PageCache is available
+	ArchPPC64LEPC          = "ppc64le_PC" // ArchPPC64LE is the GOARCH for 64-bit PowerPC little endian platform. PC indicates PageCache is available
 )
 
 // Solution is identified by set of note numbers.
@@ -35,36 +35,40 @@ type Solution []string
 
 // AllSolutions contains a list of all available solutions with their related
 // SAP Notes for all supported architectures
-var AllSolutions = GetSolutionDefintion(SolutionSheet)
+var AllSolutions = GetSolutionDefintion(SolutionSheets)
 
 // OverrideSolutions contains a list of all available override solutions with
 // their related SAP Notes for all supported architectures
-var OverrideSolutions = GetOtherSolution(OverrideSolutionSheet, NoteTuningSheets, ExtraTuningSheets)
+var OverrideSolutions = GetOtherSolution(OverrideSolutionSheets, NoteTuningSheets, ExtraTuningSheets)
 
 // CustomSolutions contains a list of all available customer specific solutions
 // with their related SAP Notes for all supported architectures
-var CustomSolutions = GetOtherSolution(ExtraSolutionSheet, NoteTuningSheets, ExtraTuningSheets)
+var CustomSolutions = GetOtherSolution(ExtraTuningSheets, NoteTuningSheets, ExtraTuningSheets)
 
 // DeprecSolutions contains a list of all solutions witch are deprecated
-var DeprecSolutions = GetOtherSolution(DeprecSolutionSheet, "", "")
+var DeprecSolutions = GetOtherSolution(DeprecSolutionSheets, "", "")
 
 // GetSolutionDefintion reads solution definition from file
 // build same structure for AllSolutions as before
 // can be simplyfied later
-func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
+func GetSolutionDefintion(solsDir string) map[string]map[string]Solution {
 	sols := make(map[string]map[string]Solution)
 	sol := make(map[string]Solution)
 	currentArch := ""
 	arch := ""
 	pcarch := ""
-	content, err := txtparser.ParseINIFile(fileName, false)
-	if err != nil {
-		_ = system.ErrorLog("Failed to read solution definition from file '%s'", fileName)
-		return sols
-	}
+	solAllVals := getAllSolsFromDir(solsDir, "", "")
 
-	for _, param := range content.AllValues {
+	for _, param := range solAllVals {
 		if param.Section == "reminder" || param.Section == "version" {
+			continue
+		}
+		if param.Section != "ArchX86" && param.Section != "ArchPPC64LE" {
+			// as the function most of the time is called
+			// before the logging is initialized use
+			// Fprintf instead to give customers a hint.
+			fmt.Fprintf(os.Stderr, "Warning: skip unsupported solution section '%s'\n", param.Section)
+			//system.WarningLog("skip unsupported solution section '%s'", param.Section)
 			continue
 		}
 		if param.Section != currentArch {
@@ -86,7 +90,7 @@ func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
 
 		// looking for override solution
 		if len(OverrideSolutions[arch]) != 0 && len(OverrideSolutions[arch][param.Key]) != 0 {
-			param.Value = strings.Join(OverrideSolutions[arch][param.Key], " ")
+			param.Value = strings.Join(OverrideSolutions[arch][param.Key], "\t")
 		}
 		sol[param.Key] = strings.Split(param.Value, "\t")
 	}
@@ -104,36 +108,31 @@ func GetSolutionDefintion(fileName string) map[string]map[string]Solution {
 
 // GetOtherSolution reads override, custom or deprecated solution definition
 // from file
-func GetOtherSolution(fileName, noteFiles, extraFiles string) map[string]map[string]Solution {
+func GetOtherSolution(solsDir, noteFiles, extraFiles string) map[string]map[string]Solution {
 	sols := make(map[string]map[string]Solution)
 	sol := make(map[string]Solution)
 	currentArch := ""
 	arch := ""
 	pcarch := ""
-	// looking for override or extra solution file
-	content, err := txtparser.ParseINIFile(fileName, false)
-	if err != nil {
-		return sols
+	extra := false
+	if solsDir == ExtraTuningSheets {
+		extra = true
 	}
+	// looking for override or extra solution file
+	solAllVals := getAllSolsFromDir(solsDir, noteFiles, extraFiles)
 
-	for _, param := range content.AllValues {
-		if noteFiles != "" {
-			//check, if all note files used in the override or custom
-			// solution file are available in the working area or in
-			// /etc/saptune/extra
-			notesOK := true
-			notesOK = checkSolutionNotes(param, fileName, noteFiles, extraFiles)
-			if !notesOK {
-				// skip solution definition, because one or more notes
-				// referenced in the solution definition do not have
-				// a note configuration file on the system
-				continue
-			}
-		}
-
+	for _, param := range solAllVals {
 		if param.Section == "reminder" || param.Section == "version" {
 			continue
 		}
+		if param.Section != "ArchX86" && param.Section != "ArchPPC64LE" {
+			// as the function most of the time is called
+			// before the logging is initialized use
+			// Fprintf instead to give customers a hint.
+			fmt.Fprintf(os.Stderr, "Warning: skip unsupported solution section '%s'\n", param.Section)
+			continue
+		}
+
 		if param.Section != currentArch {
 			// start a new arch
 			if currentArch != "" {
@@ -143,6 +142,11 @@ func GetOtherSolution(fileName, noteFiles, extraFiles string) map[string]map[str
 			currentArch = param.Section
 			sol = make(map[string]Solution)
 			arch, pcarch = setSolutionArch(currentArch)
+		}
+		// Do not allow customer/vendor to override built-in solutions
+		if extra && IsShippedSolution(param.Key) {
+			system.WarningLog("extra solution '%s' will not override built-in solution implementation", param.Key)
+			continue
 		}
 		sol[param.Key] = strings.Split(param.Value, "\t")
 	}
@@ -204,10 +208,26 @@ func setSolutionArch(curArch string) (arch, pcarch string) {
 // storeSols stores the collected solutions in the solution map
 // related to the last current architecture read from the solution file
 func storeSols(arch, pcarch string, sol map[string]Solution, sols map[string]map[string]Solution) map[string]map[string]Solution {
+	newSol := make(map[string]Solution)
 	if system.IsPagecacheAvailable() {
-		sols[pcarch] = sol
+		for key, val := range sols[pcarch] {
+			newSol[key] = val
+		}
+		for key, val := range sol {
+			newSol[key] = val
+		}
+		//sols[pcarch] = sol
+		sols[pcarch] = newSol
+		newSol = make(map[string]Solution)
 	}
-	sols[arch] = sol
+	for key, val := range sols[arch] {
+		newSol[key] = val
+	}
+	for key, val := range sol {
+		newSol[key] = val
+	}
+	//sols[arch] = sol
+	sols[arch] = newSol
 	return sols
 }
 
@@ -219,4 +239,82 @@ func GetSortedSolutionNames(archName string) (ret []string) {
 	}
 	sort.Strings(ret)
 	return
+}
+
+// getAllSolsFromDir retrieves all defined solutions from the solution files found in the given
+// directory
+func getAllSolsFromDir(solsDir, noteFiles, extraFiles string) []txtparser.INIEntry {
+	solAllVals := make([]txtparser.INIEntry, 0, 64)
+	_, files := system.ListDir(solsDir, "saptune solution definitions")
+	for _, fName := range files {
+		if strings.HasSuffix(fName, ".conf") {
+			// skip custom defined note definition files
+			continue
+		}
+		if fName != "solsdeprecated" && !strings.HasSuffix(fName, ".sol") {
+			// silently skip filenames without .sol suffix
+			// do not print a warning as in case of override we can not filter out
+			// the node definition files as they do not have a suffix.
+			continue
+		}
+		solName := strings.TrimSuffix(fName, ".sol")
+		fileName := fmt.Sprintf("%s%s", solsDir, fName)
+		content, err := txtparser.ParseINIFile(fileName, false)
+		if err != nil {
+			// as the function most of the time is called
+			// before the logging is initialized use
+			// Fprintf instead to give customers a hint.
+			fmt.Fprintf(os.Stderr, "Error: Failed to read solution definition from file '%s'\n", fileName)
+			continue
+		}
+
+		notesOK := true
+		for _, param := range content.AllValues {
+			param.Key = solName
+			if noteFiles != "" {
+				// check, if all note files used in the override or custom
+				// solution file are available in the working area or in
+				// /etc/saptune/extra
+				notesOK = checkSolutionNotes(param, fileName, noteFiles, extraFiles)
+				if !notesOK {
+					// skip solution definition, because one or more notes
+					// referenced in the solution definition do not have
+					// a note configuration file on the system
+					continue
+				}
+			}
+			solAllVals = append(solAllVals, param)
+			//solAllVals = append(solAllVals, content.AllValues...)
+		}
+	}
+	return solAllVals
+}
+
+// IsAvailableSolution returns true, if the solution name already exists
+func IsAvailableSolution(sol, arch string) bool {
+	found := false
+	for _, solName := range GetSortedSolutionNames(arch) {
+		if sol == solName {
+			found = true
+			break
+		}
+	}
+	return found
+}
+
+// IsShippedSolution returns true, if the solution is shipped by the
+// saptune package (from /usr/share/saptune/solutions)
+func IsShippedSolution(sol string) bool {
+	fileName := fmt.Sprintf("%s%s.sol", ShippedSolSheets, sol)
+	if _, err := os.Stat(fileName); err == nil {
+		return true
+	}
+	return false
+}
+
+// Refresh refreshes the solution related variables
+func Refresh() {
+	AllSolutions = GetSolutionDefintion(SolutionSheets)
+	OverrideSolutions = GetOtherSolution(OverrideSolutionSheets, NoteTuningSheets, ExtraTuningSheets)
+	CustomSolutions = GetOtherSolution(ExtraTuningSheets, NoteTuningSheets, ExtraTuningSheets)
 }
