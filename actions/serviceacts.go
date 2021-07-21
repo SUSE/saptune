@@ -6,6 +6,7 @@ import (
 	"github.com/SUSE/saptune/system"
 	"io"
 	"os"
+	"strings"
 )
 
 // ignore flag for takeover
@@ -161,35 +162,37 @@ func ServiceActionEnable() {
 
 // ServiceActionStatus checks the status of the saptune service
 func ServiceActionStatus(writer io.Writer, tuneApp *app.App, saptuneVersion string) {
-	notTuned := false
-	saptuneStopped := false
-
+	infoTrigger := map[string]bool{}
 	fmt.Fprintln(writer, "")
-	// check for running sapconf.service and print status
-	printSapconfStatus(writer)
-
-	// check for running tuned.service and print status
-	printTunedStatus(writer)
-
-	// Check for any enabled note/solution
-	notTuned = printNoteAndSols(writer, tuneApp, notTuned)
+	// check for running saptune.service
+	infoTrigger["saptuneStopped"], infoTrigger["remember"], infoTrigger["stenabled"] = printSaptuneStatus(writer)
 
 	// print saptune version
 	printSaptuneVers(writer, saptuneVersion)
 
+	// Check for any enabled note/solution
+	infoTrigger["notTuned"] = printNoteAndSols(writer, tuneApp)
+
 	// staging
 	printStagingStatus(writer)
 
-	// check for running saptune.service
-	saptuneStopped = printSaptuneStatus(writer, saptuneStopped)
+	// check for running sapconf.service and print status
+	infoTrigger["scenabled"] = printSapconfStatus(writer)
 
-	fmt.Fprintln(writer, "")
+	// check for running tuned.service and print status
+	printTunedStatus(writer)
+
+	// check for system(d) state
+	infoTrigger["chkHint"] = printSystemStatus(writer)
+
+	printInfoBlock(writer, infoTrigger)
+
 	// order of exit codes important for yast2 module!
 	// first 'stopped', then 'notTuned', then 'ok'
-	if saptuneStopped {
+	if infoTrigger["saptuneStopped"] {
 		system.ErrorExit("", exitSaptuneStopped)
 	}
-	if notTuned {
+	if infoTrigger["notTuned"] {
 		system.ErrorExit("", exitNotTuned)
 	}
 }
@@ -319,123 +322,164 @@ func disableAndStopTuned() {
 }
 
 // printSapconfStatus prints status of sapconf.service
-func printSapconfStatus(writer io.Writer) {
+func printSapconfStatus(writer io.Writer) bool {
+	scenabled := false
+	fmt.Fprintf(writer, "sapconf.service:        ")
 	if system.IsServiceAvailable(SapconfService) {
 		if system.SystemctlIsEnabled(SapconfService) {
-			fmt.Fprintf(writer, "Service 'sapconf.service' is enabled and ")
+			fmt.Fprintf(writer, "enabled/")
+			scenabled = true
 		} else {
-			fmt.Fprintf(writer, "Service 'sapconf.service' is disabled and ")
+			fmt.Fprintf(writer, "disabled/")
 		}
 		if system.SystemctlIsRunning(SapconfService) {
-			fmt.Fprintf(writer, "running.\n")
+			fmt.Fprintf(writer, "active\n")
 		} else {
-			fmt.Fprintf(writer, "stopped.\n")
+			fmt.Fprintf(writer, "stopped\n")
 		}
 	} else {
-		fmt.Fprintf(writer, "Service 'sapconf.service' is NOT available.\n")
+		fmt.Fprintf(writer, "not available\n")
 	}
+	return scenabled
 }
 
 // printTunedStatus prints status of tuned.service
 func printTunedStatus(writer io.Writer) {
+	fmt.Fprintf(writer, "tuned.service:          ")
 	if system.IsServiceAvailable(TunedService) {
 		if system.SystemctlIsEnabled(TunedService) {
-			fmt.Fprintf(writer, "Service 'tuned.service' is enabled and ")
+			fmt.Fprintf(writer, "enabled/")
 		} else {
-			fmt.Fprintf(writer, "Service 'tuned.service' is disabled and ")
+			fmt.Fprintf(writer, "disabled/")
 		}
 		if system.SystemctlIsRunning(TunedService) {
-			fmt.Fprintf(writer, "running.\n")
-			fmt.Fprintf(writer, "Currently active tuned profile is: '%s'\n", system.GetTunedAdmProfile())
+			fmt.Fprintf(writer, "running (profile: '%s')\n", system.GetTunedAdmProfile())
 		} else {
-			fmt.Fprintf(writer, "stopped.\n")
+			fmt.Fprintf(writer, "stopped\n")
 		}
 	} else {
-		fmt.Fprintf(writer, "Service 'tuned.service' is NOT available.\n")
+		fmt.Fprintf(writer, "not available\n")
 	}
 }
 
 // printNoteAndSols prints all enabled/active notes and solutions
-func printNoteAndSols(writer io.Writer, tuneApp *app.App, notTuned bool) bool {
-	if len(tuneApp.TuneForSolutions) > 0 || len(tuneApp.TuneForNotes) > 0 {
-		fmt.Fprintf(writer, "\nThe system has been configured for the following solutions: '")
-		for _, sol := range tuneApp.TuneForSolutions {
-			fmt.Fprintf(writer, " "+sol)
-		}
-		fmt.Fprintf(writer, "' and notes: '")
+func printNoteAndSols(writer io.Writer, tuneApp *app.App) bool {
+	notTuned := true
+	fmt.Fprintf(writer, "configured solution:    ")
+	if len(tuneApp.TuneForSolutions) > 0 {
+		fmt.Fprintf(writer, "%s", tuneApp.TuneForSolutions[0])
+		notTuned = false
+	}
+	fmt.Fprintf(writer, "\n")
+	fmt.Fprintf(writer, "configured Notes:       ")
+	if len(tuneApp.TuneForNotes) > 0 {
 		for _, noteID := range tuneApp.TuneForNotes {
 			fmt.Fprintf(writer, " "+noteID)
 		}
-		fmt.Fprintf(writer, "'")
-		// list order of enabled notes
-		tuneApp.PrintNoteApplyOrder(writer)
-		appliedNotes, _ := tuneApp.State.List()
-		if len(appliedNotes) == 0 {
-			fmt.Fprintf(writer, "Currently NO notes applied.\n\n")
-		}
-	} else {
-		fmt.Fprintf(writer, "\nYour system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.\n")
-		notTuned = true
+		notTuned = false
 	}
+	fmt.Fprintf(writer, "\n")
+	fmt.Fprintf(writer, "order of enabled notes: ")
+	if len(tuneApp.NoteApplyOrder) != 0 {
+		fmt.Fprintf(writer, "%s", strings.Join(tuneApp.NoteApplyOrder, " "))
+	}
+	fmt.Fprintf(writer, "\n")
+	fmt.Fprintf(writer, "applied Notes:          ")
+	appliedNotes, _ := tuneApp.State.List()
+	if len(appliedNotes) != 0 {
+		fmt.Fprintf(writer, "%s", strings.Join(appliedNotes, " "))
+	}
+	fmt.Fprintf(writer, "\n")
 	return notTuned
 }
 
 // printSaptuneVers prints saptune version
 func printSaptuneVers(writer io.Writer, saptuneVersion string) {
-	fmt.Fprintf(writer, "Current active saptune version is '%s'.\n", saptuneVersion)
 	// print saptune rpm version and date
 	// because of the need of 'reproducible' builds, we can not use a
 	// build date in the 'official' saptune binary, so 'RPMDate' will
 	// report 'undef'
-	if RPMDate == "undef" {
-		fmt.Fprintf(writer, "Installed saptune version is '%s'.\n", RPMVersion)
-	} else {
-		fmt.Fprintf(writer, "Installed saptune version is '%s' from '%s'.\n", RPMVersion, RPMDate)
+	fmt.Fprintf(writer, "saptune package:        '%s'", RPMVersion)
+	if RPMDate != "undef" {
+		fmt.Fprintf(writer, " (%s)", RPMDate)
 	}
-	fmt.Fprintln(writer, "")
+	fmt.Fprintf(writer, "\n")
+	fmt.Fprintf(writer, "configured version:     '%s'\n", saptuneVersion)
+
 }
 
 // printStagingStatus prints the status of the staging area
 func printStagingStatus(writer io.Writer) {
+	fmt.Fprintf(writer, "staging:                ")
 	stagingSwitch := getStagingFromConf()
 	if stagingSwitch {
-		fmt.Fprintf(writer, "Staging is enabled.\n")
+		fmt.Fprintf(writer, "enabled\n")
 	} else {
-		fmt.Fprintf(writer, "Staging is disabled.\n")
+		fmt.Fprintf(writer, "disabled\n")
 	}
-	fmt.Fprintf(writer, "Content of StagingArea: ")
 	_, files := system.ListDir(StagingSheets, "")
-	for _, f := range files {
-		fmt.Fprintf(writer, "%s ", f)
-	}
+	fmt.Fprintf(writer, "staging area:           %s\n", strings.Join(files, " "))
 	fmt.Fprintln(writer, "")
 }
 
 // printSaptuneStatus checks for running saptune.service and print status
-func printSaptuneStatus(writer io.Writer, saptuneStopped bool) bool {
+func printSaptuneStatus(writer io.Writer) (bool, bool, bool) {
 	remember := false
-	fmt.Fprintln(writer, "")
+	saptuneStopped := false
+	stenabled := false
+	fmt.Fprintf(writer, "saptune.service:        ")
 	if !system.SystemctlIsEnabled(SaptuneService) {
-		fmt.Fprintf(writer, "Service 'saptune.service' is disabled and ")
+		fmt.Fprintf(writer, "disabled/")
 		remember = true
 	} else {
-		fmt.Fprintf(writer, "Service 'saptune.service' is enabled and ")
+		fmt.Fprintf(writer, "enabled/")
+		stenabled = true
 	}
 	if system.SystemctlIsRunning(SaptuneService) {
-		fmt.Fprintf(writer, "running.\n")
+		fmt.Fprintf(writer, "active\n")
 	} else {
-		fmt.Fprintf(writer, "stopped.\n")
+		fmt.Fprintf(writer, "stopped\n")
 		saptuneStopped = true
 	}
-	if remember {
+	return saptuneStopped, remember, stenabled
+}
+
+// printSystemStatus prints the state of the systemd
+func printSystemStatus(writer io.Writer) bool {
+	chkHint := false
+	state, err := system.GetSystemState()
+	fmt.Fprintf(writer, "system state:           %s\n", state)
+	if err != nil {
+		chkHint = true
+	}
+	return chkHint
+}
+
+// printInfoBlock prints additional info for the status
+func printInfoBlock(writer io.Writer, infoTrigger map[string]bool) {
+	fmt.Fprintln(writer, "")
+	if infoTrigger["remember"] {
 		fmt.Fprintf(writer, "Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable ")
-		if saptuneStopped {
+		if infoTrigger["saptuneStopped"] {
 			fmt.Fprintf(writer, "and start saptune.service by running:\n 'saptune service enablestart'.\n")
 		} else {
 			fmt.Fprintf(writer, "saptune.service by running:\n 'saptune service enable'.\n")
 		}
 	}
-	return saptuneStopped
+	if infoTrigger["notTuned"] {
+		fmt.Fprintf(writer, "Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.\n")
+	}
+	if infoTrigger["stenabled"] && infoTrigger["scenabled"] {
+		fmt.Fprintf(writer, "WARNING! saptune.service and sapconf.service are BOTH enabled!\nOnly one tool may tune the system.\n")
+	}
+	if infoTrigger["chkHint"] {
+		fmt.Fprintf(writer, "The system state is NOT ok.\n")
+	}
+	if (infoTrigger["stenabled"] && infoTrigger["scenabled"]) || infoTrigger["chkHint"] {
+		fmt.Fprintf(writer, "Please call '/bin/saptune_check' to get guidance to resolve the issues!\n")
+	}
+
+	fmt.Fprintln(writer, "")
 }
 
 // DaemonAction handles daemon actions like start, stop, status asm.
