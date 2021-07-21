@@ -48,12 +48,7 @@ _saptune() {
                         case "${COMP_WORDS[COMP_CWORD-2]}" in
                             note)       opts=$((ls -1q /var/lib/saptune/working/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | sed 's/\.conf$//') | tr '\n' ' ')
                                         ;;
-                            solution)   case "$(uname -i)" in
-				                    		x86_64)	pattern="^\[ArchX86\]$" ;;
-						                    ?????)  pattern="^\[ArchPPC64LE\]$" ;;
-					                        *)      pattern="%%%" ;; # impossible pattern
-					                    esac
-					                    opts=$(sed -n "/${pattern}/,/^\$/p" /var/lib/saptune/working/solutions |  grep '=' | cut -d '=' -f1 | tr '\n' ' ')
+                            solution)   opts=$(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%f\n' | sed 's/\.sol$//' | tr '\n' ' ')
                                         ;;
                             staging)    opts=$((ls -1q /var/lib/saptune/staging/latest/ | cut -d '-' -f 1 ) | tr '\n' ' ')
                                         ;;
