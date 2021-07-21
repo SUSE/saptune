@@ -20,4 +20,4 @@ net.ipv4.tcp_sack = 1
 
 [reminder] 
 # NFS version 3 requires to limit the max TCP Slot Table entries.
-# Therefore add "options sunrpc tcp_max_slot_table_entries=128" into file "/etc/modprobe.d/sunrpc.conf"
+# Therefore add "options sunrpc tcp_max_slot_table_entries=128" into file "/etc/modprobe.d/sunrpc.conf".
