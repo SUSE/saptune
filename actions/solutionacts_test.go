@@ -138,6 +138,26 @@ The system fully conforms to the tuning guidelines of the specified SAP solution
 		checkOut(t, txt, revertMatchText)
 	})
 
+	// Test SolutionActionShow
+	t.Run("SolutionActionShow", func(t *testing.T) {
+		var showMatchText = `
+Content of Solution sol1:
+
+`
+		oldSolutionSheets := SolutionSheets
+		defer func() { SolutionSheets = oldSolutionSheets }()
+		SolutionSheets = ""
+		oldExtraTuningSheets := ExtraTuningSheets
+		defer func() { ExtraTuningSheets = oldExtraTuningSheets }()
+		ExtraTuningSheets = ExtraFilesInGOPATH
+
+		buffer := bytes.Buffer{}
+		sName := "sol1"
+		SolutionActionShow(&buffer, sName)
+		txt := buffer.String()
+		checkOut(t, txt, showMatchText)
+	})
+
 	tearDown(t)
 }
 

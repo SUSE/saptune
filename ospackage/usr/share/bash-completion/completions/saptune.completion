@@ -7,8 +7,9 @@
 #   saptune note [ list | verify | enabled | applied ]
 #   saptune note [ apply | simulate | verify | customise | revert | create | show | delete ] NoteID
 #   saptune note rename NoteID NoteID
-#   saptune solution [ list | verify | enabled ]
-#   saptune solution [ apply | simulate | verify | revert ] SolutionName
+#   saptune solution [ list | verify | enabled | applied ]
+#   saptune solution [ apply | simulate | verify | edit | create | revert | show | delete ] SolutionName
+#   saptune solution rename SolutionName SolutionName
 #   saptune revert all
 #   saptune version
 #   saptune help
@@ -32,7 +33,7 @@ _saptune() {
                             ;;
 		staging)    opts="status enable disable is-enabled list diff analysis release"
                             ;;
-                solution)   opts="list verify apply simulate revert enabled"
+                solution)   opts="list verify apply simulate edit create revert show delete rename enabled applied"
                             ;;
                 note)       opts="list verify apply simulate customise revert create show delete rename enabled applied"
                             ;;

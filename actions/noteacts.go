@@ -73,7 +73,7 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 
 // NoteActionList lists all available Note definitions
 func NoteActionList(writer io.Writer, tuneApp *app.App, tOptions note.TuningOptions) {
-	fmt.Fprintf(writer, "\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note):\n")
+	fmt.Fprintf(writer, "\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note):\n")
 	solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 	for _, noteID := range tOptions.GetSortedIDs() {
 		noteObj := tOptions[noteID]
@@ -82,7 +82,12 @@ func NoteActionList(writer io.Writer, tuneApp *app.App, tOptions note.TuningOpti
 			format = "\t%s\t%s\n"
 		}
 		if _, err := os.Stat(fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)); err == nil {
+			// override file exists
 			format = " O" + format
+		}
+		if _, err := os.Stat(fmt.Sprintf("%s%s.conf", ExtraTuningSheets, noteID)); err == nil {
+			// custom note
+			format = " C" + format
 		}
 		if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
 			j := tuneApp.PositionInNoteApplyOrder(noteID)
@@ -153,26 +158,22 @@ func NoteActionCustomise(noteID string, tuneApp *app.App) {
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		system.ErrorExit("%v", err)
 	}
-	editFileName := ""
+	editSrcFile := ""
+	editDestFile := ""
 	fileName, _ := getFileName(noteID, NoteTuningSheets, ExtraTuningSheets)
 	ovFileName, overrideNote := getovFile(noteID, OverrideTuningSheets)
 	if !overrideNote {
-		//copy file
-		err := system.CopyFile(fileName, ovFileName)
-		if err != nil {
-			system.ErrorExit("Problems while copying '%s' to '%s' - %v", fileName, ovFileName, err)
-		}
-		editFileName = ovFileName
+		editSrcFile = fileName
+		editDestFile = ovFileName
 	} else {
 		system.InfoLog("Note override file already exists, using file '%s' as base for editing", ovFileName)
-		editFileName = ovFileName
+		editSrcFile = ovFileName
+		editDestFile = ovFileName
 	}
 
-	// for 'create' the source and destination file are the same
-	// other than in 'customise'
-	changed, err := note.EditNoteFile(editFileName, editFileName, noteID)
+	changed, err := system.EditAndCheckFile(editSrcFile, editDestFile, noteID, "note")
 	if err != nil {
-		system.ErrorExit("Problems while editing note definition file '%s' - %v", editFileName, err)
+		system.ErrorExit("Problems while editing note definition file '%s' - %v", editSrcFile, err)
 	}
 	if changed {
 		if _, ok := tuneApp.IsNoteApplied(noteID); !ok {
@@ -181,7 +182,7 @@ func NoteActionCustomise(noteID string, tuneApp *app.App) {
 			system.InfoLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
 		}
 	} else {
-		system.WarningLog("nothing changed during the editor session, so no update of the note definition file '%s'", editFileName)
+		system.WarningLog("nothing changed during the editor session, so no update of the note definition file '%s'", editSrcFile)
 	}
 	// if syscall.Exec returns 'nil' the execution of the program ends immediately
 	// changed syscall.Exec to exec.Command because of the new 'lock' handling
@@ -204,7 +205,7 @@ func NoteActionCreate(noteID string, tuneApp *app.App) {
 		system.ErrorExit("Note '%s' already exists in %s. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, ExtraTuningSheets, noteID)
 	}
 
-	changed, err := note.EditNoteFile(templateFile, extraFileName, noteID)
+	changed, err := system.EditAndCheckFile(templateFile, extraFileName, noteID, "note")
 	if err != nil {
 		system.ErrorExit("Problems while editing note definition file '%s' - %v", extraFileName, err)
 	}
@@ -267,7 +268,7 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID, noteTuningShee
 	}
 
 	if readYesNo(txtConfirm, reader, writer) {
-		deleteNote(fileName, ovFileName, overrideNote, extraNote)
+		deleteDefFile(fileName, ovFileName, overrideNote, extraNote)
 	}
 }
 
@@ -310,7 +311,10 @@ func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID, not
 	}
 
 	if readYesNo(txtConfirm, reader, writer) {
-		renameNote(fileName, newFileName, ovFileName, newovFileName, overrideNote, extraNote)
+		renameDefFile(fileName, newFileName)
+		if overrideNote {
+			renameDefFile(ovFileName, newovFileName)
+		}
 	}
 }
 

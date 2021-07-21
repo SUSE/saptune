@@ -14,6 +14,7 @@ import (
 	"testing"
 )
 
+var SolutionSheetsInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol") + "/"
 var ExtraFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/extra") + "/"
 var TstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/")
 var AllTestSolutions = map[string]solution.Solution{
@@ -59,7 +60,7 @@ var setUpSol = func(t *testing.T) {
 	solution.CustomSolutions = solution.GetOtherSolution(customSolutionFile, noteFiles, extraNoteFiles)
 	solution.OverrideSolutions = solution.GetOtherSolution(ovsolutionFile, noteFiles, "")
 	solution.DeprecSolutions = solution.GetOtherSolution(depecatedSolFile, "", "")
-	solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheet)
+	solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
 }
 
 var tearDownSol = func(t *testing.T) {
@@ -67,7 +68,7 @@ var tearDownSol = func(t *testing.T) {
 	solution.CustomSolutions = solution.GetOtherSolution("", "", "")
 	solution.OverrideSolutions = solution.GetOtherSolution("", "", "")
 	solution.DeprecSolutions = solution.GetOtherSolution("", "", "")
-	solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheet)
+	solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
 }
 
 var setUp = func(t *testing.T) {

@@ -102,6 +102,8 @@ func splitLineIntoKOV(curSection, line string) []string {
 	kov := make([]string, 0)
 	if curSection == "rpm" {
 		kov = splitRPM(line)
+	} else if curSection == "ArchX86" || curSection == "ArchPPC64LE" {
+		kov = []string{"", "", "", line}
 	} else {
 		// check for unsupported '/' in the parameter name
 		param := regKey.FindStringSubmatch(line)

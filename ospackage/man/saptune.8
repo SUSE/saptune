@@ -39,10 +39,13 @@ ATTENTION: deprecated
 rename NoteID newNoteID
 
 \fBsaptune solution\fP
-[ list | verify | enabled ]
+[ list | verify | enabled | applied ]
 
 \fBsaptune solution\fP
-[ apply | simulate | verify | revert ] SolutionName
+[ apply | simulate | verify | edit | create | revert | show | delete ] SolutionName
+
+\fBsaptune solution\fP
+rename SolutionName newSolutionName
 
 \fBsaptune staging\fP
 [ status | enable | disable | is-enabled | list | diff ]
@@ -214,7 +217,7 @@ List all SAP Notes, vendor specific tuning definitions and SUSE recommendation a
 
 Currently implemented notes are marked with '\fB+\fP', if manually enabled, '\fB*\fP', if enabled by solutions or '\fB-\fP', if a note belonging to an enabled solution was reverted manually. In all cases the notes are highlighted with green color.
 .br
-If an \fBoverride\fP file exists for a NoteID, the note is marked with '\fBO\fP'.
+If an \fBoverride\fP file exists for a NoteID, the note is marked with '\fBO\fP' and a customer or vendor specific note is marked with '\fBC\fP'..
 .TP
 .B enabled
 Print all current enabled notes as a list separated by blanks.
@@ -324,7 +327,7 @@ ATTENTION:
 .br
 Note definition files shipped by the saptune package - so called \fIinternal\fP saptune Note definition files - \fBmust not\fP be deleted. There will be an appropriate error message.
 .br
-If a corresponding override file is avaiable, there will be the possibility to delete this file instead.
+If a corresponding override file is available, there will be the possibility to delete this file instead.
 
 ATTENTION:
 .br
@@ -341,14 +344,22 @@ Note definition files shipped by the saptune package - so called \fIinternal\fP 
 
 ATTENTION:
 .br
-If the Note is already applied, the command will be terminated with the information, that the Note first needs to be reverted before it can be deleted.
+If the Note is already applied, the command will be terminated with the information, that the Note first needs to be reverted before it can be renamed.
 
 .SH SOLUTION ACTIONS
 A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.
 .br
-The solution definitions of saptune can be found in the file \fI/usr/share/saptune/solutions\fP or vendor/customer specific solution definitions can be found in the file \fI/etc/saptune/extra/solutions\fP.
+The solution definitions of saptune can be found in the directoy \fI/usr/share/saptune/sols\fP or vendor/customer specific solution definitions can be found in the directoy \fI/etc/saptune/extra\fP.
 
-It's not possible to combine solutions, there can only be\fBone\fP solution enabled. But it is possible to change a soultion definition by using the override file in \fI/etc/saptune/override/solutions\fP or by creating a custom specific solution definition in the file \fI/etc/saptune/extra/solutions\fP.
+It's not possible to combine solutions, there can only be\fBone\fP solution enabled. But it is possible to change a solution definition by using an override file in \fI/etc/saptune/override\fP or by creating a custom specific solution definition in the directory \fI/etc/saptune/extra\fP.
+
+.SS
+.RS 0
+Syntax of the solution definition file names:
+<solutionName>.sol
+.br
+e.g. V4711.sol
+
 .SS
 .TP
 .B apply
@@ -359,10 +370,17 @@ List all solution names that saptune is capable of implementing.
 .br
 The currently implemented solution is marked with '\fB*\fP' and is highlighted with green color. A deprecated solution is marked with '\fBD\fP'.
 .br
-If an \fBoverride\fP file exists for a solution, the solution is marked with '\fBO\fP'. A custom sprcific solution is marked with '\fBC\fP'.
+If an \fBoverride\fP file exists for a solution, the solution is marked with '\fBO\fP'. A custom specific solution is marked with '\fBC\fP'.
+.br
+If a note belonging to an enabled solution is reverted manually, the note is highlighted with red color (instead of green) and is crossed out.
 .TP
 .B enabled
 Print the current enabled solution.
+.TP
+.B applied
+Print the current applied solution.
+.br
+If one or more notes of the solution are \fBreverted\fP, which is indicated by a '-' in the output of 'saptune note list', the string '\fB(partial)\fP is added to the solution name.
 .TP
 .B simulate
 Show all notes that are associated with the specified solution, and all changes that will be applied once the solution is activated.
@@ -370,8 +388,57 @@ Show all notes that are associated with the specified solution, and all changes 
 .B verify
 If a solution name is specified, saptune verifies the current running system against the recommended settings of this solution. If the solution name is not specified, saptune verifies all system parameters against all implemented solutions.
 .TP
+.B edit
+This allows to customize the note list of the saptune solution definitions. The solution definition file will be copied from \fI/usr/share/saptune/sols\fP or \fI/etc/saptune/extra\fP to the override location at \fI/etc/saptune/override\fP, if the file does not exist already. After that an editor will be launched to allow changing the solution definitions.
+The editor is defined by the \fBEDITOR\fP environment variable. If not set editor defaults to /usr/bin/vim.
+
+You can change, add or delete noteIDs in the list of notes defining the solution.
+
+The values from the override files will take precedence over the values from \fI/usr/share/saptune/sols\fP or \fI/etc/saptune/extra\fP. In such case you will not lose your customized solutions between saptune or vendor updates.
+.br
+The saptune option 'list' will mark the existence of an override file.
+
+ATTENTION:
+Creating or changing an override file just changes the configuration \fIinside\fP this solution definition file, but does not change the \fIrunning\fP configuration of the system.
+.br
+That means: When creating or changing an override file for an \fBalready applied\fP solution definition, please do a '\fIsaptune solution revert <solutionName>\fP' and then apply this solution again, to get the changes take effect.
+.TP
+.B create
+This allows to create own solution definition files in \fI/etc/saptune/extra\fP. The solution definition file will be created from a template file into the location \fI/etc/saptune/extra\fP, if the file does not exist already. After that an editor will be launched to allow changing the solution definition.
+The editor is defined by the \fBEDITOR\fP environment variable. If not set editor defaults to /usr/bin/vim.
+You need to choose an unique solution name for this operation. Use '\fIsaptune solution list\fP' to find the already used solution names.
+.TP
 .B revert
 Revert optimisation settings recommended by the solution, and these settings will no longer be activated automatically upon system boot.
+.TP
+.B show
+Print content of solution definition file to stdout
+.TP
+.B delete
+This allows to delete a customer or vendor specific solution definition file including the corresponding override file if available. A confirmation is needed to finish the action.
+
+ATTENTION:
+.br
+Solution definition files shipped by the saptune package - so called \fIinternal\fP saptune solution definition files - \fBmust not\fP be deleted. There will be an appropriate error message.
+.br
+If a corresponding override file is available, there will be the possibility to delete this file instead.
+
+ATTENTION:
+.br
+If the Solution is already applied, the command will be terminated with the information, that the Solution first needs to be reverted before it can be deleted.
+.TP
+.B rename
+This allows to rename a customer or vendor specific solution definition file to a new name. If a corresponding override file is available, this file will be renamed too. A confirmation is needed to finish the action.
+.br
+If the \fBnew\fP solution definition name already exists the command will be terminated with a respective message.
+
+ATTENTION:
+.br
+Solution definition files shipped by the saptune package - so called \fIinternal\fP saptune solution definition files - and their corresponding override files, if available, \fBmust not\fP be renamed. There will be an appropriate error message.
+
+ATTENTION:
+.br
+If the Solution is already applied, the command will be terminated with the information, that the Solution first needs to be reverted before it can be renamed.
 
 .SH STAGING ACTIONS
 Staging is implemented to enable customers to control and release changes shipped by package updates to their working environment.

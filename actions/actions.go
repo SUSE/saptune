@@ -46,7 +46,7 @@ var WorkingArea = "/var/lib/saptune/working/"
 var StagingArea = "/var/lib/saptune/staging/"
 
 // StagingSheets is the staging directory of the latest notes
-var StagingSheets = "/var/lib/saptune/staging/latest"
+var StagingSheets = "/var/lib/saptune/staging/latest/"
 
 // NoteTuningSheets is the working directory of available sap notes
 var NoteTuningSheets = "/var/lib/saptune/working/notes/"
@@ -56,6 +56,9 @@ var OverrideTuningSheets = "/etc/saptune/override/"
 
 // ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
 var ExtraTuningSheets = "/etc/saptune/extra/"
+
+// SolutionSheets is the working directory of available sap solutions
+var SolutionSheets = "/var/lib/saptune/working/sols/"
 
 // RPMVersion is the package version from package build process
 var RPMVersion = "undef"
@@ -72,9 +75,13 @@ var footnote1 = footnote1X86
 var tuningOptions = note.GetTuningOptions(NoteTuningSheets, ExtraTuningSheets)
 
 // set colors for the table and list output
+//var setBlueText = "\033[34m"
+//var setCyanText = "\033[36m"
+//var setUnderlinedText = "\033[4m"
 var setGreenText = "\033[32m"
 var setRedText = "\033[31m"
 var setBoldText = "\033[1m"
+var setStrikeText = "\033[9m"
 var resetTextColor = "\033[0m"
 
 // SelectAction selects the choosen action depending on the first command line
@@ -85,6 +92,7 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 		setGreenText = ""
 		setRedText = ""
 		setBoldText = ""
+		setStrikeText = ""
 		resetTextColor = ""
 	}
 	// check for test packages
@@ -100,7 +108,7 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 	case "note":
 		NoteAction(system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "solution":
-		SolutionAction(system.CliArg(2), system.CliArg(3), stApp)
+		SolutionAction(system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "revert":
 		RevertAction(os.Stdout, system.CliArg(2), stApp)
 	case "staging":
@@ -156,38 +164,45 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
 	}
 }
 
-// getFileName returns the corresponding filename of a given noteID
+// getFileName returns the corresponding filename of a given definition file
+// (note or solution)
 // additional it returns a boolean value which is pointing out that
-// the Note is a custom Note (extraNote = true) or an internal one
-func getFileName(noteID, NoteTuningSheets, ExtraTuningSheets string) (string, bool) {
-	extraNote := false
-	fileName := fmt.Sprintf("%s%s", NoteTuningSheets, noteID)
+// the definition is a custom definition (extraDef = true) or an internal one
+func getFileName(defName, workingDir, extraDir string) (string, bool) {
+	extraDef := false
+	defType := "Note"
+	if workingDir == SolutionSheets {
+		defType = "Solution"
+	}
+	fileName := fmt.Sprintf("%s%s", workingDir, defName)
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
-		// Note is NOT an internal Note, but may be a custom Note
-		extraNote = true
-		_, files := system.ListDir(ExtraTuningSheets, "")
+		// Note/solution is NOT an internal Note/solution,
+		// but may be a custom Note/solution
+		extraDef = true
+		_, files := system.ListDir(extraDir, "")
 		for _, f := range files {
-			if strings.HasPrefix(f, noteID) {
-				fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, f)
+			if strings.HasPrefix(f, defName) {
+				fileName = fmt.Sprintf("%s%s", extraDir, f)
 			}
 		}
 		if _, err := os.Stat(fileName); os.IsNotExist(err) {
-			system.ErrorExit("Note %s not found in %s or %s.", noteID, NoteTuningSheets, ExtraTuningSheets)
+			system.ErrorExit("%s %s not found in %s or %s.", defType, defName, workingDir, extraDir)
 		} else if err != nil {
 			system.ErrorExit("Failed to read file '%s' - %v", fileName, err)
 		}
 	} else if err != nil {
 		system.ErrorExit("Failed to read file '%s' - %v", fileName, err)
 	}
-	return fileName, extraNote
+	return fileName, extraDef
 }
 
-// getovFile returns the corresponding override filename of a given noteID
+// getovFile returns the corresponding override filename of a given
+// definition (Note or solution)
 // additional it returns a boolean value which is pointing out if the
 // override file already exists (overrideNote = true) or not
-func getovFile(noteID, OverrideTuningSheets string) (string, bool) {
+func getovFile(defName, OverrideTuningSheets string) (string, bool) {
 	overrideNote := true
-	ovFileName := fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)
+	ovFileName := fmt.Sprintf("%s%s", OverrideTuningSheets, defName)
 	if _, err := os.Stat(ovFileName); os.IsNotExist(err) {
 		overrideNote = false
 	} else if err != nil {
@@ -216,28 +231,21 @@ func readYesNo(s string, in io.Reader, out io.Writer) bool {
 	}
 }
 
-// renameNote will rename a Note to an new name
-func renameNote(fileName, newFileName, ovFileName, newovFileName string, overrideNote, extraNote bool) {
-	if overrideNote {
-		if err := os.Rename(ovFileName, newovFileName); err != nil {
-			system.ErrorExit("Failed to rename file '%s' to '%s' - %v", ovFileName, newovFileName, err)
-		}
-	}
-	if extraNote {
-		if err := os.Rename(fileName, newFileName); err != nil {
-			system.ErrorExit("Failed to rename file '%s' to '%s' - %v", fileName, newFileName, err)
-		}
+// renameDefFile will rename a definition file (Note or Solution) to an new name
+func renameDefFile(fileName, newFileName string) {
+	if err := os.Rename(fileName, newFileName); err != nil {
+		system.ErrorExit("Failed to rename file '%s' to '%s' - %v", fileName, newFileName, err)
 	}
 }
 
-// deleteNote will delete a Note
-func deleteNote(fileName, ovFileName string, overrideNote, extraNote bool) {
-	if overrideNote {
+// deleteDefFile will delete a definition file (Note or Solution)
+func deleteDefFile(fileName, ovFileName string, overrideDef, extraDef bool) {
+	if overrideDef {
 		if err := os.Remove(ovFileName); err != nil {
 			system.ErrorExit("Failed to remove file '%s' - %v", ovFileName, err)
 		}
 	}
-	if extraNote {
+	if extraDef {
 		if err := os.Remove(fileName); err != nil {
 			system.ErrorExit("Failed to remove file '%s' - %v", fileName, err)
 		}
@@ -255,8 +263,9 @@ Tune system according to SAP and SUSE notes:
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled ]
-  saptune solution [ apply | simulate | verify | revert ] SolutionName
+  saptune solution [ list | verify | enabled | applied ]
+  saptune solution [ apply | simulate | verify | edit | create | revert | show | delete ] SolutionName
+  saptune solution rename SolutionName newSolutionName
 Staging control:
    saptune staging [ status | enable | disable | is-enabled | list | diff ]
    saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]

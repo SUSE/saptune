@@ -156,6 +156,33 @@ func (app *App) IsNoteApplied(noteID string) (string, bool) {
 	return rval, ret
 }
 
+// IsSolutionApplied returns true, if the solution is (partial) applied
+// or false, if not
+func (app *App) IsSolutionApplied(sol string) (string, bool) {
+	state := ""
+	ret := false
+	if len(app.TuneForSolutions) != 0 {
+		if app.TuneForSolutions[0] == sol {
+			noteOK := 0
+			noteCnt := 0
+			for _, note := range app.AllSolutions[sol] {
+				noteCnt = noteCnt + 1
+				if _, ok := app.IsNoteApplied(note); ok {
+					noteOK = noteOK + 1
+				}
+			}
+			if noteOK == noteCnt {
+				ret = true
+				state = "fully"
+			} else if noteOK != 0 {
+				ret = true
+				state = "partial"
+			}
+		}
+	}
+	return state, ret
+}
+
 // NoteSanityCheck checks, if for all notes listed in
 // NoteApplyOrder and TuneForNotes a note definition file exists.
 // if not, remove the NoteID from the variables, save the new config and

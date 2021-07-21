@@ -267,15 +267,9 @@ func showAnalysis(writer io.Writer, stageName string) {
 	if flag != "deleted" {
 		fmt.Fprintf(writer, txtReleaseNote, stageName, vers, date)
 	}
-	if stageName == "solutions" {
-		stgSols := solution.GetSolutionDefintion(stgFiles.StageAttributes[stageName]["sfilename"])
-		stageSols, exist := stgSols[system.GetSolutionSelector()]
-		if !exist {
-			system.ErrorExit("No solution definition available for system architecture '%s'.", system.GetSolutionSelector())
-			return
-		}
+	if strings.HasSuffix(stageName, ".sol") {
 		// print solution analysis
-		printSolAnalysis(writer, stageName, txtPrefix, stageSols)
+		printSolAnalysis(writer, stageName, txtPrefix, flag)
 	} else {
 		// print note analysis
 		printNoteAnalysis(writer, stageName, txtPrefix, flag)
@@ -283,31 +277,37 @@ func showAnalysis(writer io.Writer, stageName string) {
 }
 
 // printSolAnalysis handles the solution related analysis
-func printSolAnalysis(writer io.Writer, stageName, txtPrefix string, stageSols map[string]solution.Solution) {
-	txtSolEnabled := txtPrefix + "Solution '%s' is enabled and must be re-applied.\n"
-	txtRequiredNote := txtPrefix + "Solution '%s' requires releasing of '%s' or it breaks!\n"
-	txtDelSolEnabled := txtPrefix + "Solution '%s' is currently enabled, but now deleted. Must be reverted.\n"
-	sols := []string{}
-	for sol := range stageSols {
-		sols = append(sols, sol)
+func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) {
+	txtDeleteSol := "Deletion of %s\n"
+	txtOverrideExists := txtPrefix + "Override file exists and might need adjustments.\n"
+	txtSolEnabled := txtPrefix + "Solution is enabled and must be re-applied.\n"
+	txtSolNotEnabled := txtPrefix + "Solution is not enabled, no action required.\n"
+	txtRequiredNote := txtPrefix + "Solution requires releasing of '%s' or it breaks!\n"
+
+	if flag == "deleted" {
+		txtOverrideExists = txtPrefix + "Override file exists and can be deleted.\n"
+		txtSolEnabled = txtPrefix + "Solution is enabled and must be reverted.\n"
+
+		fmt.Fprintf(writer, txtDeleteSol, stageName)
 	}
-	sort.Strings(sols)
-	escnt := 0
-	for _, sol := range sols {
-		if sol == stgFiles.StageAttributes[stageName]["enabledSol"] {
-			fmt.Fprintf(writer, txtSolEnabled, sol)
-			escnt = escnt + 1
+
+	if stgFiles.StageAttributes[stageName]["override"] == "true" {
+		fmt.Fprintf(writer, txtOverrideExists)
+	}
+	if flag != "new" {
+		if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
+			fmt.Fprintf(writer, txtSolEnabled)
+		} else {
+			fmt.Fprintf(writer, txtSolNotEnabled)
 		}
-		for _, noteID := range stageSols[sol] {
-			for _, stgName := range stgFiles.AllStageFiles {
-				if stgName == noteID {
-					fmt.Fprintf(writer, txtRequiredNote, sol, stgName)
-				}
+	}
+
+	for _, note := range strings.Split(stgFiles.StageAttributes[stageName]["notes"], " ") {
+		for _, stgName := range stgFiles.AllStageFiles {
+			if stgName == note {
+				fmt.Fprintf(writer, txtRequiredNote, stgName)
 			}
 		}
-	}
-	if stgFiles.StageAttributes[stageName]["enabledSol"] != "" && escnt == 0 {
-		fmt.Fprintf(writer, txtDelSolEnabled, stgFiles.StageAttributes[stageName]["enabledSol"])
 	}
 }
 
@@ -429,6 +429,7 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 		StageAttributes: make(map[string]map[string]string),
 	}
 	stageMap := make(map[string]string)
+	solStageName := ""
 
 	for _, stageName := range stagingOptions.GetSortedIDs() {
 		// add new stage file
@@ -439,14 +440,18 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 		name := noteObj.Name()
 
 		stagingFile := fmt.Sprintf("%s/%s", StagingSheets, stageName)
-		workingFile := fmt.Sprintf("%snotes/%s", WorkingArea, stageName)
+		workingFile := fmt.Sprintf("%s/%s", NoteTuningSheets, stageName)
 		packageFile := fmt.Sprintf("%snotes/%s", PackageArea, stageName)
-		if stageName == "solutions" {
+		stageMap["notes"] = ""
+		if strings.HasSuffix(stageName, ".sol") {
+			solStageName = strings.TrimSuffix(stageName, ".sol")
 			if name == "" {
 				name = fmt.Sprintf("Definition of saptune solutions\n\t\t\tVersion 1")
 			}
-			workingFile = fmt.Sprintf("%s%s", WorkingArea, stageName)
-			packageFile = fmt.Sprintf("%s%s", PackageArea, stageName)
+			workingFile = fmt.Sprintf("%s%s", SolutionSheets, stageName)
+			packageFile = fmt.Sprintf("%ssols/%s", PackageArea, stageName)
+			solNotes, _ := tuneApp.GetSolutionByName(solStageName)
+			stageMap["notes"] = strings.Join(solNotes, " ")
 		}
 
 		// Description
@@ -489,46 +494,70 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 		}
 		// check if applied
 		stageMap["applied"] = "false"
-		if _, ok := tuneApp.IsNoteApplied(stageName); ok {
-			stageMap["applied"] = "true"
+		if solStageName != "" {
+			// solution
+			if _, ok := tuneApp.IsSolutionApplied(solStageName); ok {
+				stageMap["applied"] = "true"
+			}
+		} else {
+			// note
+			if _, ok := tuneApp.IsNoteApplied(stageName); ok {
+				stageMap["applied"] = "true"
+			}
 		}
 		// check if enabled
 		stageMap["enabled"] = "true"
-		if tuneApp.PositionInNoteApplyOrder(stageName) < 0 { // noteID not yet available
+		if solStageName != "" {
+			// solution
 			stageMap["enabled"] = "false"
+			if len(tuneApp.TuneForSolutions) != 0 {
+				if tuneApp.TuneForSolutions[0] == solStageName {
+					stageMap["enabled"] = "true"
+				}
+			}
+		} else {
+			// note
+			if tuneApp.PositionInNoteApplyOrder(stageName) < 0 { // noteID not yet available
+				stageMap["enabled"] = "false"
+			}
 		}
 
-		// check if in a solution
-		noteInSols := ""
-		noteInCustomSols := ""
-		sols := []string{}
-		for sol := range tuneApp.AllSolutions {
-			sols = append(sols, sol)
-		}
-		sort.Strings(sols)
-		for _, sol := range sols {
-			for _, noteID := range tuneApp.AllSolutions[sol] {
-				if stageName == noteID {
-					// stageName is part of solution sol
-					if len(noteInSols) == 0 {
-						noteInSols = sol
-					} else {
-						noteInSols = fmt.Sprintf("%s, %s", noteInSols, sol)
-					}
-					// check for custom solution
-					if len(solution.CustomSolutions[system.GetSolutionSelector()][sol]) != 0 {
-						// sol is custom solution
-						if len(noteInCustomSols) == 0 {
-							noteInCustomSols = sol
+		stageMap["inSolution"] = ""
+		stageMap["inCustomSolution"] = ""
+		if solStageName == "" {
+			// note
+			// check if in a solution
+			noteInSols := ""
+			noteInCustomSols := ""
+			sols := []string{}
+			for sol := range tuneApp.AllSolutions {
+				sols = append(sols, sol)
+			}
+			sort.Strings(sols)
+			for _, sol := range sols {
+				for _, noteID := range tuneApp.AllSolutions[sol] {
+					if stageName == noteID {
+						// stageName is part of solution sol
+						if len(noteInSols) == 0 {
+							noteInSols = sol
 						} else {
-							noteInCustomSols = fmt.Sprintf("%s, %s", noteInCustomSols, sol)
+							noteInSols = fmt.Sprintf("%s, %s", noteInSols, sol)
+						}
+						// check for custom solution
+						if len(solution.CustomSolutions[system.GetSolutionSelector()][sol]) != 0 {
+							// sol is custom solution
+							if len(noteInCustomSols) == 0 {
+								noteInCustomSols = sol
+							} else {
+								noteInCustomSols = fmt.Sprintf("%s, %s", noteInCustomSols, sol)
+							}
 						}
 					}
 				}
 			}
+			stageMap["inSolution"] = noteInSols
+			stageMap["inCustomSolution"] = noteInCustomSols
 		}
-		stageMap["inSolution"] = noteInSols
-		stageMap["inCustomSolution"] = noteInCustomSols
 
 		stageConf.StageAttributes[stageName] = stageMap
 		stageConf.AllStageFiles = append(stageConf.AllStageFiles, stageName)
@@ -541,18 +570,22 @@ func diffStageObj(writer io.Writer, sName string) {
 	var workingNote *txtparser.INIFile
 	stgNote := map[string]string{}
 	wrkNote := map[string]string{}
+	solName := ""
 	solSelect := "ArchX86"
 	if system.GetSolutionSelector() == "ppc64le" {
 		solSelect = "ArchPPC64LE"
 	}
+	if strings.HasSuffix(sName, ".sol") {
+		solName = strings.TrimSuffix(sName, ".sol")
+	}
 	// parse staging file
 	stagingNote, err := txtparser.ParseINIFile(stgFiles.StageAttributes[sName]["sfilename"], false)
 	if err != nil {
-		system.ErrorLog("Problems while parsing the staging Note definition file. Check the name")
+		system.ErrorLog("Problems while parsing the staging definition file. Check the name")
 		return
 	}
 	for _, param := range stagingNote.AllValues {
-		if sName == "solutions" && param.Section != solSelect {
+		if solName != "" && param.Section != solSelect {
 			continue
 		}
 		stgNote[param.Key] = param.Value
@@ -562,11 +595,11 @@ func diffStageObj(writer io.Writer, sName string) {
 		// parse working file
 		workingNote, err = txtparser.ParseINIFile(stgFiles.StageAttributes[sName]["wfilename"], false)
 		if err != nil {
-			system.ErrorLog("Problems while parsing the working Note definition file. Check the name")
+			system.ErrorLog("Problems while parsing the working definition file. Check the name")
 			return
 		}
 		for _, param := range workingNote.AllValues {
-			if sName == "solutions" && param.Section != solSelect {
+			if solName != "" && param.Section != solSelect {
 				continue
 			}
 			wrkNote[param.Key] = param.Value
