@@ -1,9 +1,9 @@
 # 2684254 - SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
 # Description:    HANA DB settings
-# Version 15 from 12.11.2020 in English
+# Version 20 from 02.07.2021 in English
 
 [version]
-# SAP-NOTE=2684254 CATEGORY=HANA VERSION=15 DATE=12.11.2020 NAME="SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15"
+# SAP-NOTE=2684254 CATEGORY=HANA VERSION=20 DATE=02.07.2021 NAME="SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15"
 
 [vm]
 # Disable transparent hugepages (THP)
@@ -106,6 +106,12 @@ processor.max_cstate=1
 numa_balancing=disable
 # Disable transparent hugepages - see THP in section [vm]
 transparent_hugepage=never
+
+[filesystem:os=15-SP2]
+xfs_options= -nobarrier, -barrier
+
+[filesystem:os=15-SP3]
+xfs_options= -nobarrier, -barrier
 
 [reminder]
 # IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!
