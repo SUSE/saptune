@@ -217,7 +217,9 @@ func storeSols(arch, pcarch string, sol map[string]Solution, sols map[string]map
 			newSol[key] = val
 		}
 		//sols[pcarch] = sol
-		sols[pcarch] = newSol
+		if len(newSol) != 0 {
+			sols[pcarch] = newSol
+		}
 		newSol = make(map[string]Solution)
 	}
 	for key, val := range sols[arch] {
@@ -227,7 +229,9 @@ func storeSols(arch, pcarch string, sol map[string]Solution, sols map[string]map
 		newSol[key] = val
 	}
 	//sols[arch] = sol
-	sols[arch] = newSol
+	if len(newSol) != 0 {
+		sols[arch] = newSol
+	}
 	return sols
 }
 

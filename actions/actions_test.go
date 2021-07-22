@@ -14,13 +14,16 @@ import (
 	"testing"
 )
 
-var SolutionSheetsInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol") + "/"
+var SolutionSheetsInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/sols") + "/"
 var ExtraFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/extra") + "/"
+var OverTstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/etc/saptune/override") + "/"
+var DeprecFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/deprecated") + "/"
 var TstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/")
+
 var AllTestSolutions = map[string]solution.Solution{
-	"sol1":  solution.Solution{"simpleNote"},
-	"sol2":  solution.Solution{"extraNote"},
-	"sol12": solution.Solution{"simpleNote", "extraNote"},
+	"sol1":  {"simpleNote"},
+	"sol2":  {"extraNote"},
+	"sol12": {"simpleNote", "extraNote"},
 }
 
 var tuningOpts = note.GetTuningOptions("", ExtraFilesInGOPATH)
@@ -52,15 +55,13 @@ var checkOut = func(t *testing.T, got, want string) {
 var setUpSol = func(t *testing.T) {
 	t.Helper()
 	// prepare deprecated solution, custom solution and override
-	customSolutionFile := path.Join(TstFilesInGOPATH, "saptune-test-custom-sols")
-	ovsolutionFile := path.Join(TstFilesInGOPATH, "saptune-test-override-sols")
-	depecatedSolFile := path.Join(TstFilesInGOPATH, "saptune-test-deprecated-sols")
 	noteFiles := TstFilesInGOPATH + "/"
 	extraNoteFiles := TstFilesInGOPATH + "/extra/"
-	solution.CustomSolutions = solution.GetOtherSolution(customSolutionFile, noteFiles, extraNoteFiles)
-	solution.OverrideSolutions = solution.GetOtherSolution(ovsolutionFile, noteFiles, "")
-	solution.DeprecSolutions = solution.GetOtherSolution(depecatedSolFile, "", "")
-	solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
+	solution.CustomSolutions = solution.GetOtherSolution(ExtraFilesInGOPATH, noteFiles, extraNoteFiles)
+	solution.OverrideSolutions = solution.GetOtherSolution(OverTstFilesInGOPATH, noteFiles, "")
+	solution.DeprecSolutions = solution.GetOtherSolution(DeprecFilesInGOPATH, "", "")
+	//solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
+	solution.AllSolutions = solution.GetSolutionDefintion(SolutionSheetsInGOPATH)
 }
 
 var tearDownSol = func(t *testing.T) {
@@ -68,7 +69,8 @@ var tearDownSol = func(t *testing.T) {
 	solution.CustomSolutions = solution.GetOtherSolution("", "", "")
 	solution.OverrideSolutions = solution.GetOtherSolution("", "", "")
 	solution.DeprecSolutions = solution.GetOtherSolution("", "", "")
-	solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
+	//solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
+	solution.AllSolutions = solution.GetSolutionDefintion(SolutionSheetsInGOPATH)
 }
 
 var setUp = func(t *testing.T) {
@@ -115,7 +117,7 @@ Parameters tuned by the notes and solutions have been successfully reverted.
 
 	// this errExitMatchText differs from the 'real' text by the last 2 lines
 	// because of test situation, the 'exit 1' in PrintHelpAndExit is not
-	// executed (as desinged for testing)
+	// executed (as designed for testing)
 	errExitMatchText := fmt.Sprintf(`saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
@@ -125,8 +127,9 @@ Tune system according to SAP and SUSE notes:
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled ]
-  saptune solution [ apply | simulate | verify | revert ] SolutionName
+  saptune solution [ list | verify | enabled | applied ]
+  saptune solution [ apply | simulate | verify | edit | create | revert | show | delete ] SolutionName
+  saptune solution rename SolutionName newSolutionName
 Staging control:
    saptune staging [ status | enable | disable | is-enabled | list | diff ]
    saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
@@ -238,8 +241,9 @@ Tune system according to SAP and SUSE notes:
   saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled ]
-  saptune solution [ apply | simulate | verify | revert ] SolutionName
+  saptune solution [ list | verify | enabled | applied ]
+  saptune solution [ apply | simulate | verify | edit | create | revert | show | delete ] SolutionName
+  saptune solution rename SolutionName newSolutionName
 Staging control:
    saptune staging [ status | enable | disable | is-enabled | list | diff ]
    saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]

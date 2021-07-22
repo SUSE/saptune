@@ -9,18 +9,19 @@ import (
 	"testing"
 )
 
+var SolutionSheetsInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/sols") + "/"
+var ExtraFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/extra") + "/"
+var OverTstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/etc/saptune/override") + "/"
+var DeprecFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/deprecated") + "/"
 var TstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/")
 
 func TestGetSolutionDefintion(t *testing.T) {
 	// prepare custom solution and override
-	customSolutionFile := path.Join(TstFilesInGOPATH, "saptune-test-custom-sols")
-	ovsolutionFile := path.Join(TstFilesInGOPATH, "saptune-test-override-sols")
 	noteFiles := TstFilesInGOPATH + "/"
 	extraNoteFiles := TstFilesInGOPATH + "/extra/"
-	CustomSolutions = GetOtherSolution(customSolutionFile, noteFiles, extraNoteFiles)
-	OverrideSolutions = GetOtherSolution(ovsolutionFile, noteFiles, "")
+	CustomSolutions = GetOtherSolution(ExtraFilesInGOPATH, noteFiles, extraNoteFiles)
+	OverrideSolutions = GetOtherSolution(OverTstFilesInGOPATH, noteFiles, "")
 
-	solutionFile := path.Join(TstFilesInGOPATH, "saptune-test-solutions")
 	nwsols := "941735 1771258 1980196 1984787 2534844"
 	solcount := 2
 	if system.IsPagecacheAvailable() {
@@ -28,7 +29,7 @@ func TestGetSolutionDefintion(t *testing.T) {
 		nwsols = "941735 1771258 1980196 1984787 2534844"
 	}
 
-	solutions := GetSolutionDefintion(solutionFile)
+	solutions := GetSolutionDefintion(SolutionSheetsInGOPATH)
 	if len(solutions) != solcount {
 		t.Errorf("'%+v' has len '%+v'\n", solutions, len(solutions))
 	}
@@ -43,7 +44,6 @@ func TestGetSolutionDefintion(t *testing.T) {
 }
 
 func TestGetOverrideSolution(t *testing.T) {
-	ovsolutionFile := path.Join(TstFilesInGOPATH, "saptune-test-override-sols")
 	noteFiles := TstFilesInGOPATH + "/"
 
 	hansol := "HANA1 NEWNOTE HANA2"
@@ -52,8 +52,7 @@ func TestGetOverrideSolution(t *testing.T) {
 		solcount = 4
 	}
 
-	//ovsolutions := GetOverrideSolution(ovsolutionFile, noteFiles)
-	ovsolutions := GetOtherSolution(ovsolutionFile, noteFiles, "")
+	ovsolutions := GetOtherSolution(OverTstFilesInGOPATH, noteFiles, "")
 	if len(ovsolutions) != solcount {
 		t.Errorf("'%+v' has len '%+v'\n", ovsolutions, len(ovsolutions))
 	}
@@ -61,9 +60,8 @@ func TestGetOverrideSolution(t *testing.T) {
 		t.Error(ovsolutions)
 	}
 
-	ovsolutionFile = path.Join(TstFilesInGOPATH, "saptune-test-override-sols-missing-note")
-	//ovsolutions = GetOverrideSolution(ovsolutionFile, noteFiles)
-	ovsolutions = GetOtherSolution(ovsolutionFile, noteFiles, "")
+	overSolMissing := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/override-missing") + "/"
+	ovsolutions = GetOtherSolution(overSolMissing, noteFiles, "")
 	if len(ovsolutions) != 0 {
 		t.Errorf("'%+v' has len '%+v'\n", ovsolutions, len(ovsolutions))
 	}
@@ -76,7 +74,6 @@ func TestGetOverrideSolution(t *testing.T) {
 }
 
 func TestGetCustomSolution(t *testing.T) {
-	customSolutionFile := path.Join(TstFilesInGOPATH, "saptune-test-custom-sols")
 	noteFiles := TstFilesInGOPATH + "/"
 	extraNoteFiles := TstFilesInGOPATH + "/extra/"
 
@@ -87,8 +84,7 @@ func TestGetCustomSolution(t *testing.T) {
 		solcount = 4
 	}
 
-	//customSolutions := GetCustomSolution(customSolutionFile, noteFiles, extraNoteFiles)
-	customSolutions := GetOtherSolution(customSolutionFile, noteFiles, extraNoteFiles)
+	customSolutions := GetOtherSolution(ExtraFilesInGOPATH, noteFiles, extraNoteFiles)
 	if len(customSolutions) != solcount {
 		t.Errorf("'%+v' has len '%+v'\n", customSolutions, len(customSolutions))
 	}
@@ -99,14 +95,12 @@ func TestGetCustomSolution(t *testing.T) {
 		t.Error(customSolutions)
 	}
 
-	customSolutionFile = path.Join(TstFilesInGOPATH, "saptune-test-custom-sols-missing-note")
-	//customSolutions = GetCustomSolution(customSolutionFile, noteFiles, extraNoteFiles)
-	customSolutions = GetOtherSolution(customSolutionFile, noteFiles, extraNoteFiles)
+	customSolMissing := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/extra-missing") + "/"
+	customSolutions = GetOtherSolution(customSolMissing, noteFiles, extraNoteFiles)
 	if len(customSolutions) != 0 {
 		t.Errorf("'%+v' has len '%+v'\n", customSolutions, len(customSolutions))
 	}
 
-	//sols := GetCustomSolution("/saptune_file_not_avail", noteFiles, extraNoteFiles)
 	sols := GetOtherSolution("/saptune_file_not_avail", noteFiles, extraNoteFiles)
 	if len(sols) != 0 {
 		t.Error(sols)
@@ -114,15 +108,13 @@ func TestGetCustomSolution(t *testing.T) {
 }
 
 func TestGetDeprecatedSolution(t *testing.T) {
-	deprecSolutionFile := path.Join(TstFilesInGOPATH, "saptune-test-deprecated-sols")
 	deprec := "deprecated"
 	solcount := 2
 	if system.IsPagecacheAvailable() {
 		solcount = 4
 	}
 
-	//solutions := GetDeprecatedSolution(deprecSolutionFile)
-	solutions := GetOtherSolution(deprecSolutionFile, "", "")
+	solutions := GetOtherSolution(DeprecFilesInGOPATH, "", "")
 	if len(solutions) != solcount {
 		t.Errorf("'%+v' has len '%+v'\n", solutions, len(solutions))
 	}
