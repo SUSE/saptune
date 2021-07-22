@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-// BlockDev contains all key-value pairs of current avaliable
+// BlockDev contains all key-value pairs of current available
 // block devices in /sys/block
 type BlockDev struct {
 	AllBlockDevs    []string
@@ -161,7 +161,7 @@ func CollectBlockDeviceInfo() []string {
 		// VENDOR, MODEL e.g. for FUJITSU udev replacement
 		vendor := ""
 		model := ""
-		// virtio block devices do not have usefull values.
+		// virtio block devices do not have useful values.
 		if !isVD.MatchString(bdev) {
 			vendor, _ = GetSysString(path.Join("block", bdev, "device", "vendor"))
 			model, _ = GetSysString(path.Join("block", bdev, "device", "model"))

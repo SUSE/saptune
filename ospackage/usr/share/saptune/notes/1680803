@@ -50,7 +50,7 @@ IO_SCHEDULER=noop, none
 # Decreasing the value will benefit the real-time applications that are
 # sensitive to latency, but it also decreases the I/O throughput.
 #
-# possible maximum value depends on the choosen scheduler
+# possible maximum value depends on the chosen scheduler
 # When set, the number of requests for all block devices on the system will 
 # be switched to the chosen value
 NRREQ=1024

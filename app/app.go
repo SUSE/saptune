@@ -429,7 +429,7 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 		// to revert an applied note even if the corresponding
 		// note definition file is no longer available, but the
 		// saved state info can be found
-		// helpfull for cleanup
+		// helpful for cleanup
 		noteTemplate = note.INISettings{
 			ConfFilePath:    "",
 			ID:              "",

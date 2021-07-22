@@ -164,7 +164,7 @@ Content of Solution sol1:
 func TestSolutionActionsErrors(t *testing.T) {
 	// the error texts returned by the commands and by ErrorExit
 	// differs from the 'real' texts because of the test situation.
-	// the exit in the ErrorExit function is not executed (as desinged for
+	// the exit in the ErrorExit function is not executed (as designed for
 	// testing)
 	// test setup
 	setUp(t)

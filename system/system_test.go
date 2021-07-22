@@ -368,8 +368,8 @@ func TestOutIsTerm(t *testing.T) {
 }
 
 func TestWrapTxt(t *testing.T) {
-	testString := "This is a really long text, which does not make any sence, except that I need something for testing my new function.\n need some line feeds\n and a second one\n 12345 \n 678910\n"
-	expected := []string{"This is a really", "long text, which", "does not make any", "sence, except", "that I need", "something for", "testing my new", "function.", "need some line", "feeds", "and a second one", "12345", "678910", ""}
+	testString := "This is a really long text, which does not make any sense, except that I need something for testing my new function.\n need some line feeds\n and a second one\n 12345 \n 678910\n"
+	expected := []string{"This is a really", "long text, which", "does not make any", "sense, except", "that I need", "something for", "testing my new", "function.", "need some line", "feeds", "and a second one", "12345", "678910", ""}
 	actual := WrapTxt(testString, 17)
 	if len(actual) != len(expected) {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)

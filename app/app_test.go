@@ -471,7 +471,7 @@ func TestGetNoteByID(t *testing.T) {
 	}
 	// check for non-existing Note
 	if _, err := tuneApp.GetNoteByID("8932147"); err == nil {
-		t.Errorf("Note ID '8932147' should NOT be avaiable, but is reported as avaiable. AllNote is '%+v'\n", tuneApp.AllNotes)
+		t.Errorf("Note ID '8932147' should NOT be available, but is reported as available. AllNote is '%+v'\n", tuneApp.AllNotes)
 	}
 	tuneApp = InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 }

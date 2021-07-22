@@ -65,7 +65,7 @@ func OptCPUVal(key, actval, cfgval string) string {
 			val = "0"
 		}
 		//ANGI TODO - if actval 'all:6', but cfgval 'cpu0:performance cpu1:normal cpu2:powersave'
-		// - does not work now - check lenght of both?
+		// - does not work now - check length of both?
 		// same for governor
 		for _, entry := range strings.Fields(actval) {
 			fields := strings.Split(entry, ":")

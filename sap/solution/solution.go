@@ -50,7 +50,7 @@ var DeprecSolutions = GetOtherSolution(DeprecSolutionSheets, "", "")
 
 // GetSolutionDefintion reads solution definition from file
 // build same structure for AllSolutions as before
-// can be simplyfied later
+// can be simplified later
 func GetSolutionDefintion(solsDir string) map[string]map[string]Solution {
 	sols := make(map[string]map[string]Solution)
 	sol := make(map[string]Solution)

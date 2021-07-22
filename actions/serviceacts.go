@@ -13,8 +13,7 @@ import (
 var ignoreFlag = "/run/.saptune.ignore"
 
 // ServiceAction handles service actions like start, stop, status, enable, disable
-// it controlles the systemd saptune.service
-//func ServiceAction(actionName string, tuneApp *app.App) {
+// it controls the systemd saptune.service
 func ServiceAction(actionName, saptuneVersion string, tApp *app.App) {
 	switch actionName {
 	case "apply":

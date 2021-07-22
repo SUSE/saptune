@@ -7,7 +7,7 @@ import (
 )
 
 func TestGetLoginVal(t *testing.T) {
-	val, err := GetLoginVal("Unkown")
+	val, err := GetLoginVal("Unknown")
 	if val != "" || err != nil {
 		t.Error(val)
 	}
@@ -27,8 +27,8 @@ func TestGetLoginVal(t *testing.T) {
 }
 
 func TestOptLoginVal(t *testing.T) {
-	val := OptLoginVal("unkown")
-	if val != "unkown" {
+	val := OptLoginVal("unknown")
+	if val != "unknown" {
 		t.Error(val)
 	}
 	val = OptLoginVal("infinity")

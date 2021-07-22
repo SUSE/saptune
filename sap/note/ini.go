@@ -483,7 +483,7 @@ func (vend INISettings) handleInitOverride(key, val, section string, op txtparse
 }
 
 // printSchedInfo prints info about used block scheduler only during 'verify' to
-// supress double prints in case of 'apply'
+// suppress double prints in case of 'apply'
 func (vend INISettings) printSchedInfo(scheds string, blckOK map[string][]string) {
 	if _, ok := vend.ValuesToApply["verify"]; ok && scheds != "" {
 		if scheds == "untouched" {

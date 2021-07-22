@@ -15,7 +15,7 @@ func TestGetMemVal(t *testing.T) {
 	if val == "-1" {
 		t.Log("/dev/shm not found")
 	}
-	val = GetMemVal("UNKOWN_PARAMETER")
+	val = GetMemVal("UNKNOWN_PARAMETER")
 	if val != "" {
 		t.Error(val)
 	}
@@ -70,11 +70,11 @@ func TestOptMemVal(t *testing.T) {
 		t.Error(val)
 	}
 
-	val = OptMemVal("UNKOWN_PARAMETER", "16043", "0", "0")
+	val = OptMemVal("UNKNOWN_PARAMETER", "16043", "0", "0")
 	if val != "" {
 		t.Error(val)
 	}
-	val = OptMemVal("UNKOWN_PARAMETER", "-1", "0", "0")
+	val = OptMemVal("UNKNOWN_PARAMETER", "-1", "0", "0")
 	if val != "" {
 		t.Error(val)
 	}
