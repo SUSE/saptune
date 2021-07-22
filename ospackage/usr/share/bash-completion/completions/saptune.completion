@@ -1,4 +1,4 @@
-# v1.4
+# v1.4.1
 #
 #   saptune daemon [ start | status | stop ]
 #   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
@@ -23,7 +23,7 @@ _saptune() {
     
     case ${COMP_CWORD} in 
 
-        1)  opts="daemon service solution note revert version help"
+        1)  opts="daemon service staging solution note revert version help"
             ;;
         
         2)  case "${prev}" in
@@ -31,34 +31,29 @@ _saptune() {
                             ;;
                 service)    opts="start status stop restart takeover enable disable enablestart disablestop"
                             ;;
-		staging)    opts="status enable disable is-enabled list diff analysis release"
+		        staging)    opts="status enable disable is-enabled list diff analysis release"
                             ;;
                 solution)   opts="list verify apply simulate edit create revert show delete rename enabled applied"
                             ;;
-                note)       opts="list verify apply simulate customise revert create show delete rename enabled applied"
+                note)       opts="list verify apply simulate customise revert revertall create show delete rename enabled applied"
                             ;;
-		revert)	    opts="all"	
-			    ;;
+		        revert)	    opts="all"	
+			                ;;
                 *)          ;;
             esac
             ;;
 
         3)  case "${prev}" in
-                apply|simulate|verify|customise|revert|create|show|delete|rename|analysis|diff|release)
+                apply|simulate|verify|customise|revert|show|delete|rename|analysis|diff|release)
                         case "${COMP_WORDS[COMP_CWORD-2]}" in
-                            note)       opts=$((ls -1q /var/lib/saptune/working/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | cut -d '-' -f 1 | sed 's/\.conf$//') | tr '\n' ' ')
+                            note)       opts=$((ls -1q /var/lib/saptune/working/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | sed 's/\.conf$//') | tr '\n' ' ')
                                         ;;
-                            solution)   case "$(uname -i)" in
-						x86_64)	pattern="^\[ArchX86\]$" ;;
-						?????)  pattern="^\[ArchPPC64LE\]$" ;;
-					            *)  pattern="%%%" ;; # impossible pattern
-					esac
-					opts=$(sed -n "/${pattern}/,/^\$/p" /var/lib/saptune/working/solutions |  grep '=' | cut -d '=' -f1 | tr '\n' ' ')
+                            solution)   opts=$(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%f\n' | sed 's/\.sol$//' | tr '\n' ' ')
                                         ;;
-                            staging)       opts=$((ls -1q /var/lib/saptune/staging/latest/ | cut -d '-' -f 1 ) | tr '\n' ' ')
+                            staging)    opts=$((ls -1q /var/lib/saptune/staging/latest/ | cut -d '-' -f 1 ) | tr '\n' ' ')
                                         ;;
                         esac
-			;;
+			            ;;
                 *)  return 0
                     ;;
             esac 
