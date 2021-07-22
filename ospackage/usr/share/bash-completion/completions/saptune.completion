@@ -35,7 +35,7 @@ _saptune() {
                             ;;
                 solution)   opts="list verify apply simulate edit create revert show delete rename enabled applied"
                             ;;
-                note)       opts="list verify apply simulate customise revert create show delete rename enabled applied"
+                note)       opts="list verify apply simulate customise revert revertall create show delete rename enabled applied"
                             ;;
 		        revert)	    opts="all"	
 			                ;;
