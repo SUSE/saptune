@@ -185,23 +185,23 @@ func TestOptimiseNoteOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1001"}, []string{})
-	VerifyFileContent(t, SampleParamFile, "optimised1", "2")
+	VerifyFileContent(t, SampleParamFile, "optimised1", "1")
 	if err := tuneApp.RevertNote("1001", true); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SampleParamFile, "", "3")
+	VerifyFileContent(t, SampleParamFile, "", "2")
 	// Optimise note2 and revert it
 	if err := tuneApp.TuneNote("1002"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1002"}, []string{})
-	VerifyFileContent(t, SampleParamFile, "optimised2", "4")
+	VerifyFileContent(t, SampleParamFile, "optimised2", "3")
 	if err := tuneApp.RevertNote("1002", true); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
-	VerifyFileContent(t, SampleParamFile, "", "5")
+	VerifyFileContent(t, SampleParamFile, "", "4")
 
 	// Optimise note2, then note1, then note1 again, and then note2 again, and finally revert both (all)
 	if err := tuneApp.TuneNote("1002"); err != nil {
@@ -211,12 +211,12 @@ func TestOptimiseNoteOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1001", "1002"}, []string{})
-	VerifyFileContent(t, SampleParamFile, "optimised1", "6")
+	VerifyFileContent(t, SampleParamFile, "optimised1", "5")
 	if err := tuneApp.TuneNote("1001"); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{"1001", "1002"}, []string{})
-	VerifyFileContent(t, SampleParamFile, "optimised1", "7")
+	VerifyFileContent(t, SampleParamFile, "optimised1", "6")
 	if err := tuneApp.TuneNote("1002"); err != nil {
 		t.Fatal(err)
 	}
@@ -226,11 +226,12 @@ func TestOptimiseNoteOnly(t *testing.T) {
 	// but the check was moved to main.go (NoteAction) to suppress
 	// misleading messages for the customer
 	// so function 'TuneNote' will work as before.
-	VerifyFileContent(t, SampleParamFile, "optimised2", "8")
+	VerifyFileContent(t, SampleParamFile, "optimised2", "7")
 	if err := tuneApp.RevertAll(true); err != nil {
 		t.Fatal(err)
 	}
 	VerifyConfig(t, tuneApp, []string{}, []string{})
+	VerifyFileContent(t, SampleParamFile, "", "8")
 	// Try optimising for non-existing notes
 	if err := tuneApp.TuneNote("8932147"); err == nil {
 		t.Fatal("did not error")

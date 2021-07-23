@@ -184,10 +184,21 @@ func (rakb BlockDeviceReadAheadKB) Optimise(newReadAheadKBValue interface{}) (Pa
 // Apply sets the new read_ahead_kb value in the system
 func (rakb BlockDeviceReadAheadKB) Apply(blkdev interface{}) error {
 	bdev := blkdev.(string)
+	bfile := path.Join("block", bdev, "queue", "read_ahead_kb")
 	readahead := rakb.ReadAheadKB[bdev]
-	err := system.SetSysInt(path.Join("block", bdev, "queue", "read_ahead_kb"), readahead)
+	oldval, _ :=  system.GetSysInt(bfile)
+	err := system.SetSysInt(bfile, readahead)
 	if err != nil {
 		system.WarningLog("skipping device '%s', not valid for setting 'read_ahead_kb' to '%v'", bdev, readahead)
+	} else {
+		chkval, _ := system.GetSysInt(bfile)
+		if chkval != readahead {
+			system.LogOnlyLog("WARNING", "value '%v' for setting 'read_ahead_kb' is not valid for device '%s', will be changed by the kernel to '%v'.", readahead, bdev, chkval)
+			if oldval > 0 {
+				system.LogOnlyLog("WARNING", "skipping device '%s'. Please check and adapt the value in the Note definition file.", bdev)
+				_ = system.SetSysInt(bfile, oldval)
+			}
+		}
 	}
 	/* for future use
 	errs := make([]error, 0, 0)
