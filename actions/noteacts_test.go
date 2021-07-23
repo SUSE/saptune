@@ -12,8 +12,6 @@ import (
 	"testing"
 )
 
-var OverTstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/etc/saptune/override") + "/"
-
 /*
 // setup for ErroExit catches
 var tstRetErrorExit = -1
@@ -34,7 +32,7 @@ func TestNoteActions(t *testing.T) {
 	// Test NoteActionList
 	t.Run("NoteActionList", func(t *testing.T) {
 		var listMatchText = `
-All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note):
+All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note):
 	extraNote	Configuration drop in for extra tests
 			Version 0 from 04.06.2019 
 	oldFile		Name_syntax

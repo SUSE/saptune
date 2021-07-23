@@ -333,14 +333,13 @@ func (app *App) TuneNote(noteID string) error {
 	}
 
 	// Save current state for the Note in any case
-	// override existing saved_state file, if available
 	currentState, err := aNote.Initialise()
 	if err != nil {
 		system.ErrorLog("Failed to examine system for the current status of note %s - %v", noteID, err)
 		return err
 	}
 	forceApply := handleCounterParts(currentState)
-	if err = app.State.Store(noteID, currentState, true); err != nil {
+	if err = app.State.Store(noteID, currentState, false); err != nil {
 		system.ErrorLog("Failed to save current state of note %s - %v", noteID, err)
 		return err
 	}
@@ -429,7 +428,7 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 		// to revert an applied note even if the corresponding
 		// note definition file is no longer available, but the
 		// saved state info can be found
-		// helpfull for cleanup
+		// helpful for cleanup
 		noteTemplate = note.INISettings{
 			ConfFilePath:    "",
 			ID:              "",

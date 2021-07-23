@@ -64,22 +64,21 @@ func TestDaemonActions(t *testing.T) {
 	// Test DaemonActionStatus
 	t.Run("DaemonActionStatus", func(t *testing.T) {
 		var daemonStatusMatchText = `
-Service 'sapconf.service' is NOT available.
-Service 'tuned.service' is disabled and running.
-Currently active tuned profile is: 'balanced'
+saptune.service:        disabled/active
+saptune package:        'undef'
+configured version:     '3'
+configured solution:    sol1
+configured Notes:        2205917
+order of enabled notes: 2205917
+applied Notes:          
+staging:                disabled
+staging area:           
 
-The system has been configured for the following solutions: ' sol1' and notes: ' 2205917'
-current order of enabled notes is: 2205917
+sapconf.service:        not available
+tuned.service:          disabled/running (profile: 'balanced')
+system state:           running
 
-Currently NO notes applied.
 
-Current active saptune version is '3'.
-Installed saptune version is 'undef'.
-
-Staging is disabled.
-Content of StagingArea: 
-
-Service 'saptune.service' is disabled and running.
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
@@ -184,22 +183,21 @@ func TestServiceActions(t *testing.T) {
 	// Test ServiceActionStatus
 	t.Run("ServiceActionStatus", func(t *testing.T) {
 		var serviceStatusMatchText = `
-Service 'sapconf.service' is NOT available.
-Service 'tuned.service' is disabled and running.
-Currently active tuned profile is: 'balanced'
+saptune.service:        disabled/active
+saptune package:        'undef'
+configured version:     '3'
+configured solution:    sol1
+configured Notes:        2205917
+order of enabled notes: 2205917
+applied Notes:          
+staging:                disabled
+staging area:           
 
-The system has been configured for the following solutions: ' sol1' and notes: ' 2205917'
-current order of enabled notes is: 2205917
+sapconf.service:        not available
+tuned.service:          disabled/running (profile: 'balanced')
+system state:           running
 
-Currently NO notes applied.
 
-Current active saptune version is '3'.
-Installed saptune version is 'undef'.
-
-Staging is disabled.
-Content of StagingArea: 
-
-Service 'saptune.service' is disabled and running.
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 

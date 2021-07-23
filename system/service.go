@@ -41,7 +41,7 @@ func GetServiceName(service string) string {
 		}
 	}
 	if serviceName == "" {
-		WarningLog("skipping unkown service '%s'", service)
+		WarningLog("skipping unknown service '%s'", service)
 	}
 	return serviceName
 }

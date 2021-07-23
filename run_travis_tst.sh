@@ -35,8 +35,9 @@ ls -l /etc/saptune/*
 
 mkdir -p /etc/saptune/override
 mkdir -p /var/lib/saptune/working
-if [ ! -f /usr/share/saptune/solutions ]; then
-	ln -s /app/testdata/saptune-test-solutions /var/lib/saptune/working/solutions
+#if [ ! -d /usr/share/saptune/sols ]; then
+if [ ! -d /var/lib/saptune/working/sols ]; then
+	ln -s /app/testdata/sol/sols /var/lib/saptune/working/sols
 fi
 
 echo "go environment:"

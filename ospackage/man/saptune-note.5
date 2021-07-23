@@ -49,7 +49,7 @@ to define a special \fIos version\fP
 .br
 Valid values for \fBos=\fP are the values from the \fBVERSION=\fP line of \fB/etc/os-release\fP, e.g. 12-SP5, 12, 15 or 15-SP1
 .br
-To mark an entire major release the string 1[25]-* (wildcard) can be used.
+To mark an entire major release the string 12-* or 15-* can be used.
 .TP
 .BI arch= <hardware_architecture>
 to define a special \fIhardware architecture\fP:
@@ -443,7 +443,7 @@ The values from the Note definition files are only checked against the installed
 .br
 Package dependencies - if needed - are handled by the saptune package installation.
 
-With the availability of tagged sections, we support 2 different types of rpm line syntax. The first one - our \fBOld\fP Syntax - only for compatibility reasons. The second one - our \fBNew\fP Syntax - is our prefered syntax in combination with tagged rpm sections.
+With the availability of tagged sections, we support 2 different types of rpm line syntax. The first one - our \fBOld\fP Syntax - only for compatibility reasons. The second one - our \fBNew\fP Syntax - is our preferred syntax in combination with tagged rpm sections.
 
 \fBOld\fP Syntax:
 .br
@@ -477,7 +477,7 @@ That means, if there is no matching SLE version for the running OS no rpm entrie
 .br
 <rpm package name> <rpm package version>
 .br
-this syntax is the prefered syntax when using a 'tagged' rpm section, where the targeted operating system and/or system architecture is defined by using the tags \fBos=\fP and/or \fBarch=\fP
+this syntax is the preferred syntax when using a 'tagged' rpm section, where the targeted operating system and/or system architecture is defined by using the tags \fBos=\fP and/or \fBarch=\fP
 .br
 Add one line for each package and package version to be checked.
 
@@ -527,7 +527,7 @@ The section "[sys]" can be used to modify parameters available under /sys/, if t
 .br
 The syntax for the sys.parameters is following the 'sysctl.conf' syntax. So it's the absolute filename without the prefixed /sys/ and all remaining '/' exchanged by '.'
 .br
-e.g. \fI/sys/module/watchdog/parameters/open_timeout\fP should be writen as \fBmodule.watchdog.parameters.open_timeout\fP
+e.g. \fI/sys/module/watchdog/parameters/open_timeout\fP should be written as \fBmodule.watchdog.parameters.open_timeout\fP
 .TP
 .BI sys.parameter= VALUE
 .br

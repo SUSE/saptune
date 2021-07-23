@@ -39,7 +39,7 @@ func TestGetPagecacheVal(t *testing.T) {
 	}
 
 	prepare = LinuxPagingImprovements{PagingConfig: PCTestBaseConf}
-	val = GetPagecacheVal("UNKOWN", &prepare)
+	val = GetPagecacheVal("UNKNOWN", &prepare)
 	if val != "" {
 		t.Error(val)
 	}

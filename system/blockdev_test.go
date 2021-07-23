@@ -23,7 +23,7 @@ func TestBlockDeviceIsDisk(t *testing.T) {
 func TestCollectBlockDeviceInfo(t *testing.T) {
 	_, sysDevs := ListDir("/sys/block", "the available block devices of the system")
 	if len(sysDevs) == 0 {
-		t.Skipf("skip test, seems there are no block devices avaialble, sysDevs is '%+v'\n", sysDevs)
+		t.Skipf("skip test, seems there are no block devices available, sysDevs is '%+v'\n", sysDevs)
 	}
 	collect := CollectBlockDeviceInfo()
 	if len(collect) == 0 {

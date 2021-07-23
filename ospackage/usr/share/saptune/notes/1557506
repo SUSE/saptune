@@ -32,7 +32,7 @@ vm.pagecache_limit_ignore_dirty=1
 #
 # When pagecache limit feature is enabled, this parameter defines how to set
 # the pagecache limit
-# The limit value can be calculated automatically or the value can be overriden
+# The limit value can be calculated automatically or the value can be overridden
 # if you set this parameter to the desired limit value.
 #
 # To calculate the limit, set the parameter to 0.

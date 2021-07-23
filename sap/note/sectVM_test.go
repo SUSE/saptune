@@ -32,7 +32,7 @@ func TestOptVMVal(t *testing.T) {
 	if val != "0" {
 		t.Error(val)
 	}
-	val = OptVMVal("UNKOWN_PARAMETER", "unknown")
+	val = OptVMVal("UNKNOWN_PARAMETER", "unknown")
 	if val != "unknown" {
 		t.Error(val)
 	}

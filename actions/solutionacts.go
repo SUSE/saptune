@@ -397,7 +397,7 @@ func rewriteSolName(oldName, newName, newFile string) {
 	// create temp file
 	tmpfn, err := ioutil.TempFile("", "replace-*")
 	if err != nil {
-		system.ErrorExit("Unabel to create temporary file - %v", err)
+		system.ErrorExit("Unable to create temporary file - %v", err)
 	}
 	defer tmpfn.Close()
 	// replace the solution name while copying from fn to tmpfn

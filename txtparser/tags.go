@@ -121,7 +121,7 @@ func chkOtherTags(file, tagField string, secFields []string) bool {
 	chkDmi, err := system.GetDmiID(file)
 	if err != nil {
 		// file does not exist
-		system.WarningLog("skip unkown section tag '%v'.", file)
+		system.WarningLog("skip unknown section tag '%v'.", file)
 		ret = false
 	} else {
 		match, _ := regexp.MatchString(tagExpr, chkDmi)

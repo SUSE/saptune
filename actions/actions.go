@@ -35,7 +35,7 @@ const (
 	footnote12         = "[12] option FSOPT"
 )
 
-// PackageArea is the package area with all notes and solutions shiped by
+// PackageArea is the package area with all notes and solutions shipped by
 // the current installed saptune rpm
 var PackageArea = "/usr/share/saptune/"
 
@@ -64,7 +64,7 @@ var SolutionSheets = "/var/lib/saptune/working/sols/"
 var RPMVersion = "undef"
 
 // RPMDate is the date of package build
-// only used in individual build test packages, but NOT in our offical
+// only used in individual build test packages, but NOT in our official
 // built and released packages (not possible because of 'reproducible' builds)
 var RPMDate = "undef"
 
@@ -84,7 +84,7 @@ var setBoldText = "\033[1m"
 var setStrikeText = "\033[9m"
 var resetTextColor = "\033[0m"
 
-// SelectAction selects the choosen action depending on the first command line
+// SelectAction selects the chosen action depending on the first command line
 // argument
 func SelectAction(stApp *app.App, saptuneVers string) {
 	// switch off color and highlighting, if Stdout is not a terminal

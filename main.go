@@ -174,12 +174,21 @@ func checkWorkingArea() {
 			}
 		}
 	}
-	workSolutions := fmt.Sprintf("%ssolutions", actions.WorkingArea)
-	if _, err := os.Stat(workSolutions); os.IsNotExist(err) {
-		system.WarningLog("missing solution file in the working area, so copy the solution definition from package area to working area")
-		packedSolutions := fmt.Sprintf("%ssolutions", actions.PackageArea)
-		if err := system.CopyFile(packedSolutions, workSolutions); err != nil {
-			system.ErrorLog("Problems copying '%s' to '%s', continue with next file ...", packedSolutions, workSolutions)
+	if _, err := os.Stat(actions.SolutionSheets); os.IsNotExist(err) {
+		// missing working area /var/lib/saptune/working/sols/
+		system.WarningLog("missing the solutions in the working area, so copy solution definitions from package area to working area")
+		if err := os.MkdirAll(actions.SolutionSheets, 0755); err != nil {
+			system.ErrorExit("Problems creating directory '%s' - '%v'", actions.SolutionSheets, err)
+			return
+		}
+		packedSols := fmt.Sprintf("%ssols/", actions.PackageArea)
+		_, files := system.ListDir(packedSols, "")
+		for _, f := range files {
+			src := fmt.Sprintf("%s%s", packedSols, f)
+			dest := fmt.Sprintf("%s%s", actions.SolutionSheets, f)
+			if err := system.CopyFile(src, dest); err != nil {
+				system.ErrorLog("Problems copying '%s' to '%s', continue with next file ...", src, dest)
+			}
 		}
 	}
 }

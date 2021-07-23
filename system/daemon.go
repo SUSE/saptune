@@ -143,9 +143,21 @@ func SystemctlIsRunning(thing string) bool {
 	return false
 }
 
+// GetSystemState returns the output of 'systemctl is-system-running'
+func GetSystemState() (string, error) {
+	retval := ""
+	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
+	DebugLog("IsSystemRunning - /usr/bin/systemctl is-system-running : '%+v %s'", err, string(out))
+	if len(out) != 0 {
+		retval = string(out)
+	}
+	return retval, err
+}
+
 // IsSystemRunning returns true, if 'is-system-running' reports 'running'
-// or 'starting'. In all other cases it returns false, which means: do not
-// call 'start' or 'restart' to prevent 'Transaction is destructive' messages
+// 'degraded' or 'starting'. In all other cases it returns false, which means:
+// do not call 'start' or 'restart' to prevent 'Transaction is destructive'
+// messages
 func IsSystemRunning() (bool, error) {
 	match := false
 	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()

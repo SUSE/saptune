@@ -50,7 +50,7 @@ var DeprecSolutions = GetOtherSolution(DeprecSolutionSheets, "", "")
 
 // GetSolutionDefintion reads solution definition from file
 // build same structure for AllSolutions as before
-// can be simplyfied later
+// can be simplified later
 func GetSolutionDefintion(solsDir string) map[string]map[string]Solution {
 	sols := make(map[string]map[string]Solution)
 	sol := make(map[string]Solution)
@@ -217,7 +217,9 @@ func storeSols(arch, pcarch string, sol map[string]Solution, sols map[string]map
 			newSol[key] = val
 		}
 		//sols[pcarch] = sol
-		sols[pcarch] = newSol
+		if len(newSol) != 0 {
+			sols[pcarch] = newSol
+		}
 		newSol = make(map[string]Solution)
 	}
 	for key, val := range sols[arch] {
@@ -227,7 +229,9 @@ func storeSols(arch, pcarch string, sol map[string]Solution, sols map[string]map
 		newSol[key] = val
 	}
 	//sols[arch] = sol
-	sols[arch] = newSol
+	if len(newSol) != 0 {
+		sols[arch] = newSol
+	}
 	return sols
 }
 

@@ -1,6 +1,6 @@
 # 2578899 - SUSE Linux Enterprise Server 15: Installation Note
 # Description:    You want to use SAP software on SUSE Linux Enterprise Server 15 (SLES 15) or SUSE Linux Enterprise Server 15 for SAP Applications  (SLES for SAP 15).
-# Version 20 from 29.11.2019 in English
+# Version 39 from 09.07.2021 in English
 
 [version]
 # SAP-NOTE=2578899 CATEGORY=LINUX VERSION=20 DATE=29.11.2019 NAME="SUSE LINUX Enterprise Server 15: Installation notes"
@@ -39,6 +39,11 @@ libopenssl1_0_0 15 1.0.2n-3.3.1
 libssh2-1 15 1.8.0-2.35
 tcsh 15 6.20.00-4.9.1
 tcsh 15-SP1 6.20.00-4.9.1
+psmisc 15-SP2 23.0-6.16.1
+psmisc 15-SP3 23.0-6.16.1
+binutils 15 2.35.1-6.20.1
+binutils 15SP1 2.35.1-7.18.1
+binutils 15SP2 2.35.1-7.18.1
 
 [sysctl]
 # vm.dirty_bytes (indirect vm.dirty_ratio)
@@ -67,3 +72,9 @@ vm.dirty_bytes=629145600
 # vm.dirty_background_bytes should be set to 314572800 (see TID_7010287)
 #
 vm.dirty_background_bytes=314572800
+
+[filesystem:os=15-SP2]
+xfs_options= -nobarrier, -barrier
+
+[filesystem:os=15-SP3]
+xfs_options= -nobarrier, -barrier

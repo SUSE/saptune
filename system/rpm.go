@@ -83,7 +83,7 @@ func CheckRpmVers(vers1, vers2 string) int {
 	if vers1 == vers2 {
 		return 0
 	}
-	// get bunches of numbers or characters for comparision
+	// get bunches of numbers or characters for comparison
 	partsV1 := alphanumPattern.FindAllString(vers1, -1)
 	partsV2 := alphanumPattern.FindAllString(vers2, -1)
 	nrParts := len(partsV1)
