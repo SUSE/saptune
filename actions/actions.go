@@ -126,12 +126,14 @@ func RevertAction(writer io.Writer, actionName string, tuneApp *app.App) {
 	reportSuc := false
 	if len(tuneApp.NoteApplyOrder) != 0 {
 		reportSuc = true
+		system.LogOnlyLog("INFO", "Reverting all notes and solutions, this may take some time...")
 		fmt.Fprintf(writer, "Reverting all notes and solutions, this may take some time...\n")
 	}
 	if err := tuneApp.RevertAll(true); err != nil {
 		system.ErrorExit("Failed to revert notes: %v", err)
 	}
 	if reportSuc {
+		system.LogOnlyLog("INFO", "Parameters tuned by the notes and solutions have been successfully reverted.")
 		fmt.Fprintf(writer, "Parameters tuned by the notes and solutions have been successfully reverted.\n")
 	}
 }
@@ -235,20 +237,18 @@ func readYesNo(s string, in io.Reader, out io.Writer) bool {
 func renameDefFile(fileName, newFileName string) {
 	if err := os.Rename(fileName, newFileName); err != nil {
 		system.ErrorExit("Failed to rename file '%s' to '%s' - %v", fileName, newFileName, err)
+	} else {
+		system.LogOnlyLog("INFO", "File '%s' renamed successfully to '%s'", fileName, newFileName)
 	}
 }
 
 // deleteDefFile will delete a definition file (Note or Solution)
-func deleteDefFile(fileName, ovFileName string, overrideDef, extraDef bool) {
-	if overrideDef {
-		if err := os.Remove(ovFileName); err != nil {
-			system.ErrorExit("Failed to remove file '%s' - %v", ovFileName, err)
-		}
-	}
-	if extraDef {
-		if err := os.Remove(fileName); err != nil {
-			system.ErrorExit("Failed to remove file '%s' - %v", fileName, err)
-		}
+//func deleteDefFile(fileName, ovFileName string, overrideDef, extraDef bool) {
+func deleteDefFile(fileName string) {
+	if err := os.Remove(fileName); err != nil {
+		system.ErrorExit("Failed to remove file '%s' - %v", fileName, err)
+	} else {
+		system.LogOnlyLog("INFO", "File '%s' removed successfully", fileName)
 	}
 }
 
@@ -260,11 +260,11 @@ Daemon control:
   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | revertall | enabled | applied ]
-  saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify | enabled | applied ]
-  saptune solution [ apply | simulate | verify | edit | create | revert | show | delete ] SolutionName
+  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
   saptune solution rename SolutionName newSolutionName
 Staging control:
    saptune staging [ status | enable | disable | is-enabled | list | diff ]

@@ -124,11 +124,11 @@ Daemon control:
   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | revertall | enabled | applied ]
-  saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify | enabled | applied ]
-  saptune solution [ apply | simulate | verify | edit | create | revert | show | delete ] SolutionName
+  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
   saptune solution rename SolutionName newSolutionName
 Staging control:
    saptune staging [ status | enable | disable | is-enabled | list | diff ]
@@ -238,11 +238,11 @@ Daemon control:
   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | revertall | enabled | applied ]
-  saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify | enabled | applied ]
-  saptune solution [ apply | simulate | verify | edit | create | revert | show | delete ] SolutionName
+  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
   saptune solution rename SolutionName newSolutionName
 Staging control:
    saptune staging [ status | enable | disable | is-enabled | list | diff ]

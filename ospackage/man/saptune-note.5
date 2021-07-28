@@ -65,14 +65,14 @@ Example:
 .BI vendor= <hardware vendor>
 to define a special \fIsystem hardware vendor\fP
 .br
-Valid values for \fBvendor=\fP are the values found in \fB/sys/class/dmi/board_vendor\fP or parts of the string available in this file.
+Valid values for \fBvendor=\fP are the values found in \fB/sys/class/dmi/id/board_vendor\fP or parts of the string available in this file.
 .br
 The value of the vendor tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the vendor file.
 .TP
 .BI model= <hardware model>
 to define a special \fIsystem hardware model\fP
 .br
-Valid values for \fBmodel=\fP are the values found in \fB/sys/class/dmi/product_name\fP or parts of the string available in this file.
+Valid values for \fBmodel=\fP are the values found in \fB/sys/class/dmi/id/product_name\fP or parts of the string available in this file.
 .br
 The value of the model tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the model file.
 

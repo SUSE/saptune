@@ -90,6 +90,9 @@ func getValidBlockDevices() (valDevs []string) {
 			cont, _ := ioutil.ReadFile(dmUUID)
 			if isMpath.MatchString(string(cont)) {
 				candidates = append(candidates, bdev)
+			} else {
+				// skip unsupported devices
+				LogOnlyLog("WARNING", "skipping device '%s', unsupported", bdev)
 			}
 			_, slaves := ListDir(fmt.Sprintf("/sys/block/%s/slaves", bdev), "dm slaves")
 			if len(slaves) != 0 && (isMpath.MatchString(string(cont)) || isLVM.MatchString(string(cont))) && !isMpathPart.MatchString(string(cont)) {
@@ -98,7 +101,7 @@ func getValidBlockDevices() (valDevs []string) {
 		} else {
 			if !BlockDeviceIsDisk(bdev) {
 				// skip unsupported devices
-				WarningLog("skipping device '%s', unsupported", bdev)
+				LogOnlyLog("WARNING", "skipping device '%s', unsupported", bdev)
 				continue
 			}
 			candidates = append(candidates, bdev)
@@ -112,7 +115,7 @@ func getValidBlockDevices() (valDevs []string) {
 		for _, edev := range excludedevs {
 			if bdev == edev {
 				// skip unsupported devices
-				WarningLog("skipping device '%s', md slaves unsupported", bdev)
+				LogOnlyLog("WARNING", "skipping device '%s', md slaves unsupported", bdev)
 				exclude = true
 				break
 			}

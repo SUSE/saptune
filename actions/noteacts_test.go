@@ -182,9 +182,16 @@ net.ipv4.ip_local_port_range = 31768 61999
 # which parameters are NOT handled and the reason.
 
 `
+		oldNoteTuningSheets := NoteTuningSheets
+		defer func() { NoteTuningSheets = oldNoteTuningSheets }()
+		NoteTuningSheets = ""
+		oldExtraTuningSheets := ExtraTuningSheets
+		defer func() { ExtraTuningSheets = oldExtraTuningSheets }()
+		ExtraTuningSheets = ExtraFilesInGOPATH
+
 		buffer := bytes.Buffer{}
 		nID := "simpleNote"
-		NoteActionShow(&buffer, nID, "", ExtraFilesInGOPATH, tApp)
+		NoteActionShow(&buffer, nID, tApp)
 		txt := buffer.String()
 		checkOut(t, txt, showMatchText)
 	})
@@ -269,6 +276,17 @@ net.ipv4.ip_local_port_range = 31768 61999
 # which parameters are NOT handled and the reason.
 
 `
+
+	oldNoteTuningSheets := NoteTuningSheets
+	defer func() { NoteTuningSheets = oldNoteTuningSheets }()
+	NoteTuningSheets = ""
+	oldExtraTuningSheets := ExtraTuningSheets
+	defer func() { ExtraTuningSheets = oldExtraTuningSheets }()
+	ExtraTuningSheets = ExtraFilesInGOPATH
+	oldOverrideTuningSheets := OverrideTuningSheets
+	defer func() { OverrideTuningSheets = oldOverrideTuningSheets }()
+	OverrideTuningSheets = OverTstFilesInGOPATH
+
 	buffer := bytes.Buffer{}
 	nID := "extraSimple"
 	fileName := fmt.Sprintf("%s%s.conf", ExtraFilesInGOPATH, nID)
@@ -300,7 +318,7 @@ net.ipv4.ip_local_port_range = 31768 61999
 	newTuningOpts := note.GetTuningOptions("", ExtraFilesInGOPATH)
 	nApp := app.InitialiseApp(TstFilesInGOPATH, "", newTuningOpts, AllTestSolutions)
 
-	NoteActionShow(&buffer, nID, "", ExtraFilesInGOPATH, nApp)
+	NoteActionShow(&buffer, nID, nApp)
 	txt := buffer.String()
 	checkOut(t, txt, showMatchText)
 
@@ -312,7 +330,7 @@ net.ipv4.ip_local_port_range = 31768 61999
 	//confirmRenameMatchText := fmt.Sprintf("Note to rename is a customer/vendor specific Note.\nDo you really want to rename this Note (%s) to the new name '%s'? [y/n]: ", nID, newID)
 	confirmRenameMatchText := fmt.Sprintf("Note to rename is a customer/vendor specific Note.\nDo you really want to rename this Note (%s) and the corresponding override file to the new name '%s'? [y/n]: ", nID, newID)
 
-	NoteActionRename(strings.NewReader(input), &noRenameBuf, nID, newID, "", ExtraFilesInGOPATH, OverTstFilesInGOPATH, nApp)
+	NoteActionRename(strings.NewReader(input), &noRenameBuf, nID, newID, nApp)
 	txt = noRenameBuf.String()
 	checkOut(t, txt, confirmRenameMatchText)
 	if _, err := os.Stat(fileName); os.IsNotExist(err) {
@@ -326,7 +344,7 @@ net.ipv4.ip_local_port_range = 31768 61999
 	renameBuf := bytes.Buffer{}
 	input = "yes\n"
 
-	NoteActionRename(strings.NewReader(input), &renameBuf, nID, newID, "", ExtraFilesInGOPATH, OverTstFilesInGOPATH, nApp)
+	NoteActionRename(strings.NewReader(input), &renameBuf, nID, newID, nApp)
 	txt = renameBuf.String()
 	checkOut(t, txt, confirmRenameMatchText)
 	if _, err := os.Stat(fileName); !os.IsNotExist(err) {
@@ -342,7 +360,7 @@ net.ipv4.ip_local_port_range = 31768 61999
 	rApp := app.InitialiseApp(TstFilesInGOPATH, "", renTuningOpts, AllTestSolutions)
 
 	showRenameBuf := bytes.Buffer{}
-	NoteActionShow(&showRenameBuf, newID, "", ExtraFilesInGOPATH, rApp)
+	NoteActionShow(&showRenameBuf, newID, rApp)
 	txt = showRenameBuf.String()
 	checkOut(t, txt, renameMatchText)
 
@@ -351,12 +369,15 @@ net.ipv4.ip_local_port_range = 31768 61999
 	noDeleteBuf := bytes.Buffer{}
 	input = "no\n"
 	//add additional test without override file later
-	//deleteMatchText := fmt.Sprintf("Note to delete is a customer/vendor specific Note.\nDo you really want to delete this Note (%s)? [y/n]: ", newID)
-	deleteMatchText := fmt.Sprintf("Note to delete is a customer/vendor specific Note.\nDo you really want to delete this Note (%s) and the corresponding override file? [y/n]: ", newID)
+	deleteovMatchText := fmt.Sprintf("Note to delete is a customer/vendor specific Note and an override file for the Note exists.\nDo you want to remove the override file for Note %s? [y/n]: ", newID)
+	deleteMatchText := fmt.Sprintf("Note to delete is a customer/vendor specific Note.\nDo you really want to delete this Note (%s)? [y/n]: ", newID)
 
-	NoteActionDelete(strings.NewReader(input), &noDeleteBuf, newID, "", ExtraFilesInGOPATH, OverTstFilesInGOPATH, rApp)
+	NoteActionDelete(strings.NewReader(input), &noDeleteBuf, newID, rApp)
 	txt = noDeleteBuf.String()
-	checkOut(t, txt, deleteMatchText)
+	checkOut(t, txt, deleteovMatchText)
+	if _, err := os.Stat(newovFileName); os.IsNotExist(err) {
+		t.Errorf("file '%s' does not exists\n", newovFileName)
+	}
 	if _, err := os.Stat(newFileName); os.IsNotExist(err) {
 		t.Errorf("file '%s' does not exists\n", newFileName)
 	}
@@ -365,9 +386,17 @@ net.ipv4.ip_local_port_range = 31768 61999
 	deleteBuf := bytes.Buffer{}
 	input = "yes\n"
 
-	NoteActionDelete(strings.NewReader(input), &deleteBuf, newID, "", ExtraFilesInGOPATH, OverTstFilesInGOPATH, rApp)
+	NoteActionDelete(strings.NewReader(input), &deleteBuf, newID, rApp)
 	txt = deleteBuf.String()
-	checkOut(t, txt, deleteMatchText)
+	checkOut(t, txt, deleteovMatchText)
+	if _, err := os.Stat(newovFileName); os.IsNotExist(err) {
+		deleteBuf.Reset()
+		NoteActionDelete(strings.NewReader(input), &deleteBuf, newID, rApp)
+		txt = deleteBuf.String()
+		checkOut(t, txt, deleteMatchText)
+	} else {
+		t.Errorf("file '%s' still exists\n", newovFileName)
+	}
 	if _, err := os.Stat(newFileName); !os.IsNotExist(err) {
 		// as 'note delete' has failed, use system to clean up
 		if err := os.Remove(newFileName); err != nil {

@@ -83,10 +83,8 @@ func StagingAction(actionName string, stageName []string, tuneApp *app.App) {
 // basically the content of STAGING in /etc/sysconfig/saptune.
 func stagingActionStatus(writer io.Writer) {
 	if stagingSwitch {
-		system.InfoLog("STAGING variable is 'true'")
 		fmt.Fprintf(writer, "Staging is enabled\n")
 	} else {
-		system.InfoLog("STAGING variable is 'false'")
 		fmt.Fprintf(writer, "Staging is disabled\n")
 	}
 }
@@ -96,7 +94,7 @@ func stagingActionEnable() {
 	system.InfoLog("Enable staging")
 	stagingSwitch = true
 	if err := writeStagingToConf("true"); err != nil {
-		system.ErrorExit("Staging could NOT be enabled. - '%v'\n", err, 122)
+		system.ErrorExit("Staging could NOT be enabled. - '%v'\n", err)
 	}
 	system.InfoLog("Staging has been enabled.")
 }
@@ -106,7 +104,7 @@ func stagingActionDisable() {
 	system.InfoLog("Disable staging")
 	stagingSwitch = false
 	if err := writeStagingToConf("false"); err != nil {
-		system.ErrorExit("Staging could NOT be disabled. - '%v'\n", err, 123)
+		system.ErrorExit("Staging could NOT be disabled. - '%v'\n", err)
 	}
 	system.InfoLog("Staging has been disabled.")
 }
@@ -192,16 +190,19 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 
 		switch sName {
 		case "all":
+			if len(stgFiles.AllStageFiles) == 0 {
+				system.ErrorExit("No staging files available, so nothig to do.", 0)
+			}
 			for _, stageName := range stgFiles.AllStageFiles {
 				showAnalysis(writer, stageName)
 			}
 			if system.IsFlagSet("dryrun") {
-				system.ErrorExit("", 0)
+				system.ErrorExit("Flag 'dryrun' set, so staging action 'release' finished now without releasing anything", 0)
 			}
 			if !system.IsFlagSet("force") {
 				txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
 				if !readYesNo(txtConfirm, reader, writer) {
-					system.ErrorExit("", 0)
+					system.ErrorExit("Staging action 'release' aborted by user interaction", 0)
 				}
 			}
 			errs := make([]error, 0, 0)
@@ -210,6 +211,7 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				if _, err := os.Stat(stagingFile); err != nil {
 					system.ErrorLog("file '%s' not found in staging area, nothing to do, skipping ...", stagingFile)
 					errs = append(errs, err)
+					continue
 				}
 				stageVers = stgFiles.StageAttributes[stageName]["version"]
 				stageDate = stgFiles.StageAttributes[stageName]["date"]
@@ -221,24 +223,24 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				}
 			}
 			if len(errs) != 0 {
-				system.ErrorExit("", 126)
+				system.ErrorExit("", 1)
 			}
 		default:
 			if stagingFile == "" {
-				system.ErrorExit("'%s' not found in staging area, nothing to do.", sName, 127)
+				system.ErrorExit("'%s' not found in staging area, nothing to do.", sName, 1)
 			}
 			showAnalysis(writer, sName)
 			if system.IsFlagSet("dryrun") {
-				system.ErrorExit("", 0)
+				system.ErrorExit("Flag 'dryrun' set, so staging action 'release' finished now without releasing anything", 0)
 			}
 			if !system.IsFlagSet("force") {
 				txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
 				if !readYesNo(txtConfirm, reader, writer) {
-					system.ErrorExit("", 0)
+					system.ErrorExit("Staging action 'release' aborted by user interaction", 0)
 				}
 			}
 			if err := mvStageToWork(sName); err != nil {
-				system.ErrorExit("", 128)
+				system.ErrorExit("", 1)
 			}
 			system.InfoLog("%s Version %s (%s) released", sName, stageVers, stageDate)
 		}
@@ -370,6 +372,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) {
 // mvStageToWork moves a file from the staging area to the working area
 // or removes deleted files from the working area
 func mvStageToWork(stageName string) error {
+	errs := make([]error, 0, 0)
 	stagingFile := stgFiles.StageAttributes[stageName]["sfilename"]
 	workingFile := stgFiles.StageAttributes[stageName]["wfilename"]
 	packageFile := stgFiles.StageAttributes[stageName]["pfilename"]
@@ -377,7 +380,6 @@ func mvStageToWork(stageName string) error {
 	if _, err := os.Stat(workingFile); err == nil {
 		if _, perr := os.Stat(packageFile); os.IsNotExist(perr) {
 			// in working, but not in packaging, delete from working and staging
-			errs := make([]error, 0, 0)
 			if rerr := os.Remove(workingFile); rerr != nil {
 				system.ErrorLog("Problems during removal of '%s' from working area: %v", stageName, rerr)
 				errs = append(errs, rerr)
@@ -386,16 +388,20 @@ func mvStageToWork(stageName string) error {
 				system.ErrorLog("Problems during removal of '%s' from staging area: %v", stageName, rerr)
 				errs = append(errs, rerr)
 			}
-			if len(errs) != 0 {
-				return fmt.Errorf("Problems during removal of deleted Note '%s'", stageName)
+			if len(errs) == 0 {
+				system.InfoLog("'%s' successfully removed from working and staging area", stageName)
 			}
-			return nil
 		}
 	}
 	// move new or changed/updated note/solution from staging to working area
 	if err := os.Rename(stagingFile, workingFile); err != nil {
 		system.ErrorLog("Problems during move of '%s' from staging to working area: %v", stageName, err)
-		return err
+		errs = append(errs, err)
+	} else {
+		system.InfoLog("'%s' successfully moved from staging to working area", stageName)
+	}
+	if len(errs) != 0 {
+		return fmt.Errorf("Problems during releasing '%s' from staging to working area", stageName)
 	}
 	return nil
 }
@@ -404,7 +410,7 @@ func mvStageToWork(stageName string) error {
 func getStagingFromConf() bool {
 	sconf, err := txtparser.ParseSysconfigFile(saptuneSysconfig, true)
 	if err != nil {
-		system.ErrorExit("Unable to read file '/etc/sysconfig/saptune': '%v'\n", err, 1)
+		system.ErrorExit("Unable to read file '/etc/sysconfig/saptune': '%v'\n", err, 2)
 	}
 	if sconf.GetString("STAGING", "false") == "true" {
 		stagingSwitch = true

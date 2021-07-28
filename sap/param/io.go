@@ -186,7 +186,7 @@ func (rakb BlockDeviceReadAheadKB) Apply(blkdev interface{}) error {
 	bdev := blkdev.(string)
 	bfile := path.Join("block", bdev, "queue", "read_ahead_kb")
 	readahead := rakb.ReadAheadKB[bdev]
-	oldval, _ :=  system.GetSysInt(bfile)
+	oldval, _ := system.GetSysInt(bfile)
 	err := system.SetSysInt(bfile, readahead)
 	if err != nil {
 		system.WarningLog("skipping device '%s', not valid for setting 'read_ahead_kb' to '%v'", bdev, readahead)
