@@ -140,8 +140,18 @@ The system fully conforms to the tuning guidelines of the specified SAP solution
 
 	// Test SolutionActionShow
 	t.Run("SolutionActionShow", func(t *testing.T) {
+		// prepare custom solution and override
+		setUpSol(t)
 		var showMatchText = `
-Content of Solution sol1:
+Content of Solution NEWSOL1:
+[version]
+# SAP-NOTE=NEWSOL1 CATEGORY=SOLUTION VERSION=1 DATE=07.07.2021 NAME="Definition of NEWSOL1 solution for test"
+
+[ArchX86]
+SOL1NOTE1 NEWSOL1NOTE SOL1NOTE2
+
+[ArchPPC64LE]
+SOL1NOTE1 NEWSOL1NOTE SOL1NOTE2
 
 `
 		oldSolutionSheets := SolutionSheets
@@ -152,10 +162,11 @@ Content of Solution sol1:
 		ExtraTuningSheets = ExtraFilesInGOPATH
 
 		buffer := bytes.Buffer{}
-		sName := "sol1"
+		sName := "NEWSOL1"
 		SolutionActionShow(&buffer, sName)
 		txt := buffer.String()
 		checkOut(t, txt, showMatchText)
+		tearDownSol(t)
 	})
 
 	tearDown(t)
@@ -226,11 +237,12 @@ Daemon control:
   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | revertall | enabled | applied ]
-  saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled ]
-  saptune solution [ apply | simulate | verify | revert ] SolutionName
+  saptune solution [ list | verify | enabled | applied ]
+  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
+  saptune solution rename SolutionName newSolutionName
 Staging control:
    saptune staging [ status | enable | disable | is-enabled | list | diff ]
    saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
@@ -278,11 +290,12 @@ Daemon control:
   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | revertall | enabled | applied ]
-  saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled ]
-  saptune solution [ apply | simulate | verify | revert ] SolutionName
+  saptune solution [ list | verify | enabled | applied ]
+  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
+  saptune solution rename SolutionName newSolutionName
 Staging control:
    saptune staging [ status | enable | disable | is-enabled | list | diff ]
    saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
@@ -333,11 +346,12 @@ Daemon control:
   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | verify | revertall | enabled | applied ]
-  saptune note [ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
+  saptune note [ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled ]
-  saptune solution [ apply | simulate | verify | revert ] SolutionName
+  saptune solution [ list | verify | enabled | applied ]
+  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
+  saptune solution rename SolutionName newSolutionName
 Staging control:
    saptune staging [ status | enable | disable | is-enabled | list | diff ]
    saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
@@ -349,7 +363,6 @@ Print current saptune version:
   saptune version
 Print this message:
   saptune help
-Parameters tuned by the notes referred by the SAP solution have been successfully reverted.
 `
 
 		buffer := bytes.Buffer{}

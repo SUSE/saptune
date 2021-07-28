@@ -28,6 +28,8 @@ func SolutionAction(actionName, solName, newSolName string, tuneApp *app.App) {
 		SolutionActionVerify(os.Stdout, solName, tuneApp)
 	case "simulate":
 		SolutionActionSimulate(os.Stdout, solName, tuneApp)
+	case "customise", "customize":
+		SolutionActionCustomise(os.Stdout, solName, tuneApp)
 	case "edit":
 		SolutionActionEdit(os.Stdout, solName, tuneApp)
 	case "create":
@@ -81,11 +83,6 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):\n")
 	for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 		format := "\t%-18s -"
-		if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
-			// enabled solution
-			format = " " + setGreenText + "*" + format
-			setColor = true
-		}
 		if len(solution.OverrideSolutions[solutionSelector][solName]) != 0 {
 			// override solution
 			format = " O" + format
@@ -93,6 +90,15 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 		if len(solution.CustomSolutions[solutionSelector][solName]) != 0 {
 			// custom solution
 			format = " C" + format
+		}
+		if _, ok := solution.DeprecSolutions[solutionSelector][solName]; ok {
+			// deprecated solution
+			format = " D" + format
+		}
+		if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
+			// enabled solution
+			format = " " + setGreenText + "*" + format
+			setColor = true
 		}
 
 		solNotes := ""
@@ -110,10 +116,6 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 			} else {
 				solNotes = solNotes + " " + noteString
 			}
-		}
-		if _, ok := solution.DeprecSolutions[solutionSelector][solName]; ok {
-			// deprecated solution
-			format = " D" + format
 		}
 		format = format + solNotes
 		if setColor {
@@ -168,10 +170,18 @@ func SolutionActionRevert(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
 		PrintHelpAndExit(writer, 1)
 	}
+	// 'ok' only used to control the log messages
+	// call RevertSolution in any case to get the chance of clean up
+	_, ok := tuneApp.IsSolutionApplied(solName)
 	if err := tuneApp.RevertSolution(solName); err != nil {
 		system.ErrorExit("Failed to revert tuning for solution %s: %v", solName, err)
 	}
-	fmt.Fprintf(writer, "Parameters tuned by the notes referred by the SAP solution have been successfully reverted.\n")
+	if ok {
+		system.LogOnlyLog("INFO", "Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
+		fmt.Fprintf(writer, "Parameters tuned by the notes referred by the SAP solution have been successfully reverted.\n")
+	} else {
+		system.LogOnlyLog("INFO", "Solution '%s' is not applied, so nothing to revert.", solName)
+	}
 }
 
 // SolutionActionEnabled prints out the enabled solution definition
@@ -195,9 +205,9 @@ func SolutionActionApplied(writer io.Writer, tuneApp *app.App) {
 	}
 }
 
-// SolutionActionEdit creates an override file and allows to editing the
-// solution definition file
-func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
+// SolutionActionCustomise creates an override file and allows to editing the
+// solution definition override file
+func SolutionActionCustomise(writer io.Writer, customSol string, tuneApp *app.App) {
 	if customSol == "" {
 		PrintHelpAndExit(writer, 1)
 	}
@@ -240,6 +250,47 @@ func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
 	}
 }
 
+// SolutionActionEdit allows to editing the custom/vendor specific
+// solution definition file and NOT the override file
+func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
+	if customSol == "" {
+		PrintHelpAndExit(writer, 1)
+	}
+	solFName := customSol
+	if !strings.HasSuffix(customSol, ".sol") {
+		solFName = fmt.Sprintf("%s.sol", customSol)
+	} else {
+		customSol = strings.TrimSuffix(customSol, ".sol")
+	}
+	if !solution.IsAvailableSolution(customSol, solutionSelector) {
+		system.ErrorExit("Solution '%s' does not exist.", customSol)
+	}
+
+	fileName, extraSol := getFileName(solFName, SolutionSheets, ExtraTuningSheets)
+	ovFileName, overrideSol := getovFile(solFName, OverrideTuningSheets)
+	if !extraSol {
+		system.ErrorExit("ATTENTION: The Solution definition file you want to edit is a saptune internal (shipped) Solution and can NOT be edited. Use 'saptune solution customise' instead. Exiting ...")
+	}
+
+	changed, err := system.EditAndCheckFile(fileName, fileName, customSol, "solution")
+	if err != nil {
+		system.ErrorExit("Problems while editing Solution definition file '%s' - %v", fileName, err)
+	}
+	if changed {
+		// check, if solution is active - applied
+		if i := sort.SearchStrings(tuneApp.TuneForSolutions, customSol); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == customSol {
+			system.InfoLog("Your just edited Solution is already applied. To get your changes to take effect, please 'revert' the Solution and apply again.\n")
+		} else {
+			system.InfoLog("Do not forget to apply the just edited Solution to get your changes to take effect\n")
+		}
+		if overrideSol {
+			system.InfoLog("Solution override file '%s' exists. Please check, if the content of this file is still valid", ovFileName)
+		}
+	} else {
+		system.WarningLog("nothing changed during the editor session, so no update of the solution definition file '%s'", fileName)
+	}
+}
+
 // SolutionActionCreate helps the customer to create an own solution definition
 func SolutionActionCreate(writer io.Writer, customSol string) {
 	fileName := ""
@@ -268,6 +319,8 @@ func SolutionActionCreate(writer io.Writer, customSol string) {
 	}
 	if !changed {
 		system.WarningLog("nothing changed during the editor session, so no new, custome specific solution definition file will be created.")
+	} else {
+		system.InfoLog("Solution '%s' created successfully. You can modify the content of your Solution definition file by using 'saptune solution edit %s' or create an override file by 'saptune solution customise %s'.", customSol, customSol, customSol)
 	}
 }
 
@@ -322,15 +375,20 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 	}
 	if extraSol && overrideSol {
 		// custome solution with override file
-		txtConfirm = fmt.Sprintf("Solution to delete is a customer/vendor specific Solution.\nDo you really want to delete this Solution '%s' and the corresponding override file?", solName)
+		txtConfirm = fmt.Sprintf("Solution to delete is a customer/vendor specific Solution and an override file for the Solution exists.\nDo you want to remove the override file for Solution %s?", solName)
 	}
-	if extraSol && !overrideSol {
+	if overrideSol {
+		// remove override file
+		if readYesNo(txtConfirm, reader, writer) {
+			deleteDefFile(ovFileName)
+		}
+	} else {
 		// custome solution
 		txtConfirm = fmt.Sprintf("Solution to delete is a customer/vendor specific Solution.\nDo you really want to delete this Solution '%s'?", solName)
-	}
-
-	if readYesNo(txtConfirm, reader, writer) {
-		deleteDefFile(fileName, ovFileName, overrideSol, extraSol)
+		// remove customer/vendor specific solution definition file
+		if readYesNo(txtConfirm, reader, writer) {
+			deleteDefFile(fileName)
+		}
 	}
 }
 

@@ -3,7 +3,7 @@
 # Version 39 from 09.07.2021 in English
 
 [version]
-# SAP-NOTE=2578899 CATEGORY=LINUX VERSION=20 DATE=29.11.2019 NAME="SUSE LINUX Enterprise Server 15: Installation notes"
+# SAP-NOTE=2578899 CATEGORY=LINUX VERSION=39 DATE=09.07.2021 NAME="SUSE LINUX Enterprise Server 15: Installation notes"
 
 [service]
 # start the related services

@@ -1,9 +1,9 @@
 # 2993054 - Recommended settings for SAP systems on Linux running in Azure virtual machines
 # Description:    Azure settings
-# Version 1 from xx.xx.2021 in English
+# Version 2 from 12.07.2021 in English
 
 [version]
-# SAP-NOTE=2993054 CATEGORY=LNX-AZR VERSION=1 DATE=xx.xx.2021 NAME="Recommended settings for SAP systems on Linux running in Azure virtual machines"
+# SAP-NOTE=2993054 CATEGORY=LNX-AZR VERSION=2 DATE=12.07.2021 NAME="Recommended settings for SAP systems on Linux running in Azure virtual machines"
 
 [sysctl:csp=azure]
 net.ipv4.tcp_keepalive_time = 300
