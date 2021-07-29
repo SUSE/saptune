@@ -1,0 +1,131 @@
+#!/bin/bash
+set -u
+
+# supportconfig plugin for saptune.
+#
+# v1.0
+#
+# July 2021    v1.0    first release
+
+function display_package_info() {
+    echo -e "\n#==[ Command ]======================================#"
+    echo -e "# rpm -q ${1}"
+    rpm -q "${1}"
+
+    echo -e "\n#==[ Command ]======================================#"
+    echo -e "# rpm -V ${1}"
+    rpm -V "${1}"
+}
+
+function display_file_stat() {
+    echo -e "\n#==[ File ]===========================#"
+    echo -e "# ls -ld ${1} ; stat ${1} \n"
+    
+    if [ -e "${1}" ] ; then
+        ls -ld "${1}"
+        echo
+        stat "${1}"
+    else
+        echo "${1} does not exist!"
+    fi
+}
+
+function display_dir_stat() {
+    echo -e "\n#==[ File Stats ]============================#"
+    echo -e "# find ${1} -> ls -ld / stat \n"
+    
+    if [ -e "${1}" ] ; then
+        while read -r obj ; do
+            ls -ld "${obj}"
+        done < <(find "${1}")
+        while read -r obj ; do
+            echo
+            stat "${obj}"
+        done < <(find "${1}")
+    else
+        echo "${1} does not exist!"
+    fi
+}
+
+function display_ls() {
+    echo -e "\n#==[ Dir List ]============================#"
+    echo -e "# ls -Rlh ${1}\n"
+    if [ -e "${1}" ] ; then
+        ls -Rlh "${1}"
+    else
+        echo "${1} does not exist!"
+    fi
+}
+
+function display_file() {
+    echo -e "\n#==[ File Content ]===========================#"
+    echo -e "# cat ${1}"
+
+    if [ -e "${1}" ] ; then
+        cat "${1}"
+    else
+        echo "${1} does not exist!"
+    fi
+}
+
+function display_systemd_status() {
+    echo -e "\n#==[ Command ]======================================#"
+    echo -e "# systemctl status ${1}"
+    
+    systemctl status "${1}"
+}
+
+function display_systemd_cat() {
+    echo -e "\n#==[ Command ]======================================#"
+    echo -e "# systemctl cat ${1}"
+    
+    systemctl cat "${1}"
+}
+
+function display_cmd() {
+    echo -e "\n#==[ Command ]======================================#"
+    echo -e "# $*"
+    "${@}" 2>&1
+}
+
+function display_log() {
+    local file
+    echo -e "\n#==[ Log Files ]====================================#"
+    for file in "${@}" ; do
+        echo -e "\n# ${file}"
+        cat "${file}"
+    done
+}
+
+# ---- Main ----
+display_cmd saptune_check
+display_package_info tuned
+display_file_stat /usr/lib/tuned/functions
+display_systemd_status tuned
+display_cmd tuned-adm list
+display_file_stat /etc/tuned/active_profile
+display_file /etc/tuned/active_profile
+display_file_stat /var/run/tuned/
+display_file_stat /usr/lib/tuned/sapconf/script.sh
+display_log /var/log/tuned/tuned.log*
+
+display_package_info saptune
+display_file /var/log/saptune/saptune.log
+display_file /etc/logrotate.d/saptune
+display_file /etc/sysconfig/saptune
+display_systemd_status saptune.service
+display_systemd_cat saptune.service
+
+display_ls /etc/saptune/extra
+display_ls /etc/saptune/override
+
+display_ls /usr/share/saptune
+display_ls /var/lib/saptune
+display_ls /run/saptune/
+
+for file in  /run/saptune/parameter/* /run/saptune/saved_state/* ; do
+    [ -e "${file}" ] && { display_file_stat "${file}" ; display_file "${file}" ; echo ; }
+done 
+
+# Bye.
+exit 0
