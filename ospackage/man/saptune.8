@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "January 2021" "" "System Optimisation For SAP"
+.TH saptune "8" "July 2021" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 3\fP)
 
@@ -30,10 +30,10 @@ ATTENTION: deprecated
 [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 
 \fBsaptune note\fP
-[ list | verify | enabled | applied ]
+[ list | verify | revertall | enabled | applied ]
 
 \fBsaptune note\fP
-[ apply | simulate | verify | customise | create | revert | show | delete ] NoteID
+[ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
 
 \fBsaptune note\fP
 rename NoteID newNoteID
@@ -42,7 +42,7 @@ rename NoteID newNoteID
 [ list | verify | enabled | applied ]
 
 \fBsaptune solution\fP
-[ apply | simulate | verify | edit | create | revert | show | delete ] SolutionName
+[ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
 
 \fBsaptune solution\fP
 rename SolutionName newSolutionName
@@ -259,6 +259,19 @@ In case of 'grub' settings, this may result in a 'no' in column 'Compliant', but
 [5] expected value does not contain a supported scheduler
 .br
 [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+.br
+[7] parameter value is untouched by default
+.br
+If the parameter value in the Note definition file is left 'empty', the current system value of the parameter will not be changed.
+.br
+[8] cannot set Perf Bias because SecureBoot is enabled"
+.br
+If SecureBoot is enabled some system settings are 'read only' and can not be changed.
+.br
+[9] expected value limited to 'max_hw_sectors_kb'"
+.br
+The possible value for parameter 'MAX_SECTORS_KB' (/sys/block/*/queue/max_sectors_kb) is limited by the value of /sys/block/*/queue/max_hw_sectors_kb.
+
 
 If a Note definition contains a '\fB[reminder]\fP' section, this section will be printed below the table and the footnotes. It will be highlighted with red color.
 .TP
@@ -290,6 +303,15 @@ e.g.
 
 If a Note definition contains a '\fB[reminder]\fP' section, this section will be printed below the table and the footnotes. It will be highlighted with red color.
 .TP
+.B edit
+This allows to edit the values of the customer or vendor specific Note definitions in \fI/etc/saptune/extra\fP.
+An editor will be launched to allow changing the Note definitions.
+The editor is defined by the \fBEDITOR\fP environment variable. If not set editor defaults to /usr/bin/vim.
+
+You can change already available parameters and values or you can add new parameters and values or additional sections with parameter value pairs.
+
+If the Note is currently applied and/or an override file exists, saptune will remind you to take care of this situation.
+.TP
 .B customise
 This allows to customize the values of the saptune Note definitions. The Note definition file will be copied from \fI/usr/share/saptune/notes\fP or \fI/etc/saptune/extra\fP to the override location at \fI/etc/saptune/override\fP, if the file does not exist already. After that an editor will be launched to allow changing the Note definitions.
 The editor is defined by the \fBEDITOR\fP environment variable. If not set editor defaults to /usr/bin/vim.
@@ -316,6 +338,9 @@ You need to choose an unique NoteID for this operation. Use '\fIsaptune note lis
 .TP
 .B revert
 Revert optimisation settings carried out by the Note, and the Note will no longer be activated automatically upon system boot.
+.TP
+.B revertall
+Revert optimisation settings carried out by all applied notes, and the notes will no longer be activated automatically upon system boot.
 .TP
 .B show
 Print content of Note definition file to stdout
@@ -349,9 +374,27 @@ If the Note is already applied, the command will be terminated with the informat
 .SH SOLUTION ACTIONS
 A solution is a collection of one or more Notes. Activation of a solution will activate all associated Notes.
 .br
-The solution definitions of saptune can be found in the directory \fI/usr/share/saptune/sols\fP or vendor/customer specific solution definitions can be found in the directory \fI/etc/saptune/extra\fP.
+The solution definitions shipped with saptune can be found in the directory \fI/usr/share/saptune/sols\fP or vendor/customer specific solution definitions can be found in the directory \fI/etc/saptune/extra\fP.
 
 It's not possible to combine solutions, there can only be\fBone\fP solution enabled. But it is possible to change a solution definition by using an override file in \fI/etc/saptune/override\fP or by creating a custom specific solution definition in the directory \fI/etc/saptune/extra\fP.
+
+The following solution definitions are currently shipped with saptune:
+.TS
+tab(:) box;
+c | l
+l | l.
+SOLUTION:Definition
+_
+BOBJ:Solution for running SAP BusinessObjects.
+HANA:Solution for running an SAP HANA database.
+MAXDB:Solution for running an SAP MaxDB database.
+NETWEAVER:Solution for running SAP NetWeaver application servers.
+NETWEAVER+HANA:Solution for running both SAP application servers and SAP HANA on the same host.
+S4HANA-APPSERVER:Solution for running SAP S/4HANA application servers
+S4HANA-APP+DB:Solution for running both SAP S/4HANA application servers and SAP HANA on the same host
+S4HANA-DBSERVER:Solution for running the SAP HANA database of an SAP S/4HANA installation
+SAP-ASE:Solution for running an SAP Adaptive Server Enterprise database.
+.TE
 
 .SS
 .RS 0
@@ -389,6 +432,15 @@ Show all notes that are associated with the specified solution, and all changes 
 If a solution name is specified, saptune verifies the current running system against the recommended settings of this solution. If the solution name is not specified, saptune verifies all system parameters against all implemented solutions.
 .TP
 .B edit
+This allows to edit the note list of the customer or vendor specific solution definitions in \fI/etc/saptune/extra\fP.
+An editor will be launched to allow changing the Note definitions.
+The editor is defined by the \fBEDITOR\fP environment variable. If not set editor defaults to /usr/bin/vim.
+
+You can change, add or delete noteIDs in the list of notes defining the solution.
+
+If the solution is currently applied and/or an override file exists, saptune will remind you to take care of this situation.
+.TP
+.B customise
 This allows to customize the note list of the saptune solution definitions. The solution definition file will be copied from \fI/usr/share/saptune/sols\fP or \fI/etc/saptune/extra\fP to the override location at \fI/etc/saptune/override\fP, if the file does not exist already. After that an editor will be launched to allow changing the solution definitions.
 The editor is defined by the \fBEDITOR\fP environment variable. If not set editor defaults to /usr/bin/vim.
 
@@ -495,7 +547,7 @@ The solution definition is shown as a whole object. It is only possible to relea
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them and that it is possible to view the changes.
 .TP
-.B diff [NOTE|solutions]
+.B diff [NOTE|solution]
 Shows the differences between the Note (or all Notes) or the solution definition in the staging area and the working area.
 .br
 For each Note in the staging area the output contains the values of all parameter which differ. This includes new or removed parameters as well as changes in the reminder section.
@@ -504,15 +556,15 @@ For the Solution, all changed solutions are displayed with their differences.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them.
 .TP
-.B analysis NOTE...|solutions|all
-Does an analysis of the requested Notes, the solution definition or everything in the staging area to warn the user about possible issues or additional steps to perform.
+.B analysis NOTE...|solution|all
+Does an analysis of the requested Notes, the solution definitions or everything in the staging area to warn the user about possible issues or additional steps to perform.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them as well that he should check out the differences.
 .TP
-.B release NOTE...|solutions|all
-Releases the requested Notes, the solution definition or everything in the stages area.
+.B release NOTE...|solution|all
+Releases the requested Notes, the solution definitions or everything in the stages area.
 .br
-This means the Notes or the solution definition gets moved from the staging area to the working area. In case of a deleted Note, it will be removed from the working area.
+This means the Notes or the solution definitions gets moved from the staging area to the working area. In case of a deleted Note/solution, it will be removed from the working area.
 .br
 First the command will show an analysis of the objects going to be released to make the user aware of further needed actions or potential problems (for details see saptune staging dependencies).
 .br
@@ -572,31 +624,37 @@ Even if editing an active vendor or customer specific note definition file on th
 .RS 0
 customer specific solution definitions
 .br
-In addition to the vendor or customer specific note file definitions described previously saptune now supports vendor or customer specific \fBsolution definitions\fP by using the file \fI/etc/saptune/extra/solutions\fP. All solutions found in \fI/etc/saptune/extra/solutions\fP are listed when running '\fBsaptune solution list\fP'. All \fBsolution options\fP are available for these solutions.
+In addition to the vendor or customer specific note file definitions described previously saptune now supports vendor or customer specific \fBsolution definitions\fP by using 'drop-in' files in \fI/etc/saptune/extra\fP. All solutions found in \fI/etc/saptune/extra\fP are listed when running '\fBsaptune solution list\fP'. All \fBsolution options\fP are available for these solutions.
+
 .SS
 .RS 0
+Syntax of the solution definition file names:
+<solutionName>.sol
+.br
+e.g. V4711.sol
+
 Syntax of the file:
-The content of the custom specific solution file should be written in a INI file style with sections headed by '[section_name]' keywords.
+The content of the custom specific solution files should be written in a INI file style with sections headed by '[section_name]' keywords.
 .br
 At the moment saptune supports two architectures - \fIArchX86\fP for the x86 platform and \fIArchPPC64LE\fP for 64-bit PowerPC little endian platform for the solution definitions.
 .br
 So possible sections for solution definitions are [version] (see description of section [version] in saptune-note(5)) for a brief description of the solutions, and [ArchX86] and [ArchPPC64LE] for the solution definitions.
 .br
-The solution itself is described as a key-value pair, with key is the solution name and value is a list of note definition files separated by blanks. A solution is only valid and listed by '\fBsaptune solution list\fP', if all listed note definition files can be found in the working area or in \fI/etc/saptune/extra\fP.
+The solution itself is described as a list of note definition files separated by blanks. The solution \fBname\fP is defined by the filename without the \fI.sol\fP suffix. A solution is only valid and listed by '\fBsaptune solution list\fP', if all listed note definition files can be found in the working area or in \fI/etc/saptune/extra\fP.
 
 e.g. 
+filename is \fBNEWSOL1.sol\fP with content
+
 [version]
 .br
-# SAP-NOTE=MY-CUSTOM-SOL CATEGORY=SOLUTION VERSION=1 DATE=15.12.2020 NAME="My custom specific solution definitions"
+# SAP-NOTE=NEWSOL1 CATEGORY=SOLUTION VERSION=1 DATE=15.12.2020 NAME="My custom specific solution definitions"
 [ArchX86]
 .br
-NEWSOL1 = 1980196 CUSTOMNOTE1 CUSTOMNOTE2
-.br
-NEWSOL2 = CUSTOMNOTE1 CUSTOMNOTE3 CUSTOMNOTE4
+1980196 CUSTOMNOTE1 CUSTOMNOTE2
 .br
 [ArchPPC64LE]
 .br
-NEWSOL1 = 1980196 CUSTOMNOTE1 CUSTOMNOTE2
+1980196 CUSTOMNOTE1 CUSTOMNOTE2
 .PP
 
 .SH FILES
@@ -610,6 +668,15 @@ the saptune SAP Note definitions, which are shipped by the saptune RPM package
 Please do not change the files located here. You will lose all your changes during a saptune package update.
 .RE
 .PP
+\fI/usr/share/saptune/sols\fP
+.RS 4
+part of the \fBPackage Area\fP
+.br
+the saptune solution definitions, which are shipped by the saptune RPM package
+
+Please do not change as maintenance updates of package saptune will overwrite these files without preserving any custom changes.
+.RE
+.PP
 \fI/var/lib/saptune/working/notes\fP
 .RS 4
 part of the \fBWorking Area\fP
@@ -621,6 +688,17 @@ The files are named with the number of their corresponding SAP Note (==NoteID).
 A description of the syntax and the available tuning options can be found in saptune-note(5)
 .br
 Please do not change the files located here. You will lose all your changes during a '\fBsaptune staging release\fP' command. Use override files to change parameter values if needed.
+.RE
+.PP
+\fI/var/lib/saptune/working/sols\fP
+.RS 4
+part of the \fBWorking Area\fP
+.br
+the saptune solution definitions, which can be listed by '\fBsaptune solution list\fP'
+.br
+At the moment saptune supports two architectures - \fIArchX86\fP for the x86 platform and \fIArchPPC64LE\fP for 64-bit PowerPC little endian platform - with different solution definitions.
+
+Please do not change the files located here as the command '\fBsaptune staging release\fP' may overwrite these files without preserving any custom changes. Use override files to change the note list of the solutions.
 .RE
 .PP
 \fI/var/lib/saptune/staging/latests\fP
@@ -637,45 +715,20 @@ the central saptune configuration file containing the information about the curr
 .PP
 \fI/etc/saptune/extra\fP
 .RS 4
-vendor or customer specific tuning definitions.
+vendor or customer specific tuning or solution definitions.
 .br
 Please see \fBVENDOR SUPPORT\fP above for more information.
-.RE
-.PP
-\fI/etc/saptune/extra/solutions\fP
-.RS 4
-vendor or customer specific solution definition.
-.br
-Please see \fBVENDOR SUPPORT\fP above for more information.
+
+You can use '\fBsaptune note create NoteID\fP' or '\fBsaptune solution create solutionName\fP' to create a new vendor or customer specific definition or '\fBsaptune note edit NoteID\fP' or '\fBsaptune solution edit solutionName\fP' to modify an already existing vendor or customer specific definition.
 .RE
 .PP
 \fI/etc/saptune/override\fP
 .RS 4
-the saptune Note definition override location.
+the saptune Note and solution definition override location.
 
-If you need to customize the Note definitions found in \fI/usr/share/saptune/notes\fP or \fI/etc/saptune/extra\fP, you can copy them to \fI/etc/saptune/override\fP and modify them as you need. Please stay with the original name of the Note definition (the NoteID) and do \fBNOT\fP rename it.
+If you need to customize the Note or solution definitions found in \fI/usr/share/saptune/notes\fP or \fI/usr/share/saptune/sols\fP or in \fI/etc/saptune/extra\fP, you can copy them to \fI/etc/saptune/override\fP and modify them as you need. Please stay with the original name of the Note or solution definition (the NoteID or solution name) and do \fBNOT\fP rename it.
 
-Or use '\fBsaptune note customize NoteID\fP' to do the job for you.
-.RE
-.PP
-\fI/usr/share/saptune/solutions\fP
-.RS 4
-part of the \fBPackage Area\fP
-.br
-this file contains the saptune solution definitions, which are shipped by the saptune RPM package
-
-Please do not change as maintenance updates of package saptune will overwrite this file without preserving any custom changes.
-.RE
-.PP
-\fI/var/lib/saptune/working/solutions\fP
-.RS 4
-part of the \fBWorking Area\fP
-.br
-this file contains the saptune solution definitions, which can be listed by '\fBsaptune solution list\fP'
-.br
-At the moment saptune supports two architectures - \fIArchX86\fP for the x86 platform and \fIArchPPC64LE\fP for 64-bit PowerPC little endian platform - with different solution definitions.
-
-Please do not change as the command '\fBsaptune staging release\fP' may overwrite this file without preserving any custom changes.
+Or use '\fBsaptune note customize NoteID\fP' or '\fBsaptune solution customize solutionName\fP' to do the job for you.
 .RE
 .PP
 \fI/run/saptune/saved_state/\fP
