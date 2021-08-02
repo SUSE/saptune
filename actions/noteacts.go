@@ -303,7 +303,8 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID string, tuneApp
 		if readYesNo(txtConfirm, reader, writer) {
 			deleteDefFile(ovFileName)
 		}
-	} else {
+	}
+	if extraNote {
 		// custome note
 		txtConfirm = fmt.Sprintf("Note to delete is a customer/vendor specific Note.\nDo you really want to delete this Note (%s)?", noteID)
 		// remove customer/vendor specific note definition file

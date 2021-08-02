@@ -382,7 +382,8 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 		if readYesNo(txtConfirm, reader, writer) {
 			deleteDefFile(ovFileName)
 		}
-	} else {
+	}
+	if extraSol {
 		// custome solution
 		txtConfirm = fmt.Sprintf("Solution to delete is a customer/vendor specific Solution.\nDo you really want to delete this Solution '%s'?", solName)
 		// remove customer/vendor specific solution definition file

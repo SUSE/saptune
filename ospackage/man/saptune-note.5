@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "January 2021" "" "saptune note file format description"
+.TH "saptune-note" "5" "July 2021" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
@@ -56,7 +56,7 @@ to define a special \fIhardware architecture\fP:
 .br
 Valid values for \fBarch=\fP are the output from \fBuname -i\fP
 
-.RS 4 
+.RS 4
 Example:
 .br
 [sysctl:os=15-SP1:arch=ppc64le]
@@ -206,7 +206,18 @@ NAME is the description of the Note, which will be displayed during the action '
 Attention: The note description from the field NAME must be placed in double quotes even if there are no spaces used inside the description.
 \" section block
 .SH "[block]"
-\" ANGI TODO - describe which devices are used as valid block devices
+The settings of the "[block]" section will be set on \fBall\fP block devices found in \fI/sys/block\fP, which are considered as \fBvalid\fP.
+
+.RE
+The following rules apply for \fBvalid\fP devices:
+.IP \[bu]
+all multipath devices (dm-*, if mpath-, but not LVM- or other dm-)
+.IP \[bu]
+all physical disks (indicated by device/type=0 or names like nvme*, vd*)
+.br
+\fBexcept\fP they are part of a device mapper construct (like mpath- or LVM-).
+.RE
+
 The section "[block]" can contain the following options:
 .TP
 .BI IO_SCHEDULER= STRING
