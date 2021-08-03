@@ -76,7 +76,7 @@ func SetLoginVal(key, value string, revert bool) error {
 				return err
 			}
 			if value == "infinity" {
-				system.WarningLog("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
+				system.InfoLog("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
 					"This opens up entire system to fork-bomb style attacks.")
 			}
 		}

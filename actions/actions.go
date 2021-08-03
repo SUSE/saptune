@@ -97,7 +97,7 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 	}
 	// check for test packages
 	if RPMDate != "undef" {
-		system.InfoLog("ATTENTION: You are running a test version of saptune which is not supported for production use")
+		system.NoticeLog("ATTENTION: You are running a test version of saptune which is not supported for production use")
 	}
 
 	switch system.CliArg(1) {
@@ -126,14 +126,14 @@ func RevertAction(writer io.Writer, actionName string, tuneApp *app.App) {
 	reportSuc := false
 	if len(tuneApp.NoteApplyOrder) != 0 {
 		reportSuc = true
-		system.LogOnlyLog("INFO", "Reverting all notes and solutions, this may take some time...")
+		system.InfoLog("Reverting all notes and solutions, this may take some time...")
 		fmt.Fprintf(writer, "Reverting all notes and solutions, this may take some time...\n")
 	}
 	if err := tuneApp.RevertAll(true); err != nil {
 		system.ErrorExit("Failed to revert notes: %v", err)
 	}
 	if reportSuc {
-		system.LogOnlyLog("INFO", "Parameters tuned by the notes and solutions have been successfully reverted.")
+		system.InfoLog("Parameters tuned by the notes and solutions have been successfully reverted.")
 		fmt.Fprintf(writer, "Parameters tuned by the notes and solutions have been successfully reverted.\n")
 	}
 }
@@ -238,7 +238,7 @@ func renameDefFile(fileName, newFileName string) {
 	if err := os.Rename(fileName, newFileName); err != nil {
 		system.ErrorExit("Failed to rename file '%s' to '%s' - %v", fileName, newFileName, err)
 	} else {
-		system.LogOnlyLog("INFO", "File '%s' renamed successfully to '%s'", fileName, newFileName)
+		system.InfoLog("File '%s' renamed successfully to '%s'", fileName, newFileName)
 	}
 }
 
@@ -248,7 +248,7 @@ func deleteDefFile(fileName string) {
 	if err := os.Remove(fileName); err != nil {
 		system.ErrorExit("Failed to remove file '%s' - %v", fileName, err)
 	} else {
-		system.LogOnlyLog("INFO", "File '%s' removed successfully", fileName)
+		system.InfoLog("File '%s' removed successfully", fileName)
 	}
 }
 

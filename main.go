@@ -66,7 +66,7 @@ func main() {
 	system.LogInit(logFile, logSwitch)
 	// now system.ErrorExit can write to log and os.Stderr. No longer extra
 	// care is needed.
-	system.LogOnlyLog("INFO", "saptune started with '%s'", strings.Join(os.Args, " "))
+	system.InfoLog("saptune started with '%s'", strings.Join(os.Args, " "))
 
 	if arg1 == "lock" {
 		if arg2 := system.CliArg(2); arg2 == "remove" {

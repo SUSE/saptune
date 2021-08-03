@@ -193,9 +193,9 @@ func (rakb BlockDeviceReadAheadKB) Apply(blkdev interface{}) error {
 	} else {
 		chkval, _ := system.GetSysInt(bfile)
 		if chkval != readahead {
-			system.LogOnlyLog("WARNING", "value '%v' for setting 'read_ahead_kb' is not valid for device '%s', will be changed by the kernel to '%v'.", readahead, bdev, chkval)
+			system.InfoLog("value '%v' for setting 'read_ahead_kb' is not valid for device '%s', will be changed by the kernel to '%v'.", readahead, bdev, chkval)
 			if oldval > 0 {
-				system.LogOnlyLog("WARNING", "skipping device '%s'. Please check and adapt the value in the Note definition file.", bdev)
+				system.InfoLog("skipping device '%s'. Please check and adapt the value in the Note definition file.", bdev)
 				_ = system.SetSysInt(bfile, oldval)
 			}
 		}

@@ -200,7 +200,7 @@ func NoteActionEdit(writer io.Writer, noteID string, tuneApp *app.App) {
 	fileName, extraNote := getFileName(noteID, NoteTuningSheets, ExtraTuningSheets)
 	ovFileName, overrideNote := getovFile(noteID, OverrideTuningSheets)
 	if !extraNote {
-		system.ErrorExit("ATTENTION: The Note definition file you want to edit is a saptune internal (shipped) Note and can NOT be edited. Use 'saptune note customise' instead. Exiting ...")
+		system.ErrorExit("The Note definition file you want to edit is a saptune internal (shipped) Note and can NOT be edited. Use 'saptune note customise' instead. Exiting ...")
 	}
 
 	changed, err := system.EditAndCheckFile(fileName, fileName, noteID, "note")
@@ -288,7 +288,7 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID string, tuneApp
 	}
 
 	if !extraNote && !overrideNote {
-		system.ErrorExit("ATTENTION: The Note definition file you want to delete is a saptune internal (shipped) Note and can NOT be deleted. Exiting ...")
+		system.ErrorExit("The Note definition file you want to delete is a saptune internal (shipped) Note and can NOT be deleted. Exiting ...")
 	}
 	if !extraNote && overrideNote {
 		// system note, override file exists
@@ -373,10 +373,10 @@ func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 		system.ErrorExit("Failed to revert note %s: %v", noteID, err)
 	}
 	if ok {
-		system.LogOnlyLog("INFO", "Parameters tuned by the note '%s' have been successfully reverted.", noteID)
+		system.InfoLog("Parameters tuned by the note '%s' have been successfully reverted.", noteID)
 		fmt.Fprintf(writer, "Parameters tuned by the note have been successfully reverted.\n")
 	} else {
-		system.LogOnlyLog("INFO", "Note '%s' is not applied, so nothing to revert.", noteID)
+		system.InfoLog("INFO", "Note '%s' is not applied, so nothing to revert.", noteID)
 	}
 }
 

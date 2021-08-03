@@ -177,10 +177,10 @@ func SolutionActionRevert(writer io.Writer, solName string, tuneApp *app.App) {
 		system.ErrorExit("Failed to revert tuning for solution %s: %v", solName, err)
 	}
 	if ok {
-		system.LogOnlyLog("INFO", "Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
+		system.InfoLog("Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
 		fmt.Fprintf(writer, "Parameters tuned by the notes referred by the SAP solution have been successfully reverted.\n")
 	} else {
-		system.LogOnlyLog("INFO", "Solution '%s' is not applied, so nothing to revert.", solName)
+		system.InfoLog("Solution '%s' is not applied, so nothing to revert.", solName)
 	}
 }
 
@@ -269,7 +269,7 @@ func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
 	fileName, extraSol := getFileName(solFName, SolutionSheets, ExtraTuningSheets)
 	ovFileName, overrideSol := getovFile(solFName, OverrideTuningSheets)
 	if !extraSol {
-		system.ErrorExit("ATTENTION: The Solution definition file you want to edit is a saptune internal (shipped) Solution and can NOT be edited. Use 'saptune solution customise' instead. Exiting ...")
+		system.ErrorExit("The Solution definition file you want to edit is a saptune internal (shipped) Solution and can NOT be edited. Use 'saptune solution customise' instead. Exiting ...")
 	}
 
 	changed, err := system.EditAndCheckFile(fileName, fileName, customSol, "solution")
@@ -367,7 +367,7 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 	}
 
 	if !extraSol && !overrideSol {
-		system.ErrorExit("ATTENTION: The Solution file you want to delete is a saptune internal (shipped) Solution and can NOT be deleted. Exiting ...")
+		system.ErrorExit("The Solution file you want to delete is a saptune internal (shipped) Solution and can NOT be deleted. Exiting ...")
 	}
 	if !extraSol && overrideSol {
 		// system solution, override file exists

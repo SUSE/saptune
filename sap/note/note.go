@@ -68,13 +68,13 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		// ignore left over files (BOBJ and ASE definition files) from
 		// the migration of saptune version 1 to saptune version 2
 		if fileName == "SAP_BOBJ-SAP_Business_OBJects.conf" || fileName == "SAP_ASE-SAP_Adaptive_Server_Enterprise.conf" {
-			system.WarningLog("GetTuningOptions: skip old note definition \"%s\" from saptune version 1.", fileName)
-			system.WarningLog("For more information refer to the man page saptune-migrate(7)")
+			system.InfoLog("GetTuningOptions: skip old note definition \"%s\" from saptune version 1.", fileName)
+			system.InfoLog("For more information refer to the man page saptune-migrate(7)")
 			continue
 		}
 		if !strings.HasSuffix(fileName, ".conf") {
 			// skip filenames without .conf suffix
-			system.WarningLog("skip file \"%s\", wrong filename syntax, missing '.conf' suffix", fileName)
+			system.InfoLog("skip file \"%s\", wrong filename syntax, missing '.conf' suffix", fileName)
 			continue
 		}
 
@@ -85,12 +85,12 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			// no header found in the vendor file
 			// fall back to the old style vendor file names
 			// support of old style vendor file names for compatibility reasons
-			system.WarningLog("GetTuningOptions: no header information found in file \"%s\"", fileName)
-			system.WarningLog("falling back to old style vendor file names")
+			system.InfoLog("GetTuningOptions: no header information found in file \"%s\"", fileName)
+			system.InfoLog("falling back to old style vendor file names")
 			// By convention, the portion before dash makes up the ID.
 			idName := strings.SplitN(fileName, "-", 2)
 			if len(idName) != 2 {
-				system.WarningLog("GetTuningOptions: skip bad file name \"%s\"", fileName)
+				system.InfoLog("GetTuningOptions: skip bad file name \"%s\"", fileName)
 				continue
 			}
 			id = idName[0]
@@ -103,7 +103,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		}
 		// Do not allow vendor to override built-in
 		if _, exists := ret[id]; exists {
-			system.WarningLog("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
+			system.InfoLog("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
 			continue
 		}
 		ret[id] = INISettings{

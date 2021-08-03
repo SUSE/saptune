@@ -56,7 +56,7 @@ func chkOsTags(tagField string, secFields []string) bool {
 	if len(osw) != 3 {
 		if tagField != system.GetOsVers() {
 			// os version does not match
-			system.WarningLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
+			system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
 			ret = false
 		}
 	} else if osw[2] == "*" {
@@ -64,16 +64,16 @@ func chkOsTags(tagField string, secFields []string) bool {
 		switch osw[1] {
 		case "15":
 			if !system.IsSLE15() {
-				system.WarningLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
+				system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
 				ret = false
 			}
 		case "12":
 			if !system.IsSLE12() {
-				system.WarningLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
+				system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
 				ret = false
 			}
 		default:
-			system.WarningLog("unsupported os version '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", tagField, secFields)
+			system.InfoLog("unsupported os version '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", tagField, secFields)
 			ret = false
 		}
 	}
@@ -90,7 +90,7 @@ func chkArchTags(tagField string, secFields []string) bool {
 	}
 	if tagField != chkArch {
 		// arch does not match
-		system.WarningLog("system architecture '%s' in section definition '%v' does not match the architecture of the running system '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, chkArch)
+		system.InfoLog("system architecture '%s' in section definition '%v' does not match the architecture of the running system '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, chkArch)
 		ret = false
 	}
 	return ret
@@ -105,7 +105,7 @@ func chkCspTags(tagField string, secFields []string) bool {
 		if chkCsp == "" {
 			chkCsp = "not a cloud"
 		}
-		system.WarningLog("cloud service provider '%s' in section definition '%v' does not match the cloud service provider of the running system ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, chkCsp)
+		system.InfoLog("cloud service provider '%s' in section definition '%v' does not match the cloud service provider of the running system ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, chkCsp)
 		ret = false
 	}
 	return ret
@@ -127,7 +127,7 @@ func chkOtherTags(file, tagField string, secFields []string) bool {
 		match, _ := regexp.MatchString(tagExpr, chkDmi)
 		if !match {
 			// content of file does not match
-			system.WarningLog("the string '%s' in section definition '%v' does not match the content of the file '/sys/class/dmi/id/%s' ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, file, chkDmi)
+			system.InfoLog("the string '%s' in section definition '%v' does not match the content of the file '/sys/class/dmi/id/%s' ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, file, chkDmi)
 			ret = false
 		}
 	}
@@ -148,7 +148,7 @@ func chkHWTags(info, tagField string, secFields []string) bool {
 	} else {
 		match, _ := regexp.MatchString(tagExpr, chkHW)
 		if !match {
-			system.WarningLog("hardware %s '%s' in section definition '%v' does not match the hardware %s of the running system ('%s'). Skipping whole section with all lines till next valid section definition", info, tagField, secFields, info, chkHW)
+			system.InfoLog("hardware %s '%s' in section definition '%v' does not match the hardware %s of the running system ('%s'). Skipping whole section with all lines till next valid section definition", info, tagField, secFields, info, chkHW)
 			ret = false
 		}
 	}
@@ -171,7 +171,7 @@ func chkBlkTags(info, tagField string, secFields, actbdev []string) (bool, []str
 	bdev := system.GetAvailBlockInfo(blkInfo, tagExpr)
 	if len(bdev) == 0 {
 		// pattern, vendor or model does not match
-		system.WarningLog("%s '%s' in section definition '%v' does not match any available block device %s of the running system. Skipping whole section with all lines till next valid section definition", info, tagField, secFields, info)
+		system.InfoLog("%s '%s' in section definition '%v' does not match any available block device %s of the running system. Skipping whole section with all lines till next valid section definition", info, tagField, secFields, info)
 	} else {
 		// as it is possible to have more than one tag in a
 		// section (vendor and module) we need the overlap for

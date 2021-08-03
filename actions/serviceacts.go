@@ -97,7 +97,7 @@ func ServiceActionStart(enableService bool, tuneApp *app.App) {
 	saptuneInfo := ""
 	system.InfoLog("Starting 'saptune.service', this may take some time...")
 	if system.IsSapconfActive(SapconfService) {
-		system.ErrorExit("ATTENTION: found an active sapconf, so refuse any action")
+		system.ErrorExit("found an active sapconf, so refuse any action")
 	}
 	// release Lock, to prevent deadlock with systemd service 'saptune.service'
 	system.ReleaseSaptuneLock()
@@ -131,7 +131,7 @@ func ServiceActionApply(tuneApp *app.App) {
 	// /var/lib/sapconf/act_profile in sle12
 	// /run/sapconf/active in sle15
 	if system.IsSapconfActive(SapconfService) {
-		system.ErrorExit("ATTENTION: found an active sapconf, so refuse any action")
+		system.ErrorExit("found an active sapconf, so refuse any action")
 	}
 	system.InfoLog("saptune is now tuning the system...")
 	if err := tuneApp.TuneAll(); err != nil {
@@ -147,7 +147,7 @@ func ServiceActionEnable() {
 	// /var/lib/sapconf/act_profile in sle12
 	// /run/sapconf/active in sle15
 	if system.IsSapconfActive(SapconfService) {
-		system.ErrorExit("ATTENTION: found an active sapconf, so refuse any action")
+		system.ErrorExit("found an active sapconf, so refuse any action")
 	}
 	// enable 'saptune.service'
 	if err := system.SystemctlEnable(SaptuneService); err != nil {
@@ -248,7 +248,7 @@ func ServiceActionRevert(tuneApp *app.App) {
 	// service deadlock in ServiceActionTakeover, ignoreFlag set
 	if _, err := os.Stat(ignoreFlag); os.IsNotExist(err) {
 		if system.IsSapconfActive(SapconfService) {
-			system.ErrorExit("ATTENTION: found an active sapconf, so refuse any action")
+			system.ErrorExit("found an active sapconf, so refuse any action")
 		}
 		if len(tuneApp.NoteApplyOrder) != 0 {
 			system.InfoLog("saptune is now reverting all settings...")
@@ -491,7 +491,7 @@ func DaemonAction(writer io.Writer, actionName, saptuneVersion string, tuneApp *
 	if actionName == "stop" {
 		serviceAction = "disablestop"
 	}
-	system.WarningLog("ATTENTION: the argument 'daemon' is deprecated!. saptune will forward the request to 'saptune service %s'.\nFor the future please use 'saptune service %s'.", serviceAction, serviceAction)
+	system.WarningLog("the argument 'daemon' is deprecated!. saptune will forward the request to 'saptune service %s'.\nFor the future please use 'saptune service %s'.", serviceAction, serviceAction)
 	switch actionName {
 	case "start":
 		ServiceActionTakeover(tuneApp)

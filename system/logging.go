@@ -10,13 +10,14 @@ import (
 )
 
 var infoLogger *log.Logger    // Info logger
+var noticeLogger *log.Logger  // Notice logger
 var debugLogger *log.Logger   // Debug logger
 var errorLogger *log.Logger   // Error logger
 var warningLogger *log.Logger // Warning logger
-var logOnlyLogger *log.Logger // Log only logger
 var debugSwitch string        // Switch Debug on or off
 var verboseSwitch string      // Switch verbose mode on or off
 var errorSwitch = ""          // Switch error mode on or off
+var severNoticeFormat = "NOTICE   "
 var severInfoFormat = "INFO     "
 var severWarnFormat = "WARNING  "
 var severErrorFormat = "ERROR    "
@@ -30,13 +31,20 @@ func DebugLog(txt string, stuff ...interface{}) {
 	}
 }
 
-// InfoLog sents text to the infoLogger and stdout
+// NoticeLog sents text to the noticeLogger and stdout
+func NoticeLog(txt string, stuff ...interface{}) {
+	if noticeLogger != nil {
+		noticeLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+		if verboseSwitch == "on" {
+			fmt.Fprintf(os.Stdout, "NOTICE: "+txt+"\n", stuff...)
+		}
+	}
+}
+
+// InfoLog sents text only to the infoLogger
 func InfoLog(txt string, stuff ...interface{}) {
 	if infoLogger != nil {
 		infoLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		if verboseSwitch == "on" {
-			fmt.Fprintf(os.Stdout, "    INFO: "+txt+"\n", stuff...)
-		}
 	}
 }
 
@@ -45,7 +53,7 @@ func WarningLog(txt string, stuff ...interface{}) {
 	if warningLogger != nil {
 		warningLogger.Printf(CalledFrom()+txt+"\n", stuff...)
 		if verboseSwitch == "on" {
-			fmt.Fprintf(os.Stderr, "    WARNING: "+txt+"\n", stuff...)
+			fmt.Fprintf(os.Stderr, "WARNING: "+txt+"\n", stuff...)
 		}
 	}
 }
@@ -59,25 +67,6 @@ func ErrorLog(txt string, stuff ...interface{}) error {
 		}
 	}
 	return fmt.Errorf(txt+"\n", stuff...)
-}
-
-// LogOnlyLog sents text only to the logOnlyLogger
-func LogOnlyLog(info, txt string, stuff ...interface{}) (err error) {
-	err = nil
-	severFormat := "SAPTUNE  "
-	if logOnlyLogger != nil {
-		switch info {
-		case "INFO":
-			severFormat = severInfoFormat
-		case "WARNING":
-			severFormat = severWarnFormat
-		case "ERROR":
-			severFormat = severErrorFormat
-			err = fmt.Errorf(txt+"\n", stuff...)
-		}
-		logOnlyLogger.Printf(severFormat+logpidFormat+CalledFrom()+txt+"\n", stuff...)
-	}
-	return
 }
 
 // LogInit initialise the different log writer saptune will use
@@ -98,10 +87,10 @@ func LogInit(logFile string, logSwitch map[string]string) {
 	//log.SetFlags(0)
 
 	debugLogger = log.New(saptuneLog, logTimeFormat+"DEBUG    "+logpidFormat, 0)
+	noticeLogger = log.New(saptuneLog, logTimeFormat+severNoticeFormat+logpidFormat, 0)
 	infoLogger = log.New(saptuneLog, logTimeFormat+severInfoFormat+logpidFormat, 0)
 	warningLogger = log.New(saptuneLog, logTimeFormat+severWarnFormat+logpidFormat, 0)
 	errorLogger = log.New(saptuneLog, logTimeFormat+severErrorFormat+logpidFormat, 0)
-	logOnlyLogger = log.New(saptuneLog, logTimeFormat, 0)
 
 	debugSwitch = logSwitch["debug"]
 	verboseSwitch = logSwitch["verbose"]
