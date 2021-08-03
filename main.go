@@ -15,10 +15,8 @@ import (
 
 // constant definitions
 const (
-	TunedService    = "tuned.service"
-	saptuneV1       = "/usr/sbin/saptune_v1"
-	logFile         = "/var/log/saptune/saptune.log"
-	exitNotYetTuned = 5
+	saptuneV1 = "/usr/sbin/saptune_v1"
+	logFile   = "/var/log/saptune/saptune.log"
 )
 
 var tuneApp *app.App                 // application configuration and tuning states
@@ -31,29 +29,18 @@ var SaptuneVersion = ""
 
 func main() {
 	// get saptune version
-	sconf, err := txtparser.ParseSysconfigFile("/etc/sysconfig/saptune", true)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Unable to read file '/etc/sysconfig/saptune': %v\n", err)
-		system.ErrorExit("", 1)
-	}
-	SaptuneVersion = sconf.GetString("SAPTUNE_VERSION", "")
-	// Switch Debug on ("1") or off ("0" - default)
-	// Switch verbose mode on ("on" - default) or off ("off")
-	// check, if DEBUG or VERBOSE is set in /etc/sysconfig/saptune
-	if logSwitch["debug"] == "" {
-		logSwitch["debug"] = sconf.GetString("DEBUG", "0")
-	}
-	if logSwitch["verbose"] == "" {
-		logSwitch["verbose"] = sconf.GetString("VERBOSE", "on")
-	}
+	SaptuneVersion, logSwitch = checkSaptuneConfigFile(logSwitch)
 
 	arg1 := system.CliArg(1)
 	if arg1 == "version" || system.IsFlagSet("version") {
 		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
 		system.ErrorExit("", 0)
 	}
-	if arg1 == "" || arg1 == "help" || system.IsFlagSet("help") {
+	if arg1 == "help" || system.IsFlagSet("help") {
 		actions.PrintHelpAndExit(os.Stdout, 0)
+	}
+	if arg1 == "" {
+		actions.PrintHelpAndExit(os.Stdout, 1)
 	}
 
 	// All other actions require super user privilege
@@ -147,7 +134,7 @@ func checkUpdateLeftOvers() {
 // checkForTuned checks for enabled and/or running tuned and prints out
 // a warning message
 func checkForTuned() {
-	if system.SystemctlIsEnabled(TunedService) || system.SystemctlIsRunning(TunedService) {
+	if system.SystemctlIsEnabled(actions.TunedService) || system.SystemctlIsRunning(actions.TunedService) {
 		system.WarningLog("ATTENTION: tuned service is active, so we may encounter conflicting tuning values")
 	}
 }
@@ -191,4 +178,47 @@ func checkWorkingArea() {
 			}
 		}
 	}
+}
+
+// checkSaptuneConfigFile checks the config file /etc/sysconfig/saptune
+// if it exists, if it contains all needed variables and for some variables
+// checks, if the values is valid
+// returns the saptune version and some log switches
+func checkSaptuneConfigFile(lswitch map[string]string) (string, map[string]string) {
+	missingKey := []string{}
+	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING"}
+	sconf, err := txtparser.ParseSysconfigFile(app.SysconfigSaptuneFile, false)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: Unable to read file '%s': %v\n", app.SysconfigSaptuneFile, err)
+		system.ErrorExit("", 128)
+	}
+	// check, if all needed variables are available in the saptune
+	// config file
+	for _, key := range keyList {
+		if !sconf.IsKeyAvail(key) {
+			missingKey = append(missingKey, key)
+		}
+	}
+	if len(missingKey) != 0 {
+		fmt.Fprintf(os.Stderr, "Error: File '%s' is broken. Missing variables '%s'\n", app.SysconfigSaptuneFile, strings.Join(missingKey, ", "))
+		system.ErrorExit("", 128)
+	}
+	stageVal := sconf.GetString("STAGING", "")
+	if stageVal != "true" && stageVal != "false" {
+		fmt.Fprintf(os.Stderr, "Error: Variable 'STAGING' from file '%s' contains a wrong value '%s'. Needs to be 'true' or 'false'\n", app.SysconfigSaptuneFile, stageVal)
+		system.ErrorExit("", 128)
+	}
+
+	// set values read from the config file
+	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
+	// Switch Debug on ("1") or off ("0" - default)
+	// Switch verbose mode on ("on" - default) or off ("off")
+	// check, if DEBUG or VERBOSE is set in /etc/sysconfig/saptune
+	if lswitch["debug"] == "" {
+		lswitch["debug"] = sconf.GetString("DEBUG", "0")
+	}
+	if lswitch["verbose"] == "" {
+		lswitch["verbose"] = sconf.GetString("VERBOSE", "on")
+	}
+	return saptuneVers, lswitch
 }
