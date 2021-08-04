@@ -238,7 +238,7 @@ func renameDefFile(fileName, newFileName string) {
 	if err := os.Rename(fileName, newFileName); err != nil {
 		system.ErrorExit("Failed to rename file '%s' to '%s' - %v", fileName, newFileName, err)
 	} else {
-		system.InfoLog("File '%s' renamed successfully to '%s'", fileName, newFileName)
+		system.NoticeLog("File '%s' renamed successfully to '%s'", fileName, newFileName)
 	}
 }
 
@@ -248,7 +248,7 @@ func deleteDefFile(fileName string) {
 	if err := os.Remove(fileName); err != nil {
 		system.ErrorExit("Failed to remove file '%s' - %v", fileName, err)
 	} else {
-		system.InfoLog("File '%s' removed successfully", fileName)
+		system.NoticeLog("File '%s' removed successfully", fileName)
 	}
 }
 

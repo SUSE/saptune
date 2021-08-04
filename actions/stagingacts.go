@@ -91,22 +91,22 @@ func stagingActionStatus(writer io.Writer) {
 
 // stagingActionEnable enables staging by setting STAGING in /etc/sysconfig/saptune.
 func stagingActionEnable() {
-	system.InfoLog("Enable staging")
+	system.NoticeLog("Enable staging")
 	stagingSwitch = true
 	if err := writeStagingToConf("true"); err != nil {
 		system.ErrorExit("Staging could NOT be enabled. - '%v'\n", err)
 	}
-	system.InfoLog("Staging has been enabled.")
+	system.NoticeLog("Staging has been enabled.")
 }
 
 // stagingActionDisable disables staging by setting STAGING in /etc/sysconfig/saptune.
 func stagingActionDisable() {
-	system.InfoLog("Disable staging")
+	system.NoticeLog("Disable staging")
 	stagingSwitch = false
 	if err := writeStagingToConf("false"); err != nil {
 		system.ErrorExit("Staging could NOT be disabled. - '%v'\n", err)
 	}
-	system.InfoLog("Staging has been disabled.")
+	system.NoticeLog("Staging has been disabled.")
 }
 
 // stagingActionList lists all Notes and solution definition which can be
@@ -219,7 +219,7 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				if err != nil {
 					errs = append(errs, err)
 				} else {
-					system.InfoLog("%s Version %s (%s) released", stageName, stageVers, stageDate)
+					system.NoticeLog("%s Version %s (%s) released", stageName, stageVers, stageDate)
 				}
 			}
 			if len(errs) != 0 {
@@ -242,7 +242,7 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 			if err := mvStageToWork(sName); err != nil {
 				system.ErrorExit("", 1)
 			}
-			system.InfoLog("%s Version %s (%s) released", sName, stageVers, stageDate)
+			system.NoticeLog("%s Version %s (%s) released", sName, stageVers, stageDate)
 		}
 	}
 }
@@ -389,7 +389,7 @@ func mvStageToWork(stageName string) error {
 				errs = append(errs, rerr)
 			}
 			if len(errs) == 0 {
-				system.InfoLog("'%s' successfully removed from working and staging area", stageName)
+				system.NoticeLog("'%s' successfully removed from working and staging area", stageName)
 			}
 		}
 	}
@@ -398,7 +398,7 @@ func mvStageToWork(stageName string) error {
 		system.ErrorLog("Problems during move of '%s' from staging to working area: %v", stageName, err)
 		errs = append(errs, err)
 	} else {
-		system.InfoLog("'%s' successfully moved from staging to working area", stageName)
+		system.NoticeLog("'%s' successfully moved from staging to working area", stageName)
 	}
 	if len(errs) != 0 {
 		return fmt.Errorf("Problems during releasing '%s' from staging to working area", stageName)
@@ -617,7 +617,7 @@ func diffStageObj(writer io.Writer, sName string) {
 		PrintStageFields(writer, sName, comparisons)
 	} else {
 		// paranoia log, should not be the case, because the saptune rpm takes care of this
-		system.InfoLog("'%s' - no diffs in staging", sName)
+		system.NoticeLog("'%s' - no diffs in staging", sName)
 	}
 }
 

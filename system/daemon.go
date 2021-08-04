@@ -28,7 +28,7 @@ func SystemctlStatus(thing string) error {
 	if err != nil {
 		return ErrorLog("%v - Failed to call systemctl status on %s - %s", err, thing, string(out))
 	}
-	InfoLog("SystemctlStatus - '%+v'\n", string(out))
+	NoticeLog("SystemctlStatus - '%+v'\n", string(out))
 	return nil
 }
 
