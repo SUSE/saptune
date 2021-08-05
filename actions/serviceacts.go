@@ -203,6 +203,10 @@ func ServiceActionStop(disableService bool) {
 	saptuneInfo := ""
 
 	system.NoticeLog("Stopping 'saptune.service', this may take some time...")
+	oldServiceState := "running"
+	if !system.SystemctlIsRunning(SaptuneService) {
+		oldServiceState = "NOT running"
+	}
 	// release Lock, to prevent deadlock with systemd service 'saptune.service'
 	system.ReleaseSaptuneLock()
 	// disable and/or stop 'saptune.service'
@@ -219,7 +223,9 @@ func ServiceActionStop(disableService bool) {
 	system.NoticeLog(saptuneInfo)
 	// saptune.service then calls `saptune daemon revert` to
 	// revert all tuned parameter
-	system.NoticeLog("All tuned parameters have been reverted to default.")
+	if oldServiceState == "running" {
+		system.NoticeLog("All tuned parameters have been reverted to default.")
+	}
 }
 
 // ServiceActionRestart is only used by saptune service, hence it is not

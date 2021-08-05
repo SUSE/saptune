@@ -134,6 +134,19 @@ func SystemctlIsEnabled(thing string) bool {
 	return false
 }
 
+// SystemctlIsStarting return true only if systemctl suggests that the system is
+// starting.
+func SystemctlIsStarting() bool {
+	match := false
+	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
+	DebugLog("IsSystemRunning - /usr/bin/systemctl is-system-running : '%+v %s'", err, string(out))
+	if strings.TrimSpace(string(out)) == "starting" {
+		DebugLog("IsSystemRunning - system is in state 'starting'")
+		match = true
+	}
+	return match
+}
+
 // SystemctlIsRunning return true only if systemctl suggests that the thing is
 // running.
 func SystemctlIsRunning(thing string) bool {

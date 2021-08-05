@@ -409,7 +409,12 @@ func (vend INISettings) createParamSavedStates(key, flstates string) {
 	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "" {
 		start := vend.SysctlParams[key]
 		if key == "UserTasksMax" {
-			start = system.GetTasksMax("0")
+			if system.SystemctlIsStarting() {
+				start = system.GetBackupValue("/var/lib/saptune/working/.tmbackup")
+			} else {
+				start = system.GetTasksMax("0")
+				system.WriteBackupValue(start, "/var/lib/saptune/working/.tmbackup")
+			}
 		}
 		CreateParameterStartValues(key, start)
 		if key == "force_latency" {

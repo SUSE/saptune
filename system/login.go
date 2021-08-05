@@ -44,6 +44,7 @@ func GetTasksMax(userID string) string {
 	uSlice := "user-" + userID + ".slice"
 	cmdName := "/usr/bin/systemctl"
 	cmdArgs := []string{"show", "-p", "TasksMax", uSlice}
+	DebugLog("GetTasksMax - calling '%s' with '%s' args", cmdName, strings.Join(cmdArgs, " "))
 
 	if !CmdIsAvailable(cmdName) {
 		WarningLog("command '%s' not found", cmdName)
@@ -55,6 +56,7 @@ func GetTasksMax(userID string) string {
 		return ""
 	}
 	tasksMax := strings.Split(strings.TrimSpace(string(cmdOut)), "=")
+	DebugLog("GetTasksMax - cmd returns '%+v'", tasksMax)
 	// The result of strings.Split of an 'empty' string is a slice with
 	// one element - the empty string.
 	if len(tasksMax) == 1 && tasksMax[0] == "" {
