@@ -195,7 +195,6 @@ func GetBackupValue(fileName string) string {
 	if value == "" {
 		value = "NA"
 	}
-	os.Remove(fileName)
 	return value
 }
 
