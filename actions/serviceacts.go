@@ -95,6 +95,11 @@ func ServiceActionTakeover(tuneApp *app.App) {
 func ServiceActionStart(enableService bool, tuneApp *app.App) {
 	var err error
 	saptuneInfo := ""
+	if system.SystemctlIsRunning(SaptuneService) {
+		saptuneInfo = getInfoTxt("start", enableService)
+		system.NoticeLog(saptuneInfo)
+		return
+	}
 	system.NoticeLog("Starting 'saptune.service', this may take some time...")
 	if system.IsSapconfActive(SapconfService) {
 		system.ErrorExit("found an active sapconf, so refuse any action")
@@ -202,11 +207,12 @@ func ServiceActionStop(disableService bool) {
 	var err error
 	saptuneInfo := ""
 
-	system.NoticeLog("Stopping 'saptune.service', this may take some time...")
-	oldServiceState := "running"
 	if !system.SystemctlIsRunning(SaptuneService) {
-		oldServiceState = "NOT running"
+		saptuneInfo = getInfoTxt("stop", disableService)
+		system.NoticeLog(saptuneInfo)
+		return
 	}
+	system.NoticeLog("Stopping 'saptune.service', this may take some time...")
 	// release Lock, to prevent deadlock with systemd service 'saptune.service'
 	system.ReleaseSaptuneLock()
 	// disable and/or stop 'saptune.service'
@@ -223,9 +229,7 @@ func ServiceActionStop(disableService bool) {
 	system.NoticeLog(saptuneInfo)
 	// saptune.service then calls `saptune daemon revert` to
 	// revert all tuned parameter
-	if oldServiceState == "running" {
-		system.NoticeLog("All tuned parameters have been reverted to default.")
-	}
+	system.NoticeLog("All tuned parameters have been reverted to default.")
 }
 
 // ServiceActionRestart is only used by saptune service, hence it is not
@@ -324,6 +328,36 @@ func disableAndStopTuned() {
 			system.NoticeLog("Service '%s' disabled and stopped", TunedService)
 		}
 	}
+}
+
+// getInfoTxt prepares the information to print during start or stop
+func getInfoTxt(action string, state bool) string {
+	sinfo := ""
+	switch action {
+	case "stop":
+		sinfo = "Service 'saptune.service' not running"
+		if state {
+			if system.SystemctlIsEnabled(SaptuneService) {
+				sinfo = sinfo + " but enabled. To disable the service please use 'saptune service disable'."
+			} else {
+				sinfo = sinfo + " and disabled. So nothing to do."
+			}
+		} else {
+			sinfo = sinfo + ". So nothing to do."
+		}
+	case "start":
+		sinfo = "Service 'saptune.service' is running"
+		if state {
+			if system.SystemctlIsEnabled(SaptuneService) {
+				sinfo = sinfo + " and enabled. So nothing to do."
+			} else {
+				sinfo = sinfo + " but disabled. To enable the service please use 'saptune service enable'."
+			}
+		} else {
+			sinfo = sinfo + ". So nothing to do."
+		}
+	}
+	return sinfo
 }
 
 // printSapconfStatus prints status of sapconf.service
