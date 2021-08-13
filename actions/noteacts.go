@@ -62,7 +62,7 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 	// note to the state before it was tuned.
 	if str, ok := tuneApp.IsNoteApplied(noteID); ok {
 		if str == "" {
-			system.InfoLog("note '%s' already applied. Nothing to do", noteID)
+			system.NoticeLog("note '%s' already applied. Nothing to do", noteID)
 		}
 		system.ErrorExit("", 0)
 	}
@@ -168,7 +168,7 @@ func NoteActionCustomise(writer io.Writer, noteID string, tuneApp *app.App) {
 		editSrcFile = fileName
 		editDestFile = ovFileName
 	} else {
-		system.InfoLog("Note override file already exists, using file '%s' as base for editing", ovFileName)
+		system.NoticeLog("Note override file already exists, using file '%s' as base for editing", ovFileName)
 		editSrcFile = ovFileName
 		editDestFile = ovFileName
 	}
@@ -179,9 +179,9 @@ func NoteActionCustomise(writer io.Writer, noteID string, tuneApp *app.App) {
 	}
 	if changed {
 		if _, ok := tuneApp.IsNoteApplied(noteID); !ok {
-			system.InfoLog("Do not forget to apply the just edited Note to get your changes to take effect\n")
+			system.NoticeLog("Do not forget to apply the just edited Note to get your changes to take effect\n")
 		} else { // noteID already applied
-			system.InfoLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
+			system.NoticeLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
 		}
 	} else {
 		system.WarningLog("nothing changed during the editor session, so no update of the note definition file '%s'", editSrcFile)
@@ -200,7 +200,7 @@ func NoteActionEdit(writer io.Writer, noteID string, tuneApp *app.App) {
 	fileName, extraNote := getFileName(noteID, NoteTuningSheets, ExtraTuningSheets)
 	ovFileName, overrideNote := getovFile(noteID, OverrideTuningSheets)
 	if !extraNote {
-		system.ErrorExit("ATTENTION: The Note definition file you want to edit is a saptune internal (shipped) Note and can NOT be edited. Use 'saptune note customise' instead. Exiting ...")
+		system.ErrorExit("The Note definition file you want to edit is a saptune internal (shipped) Note and can NOT be edited. Use 'saptune note customise' instead. Exiting ...")
 	}
 
 	changed, err := system.EditAndCheckFile(fileName, fileName, noteID, "note")
@@ -209,12 +209,12 @@ func NoteActionEdit(writer io.Writer, noteID string, tuneApp *app.App) {
 	}
 	if changed {
 		if _, ok := tuneApp.IsNoteApplied(noteID); !ok {
-			system.InfoLog("Do not forget to apply the just edited Note to get your changes to take effect\n")
+			system.NoticeLog("Do not forget to apply the just edited Note to get your changes to take effect\n")
 		} else { // noteID already applied
-			system.InfoLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
+			system.NoticeLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
 		}
 		if overrideNote {
-			system.InfoLog("Note override file '%s' exists. Please check, if the content of this file is still valid", ovFileName)
+			system.NoticeLog("Note override file '%s' exists. Please check, if the content of this file is still valid", ovFileName)
 		}
 
 	} else {
@@ -246,7 +246,7 @@ func NoteActionCreate(noteID string, tuneApp *app.App) {
 	if !changed {
 		system.WarningLog("nothing changed during the editor session, so no new, custome specific note definition file will be created.")
 	} else {
-		system.InfoLog("Note '%s' created successfully. You can modify the content of your Note definition file by using 'saptune note edit %s' or create an override file by 'saptune note customise %s'.", noteID, noteID, noteID)
+		system.NoticeLog("Note '%s' created successfully. You can modify the content of your Note definition file by using 'saptune note edit %s' or create an override file by 'saptune note customise %s'.", noteID, noteID, noteID)
 	}
 }
 
@@ -282,13 +282,13 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID string, tuneApp
 
 	// check, if note is active - applied
 	if _, ok := tuneApp.IsNoteApplied(noteID); ok {
-		system.InfoLog("The Note definition file you want to delete is currently in use, which means it is already applied.")
-		system.InfoLog("So please 'revert' the Note first and then try deleting again.\n")
+		system.NoticeLog("The Note definition file you want to delete is currently in use, which means it is already applied.")
+		system.NoticeLog("So please 'revert' the Note first and then try deleting again.\n")
 		system.ErrorExit("", 0)
 	}
 
 	if !extraNote && !overrideNote {
-		system.ErrorExit("ATTENTION: The Note definition file you want to delete is a saptune internal (shipped) Note and can NOT be deleted. Exiting ...")
+		system.ErrorExit("The Note definition file you want to delete is a saptune internal (shipped) Note and can NOT be deleted. Exiting ...")
 	}
 	if !extraNote && overrideNote {
 		// system note, override file exists
@@ -338,8 +338,8 @@ func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID stri
 
 	// check, if note is active - applied
 	if _, ok := tuneApp.IsNoteApplied(noteID); ok {
-		system.InfoLog("The Note definition file you want to rename is currently in use, which means it is already applied.")
-		system.InfoLog("So please 'revert' the Note first and then try renaming again.\n")
+		system.NoticeLog("The Note definition file you want to rename is currently in use, which means it is already applied.")
+		system.NoticeLog("So please 'revert' the Note first and then try renaming again.\n")
 		system.ErrorExit("", 0)
 	}
 
@@ -373,10 +373,10 @@ func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 		system.ErrorExit("Failed to revert note %s: %v", noteID, err)
 	}
 	if ok {
-		system.LogOnlyLog("INFO", "Parameters tuned by the note '%s' have been successfully reverted.", noteID)
+		system.InfoLog("Parameters tuned by the note '%s' have been successfully reverted.", noteID)
 		fmt.Fprintf(writer, "Parameters tuned by the note have been successfully reverted.\n")
 	} else {
-		system.LogOnlyLog("INFO", "Note '%s' is not applied, so nothing to revert.", noteID)
+		system.NoticeLog("INFO", "Note '%s' is not applied, so nothing to revert.", noteID)
 	}
 }
 

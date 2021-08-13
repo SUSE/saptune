@@ -26,8 +26,8 @@ var OSExit = os.Exit
 // ErrorExitOut defines, which exit output function should be used
 var ErrorExitOut = ErrorLog
 
-// LOout defines, which log output function should be used
-var LOout = LogOnlyLog
+// InfoOut defines, which log output function should be used
+var InfoOut = InfoLog
 
 // get saptune arguments and flags
 var saptArgs, saptFlags = ParseCliArgs()
@@ -232,7 +232,7 @@ func ErrorExit(template string, stuff ...interface{}) {
 	if isOwnLock() {
 		ReleaseSaptuneLock()
 	}
-	LOout("INFO", "saptune terminated with exit code '%v'", exState)
+	InfoOut("saptune terminated with exit code '%v'", exState)
 	OSExit(exState)
 }
 

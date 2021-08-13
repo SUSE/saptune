@@ -177,10 +177,10 @@ func SolutionActionRevert(writer io.Writer, solName string, tuneApp *app.App) {
 		system.ErrorExit("Failed to revert tuning for solution %s: %v", solName, err)
 	}
 	if ok {
-		system.LogOnlyLog("INFO", "Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
+		system.InfoLog("Parameters tuned by the notes referred by the SAP solution have been successfully reverted.")
 		fmt.Fprintf(writer, "Parameters tuned by the notes referred by the SAP solution have been successfully reverted.\n")
 	} else {
-		system.LogOnlyLog("INFO", "Solution '%s' is not applied, so nothing to revert.", solName)
+		system.NoticeLog("Solution '%s' is not applied, so nothing to revert.", solName)
 	}
 }
 
@@ -229,7 +229,7 @@ func SolutionActionCustomise(writer io.Writer, customSol string, tuneApp *app.Ap
 		editSrcFile = fileName
 		editDestFile = ovFileName
 	} else {
-		system.InfoLog("Solution override file already exists, using file '%s' as base for editing", ovFileName)
+		system.NoticeLog("Solution override file already exists, using file '%s' as base for editing", ovFileName)
 		editSrcFile = ovFileName
 		editDestFile = ovFileName
 	}
@@ -241,9 +241,9 @@ func SolutionActionCustomise(writer io.Writer, customSol string, tuneApp *app.Ap
 	if changed {
 		// check, if solution is active - applied
 		if i := sort.SearchStrings(tuneApp.TuneForSolutions, customSol); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == customSol {
-			system.InfoLog("Your just edited Solution is already applied. To get your changes to take effect, please 'revert' the Solution and apply again.\n")
+			system.NoticeLog("Your just edited Solution is already applied. To get your changes to take effect, please 'revert' the Solution and apply again.\n")
 		} else {
-			system.InfoLog("Do not forget to apply the just edited Solution to get your changes to take effect\n")
+			system.NoticeLog("Do not forget to apply the just edited Solution to get your changes to take effect\n")
 		}
 	} else {
 		system.WarningLog("nothing changed during the editor session, so no update of the solution definition file '%s'", editSrcFile)
@@ -269,7 +269,7 @@ func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
 	fileName, extraSol := getFileName(solFName, SolutionSheets, ExtraTuningSheets)
 	ovFileName, overrideSol := getovFile(solFName, OverrideTuningSheets)
 	if !extraSol {
-		system.ErrorExit("ATTENTION: The Solution definition file you want to edit is a saptune internal (shipped) Solution and can NOT be edited. Use 'saptune solution customise' instead. Exiting ...")
+		system.ErrorExit("The Solution definition file you want to edit is a saptune internal (shipped) Solution and can NOT be edited. Use 'saptune solution customise' instead. Exiting ...")
 	}
 
 	changed, err := system.EditAndCheckFile(fileName, fileName, customSol, "solution")
@@ -279,12 +279,12 @@ func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
 	if changed {
 		// check, if solution is active - applied
 		if i := sort.SearchStrings(tuneApp.TuneForSolutions, customSol); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == customSol {
-			system.InfoLog("Your just edited Solution is already applied. To get your changes to take effect, please 'revert' the Solution and apply again.\n")
+			system.NoticeLog("Your just edited Solution is already applied. To get your changes to take effect, please 'revert' the Solution and apply again.\n")
 		} else {
-			system.InfoLog("Do not forget to apply the just edited Solution to get your changes to take effect\n")
+			system.NoticeLog("Do not forget to apply the just edited Solution to get your changes to take effect\n")
 		}
 		if overrideSol {
-			system.InfoLog("Solution override file '%s' exists. Please check, if the content of this file is still valid", ovFileName)
+			system.NoticeLog("Solution override file '%s' exists. Please check, if the content of this file is still valid", ovFileName)
 		}
 	} else {
 		system.WarningLog("nothing changed during the editor session, so no update of the solution definition file '%s'", fileName)
@@ -320,7 +320,7 @@ func SolutionActionCreate(writer io.Writer, customSol string) {
 	if !changed {
 		system.WarningLog("nothing changed during the editor session, so no new, custome specific solution definition file will be created.")
 	} else {
-		system.InfoLog("Solution '%s' created successfully. You can modify the content of your Solution definition file by using 'saptune solution edit %s' or create an override file by 'saptune solution customise %s'.", customSol, customSol, customSol)
+		system.NoticeLog("Solution '%s' created successfully. You can modify the content of your Solution definition file by using 'saptune solution edit %s' or create an override file by 'saptune solution customise %s'.", customSol, customSol, customSol)
 	}
 }
 
@@ -331,7 +331,7 @@ func SolutionActionShow(writer io.Writer, solName string) {
 	}
 	// check if solution really exists
 	if !solution.IsAvailableSolution(solName, solutionSelector) {
-		system.InfoLog("Solution '%s' does not exist. Nothing to do.", solName)
+		system.NoticeLog("Solution '%s' does not exist. Nothing to do.", solName)
 		system.ErrorExit("", 0)
 	}
 	solFName := fmt.Sprintf("%s.sol", solName)
@@ -351,7 +351,7 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 	}
 	// check if solution really exists
 	if !solution.IsAvailableSolution(solName, solutionSelector) {
-		system.InfoLog("Solution '%s' does not exist. Nothing to do.", solName)
+		system.NoticeLog("Solution '%s' does not exist. Nothing to do.", solName)
 		system.ErrorExit("", 0)
 	}
 	solFName := fmt.Sprintf("%s.sol", solName)
@@ -361,13 +361,13 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 
 	// check, if solution is active - applied
 	if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
-		system.InfoLog("The Solution file you want to delete is currently in use, which means the Solution is already applied.")
-		system.InfoLog("So please 'revert' the Solution first and then try deleting again.\n")
+		system.NoticeLog("The Solution file you want to delete is currently in use, which means the Solution is already applied.")
+		system.NoticeLog("So please 'revert' the Solution first and then try deleting again.\n")
 		system.ErrorExit("", 0)
 	}
 
 	if !extraSol && !overrideSol {
-		system.ErrorExit("ATTENTION: The Solution file you want to delete is a saptune internal (shipped) Solution and can NOT be deleted. Exiting ...")
+		system.ErrorExit("The Solution file you want to delete is a saptune internal (shipped) Solution and can NOT be deleted. Exiting ...")
 	}
 	if !extraSol && overrideSol {
 		// system solution, override file exists
@@ -401,7 +401,7 @@ func SolutionActionRename(reader io.Reader, writer io.Writer, solName, newSolNam
 	}
 	// check if old solution name really exists
 	if !solution.IsAvailableSolution(solName, solutionSelector) {
-		system.InfoLog("Solution '%s' does not exist. Nothing to do.", solName)
+		system.NoticeLog("Solution '%s' does not exist. Nothing to do.", solName)
 		system.ErrorExit("", 0)
 	}
 	// check if new solution name already exists
@@ -420,8 +420,8 @@ func SolutionActionRename(reader io.Reader, writer io.Writer, solName, newSolNam
 
 	// check, if solution is active - applied
 	if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
-		system.InfoLog("The Solution definition file you want to rename is currently in use, which means the Solution is already applied.")
-		system.InfoLog("So please 'revert' the Solution first and then try renaming it again.\n")
+		system.NoticeLog("The Solution definition file you want to rename is currently in use, which means the Solution is already applied.")
+		system.NoticeLog("So please 'revert' the Solution first and then try renaming it again.\n")
 		system.ErrorExit("", 0)
 	}
 

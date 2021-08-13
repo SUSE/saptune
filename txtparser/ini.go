@@ -132,7 +132,7 @@ func splitRPM(line string) []string {
 		if fields[1] == "all" || fields[1] == system.GetOsVers() {
 			kov = []string{"rpm", "rpm:" + fields[0], "", fields[2]}
 		} else {
-			system.WarningLog("in section 'rpm' the line '%v' contains a non-matching os version '%s'. Skipping line", fields, fields[1])
+			system.InfoLog("in section 'rpm' the line '%v' contains a non-matching os version '%s'. Skipping line", fields, fields[1])
 		}
 	} else if len(fields) == 2 {
 		// new syntax - rpm to check | expected package version
@@ -314,7 +314,7 @@ func ParseINI(input string) *INIFile {
 func blockDevCollect(sectFields, bDev []string, bCnt int) (int, []string) {
 	// collect the block device infos only ONCE
 	if sectFields[0] == "block" && bCnt == 0 {
-		system.WarningLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
+		system.NoticeLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
 		bCnt = bCnt + 1
 		// blockDev all valid block devices of the
 		// system regardless of any section tag

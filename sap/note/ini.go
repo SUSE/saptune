@@ -409,7 +409,12 @@ func (vend INISettings) createParamSavedStates(key, flstates string) {
 	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "" {
 		start := vend.SysctlParams[key]
 		if key == "UserTasksMax" {
-			start = system.GetTasksMax("0")
+			if system.SystemctlIsStarting() {
+				start = system.GetBackupValue("/var/lib/saptune/working/.tmbackup")
+			} else {
+				start = system.GetTasksMax("0")
+				system.WriteBackupValue(start, "/var/lib/saptune/working/.tmbackup")
+			}
 		}
 		CreateParameterStartValues(key, start)
 		if key == "force_latency" {
@@ -487,11 +492,11 @@ func (vend INISettings) handleInitOverride(key, val, section string, op txtparse
 func (vend INISettings) printSchedInfo(scheds string, blckOK map[string][]string) {
 	if _, ok := vend.ValuesToApply["verify"]; ok && scheds != "" {
 		if scheds == "untouched" {
-			system.InfoLog("Schedulers will be remain untouched!")
+			system.NoticeLog("Schedulers will be remain untouched!")
 		} else {
-			system.InfoLog("Trying scheduler in this order: %s.", scheds)
+			system.NoticeLog("Trying scheduler in this order: %s.", scheds)
 			for b, s := range blckOK {
-				system.InfoLog("'%s' will be used as new scheduler for device '%s'.", b, strings.Join(s, " "))
+				system.NoticeLog("'%s' will be used as new scheduler for device '%s'.", b, strings.Join(s, " "))
 			}
 		}
 	}

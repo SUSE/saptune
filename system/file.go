@@ -140,7 +140,7 @@ func GetFiles(dir string) map[string]string {
 	files := make(map[string]string)
 	entries, err := ioutil.ReadDir(dir)
 	if err != nil {
-		DebugLog("failed to read %s - %v", dir, err)
+		DebugLog("failed to read %s, called from '%v' - %v", dir, CalledFrom(), err)
 	}
 	for _, entry := range entries {
 		if !entry.IsDir() {
@@ -179,5 +179,30 @@ func CleanUpRun() {
 			// remove runtime file
 			_ = os.Remove(path.Join(SaptuneSectionDir, entry.Name()))
 		}
+	}
+}
+
+// GetBackupValue reads the value from the backup file
+// currently used for the former start TasksMax value
+func GetBackupValue(fileName string) string {
+	value := ""
+	content, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		DebugLog("reading backup file '%s' failed - '%v'", fileName, err)
+		return "NA"
+	}
+	value = string(content)
+	if value == "" {
+		value = "NA"
+	}
+	return value
+}
+
+// WriteBackupValue writes a value into the backup file
+// currently used for the former start TasksMax value
+func WriteBackupValue(value, fileName string) {
+	err := ioutil.WriteFile(fileName, []byte(value), 0600)
+	if err != nil {
+		DebugLog("writing backup file '%s' for value '%s' failed - '%v'", fileName, value, err)
 	}
 }

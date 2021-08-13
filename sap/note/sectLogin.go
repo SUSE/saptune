@@ -23,6 +23,7 @@ func GetLoginVal(key string) (string, error) {
 		if err != nil && !os.IsNotExist(err) {
 			return "", err
 		}
+		system.DebugLog("GetLoginVal - UserTasksMax: content of file '%s' is '%s' - error is '%v'", LogindSAPConfFile, string(logindContent), err)
 		matches := utmPat.FindStringSubmatch(string(logindContent))
 		if len(matches) != 0 {
 			val = matches[1]
@@ -42,22 +43,50 @@ func OptLoginVal(cfgval string) string {
 func SetLoginVal(key, value string, revert bool) error {
 	switch key {
 	case "UserTasksMax":
+		system.DebugLog("SetLoginVal - key is '%s', value is '%s', revert is '%v'\n", key, value, revert)
+		// because of systemd problems during shutting down a node,
+		// I need to change the code blocks to get UserTasksMax working
+		// properly after a Reboot. To prevent left-over drop-in file
+		// which will cause a wrong 'saved_state' value for UserTasksMax
+		// which will result in a wrong system value after a revert of
+		// a Note containing UserTasksMax setting
+		//
+		// So first handle drop-in file during revert
+		// then set limit per active user
+		//
+		// Because of the changed order we need 'exitEarly', because
+		// in case of removing the drop-in file we do not need to
+		// execute the rest of the code
+
+		exitEarly := false
+		// handle drop-in file during revert
+		if revert && IsLastNoteOfParameter(key) {
+			system.DebugLog("SetLoginVal - UserTasksMax: remove drop-in file")
+			exitEarly = true
+			// revert - remove logind drop-in file
+			os.Remove(path.Join(LogindConfDir, LogindSAPConfFile))
+			// reload-or-try-restart systemd-logind.service
+			if err := system.SystemctlReloadTryRestart("systemd-logind.service"); err != nil {
+				return err
+			}
+		}
 		// set limit per active user (for both - revert and apply)
 		if value != "" && value != "NA" {
 			for _, userID := range system.GetCurrentLogins() {
+				system.DebugLog("userID is '%v'\n", userID)
 				if err := system.SetTasksMax(userID, value); err != nil {
+					system.DebugLog("error is '%v'\n", err)
 					return err
 				}
 			}
 		}
-		// handle drop-in file
-		if revert && IsLastNoteOfParameter(key) {
-			// revert - remove logind drop-in file
-			os.Remove(path.Join(LogindConfDir, LogindSAPConfFile))
-			// reload-or-try-restart systemd-logind.service
-			err := system.SystemctlReloadTryRestart("systemd-logind.service")
-			return err
+		if exitEarly {
+			// we are in 'revert' and it's the last Note handling
+			// UserTasksMax setting
+			// so exit now
+			return nil
 		}
+
 		if value != "" && value != "NA" {
 			// revert with value from another former applied note
 			// or
@@ -76,7 +105,7 @@ func SetLoginVal(key, value string, revert bool) error {
 				return err
 			}
 			if value == "infinity" {
-				system.WarningLog("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
+				system.InfoLog("Be aware: system-wide UserTasksMax is now set to infinity according to SAP recommendations.\n" +
 					"This opens up entire system to fork-bomb style attacks.")
 			}
 		}

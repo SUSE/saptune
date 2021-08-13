@@ -201,3 +201,13 @@ func (conf *Sysconfig) ToText() string {
 	}
 	return ret.String()
 }
+
+// IsKeyAvail return true, if the key is available.
+// false, if the key does not exist.
+func (conf *Sysconfig) IsKeyAvail(key string) bool {
+	_, exists := conf.KeyValue[key]
+	if !exists {
+		return false
+	}
+	return true
+}

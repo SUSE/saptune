@@ -36,7 +36,7 @@ func ServiceAction(actionName, saptuneVersion string, tApp *app.App) {
 		ServiceActionRevert(tApp)
 	case "reload":
 		// This action name is only used by saptune service, hence it is not advertised to end user.
-		system.InfoLog("saptune is now restartig the service...")
+		system.NoticeLog("saptune is now restartig the service...")
 		ServiceActionRevert(tApp)
 		ServiceActionApply(tApp)
 	case "start":
@@ -58,7 +58,7 @@ func ServiceAction(actionName, saptuneVersion string, tApp *app.App) {
 // disable and stop sapconf.service and tuned.service
 func ServiceActionTakeover(tuneApp *app.App) {
 	lockReleased := false
-	system.InfoLog("Starting 'saptune.service', this may take some time...")
+	system.NoticeLog("Starting 'saptune.service', this may take some time...")
 
 	// disable and stop 'tuned.service'
 	disableAndStopTuned()
@@ -81,12 +81,12 @@ func ServiceActionTakeover(tuneApp *app.App) {
 	// saptune.service (start) then calls 'saptune service apply' to
 	// tune the system
 	if system.SystemctlIsRunning(SaptuneService) && system.SystemctlIsEnabled(SaptuneService) {
-		system.InfoLog("Service '%s' has been enabled and started.", SaptuneService)
+		system.NoticeLog("Service '%s' has been enabled and started.", SaptuneService)
 	} else {
 		system.WarningLog("seems enabling and starting service '%s' was not successful. Please check.", SaptuneService)
 	}
 	if len(tuneApp.TuneForSolutions) == 0 && len(tuneApp.TuneForNotes) == 0 {
-		system.InfoLog("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
+		system.NoticeLog("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
 	}
 }
 
@@ -95,9 +95,14 @@ func ServiceActionTakeover(tuneApp *app.App) {
 func ServiceActionStart(enableService bool, tuneApp *app.App) {
 	var err error
 	saptuneInfo := ""
-	system.InfoLog("Starting 'saptune.service', this may take some time...")
+	if system.SystemctlIsRunning(SaptuneService) {
+		saptuneInfo = getInfoTxt("start", enableService)
+		system.NoticeLog(saptuneInfo)
+		return
+	}
+	system.NoticeLog("Starting 'saptune.service', this may take some time...")
 	if system.IsSapconfActive(SapconfService) {
-		system.ErrorExit("ATTENTION: found an active sapconf, so refuse any action")
+		system.ErrorExit("found an active sapconf, so refuse any action")
 	}
 	// release Lock, to prevent deadlock with systemd service 'saptune.service'
 	system.ReleaseSaptuneLock()
@@ -112,14 +117,14 @@ func ServiceActionStart(enableService bool, tuneApp *app.App) {
 	if err != nil {
 		system.ErrorExit("%v", err)
 	}
-	system.InfoLog(saptuneInfo)
+	system.NoticeLog(saptuneInfo)
 	// saptune.service then calls `saptune service apply` to
 	// tune the system
 	if len(tuneApp.TuneForSolutions) == 0 && len(tuneApp.TuneForNotes) == 0 {
-		system.InfoLog("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
+		system.NoticeLog("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
 	}
 	if !system.SystemctlIsEnabled(SaptuneService) {
-		system.InfoLog("Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable saptune.service by running:\n    saptune service enable\n")
+		system.NoticeLog("Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable saptune.service by running:\n    saptune service enable\n")
 	}
 }
 
@@ -131,9 +136,9 @@ func ServiceActionApply(tuneApp *app.App) {
 	// /var/lib/sapconf/act_profile in sle12
 	// /run/sapconf/active in sle15
 	if system.IsSapconfActive(SapconfService) {
-		system.ErrorExit("ATTENTION: found an active sapconf, so refuse any action")
+		system.ErrorExit("found an active sapconf, so refuse any action")
 	}
-	system.InfoLog("saptune is now tuning the system...")
+	system.NoticeLog("saptune is now tuning the system...")
 	if err := tuneApp.TuneAll(); err != nil {
 		system.ErrorExit("%v", err)
 	}
@@ -141,21 +146,21 @@ func ServiceActionApply(tuneApp *app.App) {
 
 // ServiceActionEnable enables the saptune service
 func ServiceActionEnable() {
-	system.InfoLog("Enable 'saptune.service'")
+	system.NoticeLog("Enable 'saptune.service'")
 	// service should fail, if sapconf.service is enabled or has exited
 	// but 'active' file is available
 	// /var/lib/sapconf/act_profile in sle12
 	// /run/sapconf/active in sle15
 	if system.IsSapconfActive(SapconfService) {
-		system.ErrorExit("ATTENTION: found an active sapconf, so refuse any action")
+		system.ErrorExit("found an active sapconf, so refuse any action")
 	}
 	// enable 'saptune.service'
 	if err := system.SystemctlEnable(SaptuneService); err != nil {
 		system.ErrorExit("%v", err)
 	}
-	system.InfoLog("Service 'saptune.service' has been enabled.")
+	system.NoticeLog("Service 'saptune.service' has been enabled.")
 	if !system.SystemctlIsRunning(SaptuneService) {
-		system.InfoLog("Service 'saptune.service' is not running. Please use `saptune service start` to start the service and tune the system")
+		system.NoticeLog("Service 'saptune.service' is not running. Please use `saptune service start` to start the service and tune the system")
 	}
 }
 
@@ -202,7 +207,12 @@ func ServiceActionStop(disableService bool) {
 	var err error
 	saptuneInfo := ""
 
-	system.InfoLog("Stopping 'saptune.service', this may take some time...")
+	if !system.SystemctlIsRunning(SaptuneService) {
+		saptuneInfo = getInfoTxt("stop", disableService)
+		system.NoticeLog(saptuneInfo)
+		return
+	}
+	system.NoticeLog("Stopping 'saptune.service', this may take some time...")
 	// release Lock, to prevent deadlock with systemd service 'saptune.service'
 	system.ReleaseSaptuneLock()
 	// disable and/or stop 'saptune.service'
@@ -216,24 +226,24 @@ func ServiceActionStop(disableService bool) {
 	if err != nil {
 		system.ErrorExit("%v", err)
 	}
-	system.InfoLog(saptuneInfo)
+	system.NoticeLog(saptuneInfo)
 	// saptune.service then calls `saptune daemon revert` to
 	// revert all tuned parameter
-	system.InfoLog("All tuned parameters have been reverted to default.")
+	system.NoticeLog("All tuned parameters have been reverted to default.")
 }
 
 // ServiceActionRestart is only used by saptune service, hence it is not
 // advertised to the end user. It is used to restart the saptune service
 func ServiceActionRestart(tuneApp *app.App) {
 	var err error
-	system.InfoLog("Restarting 'saptune.service', this may take some time...")
+	system.NoticeLog("Restarting 'saptune.service', this may take some time...")
 	// release Lock, to prevent deadlock with systemd service 'saptune.service'
 	system.ReleaseSaptuneLock()
 	// restart 'saptune.service'
 	if err = system.SystemctlRestart(SaptuneService); err != nil {
 		system.ErrorExit("%v", err)
 	}
-	system.InfoLog("Service 'saptune.service' has been restarted.")
+	system.NoticeLog("Service 'saptune.service' has been restarted.")
 }
 
 // ServiceActionRevert is only used by saptune service, hence it is not
@@ -248,10 +258,10 @@ func ServiceActionRevert(tuneApp *app.App) {
 	// service deadlock in ServiceActionTakeover, ignoreFlag set
 	if _, err := os.Stat(ignoreFlag); os.IsNotExist(err) {
 		if system.IsSapconfActive(SapconfService) {
-			system.ErrorExit("ATTENTION: found an active sapconf, so refuse any action")
+			system.ErrorExit("found an active sapconf, so refuse any action")
 		}
 		if len(tuneApp.NoteApplyOrder) != 0 {
-			system.InfoLog("saptune is now reverting all settings...")
+			system.NoticeLog("saptune is now reverting all settings...")
 		}
 	} else {
 		system.WarningLog("ignore flag set, skipping check for active sapconf service")
@@ -263,14 +273,14 @@ func ServiceActionRevert(tuneApp *app.App) {
 
 // ServiceActionDisable disables the saptune service
 func ServiceActionDisable() {
-	system.InfoLog("Disable 'saptune.service'")
+	system.NoticeLog("Disable 'saptune.service'")
 	// disable 'saptune.service'
 	if err := system.SystemctlDisable(SaptuneService); err != nil {
 		system.ErrorExit("%v", err)
 	}
-	system.InfoLog("Service 'saptune.service' has been disabled.")
+	system.NoticeLog("Service 'saptune.service' has been disabled.")
 	if system.SystemctlIsRunning(SaptuneService) {
-		system.InfoLog("Service 'saptune.service' still running. Please use `saptune service stop` to stop the service and revert the tuned parameter")
+		system.NoticeLog("Service 'saptune.service' still running. Please use `saptune service stop` to stop the service and revert the tuned parameter")
 	}
 }
 
@@ -301,7 +311,7 @@ func disableAndStopSapconf(lockReleased bool) bool {
 	if system.SystemctlIsRunning(SapconfService) || system.SystemctlIsEnabled(SapconfService) {
 		system.WarningLog("seems disabling and stopping service '%s' was not successful. Please check.", SapconfService)
 	} else {
-		system.InfoLog("Service '%s' disabled and stopped", SapconfService)
+		system.NoticeLog("Service '%s' disabled and stopped", SapconfService)
 	}
 	return lockReleased
 }
@@ -315,9 +325,39 @@ func disableAndStopTuned() {
 		if system.SystemctlIsRunning(TunedService) || system.SystemctlIsEnabled(TunedService) {
 			system.WarningLog("seems disabling and stopping service '%s' was not successful. Please check.", TunedService)
 		} else {
-			system.InfoLog("Service '%s' disabled and stopped", TunedService)
+			system.NoticeLog("Service '%s' disabled and stopped", TunedService)
 		}
 	}
+}
+
+// getInfoTxt prepares the information to print during start or stop
+func getInfoTxt(action string, state bool) string {
+	sinfo := ""
+	switch action {
+	case "stop":
+		sinfo = "Service 'saptune.service' not running"
+		if state {
+			if system.SystemctlIsEnabled(SaptuneService) {
+				sinfo = sinfo + " but enabled. To disable the service please use 'saptune service disable'."
+			} else {
+				sinfo = sinfo + " and disabled. So nothing to do."
+			}
+		} else {
+			sinfo = sinfo + ". So nothing to do."
+		}
+	case "start":
+		sinfo = "Service 'saptune.service' is running"
+		if state {
+			if system.SystemctlIsEnabled(SaptuneService) {
+				sinfo = sinfo + " and enabled. So nothing to do."
+			} else {
+				sinfo = sinfo + " but disabled. To enable the service please use 'saptune service enable'."
+			}
+		} else {
+			sinfo = sinfo + ". So nothing to do."
+		}
+	}
+	return sinfo
 }
 
 // printSapconfStatus prints status of sapconf.service
@@ -491,7 +531,7 @@ func DaemonAction(writer io.Writer, actionName, saptuneVersion string, tuneApp *
 	if actionName == "stop" {
 		serviceAction = "disablestop"
 	}
-	system.WarningLog("ATTENTION: the argument 'daemon' is deprecated!. saptune will forward the request to 'saptune service %s'.\nFor the future please use 'saptune service %s'.", serviceAction, serviceAction)
+	system.WarningLog("the argument 'daemon' is deprecated!. saptune will forward the request to 'saptune service %s'.\nFor the future please use 'saptune service %s'.", serviceAction, serviceAction)
 	switch actionName {
 	case "start":
 		ServiceActionTakeover(tuneApp)
