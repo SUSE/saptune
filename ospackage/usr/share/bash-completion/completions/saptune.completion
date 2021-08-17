@@ -1,4 +1,4 @@
-# v1.4.2
+# v1.4.3
 #
 # Daemon control:
 #   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
@@ -12,8 +12,8 @@
 #   saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
 #   saptune solution rename SolutionName newSolutionName
 # Staging control:
-#   saptune staging [ status | enable | disable | is-enabled | list | diff ]
-#   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
+#   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
+#   saptune staging [ analysis | diff | release ] [ NoteID... | SolutionID... | all ]
 # Revert all parameters tuned by the SAP notes or solutions:
 #   saptune revert all
 # Remove the pending lock file from a former saptune call
@@ -29,7 +29,7 @@ _saptune() {
     COMPREPLY=()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
-    
+
     case ${COMP_CWORD} in 
 
         1)  opts="daemon service staging solution note revert version help"
@@ -54,21 +54,27 @@ _saptune() {
 
         3)  case "${prev}" in
                 apply|simulate|verify|customise|edit|revert|show|delete|rename|analysis|diff|release)
-                        case "${COMP_WORDS[COMP_CWORD-2]}" in
-                            note)       opts=$((ls -1q /var/lib/saptune/working/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | sed 's/\.conf$//') | tr '\n' ' ')
-                                        ;;
-                            solution)   opts=$(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%f\n' | sed 's/\.sol$//' | tr '\n' ' ')
-                                        ;;
-                            staging)    opts=$((ls -1q /var/lib/saptune/staging/latest/ | cut -d '-' -f 1 ) | tr '\n' ' ')
-                                        ;;
-                        esac
-			            ;;
+                    case "${COMP_WORDS[COMP_CWORD-2]}" in
+                        note)       opts=$((ls -1q /var/lib/saptune/working/notes/ ; find /etc/saptune/extra/ -name '*.conf' -printf '%f\n' | sed 's/\.conf$//') | tr '\n' ' ')
+                                    ;;
+                        solution)   opts=$(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%f\n' | sed 's/\.sol$//' | tr '\n' ' ')
+                                    ;;
+                        staging)    opts="$((ls -1q /var/lib/saptune/staging/latest/ | cut -d '-' -f 1 ) | tr '\n' ' ') all"
+                                    ;;
+                    esac
+                    ;;
                 *)  return 0
                     ;;
             esac 
-	    ;;
+	        ;;
 
-        *)  return 0
+        *)  case "${COMP_WORDS[1]}-${COMP_WORDS[2]}" in
+                staging-analysis|staging-diff|staging-release)
+                    opts=$((ls -1q /var/lib/saptune/staging/latest/ | cut -d '-' -f 1 ) | tr '\n' ' ')
+                    ;;
+                *)  return 0
+                    ;;
+            esac         
             ;;
     esac
 
