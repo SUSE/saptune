@@ -80,7 +80,15 @@ func ServiceActionTakeover(tuneApp *app.App) {
 	}
 	// saptune.service (start) then calls 'saptune service apply' to
 	// tune the system
-	if system.SystemctlIsRunning(SaptuneService) && system.SystemctlIsEnabled(SaptuneService) {
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	enabled, err := system.SystemctlIsEnabled(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if active && enabled {
 		system.NoticeLog("Service '%s' has been enabled and started.", SaptuneService)
 	} else {
 		system.WarningLog("seems enabling and starting service '%s' was not successful. Please check.", SaptuneService)
@@ -95,7 +103,11 @@ func ServiceActionTakeover(tuneApp *app.App) {
 func ServiceActionStart(enableService bool, tuneApp *app.App) {
 	var err error
 	saptuneInfo := ""
-	if system.SystemctlIsRunning(SaptuneService) {
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if active {
 		saptuneInfo = getInfoTxt("start", enableService)
 		system.NoticeLog(saptuneInfo)
 		return
@@ -123,7 +135,11 @@ func ServiceActionStart(enableService bool, tuneApp *app.App) {
 	if len(tuneApp.TuneForSolutions) == 0 && len(tuneApp.TuneForNotes) == 0 {
 		system.NoticeLog("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
 	}
-	if !system.SystemctlIsEnabled(SaptuneService) {
+	enabled, err := system.SystemctlIsEnabled(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if !enabled {
 		system.NoticeLog("Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable saptune.service by running:\n    saptune service enable\n")
 	}
 }
@@ -159,7 +175,11 @@ func ServiceActionEnable() {
 		system.ErrorExit("%v", err)
 	}
 	system.NoticeLog("Service 'saptune.service' has been enabled.")
-	if !system.SystemctlIsRunning(SaptuneService) {
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if !active {
 		system.NoticeLog("Service 'saptune.service' is not running. Please use `saptune service start` to start the service and tune the system")
 	}
 }
@@ -207,7 +227,11 @@ func ServiceActionStop(disableService bool) {
 	var err error
 	saptuneInfo := ""
 
-	if !system.SystemctlIsRunning(SaptuneService) {
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if !active {
 		saptuneInfo = getInfoTxt("stop", disableService)
 		system.NoticeLog(saptuneInfo)
 		return
@@ -279,7 +303,11 @@ func ServiceActionDisable() {
 		system.ErrorExit("%v", err)
 	}
 	system.NoticeLog("Service 'saptune.service' has been disabled.")
-	if system.SystemctlIsRunning(SaptuneService) {
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if active {
 		system.NoticeLog("Service 'saptune.service' still running. Please use `saptune service stop` to stop the service and revert the tuned parameter")
 	}
 }
@@ -287,7 +315,15 @@ func ServiceActionDisable() {
 // disableAndStopSapconf disables and stops 'sapconf.service'
 func disableAndStopSapconf(lockReleased bool) bool {
 	// check, if saptune is enabled or active
-	if system.SystemctlIsRunning(SaptuneService) || system.SystemctlIsEnabled(SaptuneService) {
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	enabled, err := system.SystemctlIsEnabled(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if active || enabled {
 		// disable/stop saptune to prevent failed sapconf service
 		// release Lock, to prevent deadlock with systemd service 'saptune.service'
 		system.ReleaseSaptuneLock()
@@ -308,7 +344,15 @@ func disableAndStopSapconf(lockReleased bool) bool {
 	if err := system.SystemctlDisableStop(SapconfService); err != nil {
 		system.ErrorExit("%v", err)
 	}
-	if system.SystemctlIsRunning(SapconfService) || system.SystemctlIsEnabled(SapconfService) {
+	active, err = system.SystemctlIsRunning(SapconfService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	enabled, err = system.SystemctlIsEnabled(SapconfService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if active || enabled {
 		system.WarningLog("seems disabling and stopping service '%s' was not successful. Please check.", SapconfService)
 	} else {
 		system.NoticeLog("Service '%s' disabled and stopped", SapconfService)
@@ -322,7 +366,15 @@ func disableAndStopTuned() {
 		if err := system.SystemctlDisableStop(TunedService); err != nil {
 			system.ErrorExit("%v", err)
 		}
-		if system.SystemctlIsRunning(TunedService) || system.SystemctlIsEnabled(TunedService) {
+		active, err := system.SystemctlIsRunning(TunedService)
+		if err != nil {
+			system.ErrorExit("%v", err)
+		}
+		enabled, err := system.SystemctlIsEnabled(TunedService)
+		if err != nil {
+			system.ErrorExit("%v", err)
+		}
+		if active || enabled {
 			system.WarningLog("seems disabling and stopping service '%s' was not successful. Please check.", TunedService)
 		} else {
 			system.NoticeLog("Service '%s' disabled and stopped", TunedService)
@@ -337,7 +389,11 @@ func getInfoTxt(action string, state bool) string {
 	case "stop":
 		sinfo = "Service 'saptune.service' not running"
 		if state {
-			if system.SystemctlIsEnabled(SaptuneService) {
+			enabled, err := system.SystemctlIsEnabled(SaptuneService)
+			if err != nil {
+				system.ErrorExit("%v", err)
+			}
+			if enabled {
 				sinfo = sinfo + " but enabled. To disable the service please use 'saptune service disable'."
 			} else {
 				sinfo = sinfo + " and disabled. So nothing to do."
@@ -348,7 +404,11 @@ func getInfoTxt(action string, state bool) string {
 	case "start":
 		sinfo = "Service 'saptune.service' is running"
 		if state {
-			if system.SystemctlIsEnabled(SaptuneService) {
+			enabled, err := system.SystemctlIsEnabled(SaptuneService)
+			if err != nil {
+				system.ErrorExit("%v", err)
+			}
+			if enabled {
 				sinfo = sinfo + " and enabled. So nothing to do."
 			} else {
 				sinfo = sinfo + " but disabled. To enable the service please use 'saptune service enable'."
@@ -365,13 +425,21 @@ func printSapconfStatus(writer io.Writer) bool {
 	scenabled := false
 	fmt.Fprintf(writer, "sapconf.service:        ")
 	if system.IsServiceAvailable(SapconfService) {
-		if system.SystemctlIsEnabled(SapconfService) {
+		enabled, err := system.SystemctlIsEnabled(SapconfService)
+		if err != nil {
+			system.ErrorExit("%v", err)
+		}
+		if enabled {
 			fmt.Fprintf(writer, "enabled/")
 			scenabled = true
 		} else {
 			fmt.Fprintf(writer, "disabled/")
 		}
-		if system.SystemctlIsRunning(SapconfService) {
+		active, err := system.SystemctlIsRunning(SapconfService)
+		if err != nil {
+			system.ErrorExit("%v", err)
+		}
+		if active {
 			fmt.Fprintf(writer, "active\n")
 		} else {
 			fmt.Fprintf(writer, "stopped\n")
@@ -386,12 +454,20 @@ func printSapconfStatus(writer io.Writer) bool {
 func printTunedStatus(writer io.Writer) {
 	fmt.Fprintf(writer, "tuned.service:          ")
 	if system.IsServiceAvailable(TunedService) {
-		if system.SystemctlIsEnabled(TunedService) {
+		enabled, err := system.SystemctlIsEnabled(TunedService)
+		if err != nil {
+			system.ErrorExit("%v", err)
+		}
+		if enabled {
 			fmt.Fprintf(writer, "enabled/")
 		} else {
 			fmt.Fprintf(writer, "disabled/")
 		}
-		if system.SystemctlIsRunning(TunedService) {
+		active, err := system.SystemctlIsRunning(TunedService)
+		if err != nil {
+			system.ErrorExit("%v", err)
+		}
+		if active {
 			fmt.Fprintf(writer, "running (profile: '%s')\n", system.GetTunedAdmProfile())
 		} else {
 			fmt.Fprintf(writer, "stopped\n")
@@ -467,14 +543,22 @@ func printSaptuneStatus(writer io.Writer) (bool, bool, bool) {
 	saptuneStopped := false
 	stenabled := false
 	fmt.Fprintf(writer, "saptune.service:        ")
-	if !system.SystemctlIsEnabled(SaptuneService) {
+	enabled, err := system.SystemctlIsEnabled(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if !enabled {
 		fmt.Fprintf(writer, "disabled/")
 		remember = true
 	} else {
 		fmt.Fprintf(writer, "enabled/")
 		stenabled = true
 	}
-	if system.SystemctlIsRunning(SaptuneService) {
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if active {
 		fmt.Fprintf(writer, "active\n")
 	} else {
 		fmt.Fprintf(writer, "stopped\n")

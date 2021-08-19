@@ -22,12 +22,14 @@ func GetServiceVal(key string) string {
 	if service == "" {
 		return "NA"
 	}
-	if system.SystemctlIsRunning(service) {
+	active, _ := system.SystemctlIsRunning(service)
+	if active {
 		val = "start"
 	} else {
 		val = "stop"
 	}
-	if system.SystemctlIsEnabled(service) {
+	enabled, _ := system.SystemctlIsEnabled(service)
+	if enabled {
 		val = fmt.Sprintf("%s, enable", val)
 	} else {
 		val = fmt.Sprintf("%s, disable", val)
@@ -120,16 +122,18 @@ func SetServiceVal(key, value string) error {
 	for _, state := range strings.Split(value, ",") {
 		sval := strings.ToLower(strings.TrimSpace(state))
 
-		if sval == "start" && !system.SystemctlIsRunning(service) {
+		active, _ := system.SystemctlIsRunning(service)
+		if sval == "start" && !active {
 			err = system.SystemctlStart(service)
 		}
-		if sval == "stop" && system.SystemctlIsRunning(service) {
+		if sval == "stop" && active {
 			err = system.SystemctlStop(service)
 		}
-		if sval == "enable" && !system.SystemctlIsEnabled(service) {
+		enabled, _ := system.SystemctlIsEnabled(service)
+		if sval == "enable" && !enabled {
 			err = system.SystemctlEnable(service)
 		}
-		if sval == "disable" && system.SystemctlIsEnabled(service) {
+		if sval == "disable" && enabled {
 			err = system.SystemctlDisable(service)
 		}
 	}

@@ -127,11 +127,17 @@ func SystemctlDisableStop(thing string) error {
 
 // SystemctlIsEnabled return true only if systemctl suggests that the thing is
 // enabled.
-func SystemctlIsEnabled(thing string) bool {
-	if _, err := exec.Command(systemctlCmd, "is-enabled", thing).CombinedOutput(); err == nil {
-		return true
+func SystemctlIsEnabled(thing string) (bool, error) {
+	match := false
+	out, err := exec.Command(systemctlCmd, "is-enabled", thing).CombinedOutput()
+	DebugLog("SystemctlIsEnabled - /usr/bin/systemctl is-enabled : '%+v %s'", err, string(out))
+	if err == nil {
+		match = true
 	}
-	return false
+	if len(out) == 0 && err != nil {
+		return match, ErrorLog("%v - Failed to call systemctl is-enabled", err)
+	}
+	return match, nil
 }
 
 // SystemctlIsStarting return true only if systemctl suggests that the system is
@@ -149,13 +155,19 @@ func SystemctlIsStarting() bool {
 
 // SystemctlIsRunning return true only if systemctl suggests that the thing is
 // running.
-func SystemctlIsRunning(thing string) bool {
-	if _, err := exec.Command(systemctlCmd, "is-active", thing).CombinedOutput(); err == nil {
-		return true
+func SystemctlIsRunning(thing string) (bool, error) {
+	match := false
+	out, err := exec.Command(systemctlCmd, "is-active", thing).CombinedOutput()
+	DebugLog("SystemctlIsRunning - /usr/bin/systemctl is-active : '%+v %s'", err, string(out))
+	if err == nil {
+		match = true
 	}
-	return false
+	if len(out) == 0 && err != nil {
+		return match, ErrorLog("%v - Failed to call systemctl is-active", err)
+	}
+	return match, nil
 }
-
+		
 // GetSystemState returns the output of 'systemctl is-system-running'
 func GetSystemState() (string, error) {
 	retval := ""
@@ -194,6 +206,7 @@ func IsServiceAvailable(service string) bool {
 	cmdArgs := []string{"--no-pager", "list-unit-files", "-t", "service"}
 	cmdOut, err := exec.Command(systemctlCmd, cmdArgs...).CombinedOutput()
 	if err != nil {
+		_ = ErrorLog("Failed to call '%s %v' to get the available services - %v", systemctlCmd, strings.Join(cmdArgs, " "), err)
 		return match
 	}
 	for _, line := range strings.Split(string(cmdOut), "\n") {
@@ -281,7 +294,11 @@ func GetTunedProfile() string {
 
 // TunedAdmOff calls tuned-adm to switch off the active profile.
 func TunedAdmOff() error {
-	if !SystemctlIsRunning("tuned.service") {
+	active, err := SystemctlIsRunning("tuned.service")
+	if err != nil {
+		return err
+	}
+	if !active {
 		// 'tuned-adm off' does not work without running tuned
 		return nil
 	}
@@ -319,7 +336,9 @@ func GetTunedAdmProfile() string {
 
 // IsSapconfActive checks, if sapconf is active
 func IsSapconfActive(sapconf string) bool {
-	if SystemctlIsEnabled(sapconf) || SystemctlIsRunning(sapconf) || CmdIsAvailable("/var/lib/sapconf/act_profile") || CmdIsAvailable("/run/sapconf/active") {
+	active, _ := SystemctlIsRunning(sapconf)
+	enabled, _ := SystemctlIsEnabled(sapconf)
+	if enabled || active || CmdIsAvailable("/var/lib/sapconf/act_profile") || CmdIsAvailable("/run/sapconf/active") {
 		return true
 	}
 	return false

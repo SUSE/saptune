@@ -98,6 +98,7 @@ func main() {
 
 	solutionSelector := system.GetSolutionSelector()
 	archSolutions, exist := solution.AllSolutions[solutionSelector]
+	fmt.Fprintf(os.Stdout, "\n")
 	if !exist {
 		system.ErrorExit("The system architecture (%s) is not supported.", solutionSelector)
 		return
@@ -134,7 +135,9 @@ func checkUpdateLeftOvers() {
 // checkForTuned checks for enabled and/or running tuned and prints out
 // a warning message
 func checkForTuned() {
-	if system.SystemctlIsEnabled(actions.TunedService) || system.SystemctlIsRunning(actions.TunedService) {
+	active, _ := system.SystemctlIsRunning(actions.TunedService)
+	enabled, _ := system.SystemctlIsEnabled(actions.TunedService)
+	if enabled || active {
 		system.WarningLog("ATTENTION: tuned service is active, so we may encounter conflicting tuning values")
 	}
 }

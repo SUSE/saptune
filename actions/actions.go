@@ -141,8 +141,12 @@ func RevertAction(writer io.Writer, actionName string, tuneApp *app.App) {
 
 // rememberMessage prints a reminder message
 func rememberMessage(writer io.Writer) {
-	if !system.SystemctlIsRunning("saptune.service") {
-		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot,"+
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if !active {
+		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot, "+
 			"you must enable and start saptune.service by running:"+
 			"\n    saptune service enablestart\n")
 	}
