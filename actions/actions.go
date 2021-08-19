@@ -33,6 +33,7 @@ const (
 	footnote10         = "[10] parameter is defined twice, see section SECT"
 	footnote11         = "[11] parameter is additional defined in SYSCTLLIST"
 	footnote12         = "[12] option FSOPT"
+	footnote13         = "[13] The SAP recommendation for nr_request does not work in the context of multiqueue block framework (scheduler=none).\n      Maximal supported value by the hardware is MAXVAL"
 )
 
 // PackageArea is the package area with all notes and solutions shipped by

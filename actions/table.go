@@ -21,7 +21,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 12, 12)
+	footnote := make([]string, 13, 13)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -220,6 +220,8 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 	compliant, comment, footnote = setSysctlGlobal(compliant, comment, inform, footnote)
 	// set footnote for filesystem options [12]
 	compliant, comment, footnote = setFSOptions(comparison, compliant, comment, inform, footnote)
+	// set footnote for unsupported nr_request value [13]
+	compliant, comment, footnote = setUnNRR(comparison.ReflectMapKey, compliant, comment, inform, footnote)
 	return compliant, comment, footnote
 }
 
@@ -289,6 +291,17 @@ func setUnSched(mapKey, compliant, comment, info string, footnote []string) (str
 		compliant = compliant + " [5]"
 		comment = comment + " [5]"
 		footnote[4] = footnote5
+	}
+	return compliant, comment, footnote
+}
+
+// setUnNRR sets footnote for unsupported nr_request values
+func setUnNRR(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
+	if system.IsNrreq.MatchString(mapKey) && strings.Contains(info, "wrongVal") {
+		compliant = compliant + " [13]"
+		comment = comment + " [13]"
+		maxVal, _, _ := system.GetNrTags(mapKey)
+		footnote[12] = writeFN(footnote[12], footnote13, strconv.Itoa(maxVal), "MAXVAL")
 	}
 	return compliant, comment, footnote
 }
