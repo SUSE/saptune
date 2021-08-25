@@ -48,13 +48,18 @@ rename NoteID newNoteID
 rename SolutionName newSolutionName
 
 \fBsaptune staging\fP
-[ status | enable | disable | is-enabled | list | diff ]
+[ status | enable | disable | is-enabled | list | diff | analysis | release ]
 
 \fBsaptune staging\fP
-[ analysis | diff | release ] [ NoteID | solutions | all ]
+[ analysis | diff ] [ NoteID... | SolutionID... | all ]
+
+\fBsaptune staging\fP
+release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
 
 \fBsaptune revert\fP
 all
+
+\fBsaptune status\fP
 
 \fBsaptune version\fP
 
@@ -547,8 +552,8 @@ The solution definition is shown as a whole object. It is only possible to relea
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them and that it is possible to view the changes.
 .TP
-.B diff [NOTE|solution]
-Shows the differences between the Note (or all Notes) or the solution definition in the staging area and the working area.
+.B diff [NoteID|SolutionID]
+Shows the differences between the Note (or all Notes) or the Solution definition in the staging area and the working area.
 .br
 For each Note in the staging area the output contains the values of all parameter which differ. This includes new or removed parameters as well as changes in the reminder section.
 .br
@@ -556,15 +561,15 @@ For the Solution, all changed solutions are displayed with their differences.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them.
 .TP
-.B analysis NOTE...|solution|all
-Does an analysis of the requested Notes, the solution definitions or everything in the staging area to warn the user about possible issues or additional steps to perform.
+.B analysis NoteID...|SolutionID...|all
+Does an analysis of the requested Notes, the Solution definitions or everything in the staging area to warn the user about possible issues or additional steps to perform.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them as well that he should check out the differences.
 .TP
-.B release NOTE...|solution|all
-Releases the requested Notes, the solution definitions or everything in the stages area.
+.B release NoteID...|SolutionID...|all
+Releases the requested Notes, the Solution definitions or everything in the stages area.
 .br
-This means the Notes or the solution definitions gets moved from the staging area to the working area. In case of a deleted Note/solution, it will be removed from the working area.
+This means the Notes or the Solution definitions get moved from the staging area to the working area. In case of a deleted Note/Solution, it will be removed from the working area.
 .br
 First the command will show an analysis of the objects going to be released to make the user aware of further needed actions or potential problems (for details see saptune staging dependencies).
 .br
@@ -575,6 +580,11 @@ Because the release is irreversible, the user has to confirm the action.
 .TP
 .B revert all
 Revert all optimisation settings recommended by the SAP solution and/or the Notes, and these settings will no longer be activated automatically upon system boot.
+
+.SH STATUS ACTIONS
+.TP
+.B status
+Will display the currently saptune status. This will be short for 'saptune service status'.
 
 .SH VERSION ACTIONS
 .TP
