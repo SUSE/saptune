@@ -19,7 +19,7 @@ All solutions (* denotes enabled solution, O denotes override file exists for so
 	MAXDB              - 941735 1771258 1984787
 	NETW               - 941735 1771258 1980196 1984787 2534844
 
-Remember: if you wish to automatically activate the solution's tuning options after a reboot,you must enable and start saptune.service by running:
+Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
     saptune service enablestart
 `
 
@@ -43,7 +43,7 @@ All solutions (* denotes enabled solution, O denotes override file exists for so
  C	NEWSOL1            - SOL1NOTE1 NEWSOL1NOTE SOL1NOTE2
  C	NEWSOL2            - SOL2NOTE1 NEWSOL2NOTE SOL2NOTE2
 
-Remember: if you wish to automatically activate the solution's tuning options after a reboot,you must enable and start saptune.service by running:
+Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
     saptune service enablestart
 `
 
@@ -82,7 +82,7 @@ Hints or values not yet handled by saptune. So please read carefully, check and 
 	t.Run("SolutionActionApply", func(t *testing.T) {
 		var applyMatchText = `All tuning options for the SAP solution have been applied successfully.
 
-Remember: if you wish to automatically activate the solution's tuning options after a reboot,you must enable and start saptune.service by running:
+Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
     saptune service enablestart
 `
 		buffer := bytes.Buffer{}
@@ -184,7 +184,7 @@ func TestSolutionActionsErrors(t *testing.T) {
 	t.Run("SolutionActionApplySecondSol", func(t *testing.T) {
 		var applyErrorText = `All tuning options for the SAP solution have been applied successfully.
 
-Remember: if you wish to automatically activate the solution's tuning options after a reboot,you must enable and start saptune.service by running:
+Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
     saptune service enablestart
 `
 		var testErrorText = `ERROR: There is already one solution applied. Applying another solution is NOT supported.
@@ -244,12 +244,15 @@ Tune system for all notes applicable to your SAP solution:
   saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
   saptune solution rename SolutionName newSolutionName
 Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff ]
-   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
+   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
+   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
+   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Print current saptune status:
+  saptune status
 Print current saptune version:
   saptune version
 Print this message:
@@ -297,19 +300,22 @@ Tune system for all notes applicable to your SAP solution:
   saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
   saptune solution rename SolutionName newSolutionName
 Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff ]
-   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
+   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
+   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
+   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Print current saptune status:
+  saptune status
 Print current saptune version:
   saptune version
 Print this message:
   saptune help
 All tuning options for the SAP solution have been applied successfully.
 
-Remember: if you wish to automatically activate the solution's tuning options after a reboot,you must enable and start saptune.service by running:
+Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
     saptune service enablestart
 `
 
@@ -353,12 +359,15 @@ Tune system for all notes applicable to your SAP solution:
   saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
   saptune solution rename SolutionName newSolutionName
 Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff ]
-   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
+   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
+   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
+   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Print current saptune status:
+  saptune status
 Print current saptune version:
   saptune version
 Print this message:

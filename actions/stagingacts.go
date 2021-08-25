@@ -161,30 +161,34 @@ func stagingActionDiff(writer io.Writer, sObject []string) {
 // issues or additional steps to perform.
 func stagingActionAnalysis(writer io.Writer, stageObject []string) {
 	releaseable := true
+	ret := 0
 	breakingObj := []string{}
 	fmt.Fprintf(writer, "\n")
 	for _, sObj := range stageObject {
 		switch sObj {
 		case "all":
 			for _, stageName := range stgFiles.AllStageFiles {
-				rel := showAnalysis(writer, stageName)
+				rel, err := showAnalysis(writer, stageName)
 				if !rel {
 					releaseable = false
 					breakingObj = append(breakingObj, stageName)
 				}
+				ret = system.MaxI(ret, err)
 			}
 		default:
-			rel := showAnalysis(writer, sObj)
+			rel, err := showAnalysis(writer, sObj)
 			if !rel {
 				releaseable = false
 				breakingObj = append(breakingObj, sObj)
 			}
+			ret = system.MaxI(ret, err)
 		}
 	}
 	if !releaseable {
-		system.ErrorExit("Releasing '%s' will break the functionality of saptune. Please fix.", strings.Join(breakingObj, ", "), 2)
+		system.ErrorExit("Releasing '%s' will break the functionality of saptune. Please fix.", strings.Join(breakingObj, ", "), ret)
 	}
 	fmt.Fprintf(writer, "\nRemember: To release from staging use the command 'saptune staging release ...'. Check the differences first with 'saptune staging diff...'.\n")
+	system.ErrorExit("", ret)
 }
 
 // StagingActionRelease releases the requested Notes, the solution definition or
@@ -208,7 +212,7 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				system.ErrorExit("No staging files available, so nothig to do.", 0)
 			}
 			for _, stageName := range stgFiles.AllStageFiles {
-				rel := showAnalysis(writer, stageName)
+				rel, _ := showAnalysis(writer, stageName)
 				if !rel {
 					system.ErrorExit("Releasing '%s' will break the functionality of saptune. Please fix", stageName, 2)
 				}
@@ -246,7 +250,7 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 			if stagingFile == "" {
 				system.ErrorExit("'%s' not found in staging area, nothing to do.", sName, 1)
 			}
-			rel := showAnalysis(writer, sName)
+			rel, _ := showAnalysis(writer, sName)
 			if !rel {
 				system.ErrorExit("Releasing '%s' will break the functionality of saptune. Please fix", sName, 2)
 			}
@@ -269,8 +273,9 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 
 // showAnalysis does an analysis of the requested object in the staging area
 // to warn the user about possible issues or additional steps to perform.
-func showAnalysis(writer io.Writer, stageName string) bool {
+func showAnalysis(writer io.Writer, stageName string) (bool, int) {
 	release := true
+	ret := 0
 	if stageName == "" {
 		PrintHelpAndExit(writer, 0)
 	}
@@ -292,29 +297,33 @@ func showAnalysis(writer io.Writer, stageName string) bool {
 	}
 	if strings.HasSuffix(stageName, ".sol") {
 		// print solution analysis
-		release = printSolAnalysis(writer, stageName, txtPrefix, flag)
+		release, ret = printSolAnalysis(writer, stageName, txtPrefix, flag)
 	} else {
 		// print note analysis
-		release = printNoteAnalysis(writer, stageName, txtPrefix, flag)
+		release, ret = printNoteAnalysis(writer, stageName, txtPrefix, flag)
 	}
-	return release
+	return release, ret
 }
 
 // printSolAnalysis handles the solution related analysis
-func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) bool {
+func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool, int) {
 	releaseable := true
+	retVal := 0
 	txtDeleteSol := "Deletion of %s\n"
 	txtSolNew := txtPrefix + "Solution is new, no action required.\n"
 	txtOverrideExists := txtPrefix + "Override file exists and might need adjustments.\n"
-	txtSolEnabled := txtPrefix + "Solution is enabled and must be re-applied.\n"
+	txtSolEnabled := txtPrefix + "Solution is enabled, but not applied, no action required.\n"
+	txtSolApplied := txtPrefix + "Solution is applied and must be re-applied.\n"
 	txtSolNotEnabled := txtPrefix + "Solution is not enabled, no action required.\n"
-	txtRequiredNote := txtPrefix + "Solution requires releasing of '%s' or it breaks!\n"
+	txtUpdatedNote := txtPrefix + "Solution benefits from releasing '%s' because this note will be updated too!\n"
+	txtRequiredNote := txtPrefix + "Solution requires releasing of the new note '%s' or it breaks!\n"
 	txtMissingNote := txtPrefix + "Because of missing note '%s' the Solution will break after release!\n"
 	txtDeletedNote := txtPrefix + "Solution will break, if note '%s' will be released because this note will be deleted!\n"
 
 	if flag == "deleted" {
 		txtOverrideExists = txtPrefix + "Override file exists and can be deleted.\n"
 		txtSolEnabled = txtPrefix + "Solution is enabled and must be reverted.\n"
+		txtSolApplied = txtPrefix + "Solution is applied and must be reverted.\n"
 
 		fmt.Fprintf(writer, txtDeleteSol, stageName)
 	}
@@ -323,18 +332,28 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) bool 
 		fmt.Fprintf(writer, txtOverrideExists)
 	}
 	if flag != "new" {
-		if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
+		if stgFiles.StageAttributes[stageName]["applied"] == "true" {
+			fmt.Fprintf(writer, txtSolApplied)
+			retVal = system.MaxI(retVal, 1)
+		} else if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
 			fmt.Fprintf(writer, txtSolEnabled)
+			if flag == "deleted" {
+				retVal = system.MaxI(retVal, 1)
+			}
 		} else {
 			fmt.Fprintf(writer, txtSolNotEnabled)
 		}
 	}
 
 	for _, note := range strings.Split(stgFiles.StageAttributes[stageName]["notes"], " ") {
+		if note == "" {
+			continue
+		}
 		for _, n := range strings.Split(stgFiles.StageAttributes[stageName]["missingNotes"], " ") {
 			if n == note {
 				fmt.Fprintf(writer, txtMissingNote, note)
 				releaseable = false
+				retVal = system.MaxI(retVal, 2)
 				break
 			}
 		}
@@ -343,10 +362,16 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) bool 
 				if stgFiles.StageAttributes[note]["deleted"] == "true" {
 					fmt.Fprintf(writer, txtDeletedNote, note)
 					releaseable = false
+					retVal = system.MaxI(retVal, 2)
 				}
 				if stgFiles.StageAttributes[note]["new"] == "true" {
 					fmt.Fprintf(writer, txtRequiredNote, note)
 					releaseable = false
+					retVal = system.MaxI(retVal, 2)
+				}
+				if stgFiles.StageAttributes[note]["updated"] == "true" {
+					fmt.Fprintf(writer, txtUpdatedNote, note)
+					retVal = system.MaxI(retVal, 1)
 				}
 			}
 		}
@@ -354,16 +379,18 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) bool 
 	if flag == "new" {
 		fmt.Fprintf(writer, txtSolNew)
 	}
-	return releaseable
+	return releaseable, retVal
 }
 
 // printNoteAnalysis handles the solution related analysis
-func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) bool {
+func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool, int) {
 	releaseable := true
+	retVal := 0
 	txtDeleteNote := "Deletion of %s\n"
 	txtOverrideExists := txtPrefix + "Override file exists and might need adjustments.\n"
 	txtNoteNew := txtPrefix + "Note is new, no action required.\n"
-	txtNoteEnabled := txtPrefix + "Note is enabled and must be reapplied.\n"
+	txtNoteEnabled := txtPrefix + "Note is enabled, but not applied, no action required.\n"
+	txtNoteApplied := txtPrefix + "Note is applied and must be re-applied.\n"
 	txtNoteNotEnabled := txtPrefix + "Note is not enabled, no action required.\n"
 	txtSolEnabled := txtPrefix + "Note is part of the currently enabled solution '%s'.\n"
 	txtSolNotEnabled := txtPrefix + "Note is part of the not-enabled solution(s) '%s'\n"
@@ -373,6 +400,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) bool
 	if flag == "deleted" {
 		txtOverrideExists = txtPrefix + "Override file exists and can be deleted.\n"
 		txtNoteEnabled = txtPrefix + "Note is enabled and must be reverted.\n"
+		txtNoteApplied = txtPrefix + "Note is applied and must be reverted.\n"
 		txtSolEnabled = txtPrefix + "Note is part of the currently enabled solution '%s'. Release would break the solution!\n"
 		txtSolNotEnabled = txtPrefix + "Note is part of the not-enabled solution '%s'. Release would break the solution(s)!\n"
 		txtCustomSolEnabled = txtPrefix + "Note is part of the currently enabled custom solution '%s'. Release would break the solution!\n"
@@ -384,12 +412,13 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) bool
 		fmt.Fprintf(writer, txtOverrideExists)
 	}
 	if flag != "new" {
-		// ANGI TODO - ask Soeren, if enabled (only in the variable) or applied (saved_state file available)
-		//if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
 		if stgFiles.StageAttributes[stageName]["applied"] == "true" {
+			fmt.Fprintf(writer, txtNoteApplied)
+			retVal = system.MaxI(retVal, 1)
+		} else if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
 			fmt.Fprintf(writer, txtNoteEnabled)
 			if flag == "deleted" {
-				releaseable = false
+				retVal = system.MaxI(retVal, 1)
 			}
 		} else {
 			fmt.Fprintf(writer, txtNoteNotEnabled)
@@ -415,6 +444,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) bool
 				fmt.Fprintf(writer, txtSNotEnabled, sol)
 			}
 			if flag == "deleted" {
+				retVal = system.MaxI(retVal, 2)
 				releaseable = false
 			}
 		}
@@ -422,7 +452,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) bool
 	if flag == "new" {
 		fmt.Fprintf(writer, txtNoteNew)
 	}
-	return releaseable
+	return releaseable, retVal
 }
 
 // mvStageToWork moves a file from the staging area to the working area
@@ -622,18 +652,29 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 			// solution
 			solNotes := stagingSolutions[system.GetSolutionSelector()][solStageName]
 			stageMap["notes"] = strings.Join(solNotes, " ")
-			for _, n := range strings.Split(stageMap["notes"], " ") {
+			for _, n := range solNotes {
+				if n == "" {
+					continue
+				}
 				inStaging := false
 				for _, s := range stagingOptions.GetSortedIDs() {
 					if s == n {
-						stageMap["notesInStaging"] = stageMap["notesInStaging"] + " " + n
+						if stageMap["notesInStaging"] == "" {
+							stageMap["notesInStaging"] = n
+						} else {
+							stageMap["notesInStaging"] = stageMap["notesInStaging"] + " " + n
+						}
 						inStaging = true
 						break
 					}
 				}
 				if _, exists := tuneApp.AllNotes[n]; !exists && !inStaging {
 					// note definition file for NoteID does not exist
-					stageMap["missingNotes"] = stageMap["missingNotes"] + " " + n
+					if stageMap["missingNotes"] == "" {
+						stageMap["missingNotes"] = n
+					} else {
+						stageMap["missingNotes"] = stageMap["missingNotes"] + " " + n
+					}
 				}
 			}
 		}

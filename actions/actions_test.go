@@ -131,8 +131,9 @@ Tune system for all notes applicable to your SAP solution:
   saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
   saptune solution rename SolutionName newSolutionName
 Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff ]
-   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
+   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
+   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
+   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
@@ -247,8 +248,9 @@ Tune system for all notes applicable to your SAP solution:
   saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
   saptune solution rename SolutionName newSolutionName
 Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff ]
-   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
+   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
+   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
+   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
