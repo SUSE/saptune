@@ -147,6 +147,13 @@ func TestSysconfig(t *testing.T) {
 	if val := conf.GetBool("BOOL_TEST_FALSE", true); val {
 		t.Error(val)
 	}
+	// check, if key is available
+	if val := conf.IsKeyAvail("LIMIT_1"); !val {
+		t.Error(val)
+	}
+	if val := conf.IsKeyAvail("KEY_DOES_NOT_EXIST"); val {
+		t.Error(val)
+	}
 	// Write keys
 	conf.Set("LIMIT_1", "new value")
 	conf.Set("newkey", "orange")
