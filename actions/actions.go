@@ -18,22 +18,6 @@ const (
 	TunedService       = "tuned.service"
 	exitSaptuneStopped = 1
 	exitNotTuned       = 3
-	footnote1X86       = " [1] setting is not supported by the system"
-	footnote1IBM       = " [1] setting is not relevant for the system"
-	footnote1AZR       = " [1] setting is not available on Azure instances (see SAP Note 2993054)."
-	footnote1AWS       = " [1] setting is not available on AWS instances (see SAP Note 1656250)."
-	footnote2          = " [2] setting is not available on the system"
-	footnote3          = " [3] value is only checked, but NOT set"
-	footnote4          = " [4] cpu idle state settings differ"
-	footnote5          = " [5] expected value does not contain a supported scheduler"
-	footnote6          = " [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
-	footnote7          = " [7] parameter value is untouched by default"
-	footnote8          = " [8] cannot set Perf Bias because SecureBoot is enabled"
-	footnote9          = " [9] expected value limited to 'max_hw_sectors_kb'"
-	footnote10         = "[10] parameter is defined twice, see section SECT"
-	footnote11         = "[11] parameter is additional defined in SYSCTLLIST"
-	footnote12         = "[12] option FSOPT"
-	footnote13         = "[13] The SAP recommendation for nr_request does not work in the context of multiqueue block framework (scheduler=none).\n      Maximal supported value by the hardware is MAXVAL"
 )
 
 // PackageArea is the package area with all notes and solutions shipped by
@@ -68,9 +52,6 @@ var RPMVersion = "undef"
 // only used in individual build test packages, but NOT in our official
 // built and released packages (not possible because of 'reproducible' builds)
 var RPMDate = "undef"
-
-// set 'unsupported' footnote regarding the architecture
-var footnote1 = footnote1X86
 
 // Collection of tuning options from SAP notes and 3rd party vendors.
 var tuningOptions = note.GetTuningOptions(NoteTuningSheets, ExtraTuningSheets)
