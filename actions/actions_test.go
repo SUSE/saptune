@@ -137,6 +137,8 @@ Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Print current saptune status:
+  saptune status
 Print current saptune version:
   saptune version
 Print this message:
@@ -251,6 +253,8 @@ Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Print current saptune status:
+  saptune status
 Print current saptune version:
   saptune version
 Print this message:
