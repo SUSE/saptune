@@ -489,7 +489,7 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App) bool {
 	fmt.Fprintf(writer, "configured Notes:       ")
 	if len(tuneApp.TuneForNotes) > 0 {
 		for _, noteID := range tuneApp.TuneForNotes {
-			fmt.Fprintf(writer, " "+noteID)
+			fmt.Fprintf(writer, noteID+" ")
 		}
 		notTuned = false
 	}

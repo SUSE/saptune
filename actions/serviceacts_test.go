@@ -68,7 +68,7 @@ saptune.service:        disabled/active
 saptune package:        'undef'
 configured version:     '3'
 configured solution:    sol1
-configured Notes:        2205917
+configured Notes:       2205917 
 order of enabled notes: 2205917
 applied Notes:          
 staging:                disabled
@@ -197,7 +197,7 @@ saptune.service:        disabled/active
 saptune package:        'undef'
 configured version:     '3'
 configured solution:    sol1
-configured Notes:        2205917
+configured Notes:       2205917 
 order of enabled notes: 2205917
 applied Notes:          
 staging:                disabled

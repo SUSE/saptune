@@ -167,7 +167,7 @@ func SystemctlIsRunning(thing string) (bool, error) {
 	}
 	return match, nil
 }
-		
+
 // GetSystemState returns the output of 'systemctl is-system-running'
 func GetSystemState() (string, error) {
 	retval := ""

@@ -39,7 +39,7 @@ All notes (+ denotes manually enabled notes, * denotes notes enabled by solution
 	simpleNote	Configuration drop in for simple tests
 			Version 1 from 09.07.2019 
 
-Remember: if you wish to automatically activate the solution's tuning options after a reboot,you must enable and start saptune.service by running:
+Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
     saptune service enablestart
 `
 
@@ -79,7 +79,7 @@ Hints or values not yet handled by saptune. So please read carefully, check and 
 	t.Run("NoteActionApply", func(t *testing.T) {
 		var applyMatchText = `The note has been applied successfully.
 
-Remember: if you wish to automatically activate the solution's tuning options after a reboot,you must enable and start saptune.service by running:
+Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
     saptune service enablestart
 `
 		buffer := bytes.Buffer{}
