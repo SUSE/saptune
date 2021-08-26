@@ -110,7 +110,7 @@ func (vend INISettings) Initialise() (Note, error) {
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key], _ = GetBlkVal(param.Key, &blck)
 		case INISectionLimits:
-			vend.SysctlParams[param.Key], _ = GetLimitsVal(param.Value)
+			vend.SysctlParams[param.Key], vend.Inform[param.Key], _ = GetLimitsVal(param.Value)
 		case INISectionService:
 			vend.SysctlParams[param.Key] = GetServiceVal(param.Key)
 		case INISectionLogin:

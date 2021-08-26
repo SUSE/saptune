@@ -18,21 +18,6 @@ const (
 	TunedService       = "tuned.service"
 	exitSaptuneStopped = 1
 	exitNotTuned       = 3
-	footnote1X86       = " [1] setting is not supported by the system"
-	footnote1IBM       = " [1] setting is not relevant for the system"
-	footnote1AZR       = " [1] setting is not available on Azure instances (see SAP Note 2993054)."
-	footnote1AWS       = " [1] setting is not available on AWS instances (see SAP Note 1656250)."
-	footnote2          = " [2] setting is not available on the system"
-	footnote3          = " [3] value is only checked, but NOT set"
-	footnote4          = " [4] cpu idle state settings differ"
-	footnote5          = " [5] expected value does not contain a supported scheduler"
-	footnote6          = " [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details"
-	footnote7          = " [7] parameter value is untouched by default"
-	footnote8          = " [8] cannot set Perf Bias because SecureBoot is enabled"
-	footnote9          = " [9] expected value limited to 'max_hw_sectors_kb'"
-	footnote10         = "[10] parameter is defined twice, see section SECT"
-	footnote11         = "[11] parameter is additional defined in SYSCTLLIST"
-	footnote12         = "[12] option FSOPT"
 )
 
 // PackageArea is the package area with all notes and solutions shipped by
@@ -67,9 +52,6 @@ var RPMVersion = "undef"
 // only used in individual build test packages, but NOT in our official
 // built and released packages (not possible because of 'reproducible' builds)
 var RPMDate = "undef"
-
-// set 'unsupported' footnote regarding the architecture
-var footnote1 = footnote1X86
 
 // Collection of tuning options from SAP notes and 3rd party vendors.
 var tuningOptions = note.GetTuningOptions(NoteTuningSheets, ExtraTuningSheets)
@@ -113,6 +95,8 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 		RevertAction(os.Stdout, system.CliArg(2), stApp)
 	case "staging":
 		StagingAction(system.CliArg(2), system.CliArgs(3), stApp)
+	case "status":
+		ServiceAction("status", saptuneVers, stApp)
 	default:
 		PrintHelpAndExit(os.Stdout, 1)
 	}
@@ -140,8 +124,12 @@ func RevertAction(writer io.Writer, actionName string, tuneApp *app.App) {
 
 // rememberMessage prints a reminder message
 func rememberMessage(writer io.Writer) {
-	if !system.SystemctlIsRunning("saptune.service") {
-		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot,"+
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	if !active {
+		fmt.Fprintf(writer, "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot, "+
 			"you must enable and start saptune.service by running:"+
 			"\n    saptune service enablestart\n")
 	}
@@ -267,12 +255,15 @@ Tune system for all notes applicable to your SAP solution:
   saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
   saptune solution rename SolutionName newSolutionName
 Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff ]
-   saptune staging [ analysis | diff | release ] [ NoteID | solutions | all ]
+   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
+   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
+   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
 Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Print current saptune status:
+  saptune status
 Print current saptune version:
   saptune version
 Print this message:

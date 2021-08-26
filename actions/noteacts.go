@@ -376,7 +376,7 @@ func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 		system.InfoLog("Parameters tuned by the note '%s' have been successfully reverted.", noteID)
 		fmt.Fprintf(writer, "Parameters tuned by the note have been successfully reverted.\n")
 	} else {
-		system.NoticeLog("INFO", "Note '%s' is not applied, so nothing to revert.", noteID)
+		system.NoticeLog("Note '%s' is not applied, so nothing to revert.", noteID)
 	}
 }
 

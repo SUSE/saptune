@@ -68,7 +68,7 @@ saptune.service:        disabled/active
 saptune package:        'undef'
 configured version:     '3'
 configured solution:    sol1
-configured Notes:        2205917
+configured Notes:       2205917 
 order of enabled notes: 2205917
 applied Notes:          
 staging:                disabled
@@ -105,10 +105,12 @@ Remember: if you wish to automatically activate the note's and solution's tuning
 	// Test DaemonActionStop
 	t.Run("DaemonActionStop", func(t *testing.T) {
 		DaemonAction(os.Stdout, "stop", saptuneVersion, sApp)
-		if system.SystemctlIsEnabled(testService) {
+		enabled, _ := system.SystemctlIsEnabled(testService)
+		if enabled {
 			t.Errorf("'%s' not disabled", testService)
 		}
-		if system.SystemctlIsRunning(testService) {
+		active, _ := system.SystemctlIsRunning(testService)
+		if active {
 			t.Errorf("'%s' not stopped", testService)
 		}
 	})
@@ -124,20 +126,24 @@ func TestServiceActions(t *testing.T) {
 	// Test ServiceActionStart
 	t.Run("ServiceActionStartandEnable", func(t *testing.T) {
 		ServiceActionStart(true, sApp)
-		if !system.SystemctlIsRunning(testService) {
+		active, _ := system.SystemctlIsRunning(testService)
+		if !active {
 			t.Errorf("'%s' not started", testService)
 		}
-		if !system.SystemctlIsEnabled(testService) {
+		enabled, _ := system.SystemctlIsEnabled(testService)
+		if !enabled {
 			t.Errorf("'%s' not enabled", testService)
 		}
 	})
 	// Test ServiceActionStop
 	t.Run("ServiceActionStopandDisable", func(t *testing.T) {
 		ServiceActionStop(true)
-		if system.SystemctlIsEnabled(testService) {
+		enabled, _ := system.SystemctlIsEnabled(testService)
+		if enabled {
 			t.Errorf("'%s' not disabled", testService)
 		}
-		if system.SystemctlIsRunning(testService) {
+		active, _ := system.SystemctlIsRunning(testService)
+		if active {
 			t.Errorf("'%s' not stopped", testService)
 		}
 	})
@@ -145,28 +151,32 @@ func TestServiceActions(t *testing.T) {
 	// Test ServiceActionStart
 	t.Run("ServiceActionStart", func(t *testing.T) {
 		ServiceActionStart(false, sApp)
-		if !system.SystemctlIsRunning(testService) {
+		active, _ := system.SystemctlIsRunning(testService)
+		if !active {
 			t.Errorf("'%s' not started", testService)
 		}
 	})
 	// Test ServiceActionStop
 	t.Run("ServiceActionStop", func(t *testing.T) {
 		ServiceActionStop(false)
-		if system.SystemctlIsRunning(testService) {
+		active, _ := system.SystemctlIsRunning(testService)
+		if active {
 			t.Errorf("'%s' not stopped", testService)
 		}
 	})
 	// Test ServiceActionEnable
 	t.Run("ServiceActionEnable", func(t *testing.T) {
 		ServiceActionEnable()
-		if !system.SystemctlIsEnabled(testService) {
+		enabled, _ := system.SystemctlIsEnabled(testService)
+		if !enabled {
 			t.Errorf("'%s' not enabled", testService)
 		}
 	})
 	// Test ServiceActionDisable
 	t.Run("ServiceActionDisable", func(t *testing.T) {
 		ServiceActionDisable()
-		if system.SystemctlIsEnabled(testService) {
+		enabled, _ := system.SystemctlIsEnabled(testService)
+		if enabled {
 			t.Errorf("'%s' not disabled", testService)
 		}
 	})
@@ -187,7 +197,7 @@ saptune.service:        disabled/active
 saptune package:        'undef'
 configured version:     '3'
 configured solution:    sol1
-configured Notes:        2205917
+configured Notes:       2205917 
 order of enabled notes: 2205917
 applied Notes:          
 staging:                disabled

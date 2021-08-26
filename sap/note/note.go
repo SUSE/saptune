@@ -218,6 +218,10 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) {
 						allMatch = false
 					}
+					// handle filesystem options separately
+					if system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA" {
+						allMatch = true
+					}
 				}
 			}
 		} else {

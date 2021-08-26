@@ -532,6 +532,15 @@ The section "[sysctl]" can be used to modify kernel parameters. The parameters a
 Please write the section keyword '[sysctl]' in the first line and add the desired tunables in 'sysctl.conf' syntax.
 .TP
 .BI sysctl.parameter= VALUE
+
+There will be a detection of conflicting (system) sysctl entries.
+.br
+When parsing the section '[sysctl]' in the Note definition file saptune additional collects all defined sysctl settings (parameter and value) availabel in "/etc/sysctl.conf", "/run/sysctl.d/", "/etc/sysctl.d/", "/usr/local/lib/sysctl.d/", "/usr/lib/sysctl.d/", "/lib/sysctl.d/", "/boot/" (list retrieved from the comment in /etc/sysctl.conf and man page sysctl.conf(5)). When this file list contains a directory (like /etc/sysctl.d/) the files located in this directory are read too.
+.br
+saptune will now check, if the parameters from the section '[sysctl]' in the Note definition file are additional defined in one or more of the (system) sysctl config files. If yes, a warning is displayed and logged and a footnote will be prepared for the 'saptune verify' output. The info shown is the filename, where the parameter is additionally defined with it's value in brackets.
+
+Hint: At the moment links are not recognized. So the linked files will be added both in the file list.
+
 \" section sys
 .SH "[sys]"
 The section "[sys]" can be used to modify parameters available under /sys/, if the related file is writable.

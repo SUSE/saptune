@@ -86,10 +86,6 @@ func TestOptBlkVal(t *testing.T) {
 	if val != "512" {
 		t.Error(val)
 	}
-	val, info = OptBlkVal("NRREQ_sdb", "0", &tblck, blckOK)
-	if val != "1024" {
-		t.Error(val)
-	}
 	val, info = OptBlkVal("NRREQ_sdc", "128", &tblck, blckOK)
 	if val != "128" {
 		t.Error(val)

@@ -128,7 +128,16 @@ func (ior BlockDeviceNrRequests) Apply(blkdev interface{}) error {
 	nrreq := ior.NrRequests[bdev]
 	err := system.SetSysInt(path.Join("block", bdev, "queue", "nr_requests"), nrreq)
 	if err != nil {
-		system.WarningLog("skipping device '%s', not valid for setting 'number of requests' to '%v'", bdev, nrreq)
+		// do not use the stored (and may be outdated) value from
+		// blkDev.BlockAttributes[bdev]["IO_SCHEDULER"]
+		// need the current elevator, so need to ask again.
+		elev, _ := system.GetSysChoice(path.Join("block", bdev, "queue", "scheduler"))
+		if elev == "none" {
+			nrtags := blkDev.BlockAttributes[bdev]["NR_TAGS"]
+			system.ErrorLog("skipping device '%s', not valid for setting 'number of requests' to '%v'.\n The SAP recommendation does not work in the context of multiqueue block framework. Maximal supported value by the hardware is '%v'\n.", bdev, nrreq, nrtags)
+		} else {
+			system.WarningLog("skipping device '%s', not valid for setting 'number of requests' to '%v'", bdev, nrreq)
+		}
 	}
 	/* for future use
 	errs := make([]error, 0, 0)

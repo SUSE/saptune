@@ -8,6 +8,7 @@ import (
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -29,7 +30,7 @@ var SaptuneVersion = ""
 
 func main() {
 	// get saptune version
-	SaptuneVersion, logSwitch = checkSaptuneConfigFile(logSwitch)
+	SaptuneVersion, logSwitch = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
 
 	arg1 := system.CliArg(1)
 	if arg1 == "version" || system.IsFlagSet("version") {
@@ -98,6 +99,7 @@ func main() {
 
 	solutionSelector := system.GetSolutionSelector()
 	archSolutions, exist := solution.AllSolutions[solutionSelector]
+	fmt.Fprintf(os.Stdout, "\n")
 	if !exist {
 		system.ErrorExit("The system architecture (%s) is not supported.", solutionSelector)
 		return
@@ -134,7 +136,9 @@ func checkUpdateLeftOvers() {
 // checkForTuned checks for enabled and/or running tuned and prints out
 // a warning message
 func checkForTuned() {
-	if system.SystemctlIsEnabled(actions.TunedService) || system.SystemctlIsRunning(actions.TunedService) {
+	active, _ := system.SystemctlIsRunning(actions.TunedService)
+	enabled, _ := system.SystemctlIsEnabled(actions.TunedService)
+	if enabled || active {
 		system.WarningLog("ATTENTION: tuned service is active, so we may encounter conflicting tuning values")
 	}
 }
@@ -184,12 +188,12 @@ func checkWorkingArea() {
 // if it exists, if it contains all needed variables and for some variables
 // checks, if the values is valid
 // returns the saptune version and some log switches
-func checkSaptuneConfigFile(lswitch map[string]string) (string, map[string]string) {
+func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) (string, map[string]string) {
 	missingKey := []string{}
 	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING"}
-	sconf, err := txtparser.ParseSysconfigFile(app.SysconfigSaptuneFile, false)
+	sconf, err := txtparser.ParseSysconfigFile(saptuneConf, false)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Unable to read file '%s': %v\n", app.SysconfigSaptuneFile, err)
+		fmt.Fprintf(writer, "Error: Unable to read file '%s': %v\n", saptuneConf, err)
 		system.ErrorExit("", 128)
 	}
 	// check, if all needed variables are available in the saptune
@@ -200,12 +204,12 @@ func checkSaptuneConfigFile(lswitch map[string]string) (string, map[string]strin
 		}
 	}
 	if len(missingKey) != 0 {
-		fmt.Fprintf(os.Stderr, "Error: File '%s' is broken. Missing variables '%s'\n", app.SysconfigSaptuneFile, strings.Join(missingKey, ", "))
+		fmt.Fprintf(writer, "Error: File '%s' is broken. Missing variables '%s'\n", saptuneConf, strings.Join(missingKey, ", "))
 		system.ErrorExit("", 128)
 	}
 	stageVal := sconf.GetString("STAGING", "")
 	if stageVal != "true" && stageVal != "false" {
-		fmt.Fprintf(os.Stderr, "Error: Variable 'STAGING' from file '%s' contains a wrong value '%s'. Needs to be 'true' or 'false'\n", app.SysconfigSaptuneFile, stageVal)
+		fmt.Fprintf(writer, "Error: Variable 'STAGING' from file '%s' contains a wrong value '%s'. Needs to be 'true' or 'false'\n", saptuneConf, stageVal)
 		system.ErrorExit("", 128)
 	}
 

@@ -222,3 +222,12 @@ func TestGetSysSearchParam(t *testing.T) {
 		t.Errorf("expected '%s', got '%s'\n", msect, sect)
 	}
 }
+
+func TestGetNrTags(t *testing.T) {
+	key := "NRREQ_sda"
+	nrtags, elev, bdev := GetNrTags(key)
+	if bdev != "sda" {
+		t.Errorf("expected 'sda', got '%s'\n", bdev)
+	}
+	t.Logf("nrtags is '%+v', elev is '%+v', bdev is '%+v'\n", nrtags, elev, bdev)
+}

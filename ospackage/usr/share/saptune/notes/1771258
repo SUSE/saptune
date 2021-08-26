@@ -1,5 +1,8 @@
 # 1771258 - Linux: User and system resource limits
 # Version 5 from 18.06.2018 in English
+# as it is planned by SAP to use this Note for Netweaver AND HANA we just
+# changed the values while we are still waiting for the updated version of
+# the Note
 
 [version]
 # SAP-NOTE=1771258 CATEGORY=LINUX VERSION=5 DATE=18.06.2018 NAME="Linux: User and system resource limits"
@@ -12,4 +15,4 @@
 # Consult with manual page limits.conf(5) for the correct syntax.
 # Note: The "@" sign in DOMAIN matches a group.
 # LIMITS="DOMAIN TYPE ITEM VALUE, DOMAIN TYPE ITEM VALUE"
-LIMITS = @sapsys hard nofile 65536, @sapsys soft nofile 65536, @sdba hard nofile 65536, @sdba soft nofile 65536, @dba hard nofile 65536, @dba soft nofile 65536
+LIMITS = @sapsys hard nofile 1048576, @sapsys soft nofile 1048576, @sdba hard nofile 1048576, @sdba soft nofile 1048576, @dba hard nofile 1048576, @dba soft nofile 1048576

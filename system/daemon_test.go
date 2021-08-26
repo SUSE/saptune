@@ -34,37 +34,43 @@ func TestSystemctl(t *testing.T) {
 	if err := SystemctlStart(testService); err != nil {
 		t.Fatal(err)
 	}
-	if !SystemctlIsRunning(testService) {
+	active, _ := SystemctlIsRunning(testService)
+	if !active {
 		t.Fatalf("service '%s' not running\n", testService)
 	}
 	if err := SystemctlRestart(testService); err != nil {
 		t.Fatal(err)
 	}
-	if !SystemctlIsRunning(testService) {
+	active, _ = SystemctlIsRunning(testService)
+	if !active {
 		t.Fatalf("service '%s' not running\n", testService)
 	}
 	if err := SystemctlReloadTryRestart(testService); err != nil {
 		t.Fatal(err)
 	}
-	if !SystemctlIsRunning(testService) {
+	active, _ = SystemctlIsRunning(testService)
+	if !active {
 		t.Fatalf("service '%s' not running\n", testService)
 	}
 	if err := SystemctlStop(testService); err != nil {
 		t.Fatal(err)
 	}
-	if SystemctlIsRunning(testService) {
+	active, _ = SystemctlIsRunning(testService)
+	if active {
 		t.Fatalf("service '%s' still running\n", testService)
 	}
 	if err := SystemctlEnableStart(testService); err != nil {
 		t.Fatal(err)
 	}
-	if !SystemctlIsRunning(testService) {
+	active, _ = SystemctlIsRunning(testService)
+	if !active {
 		t.Fatalf("service '%s' not running\n", testService)
 	}
 	if err := SystemctlDisableStop(testService); err != nil {
 		t.Fatal(err)
 	}
-	if SystemctlIsRunning(testService) {
+	active, _ = SystemctlIsRunning(testService)
+	if active {
 		t.Fatalf("service '%s' still running\n", testService)
 	}
 
@@ -87,20 +93,23 @@ func TestSystemctl(t *testing.T) {
 
 func TestSystemctlIsEnabled(t *testing.T) {
 	testService := "rpcbind.service"
-	if SystemctlIsEnabled(testService) {
+	enabled, _ := SystemctlIsEnabled(testService)
+	if enabled {
 		t.Errorf("service '%s' is detected as enabled, but should be disabled", testService)
 	}
 	if err := SystemctlEnableStart(testService); err != nil {
 		t.Errorf("Error enable and start '%s': '%v'\n", testService, err)
 	}
-	if !SystemctlIsEnabled(testService) {
+	enabled, _ = SystemctlIsEnabled(testService)
+	if !enabled {
 		t.Errorf("service '%s' is detected as disabled, but should be enabled", testService)
 	}
 	if err := SystemctlDisableStop(testService); err != nil {
 		t.Errorf("Error disable and stop '%s': '%v'\n", testService, err)
 	}
 
-	if SystemctlIsEnabled("UnkownService") {
+	enabled, _ = SystemctlIsEnabled("UnkownService")
+	if enabled {
 		t.Errorf("service 'UnkownService' is detected as enabled, which is not possible")
 	}
 }
@@ -110,10 +119,12 @@ func TestSystemctlIsRunning(t *testing.T) {
 	if !CmdIsAvailable("/usr/bin/systemctl") {
 		t.Skip("command '/usr/bin/systemctl' not available. Skip tests")
 	}
-	if !SystemctlIsRunning("dbus.service") {
+	active, _ := SystemctlIsRunning("dbus.service")
+	if !active {
 		t.Fatal("'dbus.service' not running")
 	}
-	if !SystemctlIsRunning("tuned.service") {
+	active, _ = SystemctlIsRunning("tuned.service")
+	if !active {
 		t.Log("'tuned.service' not running")
 		t.Log("start 'tuned.service' for following tests")
 		if err := SystemctlStart("tuned.service"); err != nil {

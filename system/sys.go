@@ -139,3 +139,19 @@ func GetSysSearchParam(syskey string) (string, string) {
 	}
 	return searchParam, sect
 }
+
+// GetNrTags returns the value from /sys/block/<bdev>/mq/0/nr_tags and the
+// related scheduler
+func GetNrTags(key string) (int, string, string) {
+	nrtags := 0
+	elev := ""
+	disk := ""
+	dname := regexp.MustCompile(`^NRREQ_(\w+)$`)
+	bdev := dname.FindStringSubmatch(key)
+	if len(bdev) > 0 {
+		nrtags, _ = GetSysInt(path.Join("block", bdev[1], "mq", "0", "nr_tags"))
+		elev, _ = GetSysChoice(path.Join("block", bdev[1], "queue", "scheduler"))
+		disk = bdev[1]
+	}
+	return nrtags, elev, disk
+}

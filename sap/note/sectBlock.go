@@ -93,16 +93,15 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 			cur.BlockDeviceSchedulers = opt.(param.BlockDeviceSchedulers)
 		}
 	case system.IsNrreq.MatchString(key):
-		if sval == "0" {
-			sval = "1024"
-		}
 		ival, _ := strconv.Atoi(sval)
+		nrtags, elev, bdev := system.GetNrTags(key)
+		nxtElev := cur.BlockDeviceSchedulers.SchedulerChoice[bdev]
+		if (elev == "none" || nxtElev == "none") && ival > nrtags {
+			info = "wrongVal"
+		}
 		opt, _ := cur.BlockDeviceNrRequests.Optimise(ival)
 		cur.BlockDeviceNrRequests = opt.(param.BlockDeviceNrRequests)
 	case system.IsRahead.MatchString(key):
-		if sval == "0" {
-			sval = "512"
-		}
 		ival, _ := strconv.Atoi(sval)
 		opt, _ := cur.BlockDeviceReadAheadKB.Optimise(ival)
 		cur.BlockDeviceReadAheadKB = opt.(param.BlockDeviceReadAheadKB)
