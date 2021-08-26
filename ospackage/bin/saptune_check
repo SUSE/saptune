@@ -29,17 +29,20 @@
 # 08.01.2021  v0.1      First release. (Split of sapconf_saptune_check v1.2.1)
 # 19.08.2021  v0.2      supports (only) saptune v3
 #                       tests system status and lists failed services
+# 26.08.2021  v0.2.1    added missing os_release to global arrays
 
-version="0.2"
+
+version="0.2.1"
 
 # We use these global arrays through out the program:
 #
 # package_version     -  contains package version (string)
+# os_version          -  contains os version and service pack
 # system_status       -  contains system status and failed units 
 # unit_state_active   -  contains systemd unit state (systemctl is-active) 
 # unit_state_enabled  -  contains systemd unit state (systemctl is-enabled) 
 # tool_profile        -  contains actual profile (string) for each tool
-declare -A package_version system_status unit_state_active unit_state_enabled tool_profile
+declare -A package_version os_version system_status unit_state_active unit_state_enabled tool_profile
 
 color=1     # we like it colorful
 
@@ -112,7 +115,6 @@ function get_os_version() {
     # Exitcode: -
     #
     # Determines the OS version as string for each PACKAGE.
-    # Not installed packages will have an empty string as version.
     #
     # The function updates the associative array "os_version".
     #
