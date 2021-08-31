@@ -599,7 +599,7 @@ func printInfoBlock(writer io.Writer, infoTrigger map[string]bool) {
 		fmt.Fprintf(writer, "The system state is NOT ok.\n")
 	}
 	if (infoTrigger["stenabled"] && infoTrigger["scenabled"]) || infoTrigger["chkHint"] {
-		fmt.Fprintf(writer, "Please call '/bin/saptune_check' to get guidance to resolve the issues!\n")
+		fmt.Fprintf(writer, "Please call '/usr/sbin/saptune_check' to get guidance to resolve the issues!\n")
 	}
 
 	fmt.Fprintln(writer, "")

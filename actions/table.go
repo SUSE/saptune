@@ -11,7 +11,6 @@ import (
 )
 
 // PrintNoteFields Print mismatching fields in the note comparison result.
-//func PrintNoteFields(header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool) {
 func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool) {
 
 	// initialise

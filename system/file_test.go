@@ -73,3 +73,108 @@ func TestListDir(t *testing.T) {
 		t.Fatal(files)
 	}
 }
+
+func TestEditFile(t *testing.T) {
+	oldEditor := os.Getenv("EDITOR")
+	defer func() { os.Setenv("EDITOR", oldEditor) }()
+	os.Setenv("EDITOR", "/usr/bin/cat")
+	//src := "/app/testdata/tstfile"
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/tstfile")
+	dst := "/tmp/saptune_tstfile"
+	err := EditFile(src, dst)
+	if err != nil {
+		t.Error(err)
+	}
+	err = EditFile("/file_does_not_exist", dst)
+	if err == nil {
+		t.Errorf("copied from non existing file")
+	}
+	err = EditFile(src, "/tmp/saptune_test/saptune_tstfile")
+	if err == nil {
+		t.Errorf("copied to non existing file")
+	}
+	os.Remove(dst)
+}
+
+func TestMD5(t *testing.T) {
+	//src := "/app/testdata/tstfile"
+	match1 := "1fd006c2c4a9c3bebb749b43889339f6"
+	match2 := "28407312133599fac8e5d22dc16f2726"
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/tstfile")
+	src2 := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sysconfig-sample")
+	dst := "/tmp/saptune_tstfile"
+	err := CopyFile(src, dst)
+	if err != nil {
+		t.Error(err)
+	}
+	if !ChkMD5Pair(src, dst) {
+		t.Error("checksum should be equal, but is not.")
+	}
+	sum1, err := GetMD5Hash(src)
+	dum1, err := GetMD5Hash(dst)
+	if sum1 != dum1 {
+		t.Errorf("checksum should be equal, but is not. %s - %s.\n", sum1, dum1)
+	}
+	if sum1 != match1 {
+		t.Errorf("wrong checksum. got: %s, expected: %s\n", sum1, match1)
+	}
+	if ChkMD5Pair(src, "/file_does_not_exist") {
+		t.Error("checksum should differ, but is equal.")
+	}
+	if ChkMD5Pair("/file_does_not_exist", dst) {
+		t.Error("checksum should differ, but is equal.")
+	}
+	os.Remove(dst)
+	
+	sum2, err := GetMD5Hash(src2)
+	if err != nil {
+		t.Error(sum2, err)
+	}
+	if sum2 != match2 {
+		t.Errorf("got: %s, expected: %s\n", sum2, match2)
+	}
+	sum3, err := GetMD5Hash("/file_does_not_exist")
+	if err == nil {
+		t.Error(sum2, err)
+	}
+	if sum3 != "" {
+		t.Errorf("got: %s, expected: \n", sum3)
+	}
+}
+
+func TestCleanUpRun(t *testing.T) {
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/tstfile")
+	dst := "/run/saptune/sections/tstfile.run"
+	dst2 := "/run/saptune/sections/tstfile.sections"
+	if err := os.MkdirAll(SaptuneSectionDir, 0755); err != nil {
+		t.Error(err)
+	}
+	err := CopyFile(src, dst)
+	if err != nil {
+		t.Error(err)
+	}
+	err = CopyFile(src, dst2)
+	if err != nil {
+		t.Error(err)
+	}
+	CleanUpRun()
+	if _, err := os.Stat(dst); !os.IsNotExist(err) {
+		t.Error(err)
+	}
+	if _, err := os.Stat(dst2); os.IsNotExist(err) {
+		t.Errorf("file '%s' does not exist\n", dst2)
+	}
+	os.Remove(dst)
+	os.Remove(dst2)
+	os.RemoveAll(SaptuneSectionDir)
+}
+
+func TestBackupValue(t *testing.T) {
+	start := "12488"
+	file := "/tmp/tst_backup"
+	WriteBackupValue(start, file)
+	val := GetBackupValue(file)
+	if val != start {
+		t.Errorf("got: %s, expected: %s\n", val, start)
+	}
+}

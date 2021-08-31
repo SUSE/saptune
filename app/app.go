@@ -105,6 +105,16 @@ func (app *App) GetSortedSolutionEnabledNotes() (allNoteIDs []string) {
 	return
 }
 
+// GetSortedAllNotes returns all SAP notes, sorted.
+func (app *App) GetSortedAllNotes() []string {
+	allNoteIDs := make([]string, 0, 0)
+	for noteID := range app.AllNotes {
+		allNoteIDs = append(allNoteIDs, noteID)
+	}
+	sort.Strings(allNoteIDs)
+	return allNoteIDs
+}
+
 // removeFromConfig removes NoteID from the variables in the configuration
 // changes TuneForNotes and NoteApplyOrder
 func (app *App) removeFromConfig(noteID string) {

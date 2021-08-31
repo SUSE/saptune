@@ -34,6 +34,9 @@ func TestSystemctl(t *testing.T) {
 	if err := SystemctlStart(testService); err != nil {
 		t.Fatal(err)
 	}
+	if err := SystemctlStatus(testService); err != nil {
+		t.Fatal(err)
+	}
 	active, _ := SystemctlIsRunning(testService)
 	if !active {
 		t.Fatalf("service '%s' not running\n", testService)
@@ -53,6 +56,9 @@ func TestSystemctl(t *testing.T) {
 		t.Fatalf("service '%s' not running\n", testService)
 	}
 	if err := SystemctlStop(testService); err != nil {
+		t.Fatal(err)
+	}
+	if err := SystemctlStatus(testService); err == nil {
 		t.Fatal(err)
 	}
 	active, _ = SystemctlIsRunning(testService)
@@ -88,6 +94,27 @@ func TestSystemctl(t *testing.T) {
 	}
 	if err := SystemctlDisableStop("UnkownService"); err == nil {
 		t.Fatal(err)
+	}
+	if err := SystemctlStatus("UnkownService"); err == nil {
+		t.Fatal(err)
+	}
+
+	if SystemctlIsStarting() {
+		t.Fatal("systemctl reports system is in state 'starting'")
+	}
+	sysState, err := GetSystemState()
+	if err != nil {
+		t.Fatal(err, sysState)
+	}
+	if sysState != "running" {
+		t.Fatalf("'%s'\n", sysState)
+	}
+}
+
+func TestIsSapconfActive(t *testing.T) {
+	sapconf := "sapconf.service"
+	if IsSapconfActive(sapconf) {
+		t.Fatalf("sapconf service active")
 	}
 }
 

@@ -43,6 +43,35 @@ func TestGetSolutionDefintion(t *testing.T) {
 	}
 }
 
+func TestAvailableShippedSolution(t *testing.T) {
+	// BWA, HANA, NETW, MAXDB
+	if !IsAvailableSolution("HANA", runtime.GOARCH) {
+		t.Error("solution 'HANA' not available")
+	}
+	if IsAvailableSolution("NoSuchSolution", runtime.GOARCH) {
+		t.Error("solution 'NoSuchSolution' reported as available")
+	}
+	// no file in /usr/share/saptune/sols available in docker container
+	// as for now.
+	if err := os.MkdirAll(ShippedSolSheets, 0755); err != nil {
+		t.Error(err)
+	}
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/sols/BWA.sol")
+	dst := path.Join(ShippedSolSheets, "BWA.sol")
+	err := system.CopyFile(src, dst)
+	if err != nil {
+		t.Error(err)
+	}
+	if !IsShippedSolution("BWA") {
+		t.Error("shipped solution 'BWA' not available")
+	}
+	if IsShippedSolution("ANGI") {
+		t.Error("solution 'ANGI' reported as shipped solution")
+	}
+	os.Remove(dst)
+	os.RemoveAll(ShippedSolSheets)
+}
+
 func TestGetOverrideSolution(t *testing.T) {
 	noteFiles := TstFilesInGOPATH + "/"
 

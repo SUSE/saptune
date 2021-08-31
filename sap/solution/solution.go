@@ -318,7 +318,7 @@ func IsShippedSolution(sol string) bool {
 
 // Refresh refreshes the solution related variables
 func Refresh() {
-	AllSolutions = GetSolutionDefintion(SolutionSheets)
-	OverrideSolutions = GetOtherSolution(OverrideSolutionSheets, NoteTuningSheets, ExtraTuningSheets)
 	CustomSolutions = GetOtherSolution(ExtraTuningSheets, NoteTuningSheets, ExtraTuningSheets)
+	OverrideSolutions = GetOtherSolution(OverrideSolutionSheets, NoteTuningSheets, ExtraTuningSheets)
+	AllSolutions = GetSolutionDefintion(SolutionSheets)
 }
