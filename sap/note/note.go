@@ -78,7 +78,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			continue
 		}
 
-		id := ""
+		id := strings.TrimSuffix(fileName, ".conf")
 		// get the description of the note from the header inside the file
 		name := txtparser.GetINIFileDescriptiveName(path.Join(thirdPartyTuningDir, fileName))
 		if name == "" {
@@ -90,16 +90,12 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			// By convention, the portion before dash makes up the ID.
 			idName := strings.SplitN(fileName, "-", 2)
 			if len(idName) != 2 {
-				system.InfoLog("GetTuningOptions: skip bad file name \"%s\"", fileName)
-				continue
+				system.InfoLog("GetTuningOptions: bad file name \"%s\"", fileName)
+			} else {
+				id = idName[0]
+				// Just for the cosmetics, remove suffix .conf from description
+				name = strings.TrimSuffix(idName[1], ".conf")
 			}
-			id = idName[0]
-			// Just for the cosmetics, remove suffix .conf from description
-			name = strings.TrimSuffix(idName[1], ".conf")
-		} else {
-			// description found in header of the file
-			// let name empty, to get the right information during 'note list'
-			id = strings.TrimSuffix(fileName, ".conf")
 		}
 		// Do not allow vendor to override built-in
 		if _, exists := ret[id]; exists {
