@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"github.com/SUSE/saptune/app"
-	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/system"
 	"io"
 	"os"
@@ -53,8 +52,8 @@ var RPMVersion = "undef"
 // built and released packages (not possible because of 'reproducible' builds)
 var RPMDate = "undef"
 
-// Collection of tuning options from SAP notes and 3rd party vendors.
-var tuningOptions = note.GetTuningOptions(NoteTuningSheets, ExtraTuningSheets)
+// solutionSelector used in solutionacts and statgingacts
+var solutionSelector = system.GetSolutionSelector()
 
 // set colors for the table and list output
 //var setBlueText = "\033[34m"

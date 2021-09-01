@@ -15,7 +15,6 @@ import (
 )
 
 var solTemplate = "/usr/share/saptune/SolutionTemplate.conf"
-var solutionSelector = system.GetSolutionSelector()
 
 // SolutionAction  Solution actions like apply, revert, verify asm.
 func SolutionAction(actionName, solName, newSolName string, tuneApp *app.App) {
@@ -79,7 +78,6 @@ func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 // SolutionActionList lists all available solution definitions
 func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 	setColor := false
-	solutionSelector := system.GetSolutionSelector()
 	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):\n")
 	for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 		format := "\t%-18s -"
@@ -246,7 +244,7 @@ func SolutionActionCustomise(writer io.Writer, customSol string, tuneApp *app.Ap
 			system.NoticeLog("Do not forget to apply the just edited Solution to get your changes to take effect\n")
 		}
 	} else {
-		system.WarningLog("nothing changed during the editor session, so no update of the solution definition file '%s'", editSrcFile)
+		system.NoticeLog("Nothing changed during the editor session, so no update of the solution definition file '%s'", editSrcFile)
 	}
 }
 
@@ -287,7 +285,7 @@ func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
 			system.NoticeLog("Solution override file '%s' exists. Please check, if the content of this file is still valid", ovFileName)
 		}
 	} else {
-		system.WarningLog("nothing changed during the editor session, so no update of the solution definition file '%s'", fileName)
+		system.NoticeLog("Nothing changed during the editor session, so no update of the solution definition file '%s'", fileName)
 	}
 }
 
@@ -318,7 +316,7 @@ func SolutionActionCreate(writer io.Writer, customSol string) {
 		system.ErrorExit("Problems while editing solution definition file '%s' - %v", fileName, err)
 	}
 	if !changed {
-		system.WarningLog("nothing changed during the editor session, so no new, custome specific solution definition file will be created.")
+		system.NoticeLog("Nothing changed during the editor session, so no new, custom specific solution definition file will be created.")
 	} else {
 		system.NoticeLog("Solution '%s' created successfully. You can modify the content of your Solution definition file by using 'saptune solution edit %s' or create an override file by 'saptune solution customise %s'.", customSol, customSol, customSol)
 	}
@@ -374,7 +372,7 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 		txtConfirm = fmt.Sprintf("Solution to delete is a saptune internal (shipped) Solution, so it can NOT be deleted. But an override file for the Solution exists.\nDo you want to remove the override file for Solution %s?", solName)
 	}
 	if extraSol && overrideSol {
-		// custome solution with override file
+		// custom solution with override file
 		txtConfirm = fmt.Sprintf("Solution to delete is a customer/vendor specific Solution and an override file for the Solution exists.\nDo you want to remove the override file for Solution %s?", solName)
 	}
 	if overrideSol {
@@ -384,7 +382,7 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 		}
 	}
 	if extraSol {
-		// custome solution
+		// custom solution
 		txtConfirm = fmt.Sprintf("Solution to delete is a customer/vendor specific Solution.\nDo you really want to delete this Solution '%s'?", solName)
 		// remove customer/vendor specific solution definition file
 		if readYesNo(txtConfirm, reader, writer) {
@@ -426,11 +424,11 @@ func SolutionActionRename(reader io.Reader, writer io.Writer, solName, newSolNam
 	}
 
 	if extraSol && overrideSol {
-		// custome solution with override file
+		// custom solution with override file
 		txtConfirm = fmt.Sprintf("Solution to rename is a customer/vendor specific Solution.\nDo you really want to rename this Solution '%s' and the corresponding override file to the new name '%s'?", solName, newSolName)
 	}
 	if extraSol && !overrideSol {
-		// custome solution
+		// custom solution
 		txtConfirm = fmt.Sprintf("Solution to rename is a customer/vendor specific Solution.\nDo you really want to rename this Solution '%s' to the new name '%s'?", solName, newSolName)
 	}
 

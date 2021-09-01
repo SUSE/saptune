@@ -4,6 +4,7 @@ package system
 
 import (
 	"io/ioutil"
+	"os"
 	"path"
 	"regexp"
 	"strconv"
@@ -149,7 +150,10 @@ func GetNrTags(key string) (int, string, string) {
 	dname := regexp.MustCompile(`^NRREQ_(\w+)$`)
 	bdev := dname.FindStringSubmatch(key)
 	if len(bdev) > 0 {
-		nrtags, _ = GetSysInt(path.Join("block", bdev[1], "mq", "0", "nr_tags"))
+		nrTagsFile := path.Join("block", bdev[1], "mq", "0", "nr_tags")
+		if _, err := os.Stat(nrTagsFile); err == nil {
+			nrtags, _ = GetSysInt(nrTagsFile)
+		}
 		elev, _ = GetSysChoice(path.Join("block", bdev[1], "queue", "scheduler"))
 		disk = bdev[1]
 	}

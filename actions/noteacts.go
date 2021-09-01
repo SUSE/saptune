@@ -20,7 +20,7 @@ func NoteAction(actionName, noteID, newNoteID string, tuneApp *app.App) {
 	case "apply":
 		NoteActionApply(os.Stdout, noteID, tuneApp)
 	case "list":
-		NoteActionList(os.Stdout, tuneApp, tuningOptions)
+		NoteActionList(os.Stdout, tuneApp)
 	case "verify":
 		NoteActionVerify(os.Stdout, noteID, tuneApp)
 	case "simulate":
@@ -74,11 +74,11 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 }
 
 // NoteActionList lists all available Note definitions
-func NoteActionList(writer io.Writer, tuneApp *app.App, tOptions note.TuningOptions) {
+func NoteActionList(writer io.Writer, tuneApp *app.App) {
 	fmt.Fprintf(writer, "\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note):\n")
 	solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
-	for _, noteID := range tOptions.GetSortedIDs() {
-		noteObj := tOptions[noteID]
+	for _, noteID := range tuneApp.GetSortedAllNotes() {
+		noteObj := tuneApp.AllNotes[noteID]
 		format := "\t%s\t\t%s\n"
 		if len(noteID) >= 8 {
 			format = "\t%s\t%s\n"
@@ -184,7 +184,7 @@ func NoteActionCustomise(writer io.Writer, noteID string, tuneApp *app.App) {
 			system.NoticeLog("Your just edited Note is already applied. To get your changes to take effect, please 'revert' the Note and apply again.\n")
 		}
 	} else {
-		system.WarningLog("nothing changed during the editor session, so no update of the note definition file '%s'", editSrcFile)
+		system.NoticeLog("Nothing changed during the editor session, so no update of the note definition file '%s'", editSrcFile)
 	}
 }
 
@@ -218,7 +218,7 @@ func NoteActionEdit(writer io.Writer, noteID string, tuneApp *app.App) {
 		}
 
 	} else {
-		system.WarningLog("nothing changed during the editor session, so no update of the note definition file '%s'", fileName)
+		system.NoticeLog("Nothing changed during the editor session, so no update of the note definition file '%s'", fileName)
 	}
 }
 
@@ -244,7 +244,7 @@ func NoteActionCreate(noteID string, tuneApp *app.App) {
 		system.ErrorExit("Problems while editing note definition file '%s' - %v", extraFileName, err)
 	}
 	if !changed {
-		system.WarningLog("nothing changed during the editor session, so no new, custome specific note definition file will be created.")
+		system.NoticeLog("Nothing changed during the editor session, so no new, custom specific note definition file will be created.")
 	} else {
 		system.NoticeLog("Note '%s' created successfully. You can modify the content of your Note definition file by using 'saptune note edit %s' or create an override file by 'saptune note customise %s'.", noteID, noteID, noteID)
 	}
@@ -295,7 +295,7 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID string, tuneApp
 		txtConfirm = fmt.Sprintf("Note to delete is a saptune internal (shipped) Note, so it can NOT be deleted. But an override file for the Note exists.\nDo you want to remove the override file for Note %s?", noteID)
 	}
 	if extraNote && overrideNote {
-		// custome note with override file
+		// custom note with override file
 		txtConfirm = fmt.Sprintf("Note to delete is a customer/vendor specific Note and an override file for the Note exists.\nDo you want to remove the override file for Note %s?", noteID)
 	}
 	if overrideNote {
@@ -305,7 +305,7 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID string, tuneApp
 		}
 	}
 	if extraNote {
-		// custome note
+		// custom note
 		txtConfirm = fmt.Sprintf("Note to delete is a customer/vendor specific Note.\nDo you really want to delete this Note (%s)?", noteID)
 		// remove customer/vendor specific note definition file
 		if readYesNo(txtConfirm, reader, writer) {
@@ -344,11 +344,11 @@ func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID stri
 	}
 
 	if extraNote && overrideNote {
-		// custome note with override file
+		// custom note with override file
 		txtConfirm = fmt.Sprintf("Note to rename is a customer/vendor specific Note.\nDo you really want to rename this Note (%s) and the corresponding override file to the new name '%s'?", noteID, newNoteID)
 	}
 	if extraNote && !overrideNote {
-		// custome note
+		// custom note
 		txtConfirm = fmt.Sprintf("Note to rename is a customer/vendor specific Note.\nDo you really want to rename this Note (%s) to the new name '%s'?", noteID, newNoteID)
 	}
 

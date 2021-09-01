@@ -12,19 +12,6 @@ import (
 	"testing"
 )
 
-/*
-// setup for ErroExit catches
-var tstRetErrorExit = -1
-var tstosExit = func(val int) {
-        tstRetErrorExit = val
-}
-var tstwriter io.Writer
-var tstErrorExitOut = func(str string, out ...interface{}) error {
-        fmt.Fprintf(tstwriter, "ERROR: "+str, out...)
-        return fmt.Errorf(str+"\n", out...)
-}
-*/
-
 func TestNoteActions(t *testing.T) {
 	// test setup
 	setUp(t)
@@ -44,7 +31,7 @@ Remember: if you wish to automatically activate the solution's tuning options af
 `
 
 		buffer := bytes.Buffer{}
-		NoteActionList(&buffer, tApp, tuningOpts)
+		NoteActionList(&buffer, tApp)
 		txt := buffer.String()
 		checkOut(t, txt, listMatchText)
 	})

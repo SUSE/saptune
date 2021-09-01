@@ -522,29 +522,14 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 		StageAttributes: make(map[string]map[string]string),
 	}
 	stageMap := make(map[string]string)
-	solStageName := ""
 
 	for _, stageName := range stagingOptions.GetSortedIDs() {
 		// add new stage file
 		stageMap = make(map[string]string)
 
-		// get Note Description and setup absolute filenames
-		noteObj := stagingOptions[stageName]
-		name := noteObj.Name()
-
+		// get Note/Solution Description and setup absolute filenames
+		solStageName, name, workingFile, packageFile := getSolOrNoteEnv(stageName)
 		stagingFile := fmt.Sprintf("%s/%s", StagingSheets, stageName)
-		workingFile := fmt.Sprintf("%s/%s", NoteTuningSheets, stageName)
-		packageFile := fmt.Sprintf("%snotes/%s", PackageArea, stageName)
-		stageMap["notes"] = ""
-		if strings.HasSuffix(stageName, ".sol") {
-			solStageName = strings.TrimSuffix(stageName, ".sol")
-			if name == "" {
-				name = fmt.Sprintf("Definition of saptune solutions\n\t\t\tVersion 1")
-			}
-			workingFile = fmt.Sprintf("%s%s", SolutionSheets, stageName)
-			packageFile = fmt.Sprintf("%ssols/%s", PackageArea, stageName)
-		}
-
 		// Description
 		stageMap["desc"] = name
 		// Version
@@ -561,128 +546,179 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 		}
 
 		// get flags
-		stageMap["new"] = "false"
-		stageMap["deleted"] = "false"
-		stageMap["updated"] = "true"
+		stageMap["new"], stageMap["deleted"], stageMap["updated"] = collectStageFlags(workingFile, packageFile)
 
-		if _, err := os.Stat(workingFile); os.IsNotExist(err) {
-			// not in working, but in staging
-			// new Note
-			stageMap["new"] = "true"
-			stageMap["updated"] = "false"
-		} else if err == nil {
-			if _, perr := os.Stat(packageFile); os.IsNotExist(perr) {
-				// in working, but not in packaging
-				// deleted Note
-				stageMap["deleted"] = "true"
-				stageMap["updated"] = "false"
-			}
-		}
 		// check for override file
 		stageMap["override"] = "false"
 		if _, override := getovFile(stageName, OverrideTuningSheets); override {
 			stageMap["override"] = "true"
 		}
 		// check if applied
-		stageMap["applied"] = "false"
-		if solStageName != "" {
-			// solution
-			if _, ok := tuneApp.IsSolutionApplied(solStageName); ok {
-				stageMap["applied"] = "true"
-			}
-		} else {
-			// note
-			if _, ok := tuneApp.IsNoteApplied(stageName); ok {
-				stageMap["applied"] = "true"
-			}
-		}
+		stageMap["applied"] = getStageAppliedState(tuneApp, solStageName, stageName)
 		// check if enabled
-		stageMap["enabled"] = "true"
-		if solStageName != "" {
-			// solution
-			stageMap["enabled"] = "false"
-			if len(tuneApp.TuneForSolutions) != 0 {
-				if tuneApp.TuneForSolutions[0] == solStageName {
-					stageMap["enabled"] = "true"
-				}
-			}
-		} else {
-			// note
-			if tuneApp.PositionInNoteApplyOrder(stageName) < 0 { // noteID not yet available
-				stageMap["enabled"] = "false"
-			}
-		}
-
-		stageMap["inSolution"] = ""
-		stageMap["inCustomSolution"] = ""
+		stageMap["enabled"] = getStageEnabledState(tuneApp, solStageName, stageName)
 		if solStageName == "" {
-			// note
-			// check if in a solution
-			noteInSols := ""
-			noteInCustomSols := ""
-			sols := []string{}
-			for sol := range tuneApp.AllSolutions {
-				sols = append(sols, sol)
-			}
-			sort.Strings(sols)
-			for _, sol := range sols {
-				for _, noteID := range tuneApp.AllSolutions[sol] {
-					if stageName == noteID {
-						// stageName is part of solution sol
-						if len(noteInSols) == 0 {
-							noteInSols = sol
-						} else {
-							noteInSols = fmt.Sprintf("%s, %s", noteInSols, sol)
-						}
-						// check for custom solution
-						if len(solution.CustomSolutions[system.GetSolutionSelector()][sol]) != 0 {
-							// sol is custom solution
-							if len(noteInCustomSols) == 0 {
-								noteInCustomSols = sol
-							} else {
-								noteInCustomSols = fmt.Sprintf("%s, %s", noteInCustomSols, sol)
-							}
-						}
-					}
-				}
-			}
-			stageMap["inSolution"] = noteInSols
-			stageMap["inCustomSolution"] = noteInCustomSols
+			// note - check if in a solution
+			stageMap["inSolution"], stageMap["inCustomSolution"] = getStageNoteInSol(tuneApp, stageName)
 		} else {
-			// solution
-			solNotes := stagingSolutions[system.GetSolutionSelector()][solStageName]
-			stageMap["notes"] = strings.Join(solNotes, " ")
-			for _, n := range solNotes {
-				if n == "" {
-					continue
-				}
-				inStaging := false
-				for _, s := range stagingOptions.GetSortedIDs() {
-					if s == n {
-						if stageMap["notesInStaging"] == "" {
-							stageMap["notesInStaging"] = n
-						} else {
-							stageMap["notesInStaging"] = stageMap["notesInStaging"] + " " + n
-						}
-						inStaging = true
-						break
-					}
-				}
-				if _, exists := tuneApp.AllNotes[n]; !exists && !inStaging {
-					// note definition file for NoteID does not exist
-					if stageMap["missingNotes"] == "" {
-						stageMap["missingNotes"] = n
-					} else {
-						stageMap["missingNotes"] = stageMap["missingNotes"] + " " + n
-					}
-				}
-			}
+			// solution - check for notes
+			stageMap["notes"], stageMap["notesInStaging"], stageMap["missingNotes"] = getStageSolRequiredNotes(tuneApp, solStageName)
 		}
 
 		stageConf.StageAttributes[stageName] = stageMap
 		stageConf.AllStageFiles = append(stageConf.AllStageFiles, stageName)
 	}
 	return stageConf
+}
+
+// getSolOrNoteEnv returns Note/Solution name, description and absolute filenames
+func getSolOrNoteEnv(stgName string) (string, string, string, string) {
+	sName := ""
+	dName := stagingOptions[stgName].Name()
+	wFile := fmt.Sprintf("%s/%s", NoteTuningSheets, stgName)
+	pFile := fmt.Sprintf("%snotes/%s", PackageArea, stgName)
+	if strings.HasSuffix(stgName, ".sol") {
+		// stage file is a solution file
+		sName = strings.TrimSuffix(stgName, ".sol")
+		if dName == "" {
+			dName = fmt.Sprintf("Definition of saptune solutions\n\t\t\tVersion 1")
+		}
+		wFile = fmt.Sprintf("%s%s", SolutionSheets, stgName)
+		pFile = fmt.Sprintf("%ssols/%s", PackageArea, stgName)
+	}
+	return sName, dName, wFile, pFile
+}
+
+// collectStageFlags collect the state of a file in staging into the flags
+func collectStageFlags(work, pack string) (string, string, string) {
+	// default is updated Note/Solution
+	uflag := "true"
+	nflag := "false"
+	dflag := "false"
+
+	if _, err := os.Stat(work); os.IsNotExist(err) {
+		// not in working, but in staging
+		// new Note/Solution
+		nflag = "true"
+		uflag = "false"
+	} else if err == nil {
+		if _, perr := os.Stat(pack); os.IsNotExist(perr) {
+			// in working, but not in packaging
+			// deleted Note/Solution
+			dflag = "true"
+			uflag = "false"
+		}
+	}
+	return nflag, dflag, uflag
+}
+
+// getStageAppliedState returns, if a stage object is applied or not
+func getStageAppliedState(tApp *app.App, sol, note string) string {
+	applied := "false"
+	if sol != "" {
+		// solution
+		if _, ok := tApp.IsSolutionApplied(sol); ok {
+			applied = "true"
+		}
+	} else {
+		// note
+		if _, ok := tApp.IsNoteApplied(note); ok {
+			applied = "true"
+		}
+	}
+	return applied
+}
+
+// getStageEnabledState returns, if a stage object is enabled or not
+func getStageEnabledState(tApp *app.App, sol, note string) string {
+	enabled := "true"
+	if sol != "" {
+		// solution
+		enabled = "false"
+		if len(tApp.TuneForSolutions) != 0 {
+			if tApp.TuneForSolutions[0] == sol {
+				enabled = "true"
+			}
+		}
+	} else {
+		// note
+		if tApp.PositionInNoteApplyOrder(note) < 0 { // noteID not yet available
+			enabled = "false"
+		}
+	}
+	return enabled
+}
+
+// getStageNoteInSol checks, if a Note from staging is part of a Solution
+// returns Solution names
+func getStageNoteInSol(tApp *app.App, noteName string) (string, string) {
+	noteInSols := ""
+	noteInCustomSols := ""
+	sols := []string{}
+	for sol := range tApp.AllSolutions {
+		sols = append(sols, sol)
+	}
+	sort.Strings(sols)
+	for _, sol := range sols {
+		for _, noteID := range tApp.AllSolutions[sol] {
+			if noteName != noteID {
+				continue
+			}
+			// note is part of solution sol
+			if len(noteInSols) == 0 {
+				noteInSols = sol
+			} else {
+				noteInSols = fmt.Sprintf("%s, %s", noteInSols, sol)
+			}
+		}
+		// check for custom solution
+		if len(solution.CustomSolutions[solutionSelector][sol]) != 0 {
+			// sol is custom solution
+			if len(noteInCustomSols) == 0 {
+				noteInCustomSols = sol
+			} else {
+				noteInCustomSols = fmt.Sprintf("%s, %s", noteInCustomSols, sol)
+			}
+		}
+	}
+	return noteInSols, noteInCustomSols
+}
+
+// getStageSolRequiredNotes checks, which Notes are related to a Solution from
+// the staging area and if there are missing Notes or Notes available in the
+// staging area
+// returns strings with Note names (notes, notesInStaging, missingNotes)
+func getStageSolRequiredNotes(tApp *app.App, solName string) (string, string, string) {
+	notesInStaging := ""
+	missingNotes := ""
+	solNotes := stagingSolutions[solutionSelector][solName]
+	sNotes := strings.Join(solNotes, " ")
+	for _, note := range solNotes {
+		if note == "" {
+			continue
+		}
+		inStaging := false
+		for _, snote := range stagingOptions.GetSortedIDs() {
+			if snote == note {
+				if notesInStaging == "" {
+					notesInStaging = note
+				} else {
+					notesInStaging = notesInStaging + " " + note
+				}
+				inStaging = true
+				break
+			}
+		}
+		if _, exists := tApp.AllNotes[note]; !exists && !inStaging {
+			// note definition file for NoteID does not exist
+			if missingNotes == "" {
+				missingNotes = note
+			} else {
+				missingNotes = missingNotes + " " + note
+			}
+		}
+	}
+	return sNotes, notesInStaging, missingNotes
 }
 
 // diffStageObj diffs a note from the staging area with a note from the working area
@@ -692,7 +728,7 @@ func diffStageObj(writer io.Writer, sName string) {
 	wrkNote := map[string]string{}
 	solName := ""
 	solSelect := "ArchX86"
-	if system.GetSolutionSelector() == "ppc64le" {
+	if solutionSelector == "ppc64le" {
 		solSelect = "ArchPPC64LE"
 	}
 	if strings.HasSuffix(sName, ".sol") {
