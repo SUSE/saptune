@@ -168,9 +168,13 @@ func getFileName(defName, workingDir, extraDir string) (string, bool) {
 		// Note/solution is NOT an internal Note/solution,
 		// but may be a custom Note/solution
 		extraDef = true
+		chkName := defName
+		if defType == "Note" {
+			chkName = defName + ".conf"
+		}
 		_, files := system.ListDir(extraDir, "")
 		for _, f := range files {
-			if strings.HasPrefix(f, defName) {
+			if f == chkName {
 				fileName = fmt.Sprintf("%s%s", extraDir, f)
 			}
 		}
