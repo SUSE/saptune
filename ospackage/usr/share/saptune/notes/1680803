@@ -1,19 +1,21 @@
 # 1680803 - SYB: SAP Adaptive Server Enterprise
 # - Best Practice for SAP Business Suite and SAP BW
 #
-# as described in the best practice document appended to the note
-# or if outdated look at https://www.sap.com/documents/2016/06/26450353-767c-0010-82c7-eda71af511fa.html
+# as described in the current online version of the best practice document
+# 'Best Practice for SAP Business Suite and SAP BW' linked in the
+# 'Solution' section of the related SAP Note 1680803 on SAP launchpad
+#
 # chapter 3.2 Configuration for Linux
 #
 # SAP Applications on SAP Adaptive Server Enterprise
 # - Best Practices for Migration and Runtime
-# Version 1.6 from 2018-01-15
+# Version 3.0 from 2020-07-31
 #
 # SAP ASE (Sybase)
-# Version 24 from 20.11.2017 in English
+# Version 26 from 11.06.2021 in English
 #
 [version]
-# SAP-NOTE=1680803 CATEGORY=SYBASE VERSION=24 DATE=20.11.2017 NAME="Sybase - SAP Adaptive Server Enterprise"
+# SAP-NOTE=1680803 CATEGORY=SYBASE VERSION=26 DATE=11.06.2021 NAME="Sybase - SAP Adaptive Server Enterprise"
 
 [block]
 ## Type:    string
@@ -53,7 +55,7 @@ IO_SCHEDULER=noop, none
 # possible maximum value depends on the chosen scheduler
 # When set, the number of requests for all block devices on the system will 
 # be switched to the chosen value
-NRREQ=1024
+NRREQ=
 
 [vm]
 # Disable transparent hugepages (THP)
@@ -89,4 +91,4 @@ vm.swappiness = 15
 # DBMS data storage settings: use ext4 or xfs file system. 
 # For best performance, disable the journal via tune2fs ^has_journal.
 # For ext4 the recommended mount options are 'noatime,nodiratime', if journaling is disabled or 'noatime,nodiratime,cache=writeback,barrier=0', if journaling is not disabled
-# network tuning including transmit queue (ifconfig <eth#> txqueuelen <value>). See Best_Practices_SAP_ASE_v1.2b.pdf (appended to the SAP Note) for more information or look at https://www.sap.com/documents/2016/06/26450353-767c-0010-82c7-eda71af511fa.html
+# network tuning including transmit queue (ifconfig <eth#> txqueuelen <value>). See the current online version of the best practice document 'Best Practice for SAP Business Suite and SAP BW' linked in the 'Solution' section of the related SAP Note 1680803 on SAP launchpad
