@@ -163,7 +163,7 @@ func CollectBlockDeviceInfo() []string {
 
 		nrTagsFile := path.Join("block", bdev, "mq", "0", "nr_tags")
 		nrtags := ""
-		if _, err := os.Stat(nrTagsFile); err == nil {
+		if _, err := os.Stat(path.Join("/sys", nrTagsFile)); err == nil {
 			nrtags, _ = GetSysString(nrTagsFile)
 		}
 		blockMap["NR_TAGS"] = nrtags

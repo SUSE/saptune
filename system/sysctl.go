@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -26,6 +27,7 @@ const (
 var sysctlDirs = []string{"/etc/sysctl.conf", "/run/sysctl.d/", "/etc/sysctl.d/", "/usr/local/lib/sysctl.d/", "/usr/lib/sysctl.d/", "/lib/sysctl.d/", "/boot/"}
 
 var sysctlParms = sysctlDefined{}
+var sysctlWarn = map[string]string{}
 
 // sysctlEntry contains the 'sysctl config filename - value' pair
 type sysctlEntry struct {
@@ -55,45 +57,86 @@ func ChkForSysctlDoubles(param string) string {
 				info = info + ", " + txt
 			}
 		}
-		WarningLog("Parameter '%s' additional defined in the following %s.", param, info)
+		printDoubleWarning(param, info)
 	}
 	return info
+}
+
+// printDoubleWarning checks, if we need to print a sysctl double warning
+func printDoubleWarning(param, info string) {
+	warn := false
+	if _, ok := sysctlWarn[param]; !ok {
+		warn = true
+	}
+	if warn {
+		// print warning
+		WarningLog("Parameter '%s' additional defined in the following %s.", param, info)
+		sysctlWarn[param] = info
+	}
 }
 
 // CollectGlobalSysctls collects all sysctl parameters defined in all
 // of the sysctl.conf related files
 func CollectGlobalSysctls() {
-	for _, file := range sysctlDirs {
+	fileList := make(map[string]string)
+
+	for _, file := range getAllSysctlFiles() {
 		// check all config files mentioned in /etc/sysctl.conf and
 		// the sysctl.conf(5) man page
+		info, err := os.Lstat(file)
+		if err != nil {
+			// file or directory does not exist
+			continue
+		}
+		switch mode := info.Mode(); {
+		case mode.IsRegular():
+			fileList[file] = file
+		case mode&os.ModeSymlink != 0:
+			// symlink
+			origFile, err := filepath.EvalSymlinks(file)
+			if err != nil {
+				continue
+			}
+			fileList[origFile] = file
+		}
+	}
+
+	for _, sfile := range fileList {
+		sconf, err := parseSysctlConfFile(sfile)
+		if err != nil {
+			// skip file
+			continue
+		}
+		for param := range sconf {
+			sysctlcnf := append(sysctlParms[param], sconf[param])
+			sysctlParms[param] = sysctlcnf
+		}
+	}
+}
+
+// getAllSysctlFiles retrieves all sysctl config files from all
+// locations/directories
+func getAllSysctlFiles() []string {
+	files := []string{}
+	for _, file := range sysctlDirs {
 		info, err := os.Stat(file)
 		if err != nil {
 			// file or directory does not exist
 			continue
 		}
-		fileList := []string{file}
 		if info.IsDir() {
-			fileList = []string{}
 			for f := range GetFiles(file) {
 				if (file == "/boot/" && !strings.HasPrefix(f, "sysctl.conf-")) && !strings.HasSuffix(f, ".conf") {
 					// wrong file name format, skip file
 					continue
 				}
-				fileList = append(fileList, file+f)
+				files = append(files, file+f)
 			}
-		}
-		for _, sfile := range fileList {
-			sconf, err := parseSysctlConfFile(sfile)
-			if err != nil {
-				// skip file
-				continue
-			}
-			for param := range sconf {
-				sysctlcnf := append(sysctlParms[param], sconf[param])
-				sysctlParms[param] = sysctlcnf
-			}
+		} else {
+			files = append(files, file)
 		}
 	}
+	return files
 }
 
 // parseSysctlConfFile parses a special sysctl config file and returns

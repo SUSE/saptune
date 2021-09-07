@@ -480,7 +480,7 @@ func printTunedStatus(writer io.Writer) {
 // printNoteAndSols prints all enabled/active notes and solutions
 func printNoteAndSols(writer io.Writer, tuneApp *app.App) bool {
 	notTuned := true
-	fmt.Fprintf(writer, "configured solution:    ")
+	fmt.Fprintf(writer, "configured Solution:    ")
 	if len(tuneApp.TuneForSolutions) > 0 {
 		fmt.Fprintf(writer, "%s", tuneApp.TuneForSolutions[0])
 		notTuned = false
@@ -494,7 +494,7 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App) bool {
 		notTuned = false
 	}
 	fmt.Fprintf(writer, "\n")
-	fmt.Fprintf(writer, "order of enabled notes: ")
+	fmt.Fprintf(writer, "order of enabled Notes: ")
 	if len(tuneApp.NoteApplyOrder) != 0 {
 		fmt.Fprintf(writer, "%s", strings.Join(tuneApp.NoteApplyOrder, " "))
 	}
