@@ -323,7 +323,7 @@ func TunedAdmProfile(profileName string) error {
 func GetTunedAdmProfile() string {
 	out, err := exec.Command(tunedAdmCmd, "active").CombinedOutput()
 	if err != nil {
-		_ = ErrorLog("Failed to call tuned-adm to get the active profile - %v %s", err, string(out))
+		InfoLog("Failed to call tuned-adm to get the active profile - %v %s", err, string(out))
 		return ""
 	}
 	re := regexp.MustCompile(`Current active profile: ([\w-]+)`)

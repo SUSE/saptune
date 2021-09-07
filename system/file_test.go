@@ -125,7 +125,7 @@ func TestMD5(t *testing.T) {
 		t.Error("checksum should differ, but is equal.")
 	}
 	os.Remove(dst)
-	
+
 	sum2, err := GetMD5Hash(src2)
 	if err != nil {
 		t.Error(sum2, err)

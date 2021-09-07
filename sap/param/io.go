@@ -18,6 +18,7 @@ type BlockDeviceQueue struct {
 }
 
 var blkDev *system.BlockDev
+var schedWarn = map[string]string{}
 
 // BlockDeviceSchedulers changes IO elevators on all IO devices
 type BlockDeviceSchedulers struct {
@@ -131,9 +132,11 @@ func (ior BlockDeviceNrRequests) Apply(blkdev interface{}) error {
 		// do not use the stored (and may be outdated) value from
 		// blkDev.BlockAttributes[bdev]["IO_SCHEDULER"]
 		// need the current elevator, so need to ask again.
+		// and in case of 'revert' we do not have blkDev.BlockAttributes
 		elev, _ := system.GetSysChoice(path.Join("block", bdev, "queue", "scheduler"))
 		if elev == "none" {
-			nrtags := blkDev.BlockAttributes[bdev]["NR_TAGS"]
+			nrtags, _ := system.GetSysString(path.Join("block", bdev, "mq", "0", "nr_tags"))
+			// future - change message in case of 'revert'
 			system.ErrorLog("skipping device '%s', not valid for setting 'number of requests' to '%v'.\n The SAP recommendation does not work in the context of multiqueue block framework. Maximal supported value by the hardware is '%v'\n.", bdev, nrreq, nrtags)
 		} else {
 			system.WarningLog("skipping device '%s', not valid for setting 'number of requests' to '%v'", bdev, nrreq)
@@ -304,8 +307,21 @@ func IsValidScheduler(blockdev, scheduler string) bool {
 			}
 		}
 	}
-	system.WarningLog("'%s' is not a valid scheduler for device '%s', skipping.", scheduler, blockdev)
+	printSchedWarning(scheduler, blockdev)
 	return false
+}
+
+// printSchedWarning checks, if we need to print a scheduler warning
+func printSchedWarning(scheduler, blockdev string) {
+	warn := false
+	if _, ok := schedWarn[blockdev]; !ok {
+		warn = true
+	}
+	if warn {
+		// print warning
+		system.WarningLog("'%s' is not a valid scheduler for device '%s', skipping.", scheduler, blockdev)
+		schedWarn[blockdev] = scheduler
+	}
 }
 
 // IsValidforNrRequests checks, if the nr_requests value is supported by the system

@@ -151,7 +151,7 @@ func GetNrTags(key string) (int, string, string) {
 	bdev := dname.FindStringSubmatch(key)
 	if len(bdev) > 0 {
 		nrTagsFile := path.Join("block", bdev[1], "mq", "0", "nr_tags")
-		if _, err := os.Stat(nrTagsFile); err == nil {
+		if _, err := os.Stat(path.Join("/sys", nrTagsFile)); err == nil {
 			nrtags, _ = GetSysInt(nrTagsFile)
 		}
 		elev, _ = GetSysChoice(path.Join("block", bdev[1], "queue", "scheduler"))

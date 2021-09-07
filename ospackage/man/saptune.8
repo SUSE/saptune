@@ -111,21 +111,27 @@ If the action was successfully the exit code is 0, otherwise 1.
 Reports the following status information on stdout:
 .RS 5
 .IP \[bu] 2
-status of sapconf.service (running/stopped, enabled/disabled)
-.IP \[bu]
-status of tuned (running/stopped, enabled/disabled, profile)
-.IP \[bu]
-applied/configured Solution and Notes
-.IP \[bu]
-all selected Notes in applied order
-.IP \[bu]
-all objects in staging area
-.IP \[bu]
-configured saptune major version (from \fI/etc/sysconfig/saptune\fP)
+status of saptune.service (enabled/disabled, running/stopped)
 .IP \[bu]
 saptune package version
 .IP \[bu]
-status of saptune.service (running/stopped, enabled/disabled)
+configured saptune major version (from \fI/etc/sysconfig/saptune\fP)
+.IP \[bu]
+configured Solution and Notes
+.IP \[bu]
+all selected Notes in applied order
+.IP \[bu]
+all currently applied Notes, sorted lexicographically
+.IP \[bu]
+state of staging
+.IP \[bu]
+all objects in staging area
+.IP \[bu]
+status of sapconf.service (enabled/disabled, running/stopped)
+.IP \[bu]
+status of tuned (enabled/disabled, running/stopped, profile)
+.IP \[bu]
+systemd status
 
 This information is not logged, but only printed to stdout.
 
