@@ -17,7 +17,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 14, 14)
+	footnote := make([]string, 15, 15)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""

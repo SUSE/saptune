@@ -359,9 +359,7 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 
 	// check, if solution is active - applied
 	if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
-		system.NoticeLog("The Solution file you want to delete is currently in use, which means the Solution is already applied.")
-		system.NoticeLog("So please 'revert' the Solution first and then try deleting again.\n")
-		system.ErrorExit("", 0)
+		system.ErrorExit("The Solution file you want to delete is currently in use, which means the Solution is already applied.\nSo please 'revert' the Solution first and then try deleting again.")
 	}
 
 	if !extraSol && !overrideSol {
@@ -418,9 +416,7 @@ func SolutionActionRename(reader io.Reader, writer io.Writer, solName, newSolNam
 
 	// check, if solution is active - applied
 	if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
-		system.NoticeLog("The Solution definition file you want to rename is currently in use, which means the Solution is already applied.")
-		system.NoticeLog("So please 'revert' the Solution first and then try renaming it again.\n")
-		system.ErrorExit("", 0)
+		system.ErrorExit("The Solution definition file you want to rename is currently in use, which means the Solution is already applied.\nSo please 'revert' the Solution first and then try renaming again.")
 	}
 
 	if extraSol && overrideSol {
