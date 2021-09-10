@@ -282,9 +282,7 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID string, tuneApp
 
 	// check, if note is active - applied
 	if _, ok := tuneApp.IsNoteApplied(noteID); ok {
-		system.NoticeLog("The Note definition file you want to delete is currently in use, which means it is already applied.")
-		system.NoticeLog("So please 'revert' the Note first and then try deleting again.\n")
-		system.ErrorExit("", 0)
+		system.ErrorExit("The Note definition file you want to delete is currently in use, which means it is already applied.\nSo please 'revert' the Note first and then try deleting again.")
 	}
 
 	if !extraNote && !overrideNote {
@@ -338,9 +336,7 @@ func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID stri
 
 	// check, if note is active - applied
 	if _, ok := tuneApp.IsNoteApplied(noteID); ok {
-		system.NoticeLog("The Note definition file you want to rename is currently in use, which means it is already applied.")
-		system.NoticeLog("So please 'revert' the Note first and then try renaming again.\n")
-		system.ErrorExit("", 0)
+		system.ErrorExit("The Note definition file you want to rename is currently in use, which means it is already applied.\nSo please 'revert' the Note first and then try renaming again.")
 	}
 
 	if extraNote && overrideNote {

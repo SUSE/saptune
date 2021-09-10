@@ -20,11 +20,13 @@ func TestNoteActions(t *testing.T) {
 	t.Run("NoteActionList", func(t *testing.T) {
 		var listMatchText = `
 All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note):
+	NEWSOL2NOTE	
 	extraNote	Configuration drop in for extra tests
 			Version 0 from 04.06.2019 
 	oldFile		Name_syntax
 	simpleNote	Configuration drop in for simple tests
 			Version 1 from 09.07.2019 
+	wrongFileNamesyntax	
 
 Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
     saptune service enablestart

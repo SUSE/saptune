@@ -28,6 +28,7 @@ const (
 	footnote12   = "[12] option FSOPT"
 	footnote13   = "[13] The SAP recommendation for nr_request does not work in the context of multiqueue block framework (scheduler=none).\n      Maximal supported value by the hardware is MAXVAL"
 	footnote14   = "[14] the parameter value exceeds the maximum possible number of open files. Check and increase fs.nr_open if really needed."
+	footnote15   = "[15] the parameter is only used to calculate the size of tmpfs (/dev/shm)"
 )
 
 // set 'unsupported' footnote regarding the architecture
@@ -70,6 +71,8 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 	compliant, comment, footnote = setUnNRR(comparison.ReflectMapKey, compliant, comment, inform, footnote)
 	// set footnote for unsupported nofile limit value [14]
 	compliant, comment, footnote = setNofile(comparison.ReflectMapKey, compliant, comment, inform, footnote)
+	// set footnote for VSZ_TMPFS_PERCENT parameter from mem section
+	compliant, comment, footnote = setMem(comparison.ReflectMapKey, compliant, comment, footnote)
 	return compliant, comment, footnote
 }
 
@@ -232,6 +235,16 @@ func setNofile(mapKey, compliant, comment, info string, footnote []string) (stri
 		compliant = compliant + " [14]"
 		comment = comment + " [14]"
 		footnote[13] = footnote14
+	}
+	return compliant, comment, footnote
+}
+
+// setMem sets footnote for VSZ_TMPFS_PERCENT parameter from mem section
+func setMem(mapKey, compliant, comment string, footnote []string) (string, string, []string) {
+	if mapKey == "VSZ_TMPFS_PERCENT" {
+		compliant = " -  [15]"
+		comment = comment + " [15]"
+		footnote[14] = footnote15
 	}
 	return compliant, comment, footnote
 }

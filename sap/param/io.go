@@ -18,7 +18,6 @@ type BlockDeviceQueue struct {
 }
 
 var blkDev *system.BlockDev
-var schedWarn = map[string]string{}
 
 // BlockDeviceSchedulers changes IO elevators on all IO devices
 type BlockDeviceSchedulers struct {
@@ -307,21 +306,8 @@ func IsValidScheduler(blockdev, scheduler string) bool {
 			}
 		}
 	}
-	printSchedWarning(scheduler, blockdev)
+	system.InfoLog("'%s' is not a valid scheduler for device '%s', skipping.", scheduler, blockdev)
 	return false
-}
-
-// printSchedWarning checks, if we need to print a scheduler warning
-func printSchedWarning(scheduler, blockdev string) {
-	warn := false
-	if _, ok := schedWarn[blockdev]; !ok {
-		warn = true
-	}
-	if warn {
-		// print warning
-		system.WarningLog("'%s' is not a valid scheduler for device '%s', skipping.", scheduler, blockdev)
-		schedWarn[blockdev] = scheduler
-	}
 }
 
 // IsValidforNrRequests checks, if the nr_requests value is supported by the system
