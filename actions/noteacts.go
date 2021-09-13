@@ -288,6 +288,11 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID string, tuneApp
 	if !extraNote && !overrideNote {
 		system.ErrorExit("The Note definition file you want to delete is a saptune internal (shipped) Note and can NOT be deleted. Exiting ...")
 	}
+	inSolution, _ := getNoteInSol(tuneApp, noteID)
+	if inSolution != "" {
+		system.ErrorExit("The Note definition file you want to delete is part of a Solution(s) (%s). Please fix the Solution first and then try deleting again.", inSolution)
+	}
+
 	if !extraNote && overrideNote {
 		// system note, override file exists
 		txtConfirm = fmt.Sprintf("Note to delete is a saptune internal (shipped) Note, so it can NOT be deleted. But an override file for the Note exists.\nDo you want to remove the override file for Note %s?", noteID)
@@ -337,6 +342,10 @@ func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID stri
 	// check, if note is active - applied
 	if _, ok := tuneApp.IsNoteApplied(noteID); ok {
 		system.ErrorExit("The Note definition file you want to rename is currently in use, which means it is already applied.\nSo please 'revert' the Note first and then try renaming again.")
+	}
+	inSolution, _ := getNoteInSol(tuneApp, noteID)
+	if inSolution != "" {
+		system.ErrorExit("The Note definition file you want to rename is part of a Solution(s) (%s). Please fix the Solution first and then try renaming again.", inSolution)
 	}
 
 	if extraNote && overrideNote {

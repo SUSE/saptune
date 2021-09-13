@@ -559,7 +559,7 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 		stageMap["enabled"] = getStageEnabledState(tuneApp, solStageName, stageName)
 		if solStageName == "" {
 			// note - check if in a solution
-			stageMap["inSolution"], stageMap["inCustomSolution"] = getStageNoteInSol(tuneApp, stageName)
+			stageMap["inSolution"], stageMap["inCustomSolution"] = getNoteInSol(tuneApp, stageName)
 		} else {
 			// solution - check for notes
 			stageMap["notes"], stageMap["notesInStaging"], stageMap["missingNotes"] = getStageSolRequiredNotes(tuneApp, solStageName)
@@ -647,41 +647,6 @@ func getStageEnabledState(tApp *app.App, sol, note string) string {
 		}
 	}
 	return enabled
-}
-
-// getStageNoteInSol checks, if a Note from staging is part of a Solution
-// returns Solution names
-func getStageNoteInSol(tApp *app.App, noteName string) (string, string) {
-	noteInSols := ""
-	noteInCustomSols := ""
-	sols := []string{}
-	for sol := range tApp.AllSolutions {
-		sols = append(sols, sol)
-	}
-	sort.Strings(sols)
-	for _, sol := range sols {
-		for _, noteID := range tApp.AllSolutions[sol] {
-			if noteName != noteID {
-				continue
-			}
-			// note is part of solution sol
-			if len(noteInSols) == 0 {
-				noteInSols = sol
-			} else {
-				noteInSols = fmt.Sprintf("%s, %s", noteInSols, sol)
-			}
-		}
-		// check for custom solution
-		if len(solution.CustomSolutions[solutionSelector][sol]) != 0 {
-			// sol is custom solution
-			if len(noteInCustomSols) == 0 {
-				noteInCustomSols = sol
-			} else {
-				noteInCustomSols = fmt.Sprintf("%s, %s", noteInCustomSols, sol)
-			}
-		}
-	}
-	return noteInSols, noteInCustomSols
 }
 
 // getStageSolRequiredNotes checks, which Notes are related to a Solution from
