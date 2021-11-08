@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/SUSE/saptune/sap/note"
+	"github.com/SUSE/saptune/system"
 	"testing"
 )
 
@@ -53,6 +54,11 @@ func TestSetWidthOfColums(t *testing.T) {
 }
 
 func TestPrintNoteFields(t *testing.T) {
+	footnote1 := " [1] setting is not supported by the system"
+	if system.GetCSP() == "azure" {
+		footnote1 = " [1] setting is not available on Azure instances (see SAP Note 2993054)."
+	}
+
 	var printMatchText1 = `
 941735 - Configuration drop in for simple tests
 			Version 1 from 09.07.2019  
@@ -68,7 +74,7 @@ func TestPrintNoteFields(t *testing.T) {
    941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
    941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
 
-  [1] setting is not supported by the system
+ ` + footnote1 + `
   [2] setting is not available on the system
   [3] value is only checked, but NOT set
   [4] cpu idle state settings differ
@@ -93,7 +99,7 @@ func TestPrintNoteFields(t *testing.T) {
    grub:intel_idle.max_cstate | NA                   | 1                    |           |  [2] [3] [6]
    kernel.shmmax              | 18446744073709551615 | 18446744073709551615 |           |   
 
-  [1] setting is not supported by the system
+ ` + footnote1 + `
   [2] setting is not available on the system
   [3] value is only checked, but NOT set
   [4] cpu idle state settings differ
@@ -115,7 +121,7 @@ func TestPrintNoteFields(t *testing.T) {
    941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
    941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
 
-  [1] setting is not supported by the system
+ ` + footnote1 + `
   [2] setting is not available on the system
   [3] value is only checked, but NOT set
   [4] cpu idle state settings differ
@@ -137,7 +143,7 @@ func TestPrintNoteFields(t *testing.T) {
    grub:intel_idle.max_cstate | NA                   | 1                    |           |  [2] [3] [6]
    kernel.shmmax              | 18446744073709551615 | 18446744073709551615 |           |   
 
-  [1] setting is not supported by the system
+ ` + footnote1 + `
   [2] setting is not available on the system
   [3] value is only checked, but NOT set
   [4] cpu idle state settings differ

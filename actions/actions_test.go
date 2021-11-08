@@ -61,7 +61,7 @@ var setUpSol = func(t *testing.T) {
 	solution.OverrideSolutions = solution.GetOtherSolution(OverTstFilesInGOPATH, noteFiles, "")
 	solution.DeprecSolutions = solution.GetOtherSolution(DeprecFilesInGOPATH, "", "")
 	//solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
-	solution.AllSolutions = solution.GetSolutionDefintion(SolutionSheetsInGOPATH)
+	solution.AllSolutions = solution.GetSolutionDefintion(SolutionSheetsInGOPATH, extraNoteFiles, noteFiles)
 }
 
 var tearDownSol = func(t *testing.T) {
@@ -70,7 +70,7 @@ var tearDownSol = func(t *testing.T) {
 	solution.OverrideSolutions = solution.GetOtherSolution("", "", "")
 	solution.DeprecSolutions = solution.GetOtherSolution("", "", "")
 	//solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
-	solution.AllSolutions = solution.GetSolutionDefintion(SolutionSheetsInGOPATH)
+	solution.AllSolutions = solution.GetSolutionDefintion(SolutionSheetsInGOPATH, ExtraTuningSheets, NoteTuningSheets)
 }
 
 var setUp = func(t *testing.T) {

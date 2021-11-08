@@ -29,7 +29,7 @@ func TestGetSolutionDefintion(t *testing.T) {
 		nwsols = "941735 1771258 1980196 1984787 2534844"
 	}
 
-	solutions := GetSolutionDefintion(SolutionSheetsInGOPATH)
+	solutions := GetSolutionDefintion(SolutionSheetsInGOPATH, "", "")
 	if len(solutions) != solcount {
 		t.Errorf("'%+v' has len '%+v'\n", solutions, len(solutions))
 	}
@@ -37,7 +37,7 @@ func TestGetSolutionDefintion(t *testing.T) {
 		t.Error(solutions)
 	}
 
-	sols := GetSolutionDefintion("/saptune_file_not_avail")
+	sols := GetSolutionDefintion("/saptune_file_not_avail", "", "")
 	if len(sols) != 0 {
 		t.Error(sols)
 	}
