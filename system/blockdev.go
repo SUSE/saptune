@@ -92,7 +92,11 @@ func getValidBlockDevices() (valDevs []string) {
 				candidates = append(candidates, bdev)
 			} else {
 				// skip unsupported devices
-				InfoLog("skipping device '%s', unsupported", bdev)
+				if isLVM.MatchString(string(cont)) {
+					InfoLog("skipping device '%s' (LVM), unsupported", bdev)
+				} else {
+					InfoLog("skipping device '%s', unsupported", bdev)
+				}
 			}
 			_, slaves := ListDir(fmt.Sprintf("/sys/block/%s/slaves", bdev), "dm slaves")
 			if len(slaves) != 0 && (isMpath.MatchString(string(cont)) || isLVM.MatchString(string(cont))) && !isMpathPart.MatchString(string(cont)) {
@@ -169,12 +173,15 @@ func CollectBlockDeviceInfo() []string {
 		blockMap["NR_TAGS"] = nrtags
 
 		// VENDOR, MODEL e.g. for FUJITSU udev replacement
+		vendFile := path.Join("block", bdev, "device", "vendor")
 		vendor := ""
+		if _, err := os.Stat(path.Join("/sys", vendFile)); err == nil {
+			vendor, _ = GetSysString(vendFile)
+		}
+		modelFile := path.Join("block", bdev, "device", "model")
 		model := ""
-		// virtio block devices do not have useful values.
-		if !isVD.MatchString(bdev) {
-			vendor, _ = GetSysString(path.Join("block", bdev, "device", "vendor"))
-			model, _ = GetSysString(path.Join("block", bdev, "device", "model"))
+		if _, err := os.Stat(path.Join("/sys", modelFile)); err == nil {
+			model, _ = GetSysString(modelFile)
 		}
 		blockMap["VENDOR"] = vendor
 		blockMap["MODEL"] = model
