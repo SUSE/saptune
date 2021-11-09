@@ -42,14 +42,14 @@ _saptune() {
                             ;;
                 service)    opts="start status stop restart takeover enable disable enablestart disablestop"
                             ;;
-		        staging)    opts="status enable disable is-enabled list diff analysis release"
+                staging)    opts="status enable disable is-enabled list diff analysis release"
                             ;;
-                solution)   opts="list verify apply simulate edit create revert show delete rename enabled applied"
+                solution)   opts="list verify apply simulate edit customise create revert show delete rename enabled applied"
                             ;;
                 note)       opts="list verify apply simulate edit customise revert revertall create show delete rename enabled applied"
                             ;;
-		        revert)	    opts="all"	
-			                ;;
+                revert)     opts="all"	
+                            ;;
                 *)          ;;
             esac
             ;;
@@ -68,7 +68,7 @@ _saptune() {
                 *)  return 0
                     ;;
             esac 
-	        ;;
+            ;;
 
         *)  case "${COMP_WORDS[1]}-${COMP_WORDS[2]}" in
                 staging-analysis|staging-diff|staging-release)

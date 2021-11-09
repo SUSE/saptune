@@ -33,10 +33,6 @@ type Solution []string
 // Architecture VS solution ID VS note numbers
 // AllSolutions = map[string]map[string]Solution
 
-// AllSolutions contains a list of all available solutions with their related
-// SAP Notes for all supported architectures
-var AllSolutions = GetSolutionDefintion(SolutionSheets)
-
 // OverrideSolutions contains a list of all available override solutions with
 // their related SAP Notes for all supported architectures
 var OverrideSolutions = GetOtherSolution(OverrideSolutionSheets, NoteTuningSheets, ExtraTuningSheets)
@@ -48,16 +44,25 @@ var CustomSolutions = GetOtherSolution(ExtraTuningSheets, NoteTuningSheets, Extr
 // DeprecSolutions contains a list of all solutions witch are deprecated
 var DeprecSolutions = GetOtherSolution(DeprecSolutionSheets, "", "")
 
+// AllSolutions contains a list of all available solutions with their related
+// SAP Notes for all supported architectures
+var AllSolutions = GetSolutionDefintion(SolutionSheets, ExtraTuningSheets, NoteTuningSheets)
+
 // GetSolutionDefintion reads solution definition from file
 // build same structure for AllSolutions as before
 // can be simplified later
-func GetSolutionDefintion(solsDir string) map[string]map[string]Solution {
+func GetSolutionDefintion(solsDir, extraDir, noteDir string) map[string]map[string]Solution {
 	sols := make(map[string]map[string]Solution)
 	sol := make(map[string]Solution)
 	currentArch := ""
 	arch := ""
 	pcarch := ""
 	solAllVals := getAllSolsFromDir(solsDir, "", "")
+	// add custom solutions to the list
+	custAllVals := getAllSolsFromDir(extraDir, noteDir, extraDir)
+	for _, p := range custAllVals {
+		solAllVals = append(solAllVals, p)
+	}
 
 	for _, param := range solAllVals {
 		if param.Section == "reminder" || param.Section == "version" {
@@ -75,12 +80,6 @@ func GetSolutionDefintion(solsDir string) map[string]map[string]Solution {
 			// start a new arch
 			if currentArch != "" {
 				// save previous arch settings
-				if len(CustomSolutions) != 0 {
-					// add custom solutions for previous arch
-					for cKey, cVal := range CustomSolutions[arch] {
-						sol[cKey] = cVal
-					}
-				}
 				sols = storeSols(arch, pcarch, sol, sols)
 			}
 			currentArch = param.Section
@@ -320,5 +319,5 @@ func IsShippedSolution(sol string) bool {
 func Refresh() {
 	CustomSolutions = GetOtherSolution(ExtraTuningSheets, NoteTuningSheets, ExtraTuningSheets)
 	OverrideSolutions = GetOtherSolution(OverrideSolutionSheets, NoteTuningSheets, ExtraTuningSheets)
-	AllSolutions = GetSolutionDefintion(SolutionSheets)
+	AllSolutions = GetSolutionDefintion(SolutionSheets, ExtraTuningSheets, NoteTuningSheets)
 }

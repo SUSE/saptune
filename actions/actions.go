@@ -62,6 +62,7 @@ var solutionSelector = system.GetSolutionSelector()
 var setGreenText = "\033[32m"
 var setRedText = "\033[31m"
 var setBoldText = "\033[1m"
+var resetBoldText = "\033[22m"
 var setStrikeText = "\033[9m"
 var resetTextColor = "\033[0m"
 

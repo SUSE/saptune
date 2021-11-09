@@ -103,7 +103,7 @@ func NoteActionList(writer io.Writer, tuneApp *app.App) {
 		}
 		// handle special highlighting in Note description
 		// like the 'only' in SAP Note 1656250
-		bonly := " " + setBoldText + "only" + resetTextColor + " "
+		bonly := " " + setBoldText + "only" + resetBoldText + " "
 		nname := strings.Replace(noteObj.Name(), " only ", bonly, 1)
 		fmt.Fprintf(writer, format, noteID, nname)
 	}
