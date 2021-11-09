@@ -72,17 +72,19 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 		// all devices with same scheduler (oval="all none")
 		oval := ""
 		sfound := false
-		dname := regexp.MustCompile(`^IO_SCHEDULER_(\w+)$`)
+		dname := regexp.MustCompile(`^IO_SCHEDULER_(\w+\-?\d*)$`)
 		bdev := dname.FindStringSubmatch(key)
-		for _, sched := range strings.Split(cfgval, ",") {
-			sval = strings.ToLower(strings.TrimSpace(sched))
-			if !param.IsValidScheduler(bdev[1], sval) {
-				continue
-			} else {
-				sfound = true
-				oval = bdev[1] + " " + sval
-				bOK[sval] = append(bOK[sval], bdev[1])
-				break
+		if len(bdev) > 0 {
+			for _, sched := range strings.Split(cfgval, ",") {
+				sval = strings.ToLower(strings.TrimSpace(sched))
+				if !param.IsValidScheduler(bdev[1], sval) {
+					continue
+				} else {
+					sfound = true
+					oval = bdev[1] + " " + sval
+					bOK[sval] = append(bOK[sval], bdev[1])
+					break
+				}
 			}
 		}
 		if !sfound {
