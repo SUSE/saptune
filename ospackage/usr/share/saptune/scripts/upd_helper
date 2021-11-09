@@ -39,6 +39,7 @@ PACKAGEAREA=/usr/share/saptune
 NOTEDIR=/usr/share/saptune/notes
 NOTES2CHANGE_12to15="1984787,2578899 2205917,2684254"
 NOTES2DELETE_15="1557506 1275776"
+FORGOTTEN_NOTES_300="2993054 1656250"
 
 set_sysconfig_version() {
     # add or change SAPTUNE_VERSION string in /etc/sysconfig/saptune to "1"
@@ -231,12 +232,189 @@ delete_notes() {
     done
 }
 
+adjust_enabled_solution() {
+    # called from the postinstall script of saptune to adjust the notes of an
+    # enabled solution
+    # need to run before the working area is touched in the postinstall
+    # only needed, if staging is NOT active and a solution is enabled and no
+    # override file exists.
+    # The staging is checked in the postinstall, so no need to do it again.
+    # If an override file for the enabled solution exists, we will NOT change
+    # anything. It is up to the customer to check and adjust after the update
+    esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    if [ -n "$esol" ] && [ ! -f ${OVERRIDEDIR}/"${esol}".sol ]; then
+        # enabled solution found, override does not exist
+        # extract notes of enabled solution from the solution definition file
+        # only use the first note list (for x86).
+        # needs to be changed, if we provide different note lists for
+        # Power or Intel for one solution in the future
+        echo "detected enabled Solution '$esol', checking for new or deleted Notes"
+        if [ -f /var/lib/saptune/.v2_solutions ]; then
+	    # starting from v2
+            # extract old notes of enabled solution from the 'old' solutions file
+            OLD_NOTES=$(sed -n "0,/^${esol} = / s///p" /var/lib/saptune/.v2_solutions)
+        else
+            # starting from v3
+            # extract old notes of enabled solution from the note definition
+            # file found in the working area
+            OLD_NOTES=$(awk '/\[ArchX86\]/ {getline; print $0}' ${WORKINGAREA}/sols/"${esol}".sol)
+        fi
+        # extract new notes of enabled solution from the note definition file
+        # found in the package area
+        NEW_NOTES=$(awk '/\[ArchX86\]/ {getline; print $0}' ${PACKAGEAREA}/sols/"${esol}".sol)
+
+        # get the new added Notes
+        for nnote in $NEW_NOTES; do
+            found=false
+            for onote in $OLD_NOTES; do
+                if [ "$nnote" == "$onote" ]; then
+                    found=true
+                    break
+                fi
+            done
+            if [ "$found" == "false" ]; then
+                NOTES2ADD="$NOTES2ADD $nnote"
+            fi
+        done
+        # get the removed Notes
+        for onote in $OLD_NOTES; do
+            found=false
+            for nnote in $NEW_NOTES; do
+                if [ "$nnote" == "$onote" ]; then
+                    found=true
+                    break
+                fi
+            done
+            if [ "$found" == "false" ]; then
+                NOTES2REM="$NOTES2REM $nnote"
+            fi
+        done
+        add_NOTE_APPLY_ORDER "$NOTES2ADD" "$esol"
+        delete_NOTE_APPLY_ORDER "$NOTES2REM" "$esol"
+    fi
+    if [ -n "$esol" ] && [ -f ${OVERRIDEDIR}/"${esol}".sol ]; then
+        echo "WARNING: override file for enabled Solution '${esol}' detected. As the content of this Solution changed, please check and adapt your override file"
+    fi
+}
+
+add_NOTE_APPLY_ORDER() {
+    new_notes="$1"
+    sol="$2"
+    apply_list=$(grep '^NOTE_APPLY_ORDER[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    notes_list=$(grep '^TUNE_FOR_NOTES[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+
+    for fnote in $new_notes; do
+        # check, if fnote is already available in NOTE_APPLY_ORDER
+        # if not, append
+        found=false
+        for anote in $apply_list; do
+           if [ "$anote" == "$fnote" ]; then
+               found=true
+               break
+           fi
+        done
+        if [ "$found" == "false" ]; then
+            # append
+            echo "### appending the new Note '$fnote' from Solution '$sol' to 'NOTE_APPLY_ORDER' in '$SAPTUNE_SYSCONFIG'"
+            sed -i "/^NOTE_APPLY_ORDER[[:space:]]*=.*/s/\"$/ $fnote\"/" $SAPTUNE_SYSCONFIG
+        fi
+
+        # delete Note from TUNE_FOR_NOTES, if available.
+        delete_TUNE_FOR_NOTES "$fnote" "$sol"
+    done
+}
+
+delete_NOTE_APPLY_ORDER() {
+    del_notes="$1"
+    sol="$2"
+    apply_list=$(grep '^NOTE_APPLY_ORDER[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+
+    for fnote in $del_notes; do
+        # check, if fnote is already available in NOTE_APPLY_ORDER
+        # if no - do nothing, all good
+        # if yes - do NOT remove the node from NOTE_APPLY_ORDER, but add
+        # note to TUNE_FOR_NOTES
+        for dnote in $apply_list; do
+            if [ "$dnote" == "$fnote" ]; then
+                # don't touch NOTE_APPLY_ORDER, but
+                # append Note to TUNE_FOR_NOTES, if not yet available
+                add_TUNE_FOR_NOTES "$fnote" "$sol"
+            fi
+        done
+    done
+}
+
+add_TUNE_FOR_NOTES() {
+    # append Note to TUNE_FOR_NOTES, if not yet available.
+    notes="$1"
+    sol="$2"
+    notes_list=$(grep '^TUNE_FOR_NOTES[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+
+    for fnote in $notes; do
+        found=false
+        for tnote in $notes_list; do
+            if [ "$tnote" == "$fnote" ]; then
+                found=true
+                break
+            fi
+        done
+        if [ "$found" == "false" ]; then
+            if [ -n "$sol" ]; then
+                echo "### appending the Note '$fnote' deleted from Solution '$sol' to 'TUNE_FOR_NOTES' in '$SAPTUNE_SYSCONFIG'"
+                sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*/s/\"$/ $fnote\"/" $SAPTUNE_SYSCONFIG
+            #else # for future use
+            fi
+        fi
+    done
+}
+
+delete_TUNE_FOR_NOTES() {
+    # delete Note from TUNE_FOR_NOTES, if available.
+    # " ${delnote} " or " ${delnote}\"" or "\"${delnote} " or "\"${delnote}\""
+    notes="$1"
+    sol="$2"
+    for fnote in $notes; do
+        changes=""
+        srch_pat1="[ ]${fnote}[ ]"
+        del_pat1=" "
+        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat1/$del_pat1/g w /dev/stdout" $SAPTUNE_SYSCONFIG)
+        srch_pat2=" ${fnote}\""
+        del_pat2="\""
+        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat2/$del_pat2/g w /dev/stdout" $SAPTUNE_SYSCONFIG)
+        srch_pat3="\"${fnote} "
+        del_pat3="\""
+        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat3/$del_pat3/g w /dev/stdout" $SAPTUNE_SYSCONFIG)
+        srch_pat4="\"${fnote}\""
+        del_pat4="\"\""
+        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat4/$del_pat4/g w /dev/stdout" $SAPTUNE_SYSCONFIG)
+        if [ -n "$changes" ]; then
+            if [ -n "$sol" ]; then
+                echo "### removing Note '$fnote' from 'TUNE_FOR_NOTES' in '$SAPTUNE_SYSCONFIG' as it is now part of the enabled Solution '$sol'"
+            else
+                # for future use, will need some 'fine tuning'
+                echo "### removing Note '$fnote' from 'TUNE_FOR_NOTES' in '$SAPTUNE_SYSCONFIG' as it is no longer shipped with saptune"
+            fi
+        fi
+    done
+}
+
+fix_300() {
+    # called from the postinstall script of saptune to fix a bug special in
+    # version 3.0.0
+    esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    if [ -n "$esol" ]; then
+        if [ "$esol" == "NETWEAVER" ] || [ "$esol" == "S4HANA-APPSERVER" ]; then
+            FORGOTTEN_NOTES_300="$FORGOTTEN_NOTES_300 900929"
+        fi
+        add_NOTE_APPLY_ORDER "$FORGOTTEN_NOTES_300" "$esol"
+    fi
+}
+
 adjust_workingarea() {
     # called from the postinstall script of saptune to adjust the working area
     # during a major release update (like 12 to 15)
     # only needed, if staging is active. If not, postinstall of package is
     # updating the working area
-    upd12to15="false"
     OIFS=$IFS
     for notepair in $NOTES2CHANGE_12to15; do
         IFS=","
@@ -250,7 +428,7 @@ adjust_workingarea() {
             # so update from SLE12 to SLE15
             if [ -n "${oldNote}" ] && [ -f ${WORKINGAREA}/notes/"${oldNote}" ]; then
                 echo "### removing old sle12 note '${oldNote}' from working area"
-                rm -rf ${WORKINGAREA}/notes/${oldNote}
+                rm -rf ${WORKINGAREA}/notes/"${oldNote}"
             fi
             if [ -n "${newNote}" ] && [ ! -f ${WORKINGAREA}/notes/"${newNote}" ]; then
                 echo "### adding new sle15 note '${newNote}' from package area to working area"
@@ -258,24 +436,24 @@ adjust_workingarea() {
             fi
 
             # adjust solution files
-            for wsol in ${WORKINGAREA}/sols/*; do
+            for wsol in "${WORKINGAREA}"/sols/*; do
                 srch_pat1="[[:space:]]${oldNote}[[:space:]]"
                 new_pat1=" ${newNote} "
-                if grep "$srch_pat1" $wsol >/dev/null 2>&1; then
+                if grep "$srch_pat1" "$wsol" >/dev/null 2>&1; then
                     echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote' in solution '$wsol'"
-                    sed -i "s/$srch_pat1/$new_pat1/g" $wsol
+                    sed -i "s/$srch_pat1/$new_pat1/g" "$wsol"
                 fi
                 srch_pat2="[[:space:]]${oldNote}$"
                 new_pat2=" ${newNote}"
-                if grep "$srch_pat2" $wsol >/dev/null 2>&1; then
+                if grep "$srch_pat2" "$wsol" >/dev/null 2>&1; then
                     echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote' in solution '$wsol'"
-                    sed -i "s/$srch_pat2/$new_pat2/g" $wsol
+                    sed -i "s/$srch_pat2/$new_pat2/g" "$wsol"
                 fi
                 srch_pat3="^${oldNote}[[:space:]]"
                 new_pat3="${newNote} "
-                if grep "$srch_pat3" $wsol >/dev/null 2>&1; then
+                if grep "$srch_pat3" "$wsol" >/dev/null 2>&1; then
                     echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote' in solution '$wsol'"
-                    sed -i "s/$srch_pat3/$new_pat3/g" $wsol
+                    sed -i "s/$srch_pat3/$new_pat3/g" "$wsol"
                 fi
             done
         fi
@@ -285,7 +463,7 @@ adjust_workingarea() {
         if [ ! -f ${NOTEDIR}/"${delnote}" ]; then
             if [ -n "${delnote}" ] && [ -f ${WORKINGAREA}/notes/"${delnote}" ]; then
                 echo "### removing no longer supported note '${delnote}' from working area"
-                rm -rf ${WORKINGAREA}/notes/${delnote}
+                rm -rf ${WORKINGAREA}/notes/"${delnote}"
             fi
             # adjust solution files - not needed yet
         fi
@@ -317,11 +495,11 @@ cleanup_savestates() {
 copy_packednotes2staging() {
     # called from the postinstall script of saptune to handle the staging area
     # check for changed or new notes
-    for pnote in ${PACKAGEAREA}/notes/*; do
+    for pnote in "${PACKAGEAREA}"/notes/*; do
         note=${pnote##*/}
-        if [ -f ${WORKINGAREA}/notes/${note} ]; then
-            md5_packed_note=$(/usr/bin/md5sum $pnote | awk '{print $1}')
-            md5_working_note=$(/usr/bin/md5sum ${WORKINGAREA}/notes/${note} | awk '{print $1}')
+        if [ -f ${WORKINGAREA}/notes/"${note}" ]; then
+            md5_packed_note=$(/usr/bin/md5sum "$pnote" | awk '{print $1}')
+            md5_working_note=$(/usr/bin/md5sum ${WORKINGAREA}/notes/"${note}" | awk '{print $1}')
             # check for unchanged notes
             if [ "$md5_packed_note" == "$md5_working_note" ]; then
                 # ignore unchanged notes
@@ -330,32 +508,32 @@ copy_packednotes2staging() {
             # check for changed notes
             if [ "$md5_packed_note" != "$md5_working_note" ]; then
                 # copy changed note from package area to staging area
-                cp $pnote ${STAGINGAREA}/latest
+                cp "$pnote" ${STAGINGAREA}/latest
             fi
         else
             # found new note
             # copy new note from package area to staging area
-            cp $pnote ${STAGINGAREA}/latest
+            cp "$pnote" ${STAGINGAREA}/latest
         fi
     done
     # check for deleted notes
     # available in working area but not in package area
-    for wnote in ${WORKINGAREA}/notes/*; do
+    for wnote in "${WORKINGAREA}"/notes/*; do
         note=${wnote##*/}
-        if [ ! -f ${PACKAGEAREA}/notes/${note} ]; then
+        if [ ! -f ${PACKAGEAREA}/notes/"${note}" ]; then
             # note deleted in the current installed package
             # create a note file in staging area, which only contains the
             # version information of the 'old' note
             # as a flag for a later removal from the working area
-            grep '# .*VERSION=.*DATE=.*NAME=".*"' ${wnote} > ${STAGINGAREA}/latest/${note}
+            grep '# .*VERSION=.*DATE=.*NAME=".*"' "${wnote}" > ${STAGINGAREA}/latest/"${note}"
         fi
     done
     # check for changed or new solutions
-    for psol in ${PACKAGEAREA}/sols/*; do
+    for psol in "${PACKAGEAREA}"/sols/*; do
         sol=${psol##*/}
-        if [ -f ${WORKINGAREA}/sols/${sol} ]; then
-            md5_packed_sol=$(/usr/bin/md5sum $psol | awk '{print $1}')
-            md5_working_sol=$(/usr/bin/md5sum ${WORKINGAREA}/sols/${sol} | awk '{print $1}')
+        if [ -f ${WORKINGAREA}/sols/"${sol}" ]; then
+            md5_packed_sol=$(/usr/bin/md5sum "$psol" | awk '{print $1}')
+            md5_working_sol=$(/usr/bin/md5sum ${WORKINGAREA}/sols/"${sol}" | awk '{print $1}')
             # check for unchanged solutions
             if [ "$md5_packed_sol" == "$md5_working_sol" ]; then
                 # ignore unchanged solution
@@ -364,24 +542,24 @@ copy_packednotes2staging() {
             # check for changed solutions
             if [ "$md5_packed_sol" != "$md5_working_sol" ]; then
                 # copy changed solution from package area to staging area
-                cp $psol ${STAGINGAREA}/latest
+                cp "$psol" ${STAGINGAREA}/latest
             fi
         else
             # found new solution
             # copy new solution from package area to staging area
-            cp $psol ${STAGINGAREA}/latest
+            cp "$psol" ${STAGINGAREA}/latest
         fi
     done
     # check for deleted solutions
     # available in working area but not in package area
-    for wsol in ${WORKINGAREA}/sols/*; do
+    for wsol in "${WORKINGAREA}"/sols/*; do
         sol=${wsol##*/}
-        if [ ! -f ${PACKAGEAREA}/sols/${sole} ]; then
+        if [ ! -f ${PACKAGEAREA}/sols/"${sol}" ]; then
             # solution deleted in the current installed package
             # create a solution file in staging area, which only contains the
             # version information of the 'old' solution
             # as a flag for a later removal from the working area
-            grep '# .*VERSION=.*DATE=.*NAME=".*"' ${wsol} > ${STAGINGAREA}/latest/${sol}
+            grep '# .*VERSION=.*DATE=.*NAME=".*"' "${wsol}" > ${STAGINGAREA}/latest/"${sol}"
         fi
     done
 }
@@ -417,4 +595,13 @@ staging)
     # called from the postinstall script of saptune to handle the staging area
     copy_packednotes2staging
     ;;
+enabledSol)
+    # called from the postinstall script of saptune to adjust the notes of an
+    # enabled solution
+    adjust_enabled_solution
+    ;;
+fix_300)
+    # called from the postinstall script of saptune to fix a bug special in
+    # version 3.0.0
+    fix_300
 esac
