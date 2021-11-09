@@ -30,9 +30,10 @@
 # 19.08.2021  v0.2      supports (only) saptune v3
 #                       tests system status and lists failed services
 # 26.08.2021  v0.2.1    added missing os_release to global arrays
+# 09.11.2021  v0.2.2    degraded system is no longer considered an error
 
 
-version="0.2.1"
+version="0.2.2"
 
 # We use these global arrays through out the program:
 #
@@ -366,9 +367,9 @@ function check_saptune() {
         running)
             print_ok "System is in status \"running\""
             ;;
-        degraded) 
-            print_fail "System is in status \"${system_status['status']}\". Failed services are: ${system_status['failed_units']}"  "Check the cause and reset the state with 'systemctl reset-failed'!"
-            ((fails++))
+        degraded)
+            print_warn "System is in status \"${system_status['status']}\". Failed services are: ${system_status['failed_units']}"  "Check the cause and reset the state with 'systemctl reset-failed'!"
+            ((warnings++))
             ;;   
         *)  print_fail "System is in status \"${system_status['status']}\"."  "Check (systemd) what is wrong!"
             ((fails++))
