@@ -1,11 +1,11 @@
 # 1771258 - Linux: User and system resource limits
-# Version 5 from 18.06.2018 in English
+# Version 6 from 05.11.2021 in English
 # as it is planned by SAP to use this Note for Netweaver AND HANA we just
 # changed the values while we are still waiting for the updated version of
 # the Note
 
 [version]
-# SAP-NOTE=1771258 CATEGORY=LINUX VERSION=5 DATE=18.06.2018 NAME="Linux: User and system resource limits"
+# SAP-NOTE=1771258 CATEGORY=LINUX VERSION=6 DATE=05.11.2021 NAME="Linux: User and system resource limits"
 
 [limits]
 # /etc/security/limits.conf or drop-in file in /etc/securitty/limits.d
