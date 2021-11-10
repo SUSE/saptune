@@ -18,7 +18,7 @@ type BlockDev struct {
 }
 
 // IsSched matches block device scheduler tag
-var IsSched = regexp.MustCompile(`^IO_SCHEDULER_\w+$`)
+var IsSched = regexp.MustCompile(`^IO_SCHEDULER_\w+\-?\d*$`)
 
 // IsNrreq matches block device nrreq tag
 var IsNrreq = regexp.MustCompile(`^NRREQ_\w+$`)
@@ -147,6 +147,9 @@ func CollectBlockDeviceInfo() []string {
 
 		// Remember, GetSysChoice does not accept the leading /sys/
 		elev, _ := GetSysChoice(path.Join("block", bdev, "queue", "scheduler"))
+		if elev == "" {
+			elev, _ = GetSysString(path.Join("block", bdev, "queue", "scheduler"))
+		}
 		blockMap["IO_SCHEDULER"] = elev
 		val, err := ioutil.ReadFile(path.Join("/sys/block/", bdev, "/queue/scheduler"))
 		sched := ""

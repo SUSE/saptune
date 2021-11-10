@@ -472,7 +472,7 @@ adjust_workingarea() {
 
 cleanup_savestates() {
     # cleanup older, no longer handled savedState files
-    param_filelist="/var/lib/saptune/parameter/IO_SCHEDULER_sr* /var/lib/saptune/parameter/IO_SCHEDULER_dm-*"
+    param_filelist="/var/lib/saptune/parameter/IO_SCHEDULER_sr*"
     for i in $param_filelist ; do
         [ -f "$i" ] && rm -f "$i"
     done

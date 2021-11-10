@@ -38,6 +38,8 @@ func (ioe BlockDeviceSchedulers) Inspect() (Parameter, error) {
 		elev := blkDev.BlockAttributes[entry]["IO_SCHEDULER"]
 		if elev != "" {
 			newIOE.SchedulerChoice[entry] = elev
+		} else {
+			newIOE.SchedulerChoice[entry] = "NA"
 		}
 	}
 	return newIOE, nil
