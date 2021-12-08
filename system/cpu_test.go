@@ -36,7 +36,7 @@ func TestSupportsPerfBias(t *testing.T) {
 	cmdArgs := []string{"info", "-b"}
 
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-	if err != nil || (err == nil && strings.Contains(string(cmdOut), notSupported)) {
+	if err != nil || (err == nil && (strings.Contains(string(cmdOut), notSupportedX86) || strings.Contains(string(cmdOut), notSupportedIBM))) {
 		t.Fatal(string(cmdOut))
 	}
 }

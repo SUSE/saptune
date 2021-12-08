@@ -19,7 +19,8 @@ import (
 const (
 	efiNotSupported = "EFI variables are not supported on this system"
 	secBootOff      = "SecureBoot disabled"
-	notSupported    = "System does not support Intel's performance bias setting"
+	notSupportedX86 = "System does not support Intel's performance bias setting"
+	notSupportedIBM = "Subcommand not supported on POWER."
 	cpuDirSys       = "devices/system/cpu"
 )
 
@@ -50,8 +51,7 @@ func GetPerfBias() string {
 
 	for k, line := range strings.Split(strings.TrimSpace(string(cmdOut)), "\n") {
 		switch {
-		case line == notSupported:
-			//WarningLog(notSupported)
+		case line == notSupportedX86 || line == notSupportedIBM:
 			return "all:none"
 		case isPBCpu.MatchString(line):
 			str = str + fmt.Sprintf("cpu%d", k/2)
@@ -106,7 +106,7 @@ func canSetPerfBias() bool {
 		WarningLog("Cannot set Perf Bias when SecureBoot is enabled, skipping")
 		setPerf = false
 	} else if !supportsPerfBias() {
-		WarningLog(notSupported)
+		WarningLog("Perf Bias settings not supported by the system")
 		setPerf = false
 	}
 	return setPerf
@@ -118,7 +118,9 @@ func SecureBootEnabled() bool {
 	cmdArgs := []string{"--sb-state"}
 
 	if !CmdIsAvailable(cmdName) {
-		WarningLog("command '%s' not found", cmdName)
+		if runtime.GOARCH != "ppc64le" {
+			ErrorLog("command '%s' not found", cmdName)
+		}
 		return false
 	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
@@ -138,7 +140,7 @@ func supportsPerfBias() bool {
 		return false
 	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-	if err != nil || (err == nil && strings.Contains(string(cmdOut), notSupported)) {
+	if err != nil || (err == nil && (strings.Contains(string(cmdOut), notSupportedX86) || strings.Contains(string(cmdOut), notSupportedIBM))) {
 		// does not support perf bias
 		return false
 	}
@@ -226,7 +228,7 @@ func canSetGov(value, info string) bool {
 	if GetCSP() == "azure" {
 		WarningLog("Setting governor is not supported on '%s'\n", CSPAzureLong)
 		setGov = false
-	} else if value == "all:none" || info == "notSupported" {
+	} else if value == "all:none" || info == "notSupportedX86" || info == "notSupportedIBM" {
 		WarningLog("governor settings not supported by the system")
 		setGov = false
 	} else if !CmdIsAvailable(cpupowerCmd) {
@@ -383,7 +385,7 @@ func canSetForceLatency(value, info string) bool {
 		WarningLog("latency settings are not supported on '%s'\n", CSPAzureLong)
 		setLatency = false
 	}
-	if value == "all:none" || info == "notSupported" {
+	if value == "all:none" || info == "notSupportedX86" || info == "notSupportedIBM" {
 		WarningLog("latency settings not supported by the system")
 		setLatency = false
 	}
