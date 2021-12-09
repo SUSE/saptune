@@ -122,7 +122,7 @@ func ParseMounts(txt string) (mounts MountPoints) {
 			}
 		}
 		if len(fields) > 5 {
-			if mountPoint.Fsck, err = strconv.Atoi(fields[4]); err != nil {
+			if mountPoint.Fsck, err = strconv.Atoi(fields[5]); err != nil {
 				WarningLog("parsing mounts - not an integer for field 'fsck' in '%s'. Working with default value '0'.", line)
 			}
 		}
