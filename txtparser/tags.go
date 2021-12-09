@@ -8,6 +8,26 @@ import (
 	"strings"
 )
 
+// isTagAvail checks, if a special tag is available in the section Fields
+func isTagAvail(tag string, secFields []string) bool {
+	cnt := 0
+	for _, secTag := range secFields {
+		if cnt == 0 {
+			// skip section name
+			cnt = cnt + 1
+			continue
+		}
+		tagField := strings.Split(secTag, "=")
+		if len(tagField) != 2 {
+			return false
+		}
+		if tag == tagField[0] {
+			return true
+		}
+	}
+	return false
+}
+
 // chkSecTags checks, if the tags of a section are valid
 func chkSecTags(secFields, blkDev []string) (bool, []string) {
 	ret := true
