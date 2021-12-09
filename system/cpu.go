@@ -17,13 +17,12 @@ import (
 
 //constant definition
 const (
-	efiNotSupported = "EFI variables are not supported on this system"
-	secBootOff      = "SecureBoot disabled"
 	notSupportedX86 = "System does not support Intel's performance bias setting"
 	notSupportedIBM = "Subcommand not supported on POWER."
 	cpuDirSys       = "devices/system/cpu"
 )
 
+var efiVarsDir = "/sys/firmware/efi/efivars"
 var cpuDir = "/sys/devices/system/cpu"
 var cpupowerCmd = "/usr/bin/cpupower"
 var isCPU = regexp.MustCompile(`^cpu\d+$`)
@@ -114,20 +113,37 @@ func canSetPerfBias() bool {
 
 // SecureBootEnabled checks, if the system is in lock-down mode
 func SecureBootEnabled() bool {
-	cmdName := "/usr/bin/mokutil"
-	cmdArgs := []string{"--sb-state"}
-
-	if !CmdIsAvailable(cmdName) {
-		if runtime.GOARCH != "ppc64le" {
-			ErrorLog("command '%s' not found", cmdName)
+	var isSecBootFileName = regexp.MustCompile(`^SecureBoot-\w[\w-]+`)
+	if _, err := os.Stat(efiVarsDir); os.IsNotExist(err) {
+		InfoLog("no EFI directory '%+s' found, assuming legacy boot", efiVarsDir)
+		return false
+	}
+	secureBootFile := ""
+	_, efiFiles := ListDir(efiVarsDir, "the available efi variables")
+	for _, eFile := range efiFiles {
+		if isSecBootFileName.MatchString(eFile) {
+			// work with the first file matching 'SecureBoot-*'
+			secureBootFile = path.Join(efiVarsDir, eFile)
+			break
 		}
+	}
+	if secureBootFile == "" {
+		InfoLog("no EFI SecureBoot file (SecureBoot-*) found in '%s', assuming legacy boot", efiVarsDir)
 		return false
 	}
-	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-	if err != nil || (err == nil && (strings.Contains(string(cmdOut), secBootOff) || strings.Contains(string(cmdOut), efiNotSupported))) {
+
+	content, err := ioutil.ReadFile(secureBootFile)
+	if err != nil {
+		InfoLog("failed to read EFI SecureBoot file '%s': %v", secureBootFile, err)
 		return false
 	}
-	return true
+	lastElement := content[len(content)-1]
+	if lastElement == 1 {
+		DebugLog("secure boot enabled - '%v'", content)
+		return true
+	}
+	DebugLog("secure boot disabled - '%v'", content)
+	return false
 }
 
 // supportsPerfBias check, if the system will support CPU performance settings
