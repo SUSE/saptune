@@ -15,6 +15,9 @@ var mountOptionSeparator = regexp.MustCompile("[[:space:]]*,[[:space:]]*")
 
 // IsXFSOption matches xfs options
 var IsXFSOption = regexp.MustCompile(`^xfsopt_\w+$`)
+var fstab = "/etc/fstab"
+var mtab = "/etc/mtab"
+var procMounts = "/proc/mounts"
 
 // MountPoint Represent a mount point entry in /proc/mounts or /etc/fstab
 type MountPoint struct {
@@ -90,7 +93,7 @@ func (mounts MountPoints) GetByMountOption(fstype, mountOption, chkDflt string) 
 }
 
 // ParseMounts return all mount points defined in the input text.
-// Panic on malformed entry.
+// Skipping malformed entry.
 func ParseMounts(txt string) (mounts MountPoints) {
 	mounts = make([]MountPoint, 0, 0)
 	for _, line := range strings.Split(txt, "\n") {
@@ -98,55 +101,65 @@ func ParseMounts(txt string) (mounts MountPoints) {
 		if len(fields) == 0 || len(fields[0]) == 0 || fields[0][0] == '#' {
 			continue // skip comments and empty lines
 		}
-		if len(fields) != 6 {
-			panic(fmt.Sprintf("parsing mounts - incorrect number of fields in '%s'", line))
+		if len(fields) < 4 {
+			// skip lines with wrong syntax
+			ErrorLog("parsing mounts - incorrect number of fields in line '%s'. Skipping entry", line)
+			continue
 		}
 		mountPoint := MountPoint{
 			Device:     fields[0],
 			MountPoint: fields[1],
 			Type:       fields[2],
+			Dump:       0,
+			Fsck:       0,
 		}
 		// Split mount options
 		mountPoint.Options = mountOptionSeparator.Split(fields[3], -1)
 		var err error
-		if mountPoint.Dump, err = strconv.Atoi(fields[4]); err != nil {
-			panic(fmt.Sprintf("parsing mounts - not an integer in '%s'", line))
+		if len(fields) > 4 {
+			if mountPoint.Dump, err = strconv.Atoi(fields[4]); err != nil {
+				WarningLog("parsing mounts - not an integer for field 'dump' in '%s'. Working with default value '0'.", line)
+			}
 		}
-		if mountPoint.Fsck, err = strconv.Atoi(fields[4]); err != nil {
-			panic(fmt.Sprintf("parsing mounts - not an integer in '%s'", line))
+		if len(fields) > 5 {
+			if mountPoint.Fsck, err = strconv.Atoi(fields[4]); err != nil {
+				WarningLog("parsing mounts - not an integer for field 'fsck' in '%s'. Working with default value '0'.", line)
+			}
 		}
 		mounts = append(mounts, mountPoint)
 	}
 	return
 }
 
-// ParseFstab return all mount points defined in /etc/fstab. Panic on error.
-func ParseFstab() MountPoints {
-	fstab, err := ioutil.ReadFile("/etc/fstab")
+// ParseMtab return all mount points defined in a given file.
+// Returns empty list of mount points on error
+func ParseMtab(file string) MountPoints {
+	mounts := ""
+	content, err := ioutil.ReadFile(file)
 	if err != nil {
-		panic(fmt.Errorf("failed to read /etc/fstab: %v", err))
+		ErrorLog("failed to read file '%s': %v", file, err)
+	} else {
+		mounts = string(content)
 	}
-	return ParseMounts(string(fstab))
+	return ParseMounts(mounts)
+}
+
+// ParseFstab return all mount points defined in /etc/fstab.
+// Returns empty list of mount points
+func ParseFstab() MountPoints {
+	return ParseMtab(fstab)
 }
 
 // ParseProcMounts return all mount points appearing in /proc/mounts.
-// Panic on error.
+// Returns empty list of mount points
 func ParseProcMounts() MountPoints {
-	mounts, err := ioutil.ReadFile("/proc/mounts")
-	if err != nil {
-		panic(fmt.Errorf("failed to open /proc/mounts: %v", err))
-	}
-	return ParseMounts(string(mounts))
+	return ParseMtab(procMounts)
 }
 
-// ParseMtabMounts return all mount points appearing in /proc/mounts.
-// Panic on error.
+// ParseMtabMounts return all mount points appearing in /etc/mtab.
+// Returns empty list of mount points
 func ParseMtabMounts() MountPoints {
-	mounts, err := ioutil.ReadFile("/etc/mtab")
-	if err != nil {
-		panic(fmt.Errorf("failed to open /etc/mtab: %v", err))
-	}
-	return ParseMounts(string(mounts))
+	return ParseMtab(mtab)
 }
 
 // RemountSHM invoke mount command to resize /dev/shm to the specified value.
