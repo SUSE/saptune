@@ -2,6 +2,7 @@ package system
 
 import (
 	"io/ioutil"
+	"os"
 	"regexp"
 )
 
@@ -24,6 +25,8 @@ const (
 	CSPAlibaba     = "alibaba"
 	CSPAlibabaLong = "Alibaba Cloud"
 )
+
+var dmiDir = "/sys/class/dmi"
 
 // dmidecode key files
 // /usr/sbin/dmidecode -s chassis-asset-tag
@@ -63,6 +66,10 @@ var isAlibaba = regexp.MustCompile(`.*[aA]libaba.*`)
 func GetCSP() string {
 	csp := ""
 
+	if _, err := os.Stat(dmiDir); os.IsNotExist(err) {
+		InfoLog("directory '%s' does not exist", dmiDir)
+		return csp
+	}
 	// check for Azure
 	if content, err := ioutil.ReadFile(dmiChassisAssetTag); err == nil {
 		matches := isAzureCat.FindStringSubmatch(string(content))

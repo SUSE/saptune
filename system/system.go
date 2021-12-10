@@ -301,6 +301,8 @@ func GetDmiID(file string) (string, error) {
 	fileName := fmt.Sprintf("%s/%s", DmiID, file)
 	if content, err = ioutil.ReadFile(fileName); err == nil {
 		ret = strings.TrimSpace(string(content))
+	} else {
+		InfoLog("failed to read %s - %v", fileName, err)
 	}
 	return ret, err
 }
@@ -323,6 +325,8 @@ func GetHWIdentity(info string) (string, error) {
 	}
 	if content, err = ioutil.ReadFile(fileName); err == nil {
 		ret = strings.TrimSpace(string(content))
+	} else {
+		InfoLog("failed to read %s - %v", fileName, err)
 	}
 	return ret, err
 }

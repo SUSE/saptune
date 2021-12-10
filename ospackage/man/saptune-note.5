@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "September 2021" "" "saptune note file format description"
+.TH "saptune-note" "5" "December 2021" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
@@ -37,6 +37,7 @@ Tags are separated by ':' and can appear in any order. Unsupported tags are cons
 .br
 For some tags the value of the tag is treated as a string and used as a regular expression to match the content of the respective source. This is mentioned in the description of the possible tags below. As a reference https://golang.org/pkg/regexp/#MatchString can be used to see, what additional expressions may be possible inside the tag value. But attention, only some basic ones are really supprted (like 'sd[ab]' for block devices).
 
+Attention: as the IBM Power platform (hardware architecture 'ppc64le') does not support files in \fI/sys/class/dmi\fP (the directory is not available on this hardware architecture) some of the tags listed below are not usable on Power systems for now.
 
 The \fBsyntax\fP for such sections is:
 
@@ -68,6 +69,8 @@ to define a special \fIsystem hardware vendor\fP
 Valid values for \fBvendor=\fP are the values found in \fB/sys/class/dmi/id/board_vendor\fP or parts of the string available in this file.
 .br
 The value of the vendor tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the vendor file.
+
+Attention: not usable on IBM Power platform (hardware architecture 'ppc64le')
 .TP
 .BI model= <hardware model>
 to define a special \fIsystem hardware model\fP
@@ -75,6 +78,8 @@ to define a special \fIsystem hardware model\fP
 Valid values for \fBmodel=\fP are the values found in \fB/sys/class/dmi/id/product_name\fP or parts of the string available in this file.
 .br
 The value of the model tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the model file.
+
+Attention: not usable on IBM Power platform (hardware architecture 'ppc64le')
 
 .RS 4
 Example:
@@ -102,6 +107,8 @@ This way it's possible to restrict a section to a special hardware vendor or har
 The value of the DMI interface tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the file in \fI/sys/class/dmi/id/<filename>\fP.
 
 Attention: if the pattern does not match any filename in \fI/sys/class/dmi/id\fP, the section will be skipped as unknown.
+
+Attention: not usable on IBM Power platform (hardware architecture 'ppc64le')
 
 .RS 4
 Example:
