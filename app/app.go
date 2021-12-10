@@ -549,6 +549,7 @@ func (app *App) RevertAll(permanent bool) error {
 	if permanent {
 		app.TuneForNotes = make([]string, 0, 0)
 		app.TuneForSolutions = make([]string, 0, 0)
+		app.NoteApplyOrder = make([]string, 0, 0)
 		if err := app.SaveConfig(); err != nil {
 			allErrs = append(allErrs, err)
 		}

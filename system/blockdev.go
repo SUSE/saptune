@@ -176,19 +176,22 @@ func CollectBlockDeviceInfo() []string {
 		blockMap["NR_TAGS"] = nrtags
 
 		// VENDOR, MODEL e.g. for FUJITSU udev replacement
-		vendFile := path.Join("block", bdev, "device", "vendor")
 		vendor := ""
-		if _, err := os.Stat(path.Join("/sys", vendFile)); err == nil {
-			vendor, _ = GetSysString(vendFile)
-		} else {
-			InfoLog("missing vendor information for block device '%s', file '%s' does not exist.", bdev, vendFile)
-		}
-		modelFile := path.Join("block", bdev, "device", "model")
 		model := ""
-		if _, err := os.Stat(path.Join("/sys", modelFile)); err == nil {
-			model, _ = GetSysString(modelFile)
-		} else {
-			InfoLog("missing model information for block device '%s', file '%s' does not exist.", bdev, modelFile)
+		// virtio block devices do not have useful values.
+		if !isVD.MatchString(bdev) {
+			vendFile := path.Join("block", bdev, "device", "vendor")
+			if _, err := os.Stat(path.Join("/sys", vendFile)); err == nil {
+				vendor, _ = GetSysString(vendFile)
+			} else {
+				InfoLog("missing vendor information for block device '%s', file '%s' does not exist.", bdev, vendFile)
+			}
+			modelFile := path.Join("block", bdev, "device", "model")
+			if _, err := os.Stat(path.Join("/sys", modelFile)); err == nil {
+				model, _ = GetSysString(modelFile)
+			} else {
+				InfoLog("missing model information for block device '%s', file '%s' does not exist.", bdev, modelFile)
+			}
 		}
 		blockMap["VENDOR"] = vendor
 		blockMap["MODEL"] = model

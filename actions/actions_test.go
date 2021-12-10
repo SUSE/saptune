@@ -149,6 +149,8 @@ Parameters tuned by the notes and solutions have been successfully reverted.
 `)
 
 	buffer.Reset()
+	// reset tApp variables, which were deleted by 'revert all'
+	tearDown(t)
 	errExitbuffer := bytes.Buffer{}
 	tstwriter = &errExitbuffer
 	RevertAction(&buffer, "NotAll", tApp)
@@ -161,6 +163,8 @@ Parameters tuned by the notes and solutions have been successfully reverted.
 	if errExOut != "" {
 		t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
 	}
+	// reset tApp variables, which were deleted by 'revert all'
+	tearDown(t)
 }
 
 func TestGetFileName(t *testing.T) {

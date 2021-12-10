@@ -102,17 +102,15 @@ func ServiceActionTakeover(tuneApp *app.App) {
 // enable service before start, if enableService is true
 func ServiceActionStart(enableService bool, tuneApp *app.App) {
 	var err error
-	saptuneInfo := ""
-	active, err := system.SystemctlIsRunning(SaptuneService)
-	if err != nil {
-		system.ErrorExit("%v", err)
-	}
-	if active {
-		saptuneInfo = getInfoTxt("start", enableService)
+
+	saptuneInfo, saptuneLeave, active, enabled := getInfoTxt("start", enableService)
+	if (active && !enableService) || (active && enabled) {
 		system.NoticeLog(saptuneInfo)
 		return
 	}
-	system.NoticeLog("Starting 'saptune.service', this may take some time...")
+	if !active {
+		system.NoticeLog("Starting 'saptune.service', this may take some time...")
+	}
 	if system.IsSapconfActive(SapconfService) {
 		system.ErrorExit("found an active sapconf, so refuse any action")
 	}
@@ -121,7 +119,7 @@ func ServiceActionStart(enableService bool, tuneApp *app.App) {
 	// enable and/or start 'saptune.service'
 	if enableService {
 		err = system.SystemctlEnableStart(SaptuneService)
-		saptuneInfo = "Service 'saptune.service' has been enabled and started."
+		saptuneInfo = saptuneLeave
 	} else {
 		err = system.SystemctlStart(SaptuneService)
 		saptuneInfo = "Service 'saptune.service' has been started."
@@ -135,7 +133,7 @@ func ServiceActionStart(enableService bool, tuneApp *app.App) {
 	if len(tuneApp.TuneForSolutions) == 0 && len(tuneApp.TuneForNotes) == 0 {
 		system.NoticeLog("Your system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning.")
 	}
-	enabled, err := system.SystemctlIsEnabled(SaptuneService)
+	enabled, err = system.SystemctlIsEnabled(SaptuneService)
 	if err != nil {
 		system.ErrorExit("%v", err)
 	}
@@ -225,24 +223,21 @@ func ServiceActionStatus(writer io.Writer, tuneApp *app.App, saptuneVersion stri
 // disable service before stop, if disableService is true
 func ServiceActionStop(disableService bool) {
 	var err error
-	saptuneInfo := ""
 
-	active, err := system.SystemctlIsRunning(SaptuneService)
-	if err != nil {
-		system.ErrorExit("%v", err)
-	}
-	if !active {
-		saptuneInfo = getInfoTxt("stop", disableService)
+	saptuneInfo, saptuneLeave, active, enabled := getInfoTxt("stop", disableService)
+	if (!active && !disableService) || (!active && !enabled) {
 		system.NoticeLog(saptuneInfo)
 		return
 	}
-	system.NoticeLog("Stopping 'saptune.service', this may take some time...")
+	if active {
+		system.NoticeLog("Stopping 'saptune.service', this may take some time...")
+	}
 	// release Lock, to prevent deadlock with systemd service 'saptune.service'
 	system.ReleaseSaptuneLock()
 	// disable and/or stop 'saptune.service'
 	if disableService {
 		err = system.SystemctlDisableStop(SaptuneService)
-		saptuneInfo = "Service 'saptune.service' has been disabled and stopped."
+		saptuneInfo = saptuneLeave
 	} else {
 		err = system.SystemctlStop(SaptuneService)
 		saptuneInfo = "Service 'saptune.service' has been stopped."
@@ -253,7 +248,9 @@ func ServiceActionStop(disableService bool) {
 	system.NoticeLog(saptuneInfo)
 	// saptune.service then calls `saptune daemon revert` to
 	// revert all tuned parameter
-	system.NoticeLog("All tuned parameters have been reverted to default.")
+	if active {
+		system.NoticeLog("All tuned parameters have been reverted to default.")
+	}
 }
 
 // ServiceActionRestart is only used by saptune service, hence it is not
@@ -382,17 +379,53 @@ func disableAndStopTuned() {
 	}
 }
 
-// getInfoTxt prepares the information to print during start or stop
-func getInfoTxt(action string, state bool) string {
-	sinfo := ""
+// getLeaveTxt prepares the information to print at the end of start or stop
+func getLeaveTxt(action string, active, enabled bool) string {
+	sleave := ""
+
 	switch action {
 	case "stop":
-		sinfo = "Service 'saptune.service' not running"
-		if state {
-			enabled, err := system.SystemctlIsEnabled(SaptuneService)
-			if err != nil {
-				system.ErrorExit("%v", err)
+		if enabled {
+			if active {
+				sleave = "Service 'saptune.service' has been disabled and stopped."
+			} else {
+				sleave = "Service 'saptune.service' has been disabled."
 			}
+		} else {
+			sleave = "Service 'saptune.service' has been stopped."
+		}
+	case "start":
+		if !enabled {
+			if !active {
+				sleave = "Service 'saptune.service' has been enabled and started."
+			} else {
+				sleave = "Service 'saptune.service' has been enabled."
+			}
+		} else {
+			sleave = "Service 'saptune.service' has been started."
+		}
+	}
+	return sleave
+}
+
+// getInfoTxt prepares the information to print during start or stop
+func getInfoTxt(action string, state bool) (string, string, bool, bool) {
+	sinfo := ""
+
+	active, err := system.SystemctlIsRunning(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	enabled, err := system.SystemctlIsEnabled(SaptuneService)
+	if err != nil {
+		system.ErrorExit("%v", err)
+	}
+	switch action {
+	case "stop":
+		if !active {
+			sinfo = "Service 'saptune.service' not running"
+		}
+		if state {
 			if enabled {
 				sinfo = sinfo + " but enabled. To disable the service please use 'saptune service disable'."
 			} else {
@@ -402,12 +435,10 @@ func getInfoTxt(action string, state bool) string {
 			sinfo = sinfo + ". So nothing to do."
 		}
 	case "start":
-		sinfo = "Service 'saptune.service' is running"
+		if active {
+			sinfo = "Service 'saptune.service' is running"
+		}
 		if state {
-			enabled, err := system.SystemctlIsEnabled(SaptuneService)
-			if err != nil {
-				system.ErrorExit("%v", err)
-			}
 			if enabled {
 				sinfo = sinfo + " and enabled. So nothing to do."
 			} else {
@@ -417,7 +448,8 @@ func getInfoTxt(action string, state bool) string {
 			sinfo = sinfo + ". So nothing to do."
 		}
 	}
-	return sinfo
+	sleave := getLeaveTxt(action, active, enabled)
+	return sinfo, sleave, active, enabled
 }
 
 // printSapconfStatus prints status of sapconf.service

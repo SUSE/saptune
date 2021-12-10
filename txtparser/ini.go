@@ -309,12 +309,29 @@ func ParseINI(input string) *INIFile {
 	return ret
 }
 
+// blkInfoNeeded - collect of block device info only needed, if a block
+// section exists or if a blk* tag is used in any section
+func blkInfoNeeded(sectFields []string) bool {
+	found := false
+	if sectFields[0] == "block" {
+		found = true
+	} else {
+		tags := []string{"blkvendor", "blkmodel", "blkpat"}
+		for _, tag := range tags {
+			if isTagAvail(tag, sectFields) {
+				found = true
+			}
+		}
+	}
+	return found
+}
+
 // blockDevCollect collects the block device infos
 // should be done only ONCE because it's time consuming on really large systems
 func blockDevCollect(sectFields, bDev []string, bCnt int) (int, []string) {
 	// collect the block device infos only ONCE
-	if sectFields[0] == "block" && bCnt == 0 {
-		system.NoticeLog("[block] section detected: Traversing all block devices can take a considerable amount of time.")
+	if bCnt == 0 && blkInfoNeeded(sectFields) {
+		system.NoticeLog("block device related section settings detected: Traversing all block devices can take a considerable amount of time.")
 		bCnt = bCnt + 1
 		// blockDev all valid block devices of the
 		// system regardless of any section tag

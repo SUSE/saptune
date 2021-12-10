@@ -4,7 +4,7 @@
 [version]
 # SAP-NOTE=1656250 CATEGORY=LNX-AWS VERSION=31 DATE=02.12.2020 NAME="SAP on AWS: Support prerequisites - only Linux Operating System IO Recommendations"
 
-[sys:csp=aws]
+[sys:blkpat=nvme:csp=aws]
 # On linux operating systems the kernel parameter nvme_core.io_timeout controls
 # how long the operating system waits before it considers an IO request to be
 # failed. It should be set to 4294967295 or the maximum value that the

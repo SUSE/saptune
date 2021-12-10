@@ -17,12 +17,12 @@ import (
 
 //constant definition
 const (
-	efiNotSupported = "EFI variables are not supported on this system"
-	secBootOff      = "SecureBoot disabled"
-	notSupported    = "System does not support Intel's performance bias setting"
+	notSupportedX86 = "System does not support Intel's performance bias setting"
+	notSupportedIBM = "Subcommand not supported on POWER."
 	cpuDirSys       = "devices/system/cpu"
 )
 
+var efiVarsDir = "/sys/firmware/efi/efivars"
 var cpuDir = "/sys/devices/system/cpu"
 var cpupowerCmd = "/usr/bin/cpupower"
 var isCPU = regexp.MustCompile(`^cpu\d+$`)
@@ -50,8 +50,7 @@ func GetPerfBias() string {
 
 	for k, line := range strings.Split(strings.TrimSpace(string(cmdOut)), "\n") {
 		switch {
-		case line == notSupported:
-			//WarningLog(notSupported)
+		case line == notSupportedX86 || line == notSupportedIBM:
 			return "all:none"
 		case isPBCpu.MatchString(line):
 			str = str + fmt.Sprintf("cpu%d", k/2)
@@ -106,7 +105,7 @@ func canSetPerfBias() bool {
 		WarningLog("Cannot set Perf Bias when SecureBoot is enabled, skipping")
 		setPerf = false
 	} else if !supportsPerfBias() {
-		WarningLog(notSupported)
+		WarningLog("Perf Bias settings not supported by the system")
 		setPerf = false
 	}
 	return setPerf
@@ -114,18 +113,37 @@ func canSetPerfBias() bool {
 
 // SecureBootEnabled checks, if the system is in lock-down mode
 func SecureBootEnabled() bool {
-	cmdName := "/usr/bin/mokutil"
-	cmdArgs := []string{"--sb-state"}
+	var isSecBootFileName = regexp.MustCompile(`^SecureBoot-\w[\w-]+`)
+	if _, err := os.Stat(efiVarsDir); os.IsNotExist(err) {
+		InfoLog("no EFI directory '%+s' found, assuming legacy boot", efiVarsDir)
+		return false
+	}
+	secureBootFile := ""
+	_, efiFiles := ListDir(efiVarsDir, "the available efi variables")
+	for _, eFile := range efiFiles {
+		if isSecBootFileName.MatchString(eFile) {
+			// work with the first file matching 'SecureBoot-*'
+			secureBootFile = path.Join(efiVarsDir, eFile)
+			break
+		}
+	}
+	if secureBootFile == "" {
+		InfoLog("no EFI SecureBoot file (SecureBoot-*) found in '%s', assuming legacy boot", efiVarsDir)
+		return false
+	}
 
-	if !CmdIsAvailable(cmdName) {
-		WarningLog("command '%s' not found", cmdName)
+	content, err := ioutil.ReadFile(secureBootFile)
+	if err != nil {
+		InfoLog("failed to read EFI SecureBoot file '%s': %v", secureBootFile, err)
 		return false
 	}
-	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-	if err != nil || (err == nil && (strings.Contains(string(cmdOut), secBootOff) || strings.Contains(string(cmdOut), efiNotSupported))) {
-		return false
+	lastElement := content[len(content)-1]
+	if lastElement == 1 {
+		DebugLog("secure boot enabled - '%v'", content)
+		return true
 	}
-	return true
+	DebugLog("secure boot disabled - '%v'", content)
+	return false
 }
 
 // supportsPerfBias check, if the system will support CPU performance settings
@@ -138,7 +156,7 @@ func supportsPerfBias() bool {
 		return false
 	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
-	if err != nil || (err == nil && strings.Contains(string(cmdOut), notSupported)) {
+	if err != nil || (err == nil && (strings.Contains(string(cmdOut), notSupportedX86) || strings.Contains(string(cmdOut), notSupportedIBM))) {
 		// does not support perf bias
 		return false
 	}
@@ -226,7 +244,7 @@ func canSetGov(value, info string) bool {
 	if GetCSP() == "azure" {
 		WarningLog("Setting governor is not supported on '%s'\n", CSPAzureLong)
 		setGov = false
-	} else if value == "all:none" || info == "notSupported" {
+	} else if value == "all:none" || info == "notSupportedX86" || info == "notSupportedIBM" {
 		WarningLog("governor settings not supported by the system")
 		setGov = false
 	} else if !CmdIsAvailable(cpupowerCmd) {
@@ -383,7 +401,7 @@ func canSetForceLatency(value, info string) bool {
 		WarningLog("latency settings are not supported on '%s'\n", CSPAzureLong)
 		setLatency = false
 	}
-	if value == "all:none" || info == "notSupported" {
+	if value == "all:none" || info == "notSupportedX86" || info == "notSupportedIBM" {
 		WarningLog("latency settings not supported by the system")
 		setLatency = false
 	}
