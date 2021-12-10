@@ -165,7 +165,7 @@ func SetBlkVal(key, value string, cur *param.BlockDeviceQueue, revert bool) erro
 func chkMaxHWsector(key, val string) (int, string, string) {
 	info := ""
 	ival, _ := strconv.Atoi(val)
-	dname := regexp.MustCompile(`^MAX_SECTORS_KB_(\w+)$`)
+	dname := regexp.MustCompile(`^MAX_SECTORS_KB_(\w+\-?\d*)$`)
 	bdev := dname.FindStringSubmatch(key)
 	maxHWsector, _ := system.GetSysInt(path.Join("block", bdev[1], "queue", "max_hw_sectors_kb"))
 	if ival > maxHWsector {

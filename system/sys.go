@@ -147,7 +147,7 @@ func GetNrTags(key string) (int, string, string) {
 	nrtags := 0
 	elev := ""
 	disk := ""
-	dname := regexp.MustCompile(`^NRREQ_(\w+)$`)
+	dname := regexp.MustCompile(`^NRREQ_(\w+\-?\d*)$`)
 	bdev := dname.FindStringSubmatch(key)
 	if len(bdev) > 0 {
 		nrTagsFile := path.Join("block", bdev[1], "mq", "0", "nr_tags")

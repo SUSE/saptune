@@ -21,13 +21,13 @@ type BlockDev struct {
 var IsSched = regexp.MustCompile(`^IO_SCHEDULER_\w+\-?\d*$`)
 
 // IsNrreq matches block device nrreq tag
-var IsNrreq = regexp.MustCompile(`^NRREQ_\w+$`)
+var IsNrreq = regexp.MustCompile(`^NRREQ_\w+\-?\d*$`)
 
 // IsRahead matches block device read_ahead_kb tag
-var IsRahead = regexp.MustCompile(`^READ_AHEAD_KB_\w+$`)
+var IsRahead = regexp.MustCompile(`^READ_AHEAD_KB_\w+\-?\d*$`)
 
 // IsMsect matches block device max_sectors_kb tag
-var IsMsect = regexp.MustCompile(`^MAX_SECTORS_KB_\w+$`)
+var IsMsect = regexp.MustCompile(`^MAX_SECTORS_KB_\w+\-?\d*$`)
 
 var isVD = regexp.MustCompile(`^vd\w+$`)
 
