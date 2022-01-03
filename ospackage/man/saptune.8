@@ -117,11 +117,23 @@ saptune package version
 .IP \[bu]
 configured saptune major version (from \fI/etc/sysconfig/saptune\fP)
 .IP \[bu]
-configured Solution and Notes
+configured Solution
+.br
+The entry 'configured Solution' shows the Solution, which was manually applied by '\fIsaptune solution apply <solution name>\fP'.
+.IP \[bu]
+configured Notes
+.br
+The entry 'configured Notes' shows all Notes, which were manually applied by '\fIsaptune note apply <note name>\fP'. They are \fBone\fP part of the list of notes in the entry 'applied Notes' and 'order of enabled Notes'.
 .IP \[bu]
 all selected Notes in applied order
+.br
+The list of 'order of enabled Notes' includes all Notes from 'configured Notes' and additional all the Notes related to the 'configured Solution' too. The list shows the order in which these Notes were applied and will be re-applied after a system reboot, if the \fBsaptune.service\fP is enabled.
 .IP \[bu]
 all currently applied Notes, sorted lexicographically
+.br
+The list of 'applied Notes' includes the \fBmanually\fP applied Notes. Additional it includes all the Notes related to the 'configured Solution' too. These Notes get applied when using '\fIsaptune solution apply\fP'. The solutions and their related notes can be listed by '\fIsaptune solution list\fP'.
+
+And additional 'applied Notes' shows you, if your system is '\fBactively\fP' tuned at the moment. If the list is empty, your system is \fBnot\fP tuned. If the list is \fBnot\fP empty, your system \fBis\fP tuned.
 .IP \[bu]
 state of staging
 .IP \[bu]
@@ -131,7 +143,7 @@ status of sapconf.service (enabled/disabled, running/stopped)
 .IP \[bu]
 status of tuned (enabled/disabled, running/stopped, profile)
 .IP \[bu]
-systemd status
+the overall systemd 'system' status, read from \fI'systemctl is-system-running'\fP (running, degraded, ....)
 
 This information is not logged, but only printed to stdout.
 
