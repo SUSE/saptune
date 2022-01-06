@@ -19,9 +19,6 @@ func GetSysVal(key string) (string, string) {
 	if strings.ContainsAny(val, "[]") {
 		val, _ = system.GetSysChoice(key)
 	}
-	if val == "" {
-		val = "NA"
-	}
 	return val, info
 }
 

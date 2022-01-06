@@ -22,6 +22,12 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	override := ""
 	comment := ""
 	hasDiff := false
+	// for sysctl and sys parameter not available on the system
+	// the actual value is empty, but for better/consolidated output
+	// set it to 'NA'. Because of many internal dependencies do not
+	// change the actual value during 'Initialize' (for now)
+	pAct := "NA"
+	pExp := ""
 
 	// sort output
 	sortkeys := sortNoteComparisonsOutput(noteComparisons)
@@ -58,12 +64,16 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 		}
 
 		// print table body
+		if comparison.ActualValueJS != "" {
+			pAct = strings.Replace(comparison.ActualValueJS, "\t", " ", -1)
+		}
+		pExp = strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1)
 		if printComparison {
 			// verify
-			fmt.Fprintf(writer, format, noteField, comparison.ReflectMapKey, strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), compliant)
+			fmt.Fprintf(writer, format, noteField, comparison.ReflectMapKey, pExp, override, pAct, compliant)
 		} else {
 			// simulate
-			fmt.Fprintf(writer, format, comparison.ReflectMapKey, strings.Replace(comparison.ActualValueJS, "\t", " ", -1), strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1), override, comment)
+			fmt.Fprintf(writer, format, comparison.ReflectMapKey, pAct, pExp, override, comment)
 		}
 	}
 	// print footer
