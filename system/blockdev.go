@@ -119,7 +119,7 @@ func getValidBlockDevices() (valDevs []string) {
 		for _, edev := range excludedevs {
 			if bdev == edev {
 				// skip unsupported devices
-				InfoLog("skipping device '%s', md slaves unsupported", bdev)
+				InfoLog("skipping device '%s', dm slaves unsupported", bdev)
 				exclude = true
 				break
 			}

@@ -75,7 +75,7 @@ staging:                disabled
 staging area:           
 
 sapconf.service:        not available
-tuned.service:          disabled/running (profile: 'balanced')
+tuned.service:          disabled/active (profile: 'balanced')
 system state:           running
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
@@ -203,7 +203,7 @@ staging:                disabled
 staging area:           
 
 sapconf.service:        not available
-tuned.service:          disabled/running (profile: 'balanced')
+tuned.service:          disabled/active (profile: 'balanced')
 system state:           running
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
