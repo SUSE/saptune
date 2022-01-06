@@ -74,10 +74,9 @@ func GetBlockDeviceInfo() (*BlockDev, error) {
 
 // getValidBlockDevices reads all block devices from /sys/block
 // and select the block devices, which are 'real disks' or a multipath
-// device (/sys/block/*/dm/uuid starts with 'mpath-'
+// device (/sys/block/*/dm/uuid starts with 'mpath-')
 func getValidBlockDevices() (valDevs []string) {
 	var isMpath = regexp.MustCompile(`^mpath-\w+`)
-	var isMpathPart = regexp.MustCompile(`^part.*-mpath-\w+`)
 	var isLVM = regexp.MustCompile(`^LVM-\w+`)
 	candidates := []string{}
 	excludedevs := []string{}
@@ -90,6 +89,8 @@ func getValidBlockDevices() (valDevs []string) {
 			cont, _ := ioutil.ReadFile(dmUUID)
 			if isMpath.MatchString(string(cont)) {
 				candidates = append(candidates, bdev)
+				_, slaves := ListDir(fmt.Sprintf("/sys/block/%s/slaves", bdev), "dm slaves")
+				excludedevs = append(excludedevs, slaves...)
 			} else {
 				// skip unsupported devices
 				if isLVM.MatchString(string(cont)) {
@@ -97,10 +98,6 @@ func getValidBlockDevices() (valDevs []string) {
 				} else {
 					InfoLog("skipping device '%s', unsupported", bdev)
 				}
-			}
-			_, slaves := ListDir(fmt.Sprintf("/sys/block/%s/slaves", bdev), "dm slaves")
-			if len(slaves) != 0 && (isMpath.MatchString(string(cont)) || isLVM.MatchString(string(cont))) && !isMpathPart.MatchString(string(cont)) {
-				excludedevs = append(excludedevs, slaves...)
 			}
 		} else {
 			if !BlockDeviceIsDisk(bdev) {
@@ -119,7 +116,7 @@ func getValidBlockDevices() (valDevs []string) {
 		for _, edev := range excludedevs {
 			if bdev == edev {
 				// skip unsupported devices
-				InfoLog("skipping device '%s', md slaves unsupported", bdev)
+				InfoLog("skipping device '%s', dm slaves unsupported", bdev)
 				exclude = true
 				break
 			}
