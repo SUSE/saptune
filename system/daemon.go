@@ -168,6 +168,17 @@ func SystemctlIsRunning(thing string) (bool, error) {
 	return match, nil
 }
 
+// SystemctlIsActive return true only if systemctl suggests that the thing is
+// running.
+func SystemctlIsActive(thing string) (string, error) {
+	out, err := exec.Command(systemctlCmd, "is-active", thing).CombinedOutput()
+	DebugLog("SystemctlIsRunning - /usr/bin/systemctl is-active : '%+v %s'", err, string(out))
+	if len(out) == 0 && err != nil {
+		return "", ErrorLog("%v - Failed to call systemctl is-active", err)
+	}
+	return strings.TrimSpace(string(out)), err
+}
+
 // GetSystemState returns the output of 'systemctl is-system-running'
 func GetSystemState() (string, error) {
 	retval := ""

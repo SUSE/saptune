@@ -467,15 +467,11 @@ func printSapconfStatus(writer io.Writer) bool {
 		} else {
 			fmt.Fprintf(writer, "disabled/")
 		}
-		active, err := system.SystemctlIsRunning(SapconfService)
-		if err != nil {
+		active, err := system.SystemctlIsActive(SapconfService)
+		if active == "" {
 			system.ErrorExit("%v", err)
 		}
-		if active {
-			fmt.Fprintf(writer, "active\n")
-		} else {
-			fmt.Fprintf(writer, "stopped\n")
-		}
+		fmt.Fprintf(writer, "%s\n", active)
 	} else {
 		fmt.Fprintf(writer, "not available\n")
 	}
@@ -495,14 +491,14 @@ func printTunedStatus(writer io.Writer) {
 		} else {
 			fmt.Fprintf(writer, "disabled/")
 		}
-		active, err := system.SystemctlIsRunning(TunedService)
-		if err != nil {
+		active, err := system.SystemctlIsActive(TunedService)
+		if active == "" {
 			system.ErrorExit("%v", err)
 		}
-		if active {
-			fmt.Fprintf(writer, "running (profile: '%s')\n", system.GetTunedAdmProfile())
+		if active == "active" {
+			fmt.Fprintf(writer, "%s (profile: '%s')\n", active, system.GetTunedAdmProfile())
 		} else {
-			fmt.Fprintf(writer, "stopped\n")
+			fmt.Fprintf(writer, "%s\n", active)
 		}
 	} else {
 		fmt.Fprintf(writer, "not available\n")
@@ -586,16 +582,14 @@ func printSaptuneStatus(writer io.Writer) (bool, bool, bool) {
 		fmt.Fprintf(writer, "enabled/")
 		stenabled = true
 	}
-	active, err := system.SystemctlIsRunning(SaptuneService)
-	if err != nil {
+	active, err := system.SystemctlIsActive(SaptuneService)
+	if active == "" {
 		system.ErrorExit("%v", err)
 	}
-	if active {
-		fmt.Fprintf(writer, "active\n")
-	} else {
-		fmt.Fprintf(writer, "stopped\n")
+	if active != "active" {
 		saptuneStopped = true
 	}
+	fmt.Fprintf(writer, "%s\n", active)
 	return saptuneStopped, remember, stenabled
 }
 

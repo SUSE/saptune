@@ -211,7 +211,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					// if this should change in the future use
 					// !strings.Contains(key.String(), "grub")
 					// instead of !isInternalGrub(key.String())
-					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && key.String() != "VSZ_TMPFS_PERCENT" {
+					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && actualValue.(string) != "" && key.String() != "VSZ_TMPFS_PERCENT" {
 						allMatch = false
 					}
 				}
@@ -298,6 +298,7 @@ func cmpMapValue(fieldName string, key reflect.Value, actVal, expVal interface{}
 		// so set match to true
 		match = true
 	}
+
 	if key.String() == "reminder" {
 		// a diff in the reminder section should not influence the
 		// compare result. So set macth to true

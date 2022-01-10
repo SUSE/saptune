@@ -21,8 +21,8 @@ func TestGetSysVal(t *testing.T) {
 		t.Errorf("expected '', got '%s'\n", inf)
 	}
 	val, inf = GetSysVal("kernel.mm.angi")
-	if val != "NA" {
-		t.Errorf("expected 'NA', got '%s'\n", val)
+	if val != "" {
+		t.Errorf("expected '', got '%s'\n", val)
 	}
 	if inf != "" {
 		t.Errorf("expected '', got '%s'\n", inf)

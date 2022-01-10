@@ -83,7 +83,7 @@ func setUsNa(actVal, compliant, comment string, footnote []string) (string, stri
 		compliant = compliant + " [1]"
 		comment = comment + " [1]"
 		footnote[0] = footnote1
-	case "NA":
+	case "NA", "":
 		compliant = compliant + " [2]"
 		comment = comment + " [2]"
 		footnote[1] = footnote2

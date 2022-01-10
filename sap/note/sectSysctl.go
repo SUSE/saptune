@@ -13,7 +13,7 @@ import (
 func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) string {
 	if actval == "" {
 		// sysctl parameter not available in system
-		return ""
+		return cfgval
 	}
 	if cfgval == "" {
 		// sysctl parameter should be leave untouched
