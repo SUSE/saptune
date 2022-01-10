@@ -92,17 +92,17 @@ func getValidBlockDevices() (valDevs []string) {
 				_, slaves := ListDir(fmt.Sprintf("/sys/block/%s/slaves", bdev), "dm slaves")
 				excludedevs = append(excludedevs, slaves...)
 			} else {
-				// skip unsupported devices
+				// skip not applicable devices
 				if isLVM.MatchString(string(cont)) {
-					InfoLog("skipping device '%s' (LVM), unsupported", bdev)
+					InfoLog("skipping device '%s' (LVM), not applicable", bdev)
 				} else {
-					InfoLog("skipping device '%s', unsupported", bdev)
+					InfoLog("skipping device '%s', not applicable", bdev)
 				}
 			}
 		} else {
 			if !BlockDeviceIsDisk(bdev) {
-				// skip unsupported devices
-				InfoLog("skipping device '%s', unsupported", bdev)
+				// skip not applicable devices
+				InfoLog("skipping device '%s', not applicable", bdev)
 				continue
 			}
 			candidates = append(candidates, bdev)
@@ -115,8 +115,8 @@ func getValidBlockDevices() (valDevs []string) {
 		exclude := false
 		for _, edev := range excludedevs {
 			if bdev == edev {
-				// skip unsupported devices
-				InfoLog("skipping device '%s', dm slaves unsupported", bdev)
+				// skip not applicable devices
+				InfoLog("skipping device '%s', not applicable for dm slaves", bdev)
 				exclude = true
 				break
 			}
