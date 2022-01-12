@@ -29,7 +29,7 @@ var IsRahead = regexp.MustCompile(`^READ_AHEAD_KB_\w+\-?\d*$`)
 // IsMsect matches block device max_sectors_kb tag
 var IsMsect = regexp.MustCompile(`^MAX_SECTORS_KB_\w+\-?\d*$`)
 
-var isVD = regexp.MustCompile(`^vd\w+$`)
+var isVD = regexp.MustCompile(`^x?vd\w+$`)
 
 // devices like /dev/nvme0n1 are the NVME storage namespaces: the devices you
 // use for actual storage, which will behave essentially as disks.
