@@ -1,0 +1,89 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "http://suse.com/saptune/usr/share/saptune/schema/1.0/saptune.schema.json",  
+    "title": "saptune schema",
+    "description": "Machine-readable JSON output of saptune commands",
+
+    "type": "object",
+    "required": [ "$schema", "executed", "command", "pid", "realm", "rc", "output", "log"],
+    "additionalProperties": false,
+    "properties": {
+
+        "$schema": {
+            "description": "URI to the schema definition",
+            "type": "string",
+            "format": "uri"
+        },
+
+        "executed": {
+            "description": "RFC3339 timestamp of the time this JSON object was created.",
+            "$ref": "#/$defs/rfc-3339 timestamp"
+        },
+
+        "command": {
+            "description": "The entire saptune command as it was called.",
+            "type": "string",
+            "minLength": 7,
+            "examples": ["saptune --format json note list", "saptune --format json version", "saptune --format json status"]
+        },
+
+        "pid": {
+            "description": "PID of the saptune process creating this object.",
+            "type": "integer",
+            "minimum": 2
+        },
+
+        "realm": {
+            "description": "The saptune realm the command belongs to.",
+            "type": "string",
+            "enum": ["daemon", "service", "note", "solution", "staging" ,"log", "lock", "status", "version", "help"]
+        },
+
+        "rc": {
+            "description": "The return code the saptune command terminated with.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+        }, 
+
+        "output": {
+            "$comment": "Here we need to add the description for the various commands."
+        },
+
+        "log": {
+            "description": "Contains all messages sent to syslog by saptune during the command execution in the order they where created.",
+            "type": "array",
+            "items": {
+                "description": "A single log message.",
+                "type": "object",
+                "required": ["priority", "message"],
+                "properties": {
+
+                    "priority": {
+                        "description": "Priority of the log messages as defined AT https://confluence.suse.com/display/SAP/Logging+Guide",
+                        "type": "string",
+                        "enum": ["CRITICAL", "ERROR" ,"WARNING" ,"NOTICE" ,"INFO", "DEBUG"]
+                    },
+
+                    "message": {
+                        "description": "The log message itself",
+                        "type": "string",
+                        "minLength": 1,
+                        "examples": ["main.go:57: saptune (3.0.2) started with 'saptune status'", "system.go:235: saptune terminated with exit code '1'"]
+                    }
+                }
+            }
+        }
+    },
+
+    "$defs": { 
+
+        "rfc-3339 timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^((?:(\\d{4}-\\d{2}-\\d{2})T(\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?))(Z|[\\+-]\\d{2}:\\d{2})?)$",
+            "examples": ["2022-01-31T12:49:01.343448+01:00", "1996-12-19T16:39:57-08:00"]
+        }
+
+    }
+}
