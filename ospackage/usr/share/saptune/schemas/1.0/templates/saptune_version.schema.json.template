@@ -1,0 +1,15 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune staging list{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["configured version"]{% endblock %}
+
+{% block result_properties %}
+                "configured version": {
+                    "description": "The configured saptune version (SAPTUNE_VERSION of /etc/sysconfig/saptune).",
+                    "$ref": "#/$defs/major saptune version"
+    
+                }            
+{% endblock %}
