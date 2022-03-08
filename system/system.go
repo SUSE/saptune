@@ -12,6 +12,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode"
 )
 
 // SaptuneSectionDir defines saptunes saved state directory
@@ -329,6 +330,16 @@ func GetHWIdentity(info string) (string, error) {
 		InfoLog("failed to read %s - %v", fileName, err)
 	}
 	return ret, err
+}
+
+// StripComment will strip everything right from the given comment character
+// (including the comment character) and returns the resulting string
+// comment characters can be '#' or ';' or something else
+func StripComment(str, commentChars string) string {
+	if cut := strings.IndexAny(str, commentChars); cut >= 0 {
+		return strings.TrimRightFunc(str[:cut], unicode.IsSpace)
+	}
+	return str
 }
 
 // Watch prints the current time

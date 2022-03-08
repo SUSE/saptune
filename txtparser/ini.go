@@ -260,6 +260,8 @@ func ParseINI(input string) *INIFile {
 			continue
 		}
 
+		// remove trailing comments from line
+		line = system.StripComment(line, "#")
 		// Break apart a line into key, operator, value.
 		kov := splitLineIntoKOV(currentSection, line)
 		if kov == nil {
