@@ -103,6 +103,13 @@ func TestSystemctl(t *testing.T) {
 		t.Fatal("systemctl reports system is in state 'starting'")
 	}
 	sysState, err := GetSystemState()
+	if sysState == "degraded" {
+		err = SystemctlResetFailed()
+	}
+	if err != nil {
+		t.Error("systemctl reset-failed did not help")
+	}
+	sysState, err = GetSystemState()
 	if err != nil {
 		t.Fatal(err, sysState)
 	}
