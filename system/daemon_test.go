@@ -1,7 +1,9 @@
 package system
 
 import (
+	"os"
 	"os/exec"
+	"path"
 	"testing"
 )
 
@@ -406,4 +408,105 @@ func TestDaemonErrorCases(t *testing.T) {
 		t.Log(err)
 	}
 	_ = SystemctlStart("tuned.service")
+}
+
+func TestSystemdDetectVirt(t *testing.T) {
+	opt := ""
+	oldSystemddvCmd := systemddvCmd
+	// test: virtualization found
+	systemddvCmd = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/systemdDVOK")
+	exp := "kvm"
+	virt, vtype, err := SystemdDetectVirt("-v")
+	if !virt {
+		t.Error("virtualization should be true, but is false")
+	}
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	if err != nil {
+		t.Errorf("Test failed, returned error should be 'nil', but got: '%v'", err)
+	}
+
+	exp = "lxc"
+	virt, vtype, err = SystemdDetectVirt("-c")
+	if !virt {
+		t.Error("virtualization should be true, but is false")
+	}
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	if err != nil {
+		t.Errorf("Test failed, returned error should be 'nil', but got: '%v'", err)
+	}
+
+	exp = ""
+	virt, vtype, err = SystemdDetectVirt("-r")
+	if !virt {
+		t.Error("virtualization should be true, but is false")
+	}
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	if err != nil {
+		t.Errorf("Test failed, returned error should be 'nil', but got: '%v'", err)
+	}
+
+	exp = "none"
+	virt, vtype, err = SystemdDetectVirt(opt)
+	if !virt {
+		t.Error("virtualization should be true, but is false")
+	}
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	if err != nil {
+		t.Errorf("Test failed, returned error should be 'nil', but got: '%v'", err)
+	}
+
+	// test: virtualization NOT available
+	systemddvCmd = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/systemdDVNOK")
+	exp = "none"
+	virt, vtype, err = SystemdDetectVirt("-v")
+	if virt {
+		t.Error("virtualization should be false, but is true")
+	}
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	if err == nil {
+		t.Errorf("Test failed, returned error should be NOT 'nil', but got: '%v'", err)
+	}
+	virt, vtype, err = SystemdDetectVirt("-c")
+	if virt {
+		t.Error("virtualization should be false, but is true")
+	}
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	if err == nil {
+		t.Errorf("Test failed, returned error should be NOT 'nil', but got: '%v'", err)
+	}
+	virt, vtype, err = SystemdDetectVirt(opt)
+	if virt {
+		t.Error("virtualization should be false, but is true")
+	}
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	if err == nil {
+		t.Errorf("Test failed, returned error should be NOT 'nil', but got: '%v'", err)
+	}
+	exp = ""
+	virt, vtype, err = SystemdDetectVirt("-r")
+	if virt {
+		t.Error("virtualization should be false, but is true")
+	}
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	if err == nil {
+		t.Errorf("Test failed, returned error should be NOT 'nil', but got: '%v'", err)
+	}
+
+	systemddvCmd = oldSystemddvCmd
 }

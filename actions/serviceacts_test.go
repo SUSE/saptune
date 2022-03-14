@@ -63,7 +63,7 @@ func TestDaemonActions(t *testing.T) {
 
 	// Test DaemonActionStatus
 	t.Run("DaemonActionStatus", func(t *testing.T) {
-		var daemonStatusMatchText = `
+		daemonStatusMatchText := fmt.Sprintf(`
 saptune.service:        disabled/active
 saptune package:        'undef'
 configured version:     '3'
@@ -75,13 +75,14 @@ staging:                disabled
 staging area:           
 
 sapconf.service:        not available
-tuned.service:          disabled/active (profile: 'balanced')
+tuned.service:          disabled/active (profile: '%s')
 system state:           running
+virtualization:         %s
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
-`
+`, system.GetTunedAdmProfile(), system.GetVirtStatus())
 		ServiceActionStart(false, sApp)
 
 		oldOSExit := system.OSExit
@@ -191,7 +192,7 @@ func TestServiceActions(t *testing.T) {
 
 	// Test ServiceActionStatus
 	t.Run("ServiceActionStatus", func(t *testing.T) {
-		var serviceStatusMatchText = `
+		serviceStatusMatchText := fmt.Sprintf(`
 saptune.service:        disabled/active
 saptune package:        'undef'
 configured version:     '3'
@@ -203,13 +204,14 @@ staging:                disabled
 staging area:           
 
 sapconf.service:        not available
-tuned.service:          disabled/active (profile: 'balanced')
+tuned.service:          disabled/active (profile: '%s')
 system state:           running
+virtualization:         %s
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
-`
+`, system.GetTunedAdmProfile(), system.GetVirtStatus())
 		ServiceActionStart(false, sApp)
 
 		oldOSExit := system.OSExit

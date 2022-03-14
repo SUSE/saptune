@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+var systemddvCmd = "/usr/bin/systemd-detect-virt"
 var systemctlCmd = "/usr/bin/systemctl"
 var tunedAdmCmd = "/usr/sbin/tuned-adm"
 var actTunedProfile = "/etc/tuned/active_profile"
@@ -74,7 +75,33 @@ func SystemctlReloadTryRestart(thing string) error {
 	return nil
 }
 
-// SystemctlResetFailed call systemctl reset-failed.
+// SystemdDetectVirt calls systemd-detect-virt.
+// option can be '-r' (chroot), -c (container), -v (vm)
+// '-r' only returns 0 or 1 without any output
+func SystemdDetectVirt(opt string) (bool, string, error) {
+	var out []byte
+	var err error
+
+	virt := false
+	vtype := ""
+	if opt == "" {
+		out, err = exec.Command(systemddvCmd).CombinedOutput()
+	} else {
+		out, err = exec.Command(systemddvCmd, opt).CombinedOutput()
+	}
+	DebugLog("SystemdDetectVirt - /usr/bin/systemd-detect-virt %s : '%+v %s'", opt, err, string(out))
+	if err == nil {
+		// virtualized environment detected
+		virt = true
+	}
+	if len(out) == 0 && err != nil && opt != "-r" {
+		return virt, vtype, ErrorLog("%v - Failed to call systemd-detect-virt %s - %s", err, opt, string(out))
+	}
+	vtype = string(out)
+	return virt, strings.TrimSpace(vtype), err
+}
+
+// SystemctlResetFailed calls systemctl reset-failed.
 func SystemctlResetFailed() error {
 	running, err := IsSystemRunning()
 	if err != nil {

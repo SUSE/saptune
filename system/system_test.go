@@ -506,3 +506,23 @@ func TestStripComments(t *testing.T) {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, res)
 	}
 }
+
+func TestGetVirtStatus(t *testing.T) {
+	oldSystemddvCmd := systemddvCmd
+	// test: virtualization found
+	systemddvCmd = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/systemdDVOK")
+	exp := "kvm lxc chroot"
+	vtype := GetVirtStatus()
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+
+	// test: virtualization NOT available
+	systemddvCmd = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/systemdDVNOK")
+	exp = "none"
+	vtype = GetVirtStatus()
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	systemddvCmd = oldSystemddvCmd
+}

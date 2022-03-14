@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# fake output of /usr/bin/systemd-detect-virt for unittests
+# use-case - virtualization found
+
+# example
+# "-v" liefert - virt: true - vtype: microsoft - err: <nil>
+# "-c" liefert - virt: true - vtype: docker - err: <nil>
+# "-r" liefert - virt: false - vtype:  - err: exit status 1
+# "" liefert - virt: false - vtype: systemd-detect-virt takes no arguments. - err: exit status 1
+
+case "$1" in
+"-r")
+    echo ""
+    ;;
+"-c")
+    echo "lxc"
+    ;;
+"-v")
+    echo "kvm"
+    ;;
+*)
+    echo "none"
+    ;;
+esac
+exit 0

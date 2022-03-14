@@ -342,6 +342,43 @@ func StripComment(str, commentChars string) string {
 	return str
 }
 
+// GetVirtStatus gets the status of virtualization environment
+func GetVirtStatus() string {
+	vtype := ""
+	// first check vm (-v)
+	virt, vm, _ := SystemdDetectVirt("-v")
+	if virt {
+		// vm detected
+		vtype = vm
+	}
+	// next check container (-c)
+	virt, container, _ := SystemdDetectVirt("-c")
+	if virt {
+		// container detected
+		if vtype == "" {
+			vtype = container
+		} else {
+			vtype = vtype + " " + container
+		}
+	}
+	// last check for chroot (-r)
+	// be in mind, that the command will not deliver any output, but only
+	// return 0, if it found a chroot env or 1, if not
+	virt, _, _ = SystemdDetectVirt("-r")
+	if virt {
+		// chroot detected
+		if vtype == "" {
+			vtype = "chroot"
+		} else {
+			vtype = vtype + " chroot"
+		}
+	}
+	if vtype == "" {
+		vtype = "none"
+	}
+	return vtype
+}
+
 // Watch prints the current time
 func Watch() string {
 	t := time.Now()
