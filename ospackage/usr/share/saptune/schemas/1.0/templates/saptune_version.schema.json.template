@@ -1,6 +1,6 @@
 {% extends "common.schema.json.template" %}
 
-{% block command %}saptune staging list{% endblock %}
+{% block command %}saptune version{% endblock %}
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 

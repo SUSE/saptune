@@ -5,7 +5,7 @@ and render them and put them with the suffix '.template.' removed into the paren
 Existing files will be overwritten!
 
 As default build.py will refuse to work until the environment variable FORCE is set to 1.
-This should be prevent inadvertent changes. Therefor to update the schema files run:
+This should be prevent inadvertent changes. Therefore to update the schema files run:
 
 FORCE=1 ./build.py 
 

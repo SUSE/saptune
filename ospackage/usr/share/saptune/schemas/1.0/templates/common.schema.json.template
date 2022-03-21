@@ -8,13 +8,11 @@
     "type": "object",
     "required": [ "$schema", "publish time", "argv", "pid", "command", "exit code", "result", "log"],
     "additionalProperties": false,
-    "unevaluatedProperties": false,
     "properties": {
 
         "$schema": {
             "description": "URI to the schema definition",
-            "type": "string",
-            "format": "uri"
+            "type": "string"
         },
 
         "publish time": {
@@ -59,20 +57,15 @@
             "maximum": 255
         }, 
 
-        "log": {
-            "description": "Contains all messages sent to syslog by saptune during the command execution in the order they where created.",
+        "messages": {
+            "description": "Contains all log messages normally printed on the screen in the order they were created",
             "type": "array",
             "items": {
-                "description": "A single log message.",
+                "description": "A single message.",
                 "type": "object",
-                "required": ["priority", "timestamp", "message"],
+                "required": ["priority", "message"],
                 "additionalProperties": false,
                 "properties": {
-
-                    "timestamp": {
-                        "description": "saptune timestamp of the time this log object was created.",
-                        "$ref": "#/$defs/saptune timestamp"
-                    },
 
                     "priority": {
                         "description": "Priority of the log messages as defined AT https://confluence.suse.com/display/SAP/Logging+Guide",
@@ -94,18 +87,9 @@
 
     "$defs": { 
 
-        "rfc-3339 timestamp": {
-            "description": "Definition of a RFC 3339 timestamp.",
-            "type": "string",
-            "format": "date-time",
-            "pattern": "^((?:(\\d{4}-\\d{2}-\\d{2})T(\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?))(Z|[\\+-]\\d{2}:\\d{2})?)$",
-            "examples": ["2022-01-31T12:49:01.343448+01:00", "1996-12-19T16:39:57-08:00"]
-        },
-
         "saptune timestamp": {
             "description": "Definition of the saptune timestamp used in v2/3.",
             "type": "string",
-            "format": "date-time",
             "pattern": "^((?:(\\d{4}-\\d{2}-\\d{2}) (\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?)))$",
             "examples": ["2022-02-16 10:51:41.163", "2022-01-28 17:26:19.661"]
         },
