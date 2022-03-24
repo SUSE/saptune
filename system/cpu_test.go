@@ -252,8 +252,10 @@ func TestCPUErrorCases(t *testing.T) {
 	if len(gval) != 0 {
 		t.Errorf("should return an empty value, but returns: %+v", gval)
 	}
-	if err := SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "", false); err == nil {
-		t.Error("should return an error and not 'nil'")
+	if canSetForceLatency("70", "") {
+		if err := SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "", false); err == nil {
+			t.Error("should return an error and not 'nil'")
+		}
 	}
 	cpuDir = oldCPUDir
 }

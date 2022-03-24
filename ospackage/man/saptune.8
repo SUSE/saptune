@@ -1,5 +1,5 @@
 .\"/*
-.\" * Copyright (c) 2017-2021 SUSE LLC.
+.\" * Copyright (c) 2017-2022 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Soeren Schmidt, Angela Briel
 .\" *
@@ -14,17 +14,15 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "August 2021" "" "System Optimisation For SAP"
+.TH saptune "8" "March 2022" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 3\fP)
 
 ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate to saptune version \fB3\fP, so please refer to man page saptune-migrate(7).
 
 .SH SYNOPSIS
-ATTENTION: deprecated
-.br
 \fBsaptune daemon\fP
-[ start | status | stop ]
+[ start | status | stop ] \fBATTENTION: deprecated\fP
 
 \fBsaptune service\fP
 [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
@@ -58,6 +56,8 @@ release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
 
 \fBsaptune revert\fP
 all
+
+\fBsaptune check\fP
 
 \fBsaptune status\fP
 
@@ -598,6 +598,11 @@ Because the release is irreversible, the user has to confirm the action.
 .TP
 .B revert all
 Revert all optimisation settings recommended by the SAP solution and/or the Notes, and these settings will no longer be activated automatically upon system boot.
+
+.SH CHECK ACTIONS
+.TP
+.B check
+Will simply call the external script '/usr/sbin/saptune_check'.
 
 .SH STATUS ACTIONS
 .TP

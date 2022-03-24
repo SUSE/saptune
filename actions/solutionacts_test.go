@@ -251,6 +251,8 @@ Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Call external script '/usr/sbin/saptune_check'
+  saptune check
 Print current saptune status:
   saptune status
 Print current saptune version:
@@ -307,6 +309,8 @@ Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Call external script '/usr/sbin/saptune_check'
+  saptune check
 Print current saptune status:
   saptune status
 Print current saptune version:
@@ -366,6 +370,8 @@ Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Call external script '/usr/sbin/saptune_check'
+  saptune check
 Print current saptune status:
   saptune status
 Print current saptune version:

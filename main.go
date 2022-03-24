@@ -17,6 +17,7 @@ import (
 // constant definitions
 const (
 	saptuneV1 = "/usr/sbin/saptune_v1"
+	saptcheck = "/usr/sbin/saptune_check"
 	logFile   = "/var/log/saptune/saptune.log"
 )
 
@@ -65,6 +66,7 @@ func main() {
 			actions.PrintHelpAndExit(os.Stdout, 0)
 		}
 	}
+	callSaptuneCheckScript(arg1)
 
 	// only one instance of saptune should run
 	// check and set saptune lock file
@@ -140,6 +142,25 @@ func checkForTuned() {
 	enabled, _ := system.SystemctlIsEnabled(actions.TunedService)
 	if enabled || active {
 		system.WarningLog("ATTENTION: tuned service is active, so we may encounter conflicting tuning values")
+	}
+}
+
+// callSaptuneCheckScript will simply call the saptune_check script
+// it's done before the saptune lock is set, but after the check for
+// running as root
+func callSaptuneCheckScript(arg string) {
+	if arg == "check" {
+		// call external scrip saptune_check
+		cmd := exec.Command(saptcheck)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			system.ErrorExit("command '%+s' failed with error '%v'\n", saptcheck, err)
+		} else {
+			system.ErrorExit("", 0)
+		}
 	}
 }
 
