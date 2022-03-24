@@ -295,8 +295,30 @@ If SecureBoot is enabled some system settings are 'read only' and can not be cha
 .br
 The possible value for parameter 'MAX_SECTORS_KB' (/sys/block/*/queue/max_sectors_kb) is limited by the value of /sys/block/*/queue/max_hw_sectors_kb.
 
-
 If a Note definition contains a '\fB[reminder]\fP' section, this section will be printed below the table and the footnotes. It will be highlighted with red color.
+
+By using the command line argument '\fB--show-non-compliant\fP' it is possible to limit the verify output to show only non-compliant parameter. The output will \fBnot\fP be colorized even that a \fBcolor scheme\fP is defined.
+
+It is possible to use a \fBcolor scheme\fP for the verify output table.
+.br
+The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme=<color scheme>\fP' or as variable '\fBCOLOR_SCHEME=<color scheme>\fP' in the saptune configuration file \fI/etc/sysconfig/saptune\fP.
+.br
+Possible \fBcolor schemes\fP are:
+.RS 7
+.IP \[bu]
+full-zebra   - whole line is colored green (compliant) or red (not compliant)
+.IP \[bu]
+cmpl-zebra   - only the content in the Compliant column is colored green (compliant) or red (not compliant)
+.IP \[bu]
+full-noncmpl - only the whole line of the not compliant parameter is colored red
+.IP \[bu]
+noncmpl      - only the content in the Compliant column of the not compliant parameter is colored red
+.RS 0
+
+The default, if no \fBcolor scheme\fP is given, is \fBfull-noncmpl\fP. If an unknown \fBcolor scheme\fP is given in the command line or in the config file, non-colorized, simple black text is printed.
+
+The 'final lines' with the overall result of the verify operation are colored green (compliant) or red (not compliant) independent from the chosen \fBcolor scheme\fP
+.SS
 .TP
 .B simulate
 Show all changes that will be applied to the system if the specified Note is applied.
@@ -778,6 +800,8 @@ If the values are applied by saptune, no further monitoring of the system parame
 Please do not change or remove files in this directory. The knowledge about the previous system state gets lost and the revert functionality of saptune will be destructed. So you will lose the capability to revert back the tunings saptune has done.
 .RE
 
+.SH NOTE
+Using saptune within a pipe, the color information will be removed from the output.
 .SH NOTE
 When the values from the saptune Note definitions are applied to the system, no further monitoring of the system parameters are done. So changes of saptune relevant parameters by using the 'sysctl' command or by editing configuration files will not be observed. If the values set by saptune should be reverted, these unrecognized changed settings will be overwritten by the previous saved system settings from saptune.
 

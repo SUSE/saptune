@@ -3,6 +3,7 @@ package actions
 import (
 	"fmt"
 	"github.com/SUSE/saptune/sap/note"
+	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io"
 	"sort"
@@ -14,6 +15,8 @@ import (
 func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool) {
 
 	// initialise
+	colFormat := ""
+	colCompliant := ""
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
@@ -28,6 +31,8 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	// change the actual value during 'Initialize' (for now)
 	pAct := "NA"
 	pExp := ""
+
+	colorScheme := getColorScheme()
 
 	// sort output
 	sortkeys := sortNoteComparisonsOutput(noteComparisons)
@@ -69,8 +74,13 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 		}
 		pExp = strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1)
 		if printComparison {
+			colFormat, colCompliant = colorPrint(format, compliant, colorScheme)
 			// verify
-			fmt.Fprintf(writer, format, noteField, comparison.ReflectMapKey, pExp, override, pAct, compliant)
+			if system.IsFlagSet("show-non-compliant") && (strings.Contains(compliant, "yes") || strings.Contains(compliant, "-")) {
+				// print only non-compliant rows, so skip the others
+				continue
+			}
+			fmt.Fprintf(writer, colFormat, noteField, comparison.ReflectMapKey, pExp, override, pAct, colCompliant)
 		} else {
 			// simulate
 			fmt.Fprintf(writer, format, comparison.ReflectMapKey, pAct, pExp, override, comment)
@@ -274,4 +284,74 @@ func setWidthOfColums(compare note.FieldComparison, c1, c2, c3, c4 int) (int, in
 		}
 	}
 	return c1, c2, c3, c4
+}
+
+// getColorScheme reads the color scheme from CLI flag or from saptune
+// sysconfig file or sets default
+func getColorScheme() string {
+	if system.IsFlagSet("show-non-compliant") {
+		return "black"
+	}
+	// check, if CLI flag is available
+	scheme := system.GetFlagVal("colorscheme")
+	if scheme != "" {
+		system.InfoLog("color scheme defined by command line flag - %s", scheme)
+	} else {
+		// no flag, check sysconfig file
+		sconf, err := txtparser.ParseSysconfigFile(saptuneSysconfig, false)
+		if err == nil {
+			scheme = sconf.GetString("COLOR_SCHEME", "")
+			if scheme != "" {
+				system.InfoLog("color scheme defined in sysconfig file - %s", scheme)
+			}
+		}
+	}
+	if scheme == "" {
+		// no flag, no sysconfig file entry - use default
+		scheme = dfltColorScheme
+	}
+	return scheme
+}
+
+// colorPrint sets the color scheme for the 'verify' table print
+// following color schemes are supported:
+// full-zebra, cmpl-zebra, full-noncmpl, noncmpl
+func colorPrint(format, compliant, colorScheme string) (string, string) {
+	colFormat := format
+	colCompl := compliant
+	switch colorScheme {
+	case "full-zebra":
+		// full-zebra - whole line is colored green (compliant) or
+		// red (not compliant)
+		if strings.Contains(compliant, "yes") {
+			colFormat = setGreenText + format + resetTextColor
+		}
+		if strings.Contains(compliant, "no") {
+			colFormat = setRedText + format + resetTextColor
+		}
+	case "cmpl-zebra":
+		// cmpl-zebra - only the content in the Compliant column is
+		// colored green (compliant) or red (not compliant)
+		if strings.Contains(compliant, "yes") {
+			colCompl = setGreenText + compliant + resetTextColor
+		}
+		if strings.Contains(compliant, "no") {
+			colCompl = setRedText + compliant + resetTextColor
+		}
+	case "full-noncmpl":
+		// full-noncmpl - only the whole line of the not compliant
+		// parameter is colored red
+		if strings.Contains(compliant, "no") {
+			colFormat = setRedText + format + resetTextColor
+		}
+	case "noncmpl":
+		// noncmpl - only the content in the Compliant column of the
+		// not compliant parameter is colored red
+		if strings.Contains(compliant, "no") {
+			colCompl = setRedText + compliant + resetTextColor
+		}
+	default:
+		system.InfoLog("unknown color scheme definition - %s", colorScheme)
+	}
+	return colFormat, colCompl
 }

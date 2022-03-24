@@ -89,7 +89,7 @@ func TestCliArg(t *testing.T) {
 		t.Errorf("Test failed, expected 'output' flag as 'false', but got 'true'")
 	}
 	expected = "screen"
-	actual = GetOutTarget()
+	actual = GetFlagVal("output")
 	if actual != expected {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
 	}
@@ -125,7 +125,7 @@ func TestCliFlags(t *testing.T) {
 		t.Errorf("Test failed, expected 'output' flag as 'false', but got 'true'")
 	}
 	expected := "json"
-	actual := GetOutTarget()
+	actual := GetFlagVal("output")
 	if actual != expected {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
 	}

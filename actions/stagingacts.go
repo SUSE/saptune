@@ -26,7 +26,6 @@ type stageComparison struct {
 	MatchExpectation bool
 }
 
-var saptuneSysconfig = "/etc/sysconfig/saptune"
 var stagingSwitch = false
 var stagingOptions = note.GetTuningOptions(StagingSheets, "")
 var stgFiles stageFiles

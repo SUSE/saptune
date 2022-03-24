@@ -140,9 +140,9 @@ func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 		}
 		PrintNoteFields(writer, "NONE", comparisons, true)
 		if len(unsatisfiedNotes) == 0 {
-			fmt.Fprintf(writer, "The system fully conforms to the tuning guidelines of the specified SAP solution.\n")
+			fmt.Fprintf(writer, "%s%sThe system fully conforms to the tuning guidelines of the specified SAP solution.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
 		} else {
-			system.ErrorExit("The parameters listed above have deviated from the specified SAP solution recommendations.\n")
+			system.ErrorExit("The parameters listed above have deviated from the specified SAP solution recommendations.\n", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
 		}
 	}
 }

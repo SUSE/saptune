@@ -108,7 +108,7 @@ Hints or values not yet handled by saptune. So please read carefully, check and 
 # Everything the customer should know about this note, especially
 # which parameters are NOT handled and the reason.
 [0m
-The system fully conforms to the tuning guidelines of the specified SAP solution.
+[32m[1mThe system fully conforms to the tuning guidelines of the specified SAP solution.[22m[0m
 `
 		buffer := bytes.Buffer{}
 		sName := "sol1"

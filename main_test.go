@@ -55,7 +55,8 @@ func TestCheckSaptuneConfigFile(t *testing.T) {
 	saptuneConf := fmt.Sprintf("%s/saptune_VersAndDebug", TstFilesInGOPATH)
 	buffer := bytes.Buffer{}
 
-	saptuneVers, lSwitch := checkSaptuneConfigFile(&buffer, saptuneConf, logSwitch)
+	lSwitch := logSwitch
+	saptuneVers := checkSaptuneConfigFile(&buffer, saptuneConf, lSwitch)
 	if saptuneVers != "5" {
 		t.Errorf("wrong value for 'SAPTUNE_VERSION' - '%+v' instead of ''\n", saptuneVers)
 	}
@@ -73,7 +74,8 @@ func TestCheckSaptuneConfigFile(t *testing.T) {
 	// check missing variable
 	saptuneConf = fmt.Sprintf("%s/saptune_NoVersion", TstFilesInGOPATH)
 	matchTxt := fmt.Sprintf("Error: File '%s' is broken. Missing variables 'SAPTUNE_VERSION'\n", saptuneConf)
-	saptuneVers, lSwitch = checkSaptuneConfigFile(&buffer, saptuneConf, logSwitch)
+	lSwitch = logSwitch
+	saptuneVers = checkSaptuneConfigFile(&buffer, saptuneConf, lSwitch)
 
 	txt := buffer.String()
 	checkOut(t, txt, matchTxt)
@@ -93,7 +95,8 @@ func TestCheckSaptuneConfigFile(t *testing.T) {
 	saptuneConf = fmt.Sprintf("%s/saptune_WrongStaging", TstFilesInGOPATH)
 	saptuneVers = ""
 	matchTxt = fmt.Sprintf("Error: Variable 'STAGING' from file '%s' contains a wrong value 'hugo'. Needs to be 'true' or 'false'\n", saptuneConf)
-	saptuneVers, lSwitch = checkSaptuneConfigFile(&buffer, saptuneConf, logSwitch)
+	lSwitch = logSwitch
+	saptuneVers = checkSaptuneConfigFile(&buffer, saptuneConf, lSwitch)
 
 	txt = buffer.String()
 	checkOut(t, txt, matchTxt)

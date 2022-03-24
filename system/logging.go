@@ -58,6 +58,13 @@ func WarningLog(txt string, stuff ...interface{}) {
 	}
 }
 
+// ErrLog sents text only to the errorLogger
+func ErrLog(txt string, stuff ...interface{}) {
+	if errorLogger != nil {
+		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+	}
+}
+
 // ErrorLog sents text to the errorLogger and stderr
 func ErrorLog(txt string, stuff ...interface{}) error {
 	if errorLogger != nil {

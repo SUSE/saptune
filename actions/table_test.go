@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/system"
+	"os"
 	"testing"
 )
 
@@ -54,6 +55,9 @@ func TestSetWidthOfColums(t *testing.T) {
 }
 
 func TestPrintNoteFields(t *testing.T) {
+	os.Args = []string{"saptune", "note", "list", "--colorscheme=black", "--out=json", "--force", "--dryrun", "--help", "--version"}
+	system.RereadArgs()
+
 	footnote1 := " [1] setting is not supported by the system"
 	if system.GetCSP() == "azure" {
 		footnote1 = " [1] setting is not available on Azure instances (see SAP Note 2993054)."
