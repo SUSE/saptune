@@ -55,6 +55,9 @@ var RPMDate = "undef"
 // solutionSelector used in solutionacts and statgingacts
 var solutionSelector = system.GetSolutionSelector()
 
+// saptune configuration file
+var saptuneSysconfig = "/etc/sysconfig/saptune"
+
 // set colors for the table and list output
 //var setBlueText = "\033[34m"
 //var setCyanText = "\033[36m"
@@ -65,6 +68,7 @@ var setBoldText = "\033[1m"
 var resetBoldText = "\033[22m"
 var setStrikeText = "\033[9m"
 var resetTextColor = "\033[0m"
+var dfltColorScheme = "full-noncmpl"
 
 // SelectAction selects the chosen action depending on the first command line
 // argument
@@ -147,9 +151,9 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
 		PrintNoteFields(writer, "NONE", comparisons, true)
 		tuneApp.PrintNoteApplyOrder(writer)
 		if len(unsatisfiedNotes) == 0 {
-			fmt.Fprintf(writer, "The running system is currently well-tuned according to all of the enabled notes.\n")
+			fmt.Fprintf(writer, "%s%sThe running system is currently well-tuned according to all of the enabled notes.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
 		} else {
-			system.ErrorExit("The parameters listed above have deviated from SAP/SUSE recommendations.")
+			system.ErrorExit("The parameters listed above have deviated from SAP/SUSE recommendations.", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
 		}
 	}
 }

@@ -127,9 +127,9 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 		PrintNoteFields(writer, "HEAD", noteComp, true)
 		tuneApp.PrintNoteApplyOrder(writer)
 		if !conforming {
-			system.ErrorExit("The parameters listed above have deviated from the specified note.\n")
+			system.ErrorExit("The parameters listed above have deviated from the specified note.\n", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
 		} else {
-			fmt.Fprintf(writer, "The system fully conforms to the specified note.\n")
+			fmt.Fprintf(writer, "%s%sThe system fully conforms to the specified note.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
 		}
 	}
 }

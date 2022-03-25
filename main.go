@@ -30,8 +30,8 @@ var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debu
 var SaptuneVersion = ""
 
 func main() {
-	// get saptune version
-	SaptuneVersion, logSwitch = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
+	// get saptune version and log switches from saptune sysconfig file
+	SaptuneVersion = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
 
 	arg1 := system.CliArg(1)
 	if arg1 == "version" || system.IsFlagSet("version") {
@@ -204,8 +204,8 @@ func checkWorkingArea() {
 // checkSaptuneConfigFile checks the config file /etc/sysconfig/saptune
 // if it exists, if it contains all needed variables and for some variables
 // checks, if the values is valid
-// returns the saptune version and some log switches
-func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) (string, map[string]string) {
+// returns the saptune version and changes some log switches
+func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) string {
 	missingKey := []string{}
 	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING"}
 	sconf, err := txtparser.ParseSysconfigFile(saptuneConf, false)
@@ -241,5 +241,5 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 	if lswitch["verbose"] == "" {
 		lswitch["verbose"] = sconf.GetString("VERBOSE", "on")
 	}
-	return saptuneVers, lswitch
+	return saptuneVers
 }

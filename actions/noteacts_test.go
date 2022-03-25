@@ -95,7 +95,7 @@ Hints or values not yet handled by saptune. So please read carefully, check and 
 
 current order of enabled notes is: simpleNote
 
-The running system is currently well-tuned according to all of the enabled notes.
+[32m[1mThe running system is currently well-tuned according to all of the enabled notes.[22m[0m
 `
 		buffer := bytes.Buffer{}
 		VerifyAllParameters(&buffer, tApp)
@@ -125,7 +125,7 @@ Hints or values not yet handled by saptune. So please read carefully, check and 
 
 current order of enabled notes is: simpleNote
 
-The system fully conforms to the specified note.
+[32m[1mThe system fully conforms to the specified note.[22m[0m
 `
 		buffer := bytes.Buffer{}
 		nID := "simpleNote"

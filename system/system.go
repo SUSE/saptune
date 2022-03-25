@@ -41,6 +41,12 @@ func IsUserRoot() bool {
 	return os.Getuid() == 0
 }
 
+// RereadArgs parses the cli parameter again
+func RereadArgs() {
+	saptArgs, saptFlags = ParseCliArgs()
+	return
+}
+
 // CliArg returns the i-th command line parameter,
 // or empty string if it is not specified.
 func CliArg(i int) string {
@@ -68,53 +74,93 @@ func IsFlagSet(flag string) bool {
 	return false
 }
 
-// GetOutTarget returns the target for the saptune command output
-// default is 'screen'
-func GetOutTarget() string {
-	return saptFlags["output"]
+// GetFlagVal returns the value of a saptune commandline flag
+func GetFlagVal(flag string) string {
+	return saptFlags[flag]
 }
 
 // ParseCliArgs parses the command line to identify special flags and the
 // 'normal' arguments
-// returns a map of Flags (set or not) and a slice containing the remaining
-// arguments
-// possible Flags - force, dryrun, help, version, output
-// on command line - --force, --dry-run or --dryrun, --help, --version, --out or --output
-// Only the Flag 'output' can have an argument (--out=json or --output=csv)
+// returns a map of Flags (set/not set or value) and a slice containing the
+// remaining arguments
+// possible Flags - force, dryrun, help, version, output, colorscheme
+// on command line - --force, --dry-run or --dryrun, --help, --version, --color-scheme, --out or --output
+// Some Flags (like 'output') can have a value (--out=json or --output=csv)
 func ParseCliArgs() ([]string, map[string]string) {
-	var isOutFlag = regexp.MustCompile(`-([\w-]+)=.*`)
-	var isOutArg = regexp.MustCompile(`--out.*=(\w+)`)
 	stArgs := []string{os.Args[0]}
-	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "output": "screen", "notSupported": ""}
+	// supported flags
+	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "show-non-compliant": "false", "output": "screen", "colorscheme": "", "notSupported": ""}
 	for _, arg := range os.Args[1:] {
 		if strings.HasPrefix(arg, "--") || strings.HasPrefix(arg, "-") {
-			// flag handling
-			if isOutFlag.MatchString(arg) {
-				// --out=screen // --output=json
-				matches := isOutArg.FindStringSubmatch(arg)
-				if len(matches) > 0 {
-					stFlags["output"] = matches[1]
-				}
-				continue
-			}
-			switch arg {
-			case "--force", "-force":
-				stFlags["force"] = "true"
-			case "--dry-run", "-dry-run", "--dryrun", "-dryrun":
-				stFlags["dryrun"] = "true"
-			case "--help", "-help", "-h":
-				stFlags["help"] = "true"
-			case "--version", "-version":
-				stFlags["version"] = "true"
-			default:
-				stFlags["notSupported"] = "arg"
-			}
+			// argument is a flag
+			handleFlags(arg, stFlags)
 			continue
 		}
 		// other args
 		stArgs = append(stArgs, arg)
 	}
 	return stArgs, stFlags
+}
+
+// handleFlags checks for valid flags in the CLI arg list
+func handleFlags(arg string, flags map[string]string) {
+	var valueFlag = regexp.MustCompile(`(-[\w-]+)=(.*)`)
+	matches := valueFlag.FindStringSubmatch(arg)
+	if len(matches) == 3 {
+		// flag with value
+		handleValueFlags(arg, matches, flags)
+		return
+	}
+	handleSimpleFlags(arg, flags)
+	return
+}
+
+// handleValueFlags checks for valid flags with value in the CLI arg list
+func handleValueFlags(arg string, matches []string, flags map[string]string) {
+	if strings.Contains(arg, "-out") {
+		// --out=screen or --output=json
+		matches[1] = "--output"
+		flags["output"] = matches[2]
+	}
+	if strings.Contains(arg, "-colorscheme") {
+		// --colorscheme=zebra
+		flags["colorscheme"] = matches[2]
+	}
+	if _, ok := flags[strings.TrimLeft(matches[1], "-")]; !ok {
+		setUnsupportedFlag(matches[1], flags)
+	}
+	return
+}
+
+// handleSimpleFlags checks for valid flags in the CLI arg list
+func handleSimpleFlags(arg string, flags map[string]string) {
+	// simple flags
+	switch arg {
+	case "--force", "-force":
+		flags["force"] = "true"
+	case "--dry-run", "-dry-run", "--dryrun", "-dryrun":
+		flags["dryrun"] = "true"
+	case "--help", "-help", "-h":
+		flags["help"] = "true"
+	case "--version", "-version":
+		flags["version"] = "true"
+	case "--show-non-compliant", "-show-non-compliant":
+		flags["show-non-compliant"] = "true"
+	default:
+		setUnsupportedFlag(arg, flags)
+	}
+	return
+}
+
+// setUnsupportedFlag sets or appends a value to the unsupported Flag
+// collection of unsupported Flags
+func setUnsupportedFlag(val string, flags map[string]string) {
+	if flags["notSupported"] != "" {
+		flags["notSupported"] = flags["notSupported"] + val
+	} else {
+		flags["notSupported"] = flags["notSupported"] + " " + val
+	}
+	return
 }
 
 // GetSolutionSelector returns the architecture string
@@ -228,7 +274,17 @@ func ErrorExit(template string, stuff ...interface{}) {
 		stuff = stuff[:len(stuff)-1]
 	}
 	if len(template) != 0 {
-		ErrorExitOut(template+"\n", stuff...)
+		if len(stuff) > 0 && stuff[0] == "colorPrint" {
+			// color, bold, text/template, reset bold, reset color
+			stuff = stuff[1:]
+			fmt.Printf("%s%sERROR: "+template+"%s%s\n", stuff...)
+			if len(stuff) >= 4 {
+				stuff = stuff[2 : len(stuff)-2]
+			}
+			ErrLog(template+"\n", stuff...)
+		} else {
+			ErrorExitOut(template+"\n", stuff...)
+		}
 	}
 	if isOwnLock() {
 		ReleaseSaptuneLock()
