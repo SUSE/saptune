@@ -33,6 +33,9 @@ func main() {
 	// get saptune version and log switches from saptune sysconfig file
 	SaptuneVersion = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
 
+	if !system.ChkCliSyntax() {
+		actions.PrintHelpAndExit(os.Stdout, 1)
+	}
 	arg1 := system.CliArg(1)
 	if arg1 == "version" || system.IsFlagSet("version") {
 		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
