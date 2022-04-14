@@ -28,8 +28,8 @@ But before committing the sources, run the tests locally by using docker and the
 	su -
 	systemctl start docker
 	cd $GOPATH/src/github.com/SUSE/saptune
-	docker run --name travis-st-ci --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro -td -v "$(pwd):/app" shap/crmsh
-	docker exec -t travis-st-ci /bin/sh -c "cd /app; ./run_travis_tst.sh;"
+	docker run --name saptune-ci --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro -td -v "$(pwd):/app" registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base
+	docker exec -t saptune-ci /bin/sh -c "cd /app; ./run_saptune_ci_tst.sh;"
 
 in $GOPATH/src/github.com/SUSE/saptune
 
@@ -41,12 +41,12 @@ make changes to the source files
 
 and run the tests again
 
-	docker exec -t travis-st-ci /bin/sh -c "cd /app; ./run_travis_tst.sh;"
+	docker exec -t saptune-ci /bin/sh -c "cd /app; ./run_saptune_ci_tst.sh;"
 
 clean up when finished with your tests
 
-	docker stop travis-st-ci
-	docker rm travis-st-ci
+	docker stop saptune-ci
+	docker rm saptune-ci
 
 ## build the saptune package:
 saptune is build on ibs (and not obs, as saptune is not available on Factory)
