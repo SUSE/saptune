@@ -131,7 +131,7 @@ func setUnsupportedFlag(val string, flags map[string]string) {
 // saptune globOpt realm realmOpt cmd cmdOpt param
 func ChkCliSyntax() bool {
 	ret := true
-	sArgs := os.Args[0:]
+	sArgs := os.Args
 	globOpt := 1
 	realm := 1
 	realmOpt := 2 // currently not used

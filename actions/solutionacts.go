@@ -2,6 +2,7 @@ package actions
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"github.com/SUSE/saptune/app"
 	"github.com/SUSE/saptune/sap/solution"
@@ -77,25 +78,39 @@ func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 
 // SolutionActionList lists all available solution definitions
 func SolutionActionList(writer io.Writer, tuneApp *app.App) {
+	solutionList := []system.SolListEntry{}
+	solutionListEntry := system.SolListEntry{}
 	setColor := false
 	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):\n")
 	for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
+		solutionListEntry = system.SolListEntry{
+			SolName:     "",
+			NotesList:   []string{},
+			SolEnabled:  false,
+			SolOverride: false,
+			CustomSol:   false,
+			DepSol:      false,
+		}
 		format := "\t%-18s -"
 		if len(solution.OverrideSolutions[solutionSelector][solName]) != 0 {
 			// override solution
 			format = " O" + format
+			solutionListEntry.SolOverride = true
 		}
 		if len(solution.CustomSolutions[solutionSelector][solName]) != 0 {
 			// custom solution
 			format = " C" + format
+			solutionListEntry.CustomSol = true
 		}
 		if _, ok := solution.DeprecSolutions[solutionSelector][solName]; ok {
 			// deprecated solution
 			format = " D" + format
+			solutionListEntry.DepSol = true
 		}
 		if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
 			// enabled solution
 			format = " " + setGreenText + "*" + format
+			solutionListEntry.SolEnabled = true
 			setColor = true
 		}
 
@@ -123,8 +138,20 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 		format = format + "\n"
 		//fmt.Printf(format, solName)
 		fmt.Fprintf(writer, format, solName)
+		solutionListEntry.SolName = solName
+		solutionListEntry.NotesList = solution.AllSolutions[solutionSelector][solName]
+		solutionList = append(solutionList, solutionListEntry)
+	}
+	remember := bytes.Buffer{}
+	if system.GetFlagVal("output") == "json" {
+		writer = &remember
 	}
 	rememberMessage(writer)
+	result := system.SolList{
+		SolsList: solutionList,
+		Msg:      remember.String(),
+	}
+	system.Jcollect(result)
 }
 
 // SolutionActionVerify compares all parameter settings from a solution
@@ -187,12 +214,14 @@ func SolutionActionEnabled(writer io.Writer, tuneApp *app.App) {
 	if len(tuneApp.TuneForSolutions) != 0 {
 		fmt.Fprintf(writer, "%s", tuneApp.TuneForSolutions[0])
 	}
+	system.Jcollect(strings.Join(tuneApp.TuneForSolutions, " "))
 }
 
 // SolutionActionApplied prints out the applied solution
 func SolutionActionApplied(writer io.Writer, tuneApp *app.App) {
+	solName := ""
 	if len(tuneApp.TuneForSolutions) != 0 {
-		solName := tuneApp.TuneForSolutions[0]
+		solName = tuneApp.TuneForSolutions[0]
 		if state, ok := tuneApp.IsSolutionApplied(solName); ok {
 			if state == "partial" {
 				fmt.Fprintf(writer, "%s (partial)", solName)
@@ -201,6 +230,7 @@ func SolutionActionApplied(writer io.Writer, tuneApp *app.App) {
 			}
 		}
 	}
+	system.Jcollect(solName)
 }
 
 // SolutionActionCustomise creates an override file and allows to editing the

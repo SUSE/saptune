@@ -77,6 +77,7 @@ var dfltColorScheme = "full-red-noncmpl"
 func SelectAction(stApp *app.App, saptuneVers string) {
 	// switch off color and highlighting, if Stdout is not a terminal
 	switchOffColor()
+	system.JnotSupportedYet()
 
 	// check for test packages
 	if RPMDate != "undef" {
@@ -262,6 +263,9 @@ func switchOffColor() {
 
 // PrintHelpAndExit prints the usage and exit
 func PrintHelpAndExit(writer io.Writer, exitStatus int) {
+	if system.GetFlagVal("output") == "json" {
+		system.JInvalid(exitStatus)
+	}
 	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated

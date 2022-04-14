@@ -21,6 +21,9 @@ const SaptuneSectionDir = "/run/saptune/sections"
 // map to hold the current available systemd services
 var services map[string]string
 
+// stdOutOrg contains the origin stdout for resetting, if needed
+var stdOutOrg = os.Stdout
+
 // OSExit defines, which exit function should be used
 var OSExit = os.Exit
 
@@ -164,6 +167,9 @@ func ErrorExit(template string, stuff ...interface{}) {
 	if isOwnLock() {
 		ReleaseSaptuneLock()
 	}
+	if jerr := jOut(exState); jerr != nil {
+		exState = 130
+	}
 	InfoOut("saptune terminated with exit code '%v'", exState)
 	OSExit(exState)
 }
@@ -171,10 +177,21 @@ func ErrorExit(template string, stuff ...interface{}) {
 // OutIsTerm returns true, if Stdout is a terminal
 func OutIsTerm(writer *os.File) bool {
 	fileInfo, _ := writer.Stat()
-	if (fileInfo.Mode() & os.ModeCharDevice) == 0 {
-		return false
+	return (fileInfo.Mode() & os.ModeCharDevice) != 0
+}
+
+// InitOut initializes the various output methodes
+// currently only json and screen are supported
+func InitOut(logSwitch map[string]string) {
+	if GetFlagVal("output") == "json" {
+		// if writing json format, switch off
+		// the stdout and stderr output of the log messages
+		logSwitch["verbose"] = "off"
+		logSwitch["error"] = "off"
+		// switch off stdout
+		os.Stdout, _ = os.Open(os.DevNull)
+		jInit()
 	}
-	return true
 }
 
 // WrapTxt implements something like 'fold' command
@@ -314,6 +331,6 @@ func GetVirtStatus() string {
 func Watch() string {
 	t := time.Now()
 	//watch := fmt.Sprintf("%s", t.Format(time.UnixDate))
-	watch := fmt.Sprintf("%s", t.Format("2006/01/02 15:04:05.99999999"))
+	watch := t.Format("2006/01/02 15:04:05.99999999")
 	return watch
 }
