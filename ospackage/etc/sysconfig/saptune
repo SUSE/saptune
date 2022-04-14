@@ -39,3 +39,13 @@ SAPTUNE_VERSION="3"
 # Enable or disable staging of saptune internal Notes
 # Disabled by default. To enable use 'saptune staging enable'
 STAGING="false"
+
+## Type:    string
+## Default: ""
+#
+# Color scheme used for 'saptune verify'
+# Possible values: 'full-green-zebra', 'cmpl-green-zebra', 'full-blue-zebra',
+# 'cmpl-blue-zebra', 'full-red-noncmpl', 'red-noncmpl', 'full-yellow-noncmpl'
+# 'yellow-noncmpl'
+# Refer to the man page for a desciprion of the color schemes.
+COLOR_SCHEME=""

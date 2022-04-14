@@ -24,18 +24,24 @@ const (
 var tuneApp *app.App                 // application configuration and tuning states
 var tuningOptions note.TuningOptions // Collection of tuning options from SAP notes and 3rd party vendors.
 // Switch to control log reaction
-var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debug": os.Getenv("SAPTUNE_DEBUG")}
+var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debug": os.Getenv("SAPTUNE_DEBUG"), "error": os.Getenv("SAPTUNE_ERROR")}
 
 // SaptuneVersion is the saptune version from /etc/sysconfig/saptune
 var SaptuneVersion = ""
 
 func main() {
+	system.InitOut(logSwitch)
+	if !system.ChkCliSyntax() {
+		actions.PrintHelpAndExit(os.Stdout, 1)
+	}
+
 	// get saptune version and log switches from saptune sysconfig file
 	SaptuneVersion = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
 
 	arg1 := system.CliArg(1)
 	if arg1 == "version" || system.IsFlagSet("version") {
 		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
+		system.Jcollect(SaptuneVersion)
 		system.ErrorExit("", 0)
 	}
 	if arg1 == "help" || system.IsFlagSet("help") {
@@ -63,7 +69,7 @@ func main() {
 			system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
 			system.ErrorExit("", 0)
 		} else {
-			actions.PrintHelpAndExit(os.Stdout, 0)
+			actions.PrintHelpAndExit(os.Stdout, 1)
 		}
 	}
 	callSaptuneCheckScript(arg1)
@@ -101,7 +107,7 @@ func main() {
 
 	solutionSelector := system.GetSolutionSelector()
 	archSolutions, exist := solution.AllSolutions[solutionSelector]
-	fmt.Fprintf(os.Stdout, "\n")
+	system.AddGap(os.Stdout)
 	if !exist {
 		system.ErrorExit("The system architecture (%s) is not supported.", solutionSelector)
 		return
@@ -207,7 +213,7 @@ func checkWorkingArea() {
 // returns the saptune version and changes some log switches
 func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) string {
 	missingKey := []string{}
-	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING"}
+	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME"}
 	sconf, err := txtparser.ParseSysconfigFile(saptuneConf, false)
 	if err != nil {
 		fmt.Fprintf(writer, "Error: Unable to read file '%s': %v\n", saptuneConf, err)
@@ -234,12 +240,15 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
 	// Switch Debug on ("1") or off ("0" - default)
 	// Switch verbose mode on ("on" - default) or off ("off")
-	// check, if DEBUG or VERBOSE is set in /etc/sysconfig/saptune
+	// check, if DEBUG, ERROR or VERBOSE is set in /etc/sysconfig/saptune
 	if lswitch["debug"] == "" {
 		lswitch["debug"] = sconf.GetString("DEBUG", "0")
 	}
 	if lswitch["verbose"] == "" {
 		lswitch["verbose"] = sconf.GetString("VERBOSE", "on")
+	}
+	if lswitch["error"] == "" {
+		lswitch["error"] = sconf.GetString("ERROR", "on")
 	}
 	return saptuneVers
 }

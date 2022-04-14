@@ -20,7 +20,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 15, 15)
+	footnote := make([]string, 15)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
@@ -74,12 +74,12 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 		}
 		pExp = strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1)
 		if printComparison {
-			colFormat, colCompliant = colorPrint(format, compliant, colorScheme)
 			// verify
 			if system.IsFlagSet("show-non-compliant") && (strings.Contains(compliant, "yes") || strings.Contains(compliant, "-")) {
 				// print only non-compliant rows, so skip the others
 				continue
 			}
+			colFormat, colCompliant = colorPrint(format, compliant, colorScheme)
 			fmt.Fprintf(writer, colFormat, noteField, comparison.ReflectMapKey, pExp, override, pAct, colCompliant)
 		} else {
 			// simulate
@@ -112,9 +112,7 @@ func sortNoteComparisonsOutput(noteCompare map[string]map[string]note.FieldCompa
 		}
 	}
 	sort.Strings(skeys)
-	for _, rem := range rkeys {
-		skeys = append(skeys, rem)
-	}
+	skeys = append(skeys, rkeys...)
 	return skeys
 }
 
@@ -317,41 +315,72 @@ func getColorScheme() string {
 // following color schemes are supported:
 // full-zebra, cmpl-zebra, full-noncmpl, noncmpl
 func colorPrint(format, compliant, colorScheme string) (string, string) {
-	colFormat := format
-	colCompl := compliant
+	colFormat := ""
+	colCompl := ""
 	switch colorScheme {
-	case "full-zebra":
-		// full-zebra - whole line is colored green (compliant) or
+	case "full-green-zebra":
+		// full-green-zebra - whole line is colored green (compliant) or
 		// red (not compliant)
-		if strings.Contains(compliant, "yes") {
-			colFormat = setGreenText + format + resetTextColor
-		}
-		if strings.Contains(compliant, "no") {
-			colFormat = setRedText + format + resetTextColor
-		}
-	case "cmpl-zebra":
-		// cmpl-zebra - only the content in the Compliant column is
-		// colored green (compliant) or red (not compliant)
-		if strings.Contains(compliant, "yes") {
-			colCompl = setGreenText + compliant + resetTextColor
-		}
-		if strings.Contains(compliant, "no") {
-			colCompl = setRedText + compliant + resetTextColor
-		}
-	case "full-noncmpl":
-		// full-noncmpl - only the whole line of the not compliant
+		colFormat = colorFormating("green", "red", format, compliant)
+	case "cmpl-green-zebra":
+		// cmpl-green-zebra - only the content in the Compliant column
+		// is colored green (compliant) or red (not compliant)
+		colCompl = colorFormating("green", "red", compliant, compliant)
+	case "full-blue-zebra":
+		// full-blue-zebra - whole line is colored blue (compliant) or
+		// yellow (not compliant)
+		colFormat = colorFormating("blue", "yellow", format, compliant)
+	case "cmpl-blue-zebra":
+		// cmpl-blue-zebra - only the content in the Compliant column is
+		// colored blue (compliant) or yellow (not compliant)
+		colCompl = colorFormating("blue", "yellow", compliant, compliant)
+	case "full-red-noncmpl":
+		// full-red-noncmpl - only the whole line of the not compliant
 		// parameter is colored red
-		if strings.Contains(compliant, "no") {
-			colFormat = setRedText + format + resetTextColor
-		}
-	case "noncmpl":
-		// noncmpl - only the content in the Compliant column of the
+		colFormat = colorFormating("", "red", format, compliant)
+	case "red-noncmpl":
+		// red-noncmpl - only the content in the Compliant column of the
 		// not compliant parameter is colored red
-		if strings.Contains(compliant, "no") {
-			colCompl = setRedText + compliant + resetTextColor
-		}
+		colCompl = colorFormating("", "red", compliant, compliant)
+	case "full-yellow-noncmpl":
+		// full-yellow-noncmpl - only the whole line of the not
+		// compliant parameter is colored yellow
+		colFormat = colorFormating("", "yellow", format, compliant)
+	case "yellow-noncmpl":
+		// yellow-noncmpl - only the content in the Compliant column of
+		// the not compliant parameter is colored yellow
+		colCompl = colorFormating("", "yellow", compliant, compliant)
 	default:
 		system.InfoLog("unknown color scheme definition - %s", colorScheme)
 	}
+	if colFormat == "" {
+		colFormat = format
+	}
+	if colCompl == "" {
+		colCompl = compliant
+	}
 	return colFormat, colCompl
+}
+
+// colorFormating sets the colors for compliant and non compliant lines in
+// 'saptune verify' output
+func colorFormating(colCmpl, colNonCmpl, txt, compliant string) string {
+	colFormat := ""
+	if strings.Contains(compliant, "yes") {
+		if colCmpl == "green" {
+			colFormat = setGreenText + txt + resetTextColor
+		}
+		if colCmpl == "blue" {
+			colFormat = setBlueText + txt + resetTextColor
+		}
+	}
+	if strings.Contains(compliant, "no") {
+		if colNonCmpl == "red" {
+			colFormat = setRedText + txt + resetTextColor
+		}
+		if colNonCmpl == "yellow" {
+			colFormat = setYellowText + txt + resetTextColor
+		}
+	}
+	return colFormat
 }

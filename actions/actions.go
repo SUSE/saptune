@@ -59,28 +59,26 @@ var solutionSelector = system.GetSolutionSelector()
 var saptuneSysconfig = "/etc/sysconfig/saptune"
 
 // set colors for the table and list output
-//var setBlueText = "\033[34m"
+//var setYellowText = "\033[38;5;220m"
 //var setCyanText = "\033[36m"
 //var setUnderlinedText = "\033[4m"
 var setGreenText = "\033[32m"
 var setRedText = "\033[31m"
+var setYellowText = "\033[33m"
+var setBlueText = "\033[34m"
 var setBoldText = "\033[1m"
 var resetBoldText = "\033[22m"
 var setStrikeText = "\033[9m"
 var resetTextColor = "\033[0m"
-var dfltColorScheme = "full-noncmpl"
+var dfltColorScheme = "full-red-noncmpl"
 
 // SelectAction selects the chosen action depending on the first command line
 // argument
 func SelectAction(stApp *app.App, saptuneVers string) {
 	// switch off color and highlighting, if Stdout is not a terminal
-	if !system.OutIsTerm(os.Stdout) {
-		setGreenText = ""
-		setRedText = ""
-		setBoldText = ""
-		setStrikeText = ""
-		resetTextColor = ""
-	}
+	switchOffColor()
+	system.JnotSupportedYet()
+
 	// check for test packages
 	if RPMDate != "undef" {
 		system.NoticeLog("ATTENTION: You are running a test version of saptune which is not supported for production use")
@@ -248,15 +246,34 @@ func deleteDefFile(fileName string) {
 	}
 }
 
+// switchOffColor turns off color and highlighting, if Stdout is not a terminal
+func switchOffColor() {
+	// switch off color and highlighting, if Stdout is not a terminal
+	if !system.OutIsTerm(os.Stdout) {
+		setGreenText = ""
+		setRedText = ""
+		setYellowText = ""
+		setBlueText = ""
+		setBoldText = ""
+		resetBoldText = ""
+		setStrikeText = ""
+		resetTextColor = ""
+	}
+}
+
 // PrintHelpAndExit prints the usage and exit
 func PrintHelpAndExit(writer io.Writer, exitStatus int) {
+	if system.GetFlagVal("output") == "json" {
+		system.JInvalid(exitStatus)
+	}
 	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
-  saptune note [ list | verify | revertall | enabled | applied ]
-  saptune note [ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
+  saptune note [ list | revertall | enabled | applied ]
+  saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
+  saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify | enabled | applied ]

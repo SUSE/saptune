@@ -21,6 +21,9 @@ const SaptuneSectionDir = "/run/saptune/sections"
 // map to hold the current available systemd services
 var services map[string]string
 
+// stdOutOrg contains the origin stdout for resetting, if needed
+var stdOutOrg = os.Stdout
+
 // OSExit defines, which exit function should be used
 var OSExit = os.Exit
 
@@ -30,137 +33,12 @@ var ErrorExitOut = ErrorLog
 // InfoOut defines, which log output function should be used
 var InfoOut = InfoLog
 
-// get saptune arguments and flags
-var saptArgs, saptFlags = ParseCliArgs()
-
 // DmiID is the path to the dmidecode representation in the /sys filesystem
 var DmiID = "/sys/class/dmi/id"
 
 // IsUserRoot return true only if the current user is root.
 func IsUserRoot() bool {
 	return os.Getuid() == 0
-}
-
-// RereadArgs parses the cli parameter again
-func RereadArgs() {
-	saptArgs, saptFlags = ParseCliArgs()
-	return
-}
-
-// CliArg returns the i-th command line parameter,
-// or empty string if it is not specified.
-func CliArg(i int) string {
-	if len(saptArgs) >= i+1 {
-		return saptArgs[i]
-	}
-	return ""
-}
-
-// CliArgs returns all remaining command line parameters starting with i,
-// or empty string if it is not specified.
-func CliArgs(i int) []string {
-	if len(saptArgs) >= i+1 {
-		return saptArgs[i:]
-	}
-	return []string{}
-}
-
-// IsFlagSet returns true, if the flag is available on the command line
-// or false, if not
-func IsFlagSet(flag string) bool {
-	if saptFlags[flag] == "true" {
-		return true
-	}
-	return false
-}
-
-// GetFlagVal returns the value of a saptune commandline flag
-func GetFlagVal(flag string) string {
-	return saptFlags[flag]
-}
-
-// ParseCliArgs parses the command line to identify special flags and the
-// 'normal' arguments
-// returns a map of Flags (set/not set or value) and a slice containing the
-// remaining arguments
-// possible Flags - force, dryrun, help, version, output, colorscheme
-// on command line - --force, --dry-run or --dryrun, --help, --version, --color-scheme, --out or --output
-// Some Flags (like 'output') can have a value (--out=json or --output=csv)
-func ParseCliArgs() ([]string, map[string]string) {
-	stArgs := []string{os.Args[0]}
-	// supported flags
-	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "show-non-compliant": "false", "output": "screen", "colorscheme": "", "notSupported": ""}
-	for _, arg := range os.Args[1:] {
-		if strings.HasPrefix(arg, "--") || strings.HasPrefix(arg, "-") {
-			// argument is a flag
-			handleFlags(arg, stFlags)
-			continue
-		}
-		// other args
-		stArgs = append(stArgs, arg)
-	}
-	return stArgs, stFlags
-}
-
-// handleFlags checks for valid flags in the CLI arg list
-func handleFlags(arg string, flags map[string]string) {
-	var valueFlag = regexp.MustCompile(`(-[\w-]+)=(.*)`)
-	matches := valueFlag.FindStringSubmatch(arg)
-	if len(matches) == 3 {
-		// flag with value
-		handleValueFlags(arg, matches, flags)
-		return
-	}
-	handleSimpleFlags(arg, flags)
-	return
-}
-
-// handleValueFlags checks for valid flags with value in the CLI arg list
-func handleValueFlags(arg string, matches []string, flags map[string]string) {
-	if strings.Contains(arg, "-out") {
-		// --out=screen or --output=json
-		matches[1] = "--output"
-		flags["output"] = matches[2]
-	}
-	if strings.Contains(arg, "-colorscheme") {
-		// --colorscheme=zebra
-		flags["colorscheme"] = matches[2]
-	}
-	if _, ok := flags[strings.TrimLeft(matches[1], "-")]; !ok {
-		setUnsupportedFlag(matches[1], flags)
-	}
-	return
-}
-
-// handleSimpleFlags checks for valid flags in the CLI arg list
-func handleSimpleFlags(arg string, flags map[string]string) {
-	// simple flags
-	switch arg {
-	case "--force", "-force":
-		flags["force"] = "true"
-	case "--dry-run", "-dry-run", "--dryrun", "-dryrun":
-		flags["dryrun"] = "true"
-	case "--help", "-help", "-h":
-		flags["help"] = "true"
-	case "--version", "-version":
-		flags["version"] = "true"
-	case "--show-non-compliant", "-show-non-compliant":
-		flags["show-non-compliant"] = "true"
-	default:
-		setUnsupportedFlag(arg, flags)
-	}
-	return
-}
-
-// setUnsupportedFlag sets or appends a value to the unsupported Flag
-// collection of unsupported Flags
-func setUnsupportedFlag(val string, flags map[string]string) {
-	if flags["notSupported"] != "" {
-		flags["notSupported"] = flags["notSupported"] + val
-	} else {
-		flags["notSupported"] = flags["notSupported"] + " " + val
-	}
-	return
 }
 
 // GetSolutionSelector returns the architecture string
@@ -289,6 +167,9 @@ func ErrorExit(template string, stuff ...interface{}) {
 	if isOwnLock() {
 		ReleaseSaptuneLock()
 	}
+	if jerr := jOut(exState); jerr != nil {
+		exState = 130
+	}
 	InfoOut("saptune terminated with exit code '%v'", exState)
 	OSExit(exState)
 }
@@ -296,10 +177,21 @@ func ErrorExit(template string, stuff ...interface{}) {
 // OutIsTerm returns true, if Stdout is a terminal
 func OutIsTerm(writer *os.File) bool {
 	fileInfo, _ := writer.Stat()
-	if (fileInfo.Mode() & os.ModeCharDevice) == 0 {
-		return false
+	return (fileInfo.Mode() & os.ModeCharDevice) != 0
+}
+
+// InitOut initializes the various output methodes
+// currently only json and screen are supported
+func InitOut(logSwitch map[string]string) {
+	if GetFlagVal("output") == "json" {
+		// if writing json format, switch off
+		// the stdout and stderr output of the log messages
+		logSwitch["verbose"] = "off"
+		logSwitch["error"] = "off"
+		// switch off stdout
+		os.Stdout, _ = os.Open(os.DevNull)
+		jInit()
 	}
-	return true
 }
 
 // WrapTxt implements something like 'fold' command
@@ -439,6 +331,6 @@ func GetVirtStatus() string {
 func Watch() string {
 	t := time.Now()
 	//watch := fmt.Sprintf("%s", t.Format(time.UnixDate))
-	watch := fmt.Sprintf("%s", t.Format("2006/01/02 15:04:05.99999999"))
+	watch := t.Format("2006/01/02 15:04:05.99999999")
 	return watch
 }

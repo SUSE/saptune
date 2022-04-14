@@ -16,7 +16,7 @@ var errorLogger *log.Logger   // Error logger
 var warningLogger *log.Logger // Warning logger
 var debugSwitch string        // Switch Debug on or off
 var verboseSwitch string      // Switch verbose mode on or off
-var errorSwitch = ""          // Switch error mode on or off
+var errorSwitch string        // Switch error mode on or off
 var severNoticeFormat = "NOTICE   "
 var severInfoFormat = "INFO     "
 var severWarnFormat = "WARNING  "
@@ -35,6 +35,7 @@ func DebugLog(txt string, stuff ...interface{}) {
 func NoticeLog(txt string, stuff ...interface{}) {
 	if noticeLogger != nil {
 		noticeLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+		jWriteMsg("NOTICE", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
 		if verboseSwitch == "on" {
 			fmt.Fprintf(os.Stdout, "NOTICE: "+txt+"\n", stuff...)
 		}
@@ -52,6 +53,7 @@ func InfoLog(txt string, stuff ...interface{}) {
 func WarningLog(txt string, stuff ...interface{}) {
 	if warningLogger != nil {
 		warningLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+		jWriteMsg("WARNING", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
 		if verboseSwitch == "on" {
 			fmt.Fprintf(os.Stderr, "WARNING: "+txt+"\n", stuff...)
 		}
@@ -69,6 +71,7 @@ func ErrLog(txt string, stuff ...interface{}) {
 func ErrorLog(txt string, stuff ...interface{}) error {
 	if errorLogger != nil {
 		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+		jWriteMsg("ERROR", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
 		if errorSwitch == "on" {
 			fmt.Fprintf(os.Stderr, "ERROR: "+txt+"\n", stuff...)
 		}
@@ -101,7 +104,7 @@ func LogInit(logFile string, logSwitch map[string]string) {
 
 	debugSwitch = logSwitch["debug"]
 	verboseSwitch = logSwitch["verbose"]
-	errorSwitch = "on"
+	errorSwitch = logSwitch["error"]
 }
 
 // SwitchOffLogging disables logging

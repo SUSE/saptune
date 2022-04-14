@@ -18,6 +18,8 @@
 #   saptune revert all
 # Remove the pending lock file from a former saptune call
 #   saptune lock remove
+# Call external script '/usr/sbin/saptune_check'
+#   saptune check
 # Print current saptune status:
 #   saptune status
 # Print current saptune version:
@@ -34,7 +36,7 @@ _saptune() {
 
     case ${COMP_CWORD} in 
 
-        1)  opts="daemon service staging solution note revert status version help"
+        1)  opts="daemon service staging solution note revert check status version help"
             ;;
         
         2)  case "${prev}" in

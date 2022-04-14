@@ -36,7 +36,7 @@ var footnote1 = footnote1X86
 
 // prepFN checks, if we need to prepare the footnote for a parameter
 // if the command line flage '--show-non-compliant' is used only non compliant
-// parameter rows will be printed and that has to be reflected to the footnotes 
+// parameter rows will be printed and that has to be reflected to the footnotes
 // too.
 func prepFN(comparison note.FieldComparison, compliant, inform string) bool {
 	prep := true

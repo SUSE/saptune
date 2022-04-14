@@ -28,10 +28,13 @@ ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate 
 [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 
 \fBsaptune note\fP
-[ list | verify | revertall | enabled | applied ]
+[ list | revertall | enabled | applied ]
 
 \fBsaptune note\fP
-[ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
+[ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
+
+\fBsaptune note\fP
+verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
 
 \fBsaptune note\fP
 rename NoteID newNoteID
@@ -306,16 +309,24 @@ The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme
 Possible \fBcolor schemes\fP are:
 .RS 7
 .IP \[bu]
-full-zebra   - whole line is colored green (compliant) or red (not compliant)
+full-green-zebra   - whole line is colored green (compliant) or red (not compliant)
 .IP \[bu]
-cmpl-zebra   - only the content in the Compliant column is colored green (compliant) or red (not compliant)
+full-blue-zebra    - whole line is colored blue (compliant) or yellow (not compliant)
 .IP \[bu]
-full-noncmpl - only the whole line of the not compliant parameter is colored red
+cmpl-green-zebra   - only the content in the Compliant column is colored green (compliant) or red (not compliant)
 .IP \[bu]
-noncmpl      - only the content in the Compliant column of the not compliant parameter is colored red
+cmpl-blue-zebra    - only the content in the Compliant column is colored blue (compliant) or yellow (not compliant)
+.IP \[bu]
+full-red-noncmpl - only the whole line of the not compliant parameter is colored red
+.IP \[bu]
+full-yellow-noncmpl - only the whole line of the not compliant parameter is colored yellow
+.IP \[bu]
+red-noncmpl      - only the content in the Compliant column of the not compliant parameter is colored red
+.IP \[bu]
+yellow-noncmpl      - only the content in the Compliant column of the not compliant parameter is colored yellow
 .RS 0
 
-The default, if no \fBcolor scheme\fP is given, is \fBfull-noncmpl\fP. If an unknown \fBcolor scheme\fP is given in the command line or in the config file, non-colorized, simple black text is printed.
+The default, if no \fBcolor scheme\fP is given, is \fBfull-red-noncmpl\fP. If an unknown \fBcolor scheme\fP is given in the command line or in the config file, non-colorized, simple black text is printed.
 
 The 'final lines' with the overall result of the verify operation are colored green (compliant) or red (not compliant) independent from the chosen \fBcolor scheme\fP
 .SS
