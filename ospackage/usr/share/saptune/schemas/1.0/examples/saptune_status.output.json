@@ -1,0 +1,1 @@
+{"$schema":"file:///usr/share/saptune/schemas/1.0/saptune_status.schema.json","publish time":"2022-05-09 11:11:15.186","argv":"saptune --out=json status","pid":2417,"command":"status","exit code":1,"result":{},"messages":[{"priority":"NOTICE","message":"actions.go:84: ATTENTION: You are running a test version of saptune which is not supported for production use\n"}]}

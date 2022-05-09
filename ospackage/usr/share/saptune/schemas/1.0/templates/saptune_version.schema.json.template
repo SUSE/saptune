@@ -10,6 +10,5 @@
                 "configured version": {
                     "description": "The configured saptune version (SAPTUNE_VERSION of /etc/sysconfig/saptune).",
                     "$ref": "#/$defs/major saptune version"
-    
                 }            
 {% endblock %}

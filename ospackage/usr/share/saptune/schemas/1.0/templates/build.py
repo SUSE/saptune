@@ -3,7 +3,7 @@
 Builds schema definitions in ../ from all templates in this directory.
 Existing files get overwritten!
 
-Usage: OVERWRITE=1 ./build.py
+Usage: FORCE=1 ./build.py
 
 """
 
@@ -15,7 +15,7 @@ import jinja2
 
 def main():
 
-    # Check if OVERWRITE is set.
+    # Check if FORCE is set.
     try:
         if os.environ['FORCE'] != '1':
             raise ValueError

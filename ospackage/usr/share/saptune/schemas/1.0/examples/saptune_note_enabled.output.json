@@ -1,0 +1,27 @@
+{
+    "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_note_enabled.schema.json",
+    "publish time": "2022-05-09 11:13:53.565",
+    "argv": "saptune --out=json note enabled",
+    "pid": 2473,
+    "command": "note enabled",
+    "exit code": 0,
+    "result": {
+        "enabled Notes": [
+            "941735",
+            "1771258",
+            "1980196",
+            "2578899",
+            "2684254",
+            "2382421",
+            "2534844",
+            "2993054",
+            "1656250"
+        ]
+    },
+    "messages": [
+        {
+            "priority": "NOTICE",
+            "message": "actions.go:84: ATTENTION: You are running a test version of saptune which is not supported for production use\n"
+        }
+    ]
+}

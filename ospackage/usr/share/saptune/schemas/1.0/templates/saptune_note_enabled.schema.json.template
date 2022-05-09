@@ -1,0 +1,18 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune note enabled{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["enabled Notes"]{% endblock %}
+
+{% block result_properties %}
+                "enabled Notes": {
+                    "description": "List of the enabled Notes.",
+                    "type":  "array",
+                    "items": {
+                        "type": "string",
+                        "$ref": "#/$defs/saptune note name"
+                    }                       
+                }            
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune note applied{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["applied Notes"]{% endblock %}
+
+{% block result_properties %}
+                "applied Notes": {
+                    "description": "List of the applied Notes.",
+                    "type":  "array",
+                    "items": {
+                        "type": "string",
+                        "$ref": "#/$defs/saptune note name"
+                    }                       
+                }            
+{% endblock %}

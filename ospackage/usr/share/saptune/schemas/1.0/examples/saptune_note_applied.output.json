@@ -1,0 +1,17 @@
+{
+    "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_note_applied.schema.json",
+    "publish time": "2022-05-09 11:14:04.084",
+    "argv": "saptune --out=json note applied",
+    "pid": 2479,
+    "command": "note applied",
+    "exit code": 0,
+    "result": {
+        "applied Notes": []
+    },
+    "messages": [
+        {
+            "priority": "NOTICE",
+            "message": "actions.go:84: ATTENTION: You are running a test version of saptune which is not supported for production use\n"
+        }
+    ]
+}

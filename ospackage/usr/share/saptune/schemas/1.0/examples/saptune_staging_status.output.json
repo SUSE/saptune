@@ -1,0 +1,12 @@
+{
+    "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_staging_status.schema.json",
+    "publish time": "2022-05-09 11:13:11.254",
+    "argv": "saptune --out=json staging status",
+    "pid": 2460,
+    "command": "staging status",
+    "exit code": 1,
+    "result": {
+        "implemented": false
+    },
+    "messages": []
+}
