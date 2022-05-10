@@ -1,0 +1,26 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune status{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["services", "system state", "configured version", "package version", "configured Solution", "Notes", "staging", "remember message"]{% endblock %}
+
+{% block result_properties %}
+                "services": {
+                    "description": "The states of various systemd services related to saptune.",
+                    "type": "object",
+                    "properties": {
+                        "saptune": { "$ref": "#/$defs/systemd state" },
+                        "sapconf": { "$ref": "#/$defs/systemd state" },
+                        "tuned": { "$ref": "#/$defs/systemd state" }
+                    }
+                },
+                "system state": {},
+                "configured version": {},
+                "package version": {}, 
+                "configured Solution": {},
+                "Notes": {},
+                "staging": {},
+                "remember message": {}
+{% endblock %}

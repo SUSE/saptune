@@ -1,9 +1,9 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_help.schema.json",  
+    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_solution_list.schema.json",  
 
     "title": "",
-    "description": "Describes the output of 'saptune help.",
+    "description": "Describes the output of 'saptune solution list.",
 
     "type": "object",
     "required": [ "$schema", "publish time", "argv", "pid", "command", "exit code", "result", "messages"],
@@ -36,21 +36,58 @@
         "command": {
             "description": "The saptune command (classifier), which was executed.",
             "type": "string",
-            "enum": ["help"]
+            "enum": ["solution list"]
         },
 
         "result": {
             "description": "The result (output) of the command.",
             "type": "object",
-            "required": ["implemented"],
+            "required": ["available Solutions", "remember message"],
             "additionalProperties": false,
             
             "properties": {
                 
-                "implemented": {
-                    "description": "Indicates that JSON output has not yet been implemented yet.",
-                    "type": "boolean",
-                    "enum": [false]
+                "available Solutions": {
+                    "description": "List of the available Solutions.",
+                    "type":  "array",
+                    "items": {
+                        "type": "object",
+                        "required": [ "Solution name", "Note list", "Solution enabled", "Solution override exists", "custom Solution", "Solution deprecated" ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "Solution name": { 
+                                "description": "Name of the Solution",
+                                "$ref": "#/$defs/saptune solution name"
+                            },
+                            "Note list": {
+                                "description": "List of Notes belonging to the Solution.",
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/$defs/saptune note name" 
+                                } 
+                            },
+                            "Solution enabled": {
+                                "description": "States if the Solution is enabled.",
+                                "type": "boolean"
+                            }, 
+                            "Solution override exists": {
+                                "description": "States if an override file exists for the Solution.",
+                                "type": "boolean"
+                            }, 
+                            "custom Solution": {
+                                "description": "States if the Note is a custom Solution.",
+                                "type": "boolean"
+                            },
+                            "Solution deprecated": {
+                                "description": "States if the Solution is deprecated.",
+                                "type": "boolean"
+                            }
+                        }
+                    }                       
+                },
+                "remember message": {
+                    "description": "The remember message.",
+                    "type": "string"
                 }            
 
             }

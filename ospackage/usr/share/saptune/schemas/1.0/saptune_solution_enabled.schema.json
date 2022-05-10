@@ -1,9 +1,9 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_help.schema.json",  
+    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_solution_enabled.schema.json",  
 
     "title": "",
-    "description": "Describes the output of 'saptune help.",
+    "description": "Describes the output of 'saptune solution enabled.",
 
     "type": "object",
     "required": [ "$schema", "publish time", "argv", "pid", "command", "exit code", "result", "messages"],
@@ -36,21 +36,23 @@
         "command": {
             "description": "The saptune command (classifier), which was executed.",
             "type": "string",
-            "enum": ["help"]
+            "enum": ["solution enabled"]
         },
 
         "result": {
             "description": "The result (output) of the command.",
             "type": "object",
-            "required": ["implemented"],
+            "required": ["enabled Solution"],
             "additionalProperties": false,
             
             "properties": {
                 
-                "implemented": {
-                    "description": "Indicates that JSON output has not yet been implemented yet.",
-                    "type": "boolean",
-                    "enum": [false]
+                "enabled Solution": {
+                    "description": "The enabled Solution.",
+                    "oneOf": [
+                        { "$ref": "#/$defs/saptune solution name" },
+                        { "type": "null" }
+                    ]                     
                 }            
 
             }

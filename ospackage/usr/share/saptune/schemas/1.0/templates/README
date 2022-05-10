@@ -45,9 +45,9 @@ saptune command                    JSON? Schema?
 ---------------------------------- ----- ------
 invalid saptune command             yes   yes  
 saptune daemon start	            no    no 
-saptune daemon status	            no    no 
+saptune daemon status	            yes   no * (see status) 
 saptune daemon stop	                no    no 
-saptune service status	            no    no 
+saptune service status	            yes   no * (see status)
 saptune service start 	            no    no 
 saptune service reload              no    no 
 saptune service restart	            no    no 
@@ -60,7 +60,7 @@ saptune service apply    	        no    no
 saptune service revert    	        no    no 
 saptune service takeover     	    no    no 
 saptune note list  	                yes   yes
-saptune note verify 	            yes   no  
+saptune note verify 	            yes   no    *  
 saptune note enabled   	            yes   yes  
 saptune note applied	            yes   yes
 saptune note apply	                no    no 
@@ -73,10 +73,10 @@ saptune note revert	                no    no
 saptune note delete	                no    no 
 saptune note rename	                no    no 
 saptune note revertall|revert all	no    no 
-saptune solution list  	            yes   no 
-saptune solution verify	            yes   no 
-saptune solution enabled	        yes   no 
-saptune solution applied  	        yes   no 
+saptune solution list  	            yes   no    
+saptune solution verify	            yes   no   *
+saptune solution enabled	        yes   yes
+saptune solution applied  	        yes   yes
 saptune solution apply	            no    no
 saptune solution simulate	        no    no
 saptune solution revert	            no    no 
@@ -94,6 +94,11 @@ saptune staging release             no    no
 saptune log status	                no    no 
 saptune log set                 	no    no 
 saptune lock remove    	            no    no 
-saptune status             	        yes   no 
+saptune status             	        yes   no   *
 saptune version          	        yes   yes 
 saptune help   	                    no    no 
+
+
+
+
+CHECK oneOf again in solution applied/enabled!!!

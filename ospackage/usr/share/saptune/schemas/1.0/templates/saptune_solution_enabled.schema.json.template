@@ -1,0 +1,17 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune solution enabled{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["enabled Solution"]{% endblock %}
+
+{% block result_properties %}
+                "enabled Solution": {
+                    "description": "The enabled Solution.",
+                    "oneOf": [
+                        { "$ref": "#/$defs/saptune solution name" },
+                        { "type": "null" }
+                    ]                     
+                }            
+{% endblock %}

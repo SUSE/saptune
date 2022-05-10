@@ -1,11 +1,11 @@
 {
-    "$schema" : "file:///home/sschmidt/Dokumente/Projekte/saptune/github.com scmschmidt saptune/ospackage/usr/share/saptune/schemas/1.0/saptune.schema.json",
+    "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_note_applied.schema.json",
 
-    "timestamp": "2022-01-31T12:49:01.343448+01:00",
-    "args": "saptune status",
+    "publish time": "2022-01-31 12:49:01.343",
+    "argv": "saptune --out=json status",
     "pid": 2225,
     "command": "status",
-    "rc": 100,
+    "exit code": 100,
 
     "result": {
         "services": {
@@ -27,8 +27,9 @@
             "Notes": [],
             "Solutions": []
         },
-        "message": "Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable and start saptune.service by running: 'saptune service enablestart'.\nYour system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning."
+        "remember message": "Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable and start saptune.service by running: 'saptune service enablestart'.\nYour system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning."
     },
 
     "messages": []
 }
+

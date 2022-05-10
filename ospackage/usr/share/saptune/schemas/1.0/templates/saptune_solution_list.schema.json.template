@@ -1,0 +1,52 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune solution list{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["available Solutions", "remember message"]{% endblock %}
+
+{% block result_properties %}
+                "available Solutions": {
+                    "description": "List of the available Solutions.",
+                    "type":  "array",
+                    "items": {
+                        "type": "object",
+                        "required": [ "Solution name", "Note list", "Solution enabled", "Solution override exists", "custom Solution", "Solution deprecated" ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "Solution name": { 
+                                "description": "Name of the Solution",
+                                "$ref": "#/$defs/saptune solution name"
+                            },
+                            "Note list": {
+                                "description": "List of Notes belonging to the Solution.",
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/$defs/saptune note name" 
+                                } 
+                            },
+                            "Solution enabled": {
+                                "description": "States if the Solution is enabled.",
+                                "type": "boolean"
+                            }, 
+                            "Solution override exists": {
+                                "description": "States if an override file exists for the Solution.",
+                                "type": "boolean"
+                            }, 
+                            "custom Solution": {
+                                "description": "States if the Note is a custom Solution.",
+                                "type": "boolean"
+                            },
+                            "Solution deprecated": {
+                                "description": "States if the Solution is deprecated.",
+                                "type": "boolean"
+                            }
+                        }
+                    }                       
+                },
+                "remember message": {
+                    "description": "The remember message.",
+                    "type": "string"
+                }            
+{% endblock %}

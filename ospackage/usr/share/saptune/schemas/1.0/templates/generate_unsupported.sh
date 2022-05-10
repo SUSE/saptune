@@ -8,9 +8,7 @@ set -u
 
 UNSUPPORTED_COMMANDS=( 
     "saptune daemon start" 
-    "saptune daemon status"
     "saptune daemon stop"
-    "saptune service status"
     "saptune service start"
     "saptune service reload"
     "saptune service restart"

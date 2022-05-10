@@ -1,0 +1,164 @@
+{
+    "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_solution_list.schema.json",
+    "publish time": "2022-05-10 16:12:56.949",
+    "argv": "saptune --out=json solution list",
+    "pid": 2873,
+    "command": "solution list",
+    "exit code": 0,
+    "result": {
+        "available Solutions": [
+            {
+                "Solution name": "BOBJ",
+                "Note list": [
+                    "941735",
+                    "1771258",
+                    "2578899",
+                    "SAP_BOBJ",
+                    "2993054",
+                    "1656250"
+                ],
+                "Solution enabled": false,
+                "Solution override exists": false,
+                "custom Solution": false,
+                "Solution deprecated": false
+            },
+            {
+                "Solution name": "HANA",
+                "Note list": [
+                    "941735",
+                    "1771258",
+                    "1980196",
+                    "2578899",
+                    "2684254",
+                    "2382421",
+                    "2534844",
+                    "2993054",
+                    "1656250"
+                ],
+                "Solution enabled": false,
+                "Solution override exists": false,
+                "custom Solution": false,
+                "Solution deprecated": false
+            },
+            {
+                "Solution name": "MAXDB",
+                "Note list": [
+                    "941735",
+                    "1771258",
+                    "2578899"
+                ],
+                "Solution enabled": true,
+                "Solution override exists": false,
+                "custom Solution": false,
+                "Solution deprecated": false
+            },
+            {
+                "Solution name": "NETWEAVER",
+                "Note list": [
+                    "941735",
+                    "1771258",
+                    "2578899",
+                    "2993054",
+                    "1656250",
+                    "900929"
+                ],
+                "Solution enabled": false,
+                "Solution override exists": false,
+                "custom Solution": false,
+                "Solution deprecated": false
+            },
+            {
+                "Solution name": "NETWEAVER+HANA",
+                "Note list": [
+                    "941735",
+                    "1771258",
+                    "1980196",
+                    "2578899",
+                    "2684254",
+                    "2382421",
+                    "2534844",
+                    "2993054",
+                    "1656250"
+                ],
+                "Solution enabled": false,
+                "Solution override exists": false,
+                "custom Solution": false,
+                "Solution deprecated": false
+            },
+            {
+                "Solution name": "S4HANA-APP+DB",
+                "Note list": [
+                    "941735",
+                    "1771258",
+                    "1980196",
+                    "2578899",
+                    "2684254",
+                    "2382421",
+                    "2534844",
+                    "2993054",
+                    "1656250"
+                ],
+                "Solution enabled": false,
+                "Solution override exists": false,
+                "custom Solution": false,
+                "Solution deprecated": false
+            },
+            {
+                "Solution name": "S4HANA-APPSERVER",
+                "Note list": [
+                    "941735",
+                    "1771258",
+                    "2578899",
+                    "2993054",
+                    "1656250",
+                    "900929"
+                ],
+                "Solution enabled": false,
+                "Solution override exists": false,
+                "custom Solution": false,
+                "Solution deprecated": false
+            },
+            {
+                "Solution name": "S4HANA-DBSERVER",
+                "Note list": [
+                    "941735",
+                    "1771258",
+                    "1980196",
+                    "2578899",
+                    "2684254",
+                    "2382421",
+                    "2534844",
+                    "2993054",
+                    "1656250"
+                ],
+                "Solution enabled": false,
+                "Solution override exists": false,
+                "custom Solution": false,
+                "Solution deprecated": false
+            },
+            {
+                "Solution name": "SAP-ASE",
+                "Note list": [
+                    "941735",
+                    "1410736",
+                    "1680803",
+                    "1771258",
+                    "2578899",
+                    "2993054",
+                    "1656250"
+                ],
+                "Solution enabled": false,
+                "Solution override exists": false,
+                "custom Solution": false,
+                "Solution deprecated": false
+            }
+        ],
+        "remember message": "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:\n    saptune service enablestart\n"
+    },
+    "messages": [
+        {
+            "priority": "NOTICE",
+            "message": "actions.go:84: ATTENTION: You are running a test version of saptune which is not supported for production use\n"
+        }
+    ]
+}

@@ -115,6 +115,60 @@
             "type": "string",
             "pattern": "^[^ ]+$",
             "examples": ["1656250", "SAP_BOBJ"]
+        },
+
+        "saptune note version": {
+            "description": "Format of Note version (defined in `man 5 saptune-note`).",
+            "type": "string",
+            "pattern": "^[0-9A-Za-z._+-]*$",
+            "examples": ["7", "1.3-prod"]
+        },
+
+        "saptune note release date": {
+            "description": "Format of Note release date (simplified).",
+            "type": "string",
+            "pattern": "^[0-9A-Za-z.]*$",
+            "examples": ["18.10.2017", "Aug 14th 2020"]
+        },
+
+        "saptune note reference": {
+            "description": "Format of a Note reference.",
+            "type": "string",
+            "examples": ["https://launchpad.support.sap.com/#/notes/1410736"]
+        },
+
+        "saptune solution name": {
+            "description": "Format of Solution name (simplified).",
+            "type": "string",
+            "pattern": "^[^ ]+$",
+            "examples": ["HANA", "myNetWeaver"]
+        },
+
+        "systemd state is-enabled": {
+            "description": "Possible systemd states for 'is-enabled' of a service.",
+            "type": "string",
+            "enum": ["enabled", "enabled-runtime", "linked", "linked-runtime", "alias", "masked", "masked-runtime", "static", "indirect", "disabled", "generated", "transient", "bad"]   
+        },
+
+        "systemd state is-active": {
+            "description": "Possible systemd states for 'is-active' of a service.",
+            "type": "string",
+            "enum": ["active", "inactive", "failed"]
+        },
+
+        "systemd state": {
+            "description": "Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages.",
+            "oneOf": [
+                { 
+                    "type": "array",
+                    "prefixItems": [
+                        { "$ref": "#/$defs/systemd state is-enabled" },
+                        { "$ref": "#/$defs/systemd state is-active" }
+                    ]                    
+                },
+                { "type": "string", "const": "not available" }
+            ],
+            "examples": [["disabled", "inactive"], ["enabled", "active"]]
         }
     }
 }

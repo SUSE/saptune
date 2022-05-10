@@ -8,21 +8,35 @@
 
 {% block result_properties %}
                 "available Notes": {
-                    "description": "List of the applied Notes.",
+                    "description": "List of the available Notes.",
                     "type":  "array",
                     "items": {
                         "type": "object",
-                        "required": [ "Note ID", "Note description", "Note enabled manually", "Note enabled by Solution", "Note reverted manually", "Note override exists", "custom Note" ],
+                        "required": [ "Note ID", "Note description", "Note reference", "Note version", "Note release date", "Note enabled manually", "Note enabled by Solution", "Note reverted manually", "Note override exists", "custom Note" ],
                         "additionalProperties": false,
                         "properties": {
                             "Note ID": { 
                                 "description": "Name (ID) of the Note",
-                                "type": "string", 
                                 "$ref": "#/$defs/saptune note name"
                             },
                             "Note description": {
                                 "description": "Description of the Note",
                                 "type": "string" 
+                            },
+                            "Note reference": { 
+                                "description": "Reference (URL) for the Note",
+                                "oneOf": [
+                                    { "$ref": "#/$defs/saptune note reference" },
+                                    { "type": "null" }
+                                ]
+                            },
+                            "Note version": { 
+                                "description": "Version of the Note", 
+                                "$ref": "#/$defs/saptune note version"
+                            },
+                            "Note release date": { 
+                                "description": "Release date of the Note",
+                                "$ref": "#/$defs/saptune note release date"
                             }, 
                             "Note enabled manually": {
                                 "description": "States if the Note was enabled manually.",
