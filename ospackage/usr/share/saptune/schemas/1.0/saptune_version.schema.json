@@ -172,6 +172,12 @@
                 { "type": "string", "const": "not available" }
             ],
             "examples": [["disabled", "inactive"], ["enabled", "active"]]
+        },
+
+        "systemd system state": {
+            "description": "Possible systemd system states reported by 'systemctl is-system-running'.",
+            "type": "string",
+            "enum": ["initializing", "starting", "running", "degraded", "maintenance", "stopping", "offline", "unknown"]    
         }
     }
 }

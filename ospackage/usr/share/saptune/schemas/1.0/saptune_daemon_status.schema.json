@@ -42,7 +42,7 @@
         "result": {
             "description": "The result (output) of the command.",
             "type": "object",
-            "required": ["services", "system state", "configured version", "package version", "configured Solution", "Notes", "staging", "remember message"],
+            "required": ["services", "system state", "configured version", "package version", "enabled Solution", "Notes", "staging", "remember message"],
             "additionalProperties": false,
             
             "properties": {
@@ -56,10 +56,25 @@
                         "tuned": { "$ref": "#/$defs/systemd state" }
                     }
                 },
-                "system state": {},
-                "configured version": {},
-                "package version": {}, 
-                "configured Solution": {},
+                "system state": { 
+                    "description": "The system state from systemd point of view.",
+                    "$ref": "#/$defs/systemd system state"
+                },
+                "configured version": {
+                    "description":  "The saptune major version as configured in `SAPTUNE_VERSION` of `/etc/sysconfig/saptune`.",
+                    "enum": ["1", "2", "3"]
+                },
+                "package version": { 
+                    "description": "The version string of the installed saptune package.",
+                    "$ref": "#/$defs/rpm version string" 
+                }, 
+                "enabled Solution": {
+                    "description": "The enabled Solution.",
+                    "oneOf": [
+                        { "$ref": "#/$defs/saptune solution name" },
+                        { "type": "null" }
+                    ]   
+                },
                 "Notes": {},
                 "staging": {},
                 "remember message": {}
@@ -184,6 +199,12 @@
                 { "type": "string", "const": "not available" }
             ],
             "examples": [["disabled", "inactive"], ["enabled", "active"]]
+        },
+
+        "systemd system state": {
+            "description": "Possible systemd system states reported by 'systemctl is-system-running'.",
+            "type": "string",
+            "enum": ["initializing", "starting", "running", "degraded", "maintenance", "stopping", "offline", "unknown"]    
         }
     }
 }

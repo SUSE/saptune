@@ -4,7 +4,7 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["services", "system state", "configured version", "package version", "configured Solution", "Notes", "staging", "remember message"]{% endblock %}
+{% block result_required %}["services", "system state", "configured version", "package version", "enabled Solution", "Notes", "staging", "remember message"]{% endblock %}
 
 {% block result_properties %}
                 "services": {
@@ -16,11 +16,35 @@
                         "tuned": { "$ref": "#/$defs/systemd state" }
                     }
                 },
-                "system state": {},
-                "configured version": {},
-                "package version": {}, 
-                "configured Solution": {},
-                "Notes": {},
+                "system state": { 
+                    "description": "The system state from systemd point of view.",
+                    "$ref": "#/$defs/systemd system state"
+                },
+                "configured version": {
+                    "description":  "The saptune major version as configured in `SAPTUNE_VERSION` of `/etc/sysconfig/saptune`.",
+                    "enum": ["1", "2", "3"]
+                },
+                "package version": { 
+                    "description": "The version string of the installed saptune package.",
+                    "$ref": "#/$defs/rpm version string" 
+                }, 
+                "enabled Solution": {
+                    "description": "The enabled Solution.",
+                    "oneOf": [
+                        { "$ref": "#/$defs/saptune solution name" },
+                        { "type": "null" }
+                    ]   
+                },
+                "Notes enabled (not from Solution": {},
+
+
+                "Notes applied": 
+
                 "staging": {},
                 "remember message": {}
 {% endblock %}
+
+
+configured Notes:       1656250 1980196 2382421 2534844 2684254 2993054 
+order of enabled Notes: 941735 1771258 1980196 2578899 2684254 2382421 2534844 2993054 1656250
+applied Notes:          

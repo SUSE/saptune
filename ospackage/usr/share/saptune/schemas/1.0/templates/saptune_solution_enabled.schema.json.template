@@ -12,6 +12,6 @@
                     "oneOf": [
                         { "$ref": "#/$defs/saptune solution name" },
                         { "type": "null" }
-                    ]                     
+                    ]                
                 }            
 {% endblock %}

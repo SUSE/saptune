@@ -16,7 +16,7 @@
         "system state": "running",
         "configured version": "3",
         "package version": "3.0.2", 
-        "configured Solution": "HANA",
+        "enabled Solution": null,
         "Notes": {
             "configured additionally": [],
             "orderly enabled": ["941735", "1771258", "1980196", "2578899", "2684254", "2382421", "2534844", "2993054", "1656250"],
