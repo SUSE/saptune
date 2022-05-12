@@ -1,0 +1,116 @@
+{
+   "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_note_applied.schema.json",
+
+   "publish time": "2022-01-31 12:49:01.343",
+   "argv": "saptune --out=json note verify",
+   "pid": 2225,
+   "command": "note verify",
+   "exit code": 100,
+
+   "result": {
+      "verifications": [
+         {
+            "Note ID": "1771258",
+            "Note version": "6",
+            "parameter": "LIMIT_@dba_hard_nofile",
+            "expected value": "@dba hard nofile 1048576",
+            "override value": null,  <-- String in golang!!!!! 
+            "actual value": "@dba hard nofile 1048576",
+            "compliant": true,
+            "amendments": [],
+         },
+         {
+            "Note ID": "2382421",
+            "Note version": "38",
+            "parameter": "net.ipv4.ip_local_reserved_ports",
+            "expected value": null,  <-- String in golang!!!!! 
+            "override value": null,  <-- String in golang!!!!! 
+            "actual value": "32768 60999",
+            "compliant": true,
+            "amendments": [
+               {
+                  "id": "2",
+                  "text": "setting is not available on the system"
+               },
+               {
+                  "id": "7",
+                  "text": "parameter value is untouched by default"
+               }
+            ]
+         },
+         {
+            "Note ID": "2534844",
+            "Note version": "12",
+            "parameter": "kernel.shmmni",
+            "expected value": "32768",
+            "override value": "32768", 
+            "actual value": "32768",
+            "compliant": true,
+            "amendments": []
+         },
+         {
+            "Note ID": "2578899",
+            "Note version": "39",
+            "parameter": "rpm:psmisc",
+            "expected value": "23.0-6.16.1",
+            "override value":  null,  <-- String in golang!!!!! 
+            "actual value": "none",  <-- unset values?????
+            "compliant": false,
+            "amendments": [
+               {
+                  "id": "2",
+                  "text": "setting is not available on the system"
+               },
+               {
+                  "id": "3",
+                  "text": "value is only checked, but NOT set"
+               }
+            ]
+         },
+         {
+            "Note ID": "941735",
+            "Note version": "11",
+            "parameter": "VSZ_TMPFS_PERCENT",
+            "expected value": "75",
+            "override value": null,  <-- String in golang!!!!! 
+            "actual value": "75",
+            "compliant": null,
+            "amendments": [
+               {
+                  "id": "15",
+                  "text": "the parameter is only used to calculate the size of tmpfs (/dev/shm)"
+               }
+            ]
+         }
+      ],
+      "attentions": [
+         {
+            "Note ID": "2382421",
+            "attention": "Hints or values not yet handled by saptune. So please read carefully, check and set manually, if needed:\n# SAP HANA Parameters - all '.ini' file changes - not handled by saptune\n# WARNING - on systems with iSCSI devices the setting of 'net.ipv4.tcp_syn_retries = 8\n# may result in deferred faulty message of iSCSI paths."
+         }
+      ],
+      "enabled Notes": ["941735", "1771258", "1980196", "2578899", "2684254", "2382421", "2534844", "2993054", "1656250"],
+      "system compliance": true
+    },
+
+   "messages": [
+      {
+         "priority": "NOTICE",
+         "message": "ATTENTION: You are running a test version of saptune which is not supported for production use"
+      },
+      {
+         "priority": "WARNING",
+         "message": "Parameter 'kernel.shmmax' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-150300.59.49-default(0xffffffffffffffff), /boot/sysctl.conf-5.3.18-150300.59.54-default(0xffffffffffffffff)."
+      },
+      {
+         "priority": "WARNING",
+         "message": "Parameter 'kernel.shmall' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-150300.59.49-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-150300.59.54-default(0x0fffffffffffff00)."
+      },
+      {
+         "priority": "NOTICE",
+         "message": "block device related section settings detected: Traversing all block devices can take a considerable amount of time."
+      }
+   ]   
+}
+
+

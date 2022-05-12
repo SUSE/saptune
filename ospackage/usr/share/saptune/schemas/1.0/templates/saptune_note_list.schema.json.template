@@ -24,11 +24,9 @@
                                 "type": "string" 
                             },
                             "Note reference": { 
-                                "description": "Reference (URL) for the Note",
-                                "oneOf": [
-                                    { "$ref": "#/$defs/saptune note reference" },
-                                    { "type": "null" }
-                                ]
+                                "description": "References (URL) for the Note",
+                                "type": "array",
+                                "items": { "$ref": "#/$defs/saptune note reference" }
                             },
                             "Note version": { 
                                 "description": "Version of the Note", 

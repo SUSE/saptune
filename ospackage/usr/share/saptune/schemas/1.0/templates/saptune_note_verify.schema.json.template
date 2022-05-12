@@ -1,0 +1,42 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune note verify{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["verifications"]{% endblock %}
+
+{% block result_properties %}
+                "verifications": {
+                    "description": "List of verifications (lines of the table output by `saptune note verify`.",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [ "Note ID", "Note version", "parameter", "expected value", "override value", "actual value"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "Note ID": { "$ref": "#/$defs/saptune note name" },
+                            "Note version": { "$ref": "#/$defs/saptune note version" },
+                            "parameter": { "$ref": "#/$defs/saptune parameter name" },
+                            "expected value": { "$ref": "#/$defs/saptune parameter value" },
+                            "override value": { "$ref": "#/$defs/saptune parameter value" },
+                            "actual value": { "$ref": "#/$defs/saptune parameter value" },
+                            "compliant": { "$ref": "#/$defs/saptune parameter compliance" }
+                        }
+                    }
+                },
+                "enabled Notes": {
+                    "description": "List of the enabled Notes.",
+                    "type":  "array",
+                    "items": {
+                        "type": "string",
+                        "$ref": "#/$defs/saptune note name"
+                    }                       
+                },
+                "system compliance": {
+                    "description": "Overall compliance of all currently applied SAP Notes.",
+                    "type": "boolean"
+                }
+{% endblock %}
+
+                            

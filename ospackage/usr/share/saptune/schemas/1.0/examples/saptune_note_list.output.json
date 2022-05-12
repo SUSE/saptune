@@ -10,7 +10,7 @@
             {
                 "Note ID": "1410736",
                 "Note description": "TCP/IP: setting keepalive interval",
-                "Note reference": "https://launchpad.support.sap.com/#/notes/1410736", 
+                "Note reference": ["https://launchpad.support.sap.com/#/notes/1410736"],
                 "Note version": "6",
                 "Note release date": "13.01.2020",
                 "Note enabled manually": false,
@@ -22,7 +22,7 @@
             {
                 "Note ID": "1656250",
                 "Note description": "SAP on AWS: Support prerequisites - only Linux Operating System IO Recommendations\n\t\t\tVersion 31 from 02.12.2020 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": true,
@@ -34,7 +34,7 @@
             {
                 "Note ID": "1680803",
                 "Note description": "Sybase - SAP Adaptive Server Enterprise\n\t\t\tVersion 26 from 11.06.2021 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": false,
@@ -46,7 +46,7 @@
             {
                 "Note ID": "1771258",
                 "Note description": "Linux: User and system resource limits\n\t\t\tVersion 6 from 05.11.2021 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": true,
@@ -58,7 +58,7 @@
             {
                 "Note ID": "1805750",
                 "Note description": "SYB: Usage of HugePages on Linux Systems with Sybase ASE\n\t\t\tVersion 6 from 14.11.2017 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": false,
@@ -70,7 +70,7 @@
             {
                 "Note ID": "1980196",
                 "Note description": "Setting Linux Kernel Parameter /proc/sys/vm/max_map_count on SAP HANA Systems\n\t\t\tVersion 7 from 18.10.2017 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": true,
@@ -82,7 +82,7 @@
             {
                 "Note ID": "2161991",
                 "Note description": "VMware vSphere configuration guidelines\n\t\t\tVersion 26 from 02.12.2019 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": false,
@@ -94,7 +94,7 @@
             {
                 "Note ID": "2382421",
                 "Note description": "Optimizing the Network Configuration on HANA- and OS-Level\n\t\t\tVersion 38 from 29.06.2020 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": true,
@@ -106,7 +106,7 @@
             {
                 "Note ID": "2534844",
                 "Note description": "Indexserver Crash During Startup due to Insufficient Shared Memory Segment\n\t\t\tVersion 12 from 15.11.2017 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": true,
@@ -118,7 +118,7 @@
             {
                 "Note ID": "2578899",
                 "Note description": "SUSE LINUX Enterprise Server 15: Installation notes\n\t\t\tVersion 39 from 09.07.2021 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": true,
@@ -130,7 +130,7 @@
             {
                 "Note ID": "2684254",
                 "Note description": "SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15\n\t\t\tVersion 20 from 02.07.2021 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": true,
@@ -142,7 +142,7 @@
             {
                 "Note ID": "2993054",
                 "Note description": "Recommended settings for SAP systems on Linux running in Azure virtual machines\n\t\t\tVersion 2 from 12.07.2021 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": true,
@@ -154,7 +154,7 @@
             {
                 "Note ID": "3024346",
                 "Note description": "Linux Kernel Settings for NetApp NFS\n\t\t\tVersion 3 from 17.02.2021 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": false,
@@ -166,7 +166,7 @@
             {
                 "Note ID": "900929",
                 "Note description": "Linux: STORAGE_PARAMETERS_WRONG_SET and 'mmap() failed'\n\t\t\tVersion 7 from 31.07.2017 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": false,
@@ -178,7 +178,7 @@
             {
                 "Note ID": "941735",
                 "Note description": "SAP memory management system for 64-bit Linux systems\n\t\t\tVersion 11 from 04.05.2018 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": true,
@@ -190,7 +190,7 @@
             {
                 "Note ID": "SAP_BOBJ",
                 "Note description": "operating system tuning for SAP Business OBJects (BOBJ)\n\t\t\tVersion 0 from 10.03.2017 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": false,
@@ -202,7 +202,7 @@
             {
                 "Note ID": "mega",
                 "Note description": "❤🤺\\e[1;34mMega note with inline comments\n\t\t\tVersion 1 from 21.03.2022 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": false,
@@ -214,7 +214,7 @@
             {
                 "Note ID": "test",
                 "Note description": "A test Note\n\t\t\tVersion 0 from 24.0.2.2022 ",
-                "Note reference": null, 
+                "Note reference": [], 
                 "Note version": "",
                 "Note release date": "",
                 "Note enabled manually": false,

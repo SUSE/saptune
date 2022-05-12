@@ -6,7 +6,7 @@
     "command": "solution enabled",
     "exit code": 0,
     "result": {
-        "enabled Solution": null
+        "enabled Solution": []
     },
     "messages": [
         {

@@ -49,10 +49,9 @@
                 
                 "enabled Solution": {
                     "description": "The enabled Solution.",
-                    "oneOf": [
-                        { "$ref": "#/$defs/saptune solution name" },
-                        { "type": "null" }
-                    ]                
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/saptune solution name" },            
+                    "maxItems": 1
                 }            
 
             }

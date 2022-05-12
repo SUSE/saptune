@@ -94,8 +94,11 @@ saptune staging release             no    no
 saptune log status	                no    no 
 saptune log set                 	no    no 
 saptune lock remove    	            no    no 
-saptune status             	        yes   no   *
+saptune status             	        yes   no   (ready so far, but the Note attributes might change: ((ADD JIRA ISSUE HERE))
 saptune version          	        yes   yes 
 saptune help   	                    no    no 
 
 
+DO HAVE ALL OBJECTS IN TEMPLATES "required" and "additionalProperties"????
+
+CHECK ALL TEMPLATES, MULTIPLE ACCOURENCES SHOULD BE REF'ED ("enabled Notes").

@@ -84,7 +84,6 @@
         }
     },
 
-
     "$defs": { 
 
         "saptune timestamp": {
@@ -173,7 +172,27 @@
             "description": "Possible systemd system states reported by 'systemctl is-system-running'.",
             "type": "string",
             "enum": ["initializing", "starting", "running", "degraded", "maintenance", "stopping", "offline", "unknown"]    
-        }
+        },
+
+        "saptune parameter name": {
+            "description": "Name of the parameter.",
+            "type": "string",
+            "pattern": "^[^ ]+$"
+        },
+
+         "saptune parameter value": {
+             "description": "Value of a parameter.",
+             "type": "string",
+             "pattern": "UNDER DISCUSSION"
+         },
+
+         "saptune parameter compliance": {
+             "description": "States if the parameter is compliant or not.",
+             "onOf": [
+                 { "type": "boolean" },
+                 { "type": "null" }
+             ]
+         }
     }
 }
 

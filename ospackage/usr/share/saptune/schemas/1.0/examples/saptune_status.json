@@ -16,16 +16,14 @@
         "system state": "running",
         "configured version": "3",
         "package version": "3.0.2", 
-        "enabled Solution": null,
-        "Notes": {
-            "configured additionally": [],
-            "orderly enabled": ["941735", "1771258", "1980196", "2578899", "2684254", "2382421", "2534844", "2993054", "1656250"],
-            "applied": ["1656250", "1771258", "1980196", "2382421", "2534844", "2578899", "2684254", "2993054", "941735"]
-        },
+        "enabled Solution": [],
+        "Notes configured": [],
+        "Notes enabled": ["941735", "1771258", "1980196", "2578899", "2684254", "2382421", "2534844", "2993054", "1656250"],
+        "Notes applied": ["1656250", "1771258", "1980196", "2382421", "2534844", "2578899", "2684254", "2993054", "941735"],
         "staging": {
             "enabled": false,
-            "Notes": [],
-            "Solutions": []
+            "staged Notes": [],
+            "staged Solutions": []
         },
         "remember message": "Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable and start saptune.service by running: 'saptune service enablestart'.\nYour system has not yet been tuned. Please visit `saptune note` and `saptune solution` to start tuning."
     },

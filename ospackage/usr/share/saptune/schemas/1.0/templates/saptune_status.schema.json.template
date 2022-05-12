@@ -4,7 +4,7 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["services", "system state", "configured version", "package version", "enabled Solution", "Notes", "staging", "remember message"]{% endblock %}
+{% block result_required %}["services", "system state", "configured version", "package version", "enabled Solution", "Notes configured", "Notes enabled", "Notes applied", "staging", "remember message"]{% endblock %}
 
 {% block result_properties %}
                 "services": {
@@ -30,18 +30,49 @@
                 }, 
                 "enabled Solution": {
                     "description": "The enabled Solution.",
-                    "oneOf": [
-                        { "$ref": "#/$defs/saptune solution name" },
-                        { "type": "null" }
-                    ]   
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/saptune solution name" },            
+                    "maxItems": 1
                 },
-                "Notes enabled (not from Solution": {},
-
-
-                "Notes applied": 
-
-                "staging": {},
-                "remember message": {}
+                "Notes configured": {
+                    "description": "List of enabled Notes, which have been manually enabled and not by a Solution.",
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/saptune note name" }
+                },
+                "Notes enabled": {
+                    "description": "List of enabled Notes.",
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/saptune note name" }
+                },
+                "Notes applied": {
+                    "description": "List of applied Notes.",
+                    "type": "array",
+                    "items": { "$ref": "#/$defs/saptune note name" }
+                },
+                "staging": {
+                    "description": "Details about staging.",
+                    "type": "object",
+                    "properties": {
+                        "enabled" : {
+                            "description": "States if staging is enabled or not.",
+                            "type": "boolean"
+                        },
+                        "staged Notes": {
+                            "description": "List of Notes present in the staging area.",
+                            "type": "array",
+                            "items": { "$ref": "#/$defs/saptune note name" }
+                        },
+                        "staged Solutions": {
+                            "description": "List of Solutions present in the staging area.",
+                            "type": "array",
+                            "items": { "$ref": "#/$defs/saptune solution name" }
+                        }
+                    }
+                },
+                "remember message": {
+                    "description": "The remember message.",
+                    "type": "string"
+                }
 {% endblock %}
 
 

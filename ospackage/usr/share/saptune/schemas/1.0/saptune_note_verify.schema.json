@@ -1,9 +1,9 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_note_list.schema.json",  
+    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_note_verify.schema.json",  
 
     "title": "",
-    "description": "Describes the output of 'saptune note list.",
+    "description": "Describes the output of 'saptune note verify.",
 
     "type": "object",
     "required": [ "$schema", "publish time", "argv", "pid", "command", "exit code", "result", "messages"],
@@ -36,81 +36,25 @@
         "command": {
             "description": "The saptune command (classifier), which was executed.",
             "type": "string",
-            "enum": ["note list"]
+            "enum": ["note verify"]
         },
 
         "result": {
             "description": "The result (output) of the command.",
             "type": "object",
-            "required": ["available Notes", "enabled Notes", "remember message"],
+            "required": ["Settings"],
             "additionalProperties": false,
             
             "properties": {
                 
-                "available Notes": {
-                    "description": "List of the available Notes.",
-                    "type":  "array",
+                "Settings": {
+                    "description": "List of setting .....",
+                    "type": "array",
                     "items": {
                         "type": "object",
-                        "required": [ "Note ID", "Note description", "Note reference", "Note version", "Note release date", "Note enabled manually", "Note enabled by Solution", "Note reverted manually", "Note override exists", "custom Note" ],
-                        "additionalProperties": false,
                         "properties": {
-                            "Note ID": { 
-                                "description": "Name (ID) of the Note",
-                                "$ref": "#/$defs/saptune note name"
-                            },
-                            "Note description": {
-                                "description": "Description of the Note",
-                                "type": "string" 
-                            },
-                            "Note reference": { 
-                                "description": "References (URL) for the Note",
-                                "type": "array",
-                                "items": { "$ref": "#/$defs/saptune note reference" }
-                            },
-                            "Note version": { 
-                                "description": "Version of the Note", 
-                                "$ref": "#/$defs/saptune note version"
-                            },
-                            "Note release date": { 
-                                "description": "Release date of the Note",
-                                "$ref": "#/$defs/saptune note release date"
-                            }, 
-                            "Note enabled manually": {
-                                "description": "States if the Note was enabled manually.",
-                                "type": "boolean"
-                            }, 
-                            "Note enabled by Solution": {
-                                "description": "States if the Note was enabled by a Solution.",
-                                "type": "boolean"
-                            }, 
-                            "Note reverted manually": {
-                                "description": "States if the Note was reverted manually.",
-                                "type": "boolean"
-                            }, 
-                            "Note override exists": {
-                                "description": "States if an override file exists for the Note.",
-                                "type": "boolean"
-                            }, 
-                            "custom Note": {
-                                "description": "States if the Note is a custom Note.",
-                                "type": "boolean"
-                            }
                         }
-                    }                       
-                },
-                "enabled Notes": {
-                    "description": "List of the enabled Notes in the order they have been enabled",
-                    "type":  "array",
-                    "items": {
-                        "description": "Name (ID) of the Note",
-                        "type": "string", 
-                        "$ref": "#/$defs/saptune note name"
                     }
-                },
-                "remember message": {
-                    "description": "The remember message.",
-                    "type": "string"
                 }            
 
             }
