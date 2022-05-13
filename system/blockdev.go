@@ -144,7 +144,7 @@ func CollectBlockDeviceInfo() []string {
 
 		// Remember, GetSysChoice does not accept the leading /sys/
 		elev, _ := GetSysChoice(path.Join("block", bdev, "queue", "scheduler"))
-		if elev == "" {
+		if elev == "" || elev == "NA" || elev == "PNA" {
 			elev, _ = GetSysString(path.Join("block", bdev, "queue", "scheduler"))
 		}
 		blockMap["IO_SCHEDULER"] = elev
