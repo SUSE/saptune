@@ -29,6 +29,7 @@ const (
 	footnote13   = "[13] The SAP recommendation for nr_request does not work in the context of multiqueue block framework (scheduler=none).\n      Maximal supported value by the hardware is MAXVAL"
 	footnote14   = "[14] the parameter value exceeds the maximum possible number of open files. Check and increase fs.nr_open if really needed."
 	footnote15   = "[15] the parameter is only used to calculate the size of tmpfs (/dev/shm)"
+	footnote16   = "[16] parameter not available on the system, setting not possible"
 )
 
 // set 'unsupported' footnote regarding the architecture
@@ -83,10 +84,15 @@ func setUsNa(actVal, compliant, comment string, footnote []string) (string, stri
 		compliant = compliant + " [1]"
 		comment = comment + " [1]"
 		footnote[0] = footnote1
-	case "NA", "":
+	case "NA":
 		compliant = compliant + " [2]"
 		comment = comment + " [2]"
 		footnote[1] = footnote2
+	case "PNA":
+		compliant = compliant + " [16]"
+		compliant = strings.Replace(compliant, "no ", " - ", 1)
+		comment = comment + " [16]"
+		footnote[15] = footnote16
 	}
 	return compliant, comment, footnote
 }

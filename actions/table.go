@@ -17,15 +17,11 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 15, 15)
+	footnote := make([]string, 16)
 	reminder := make(map[string]string)
 	override := ""
 	comment := ""
 	hasDiff := false
-	// for sysctl and sys parameter not available on the system
-	// the actual value is empty, but for better/consolidated output
-	// set it to 'NA'. Because of many internal dependencies do not
-	// change the actual value during 'Initialize' (for now)
 	pAct := "NA"
 	pExp := ""
 
@@ -64,7 +60,9 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 		}
 
 		// print table body
-		if comparison.ActualValueJS != "" {
+		if comparison.ActualValueJS == "PNA" {
+			pAct = "NA"
+		} else {
 			pAct = strings.Replace(comparison.ActualValueJS, "\t", " ", -1)
 		}
 		pExp = strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1)

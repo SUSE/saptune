@@ -211,7 +211,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					// if this should change in the future use
 					// !strings.Contains(key.String(), "grub")
 					// instead of !isInternalGrub(key.String())
-					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && actualValue.(string) != "" && key.String() != "VSZ_TMPFS_PERCENT" {
+					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && actualValue.(string) != "PNA" && key.String() != "VSZ_TMPFS_PERCENT" {
 						allMatch = false
 					}
 				}

@@ -186,7 +186,7 @@ func GetGovernor() map[string]string {
 				// GetSysString needs cpuDirSys as path - without /sys
 				gov, _ = GetSysString(path.Join(cpuDirSys, entry.Name(), "cpufreq", "scaling_governor"))
 			}
-			if gov == "" {
+			if gov == "" || gov == "NA" || gov == "PNA" {
 				gov = "none"
 			}
 			if oldgov == "99" {

@@ -25,6 +25,10 @@ func TestOptSysctlVal(t *testing.T) {
 	if val != "100 330 180" {
 		t.Error(val)
 	}
+	val = OptSysctlVal(op, "TestParam", "PNA", "100 330 180")
+	if val != "100 330 180" {
+		t.Error(val)
+	}
 	val = OptSysctlVal(op, "TestParam", "120 300 200", "")
 	if val != "" {
 		t.Error(val)
