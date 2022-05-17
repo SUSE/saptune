@@ -15,10 +15,7 @@
                         "required": [ "Note ID", "Note description", "Note reference", "Note version", "Note release date", "Note enabled manually", "Note enabled by Solution", "Note reverted manually", "Note override exists", "custom Note" ],
                         "additionalProperties": false,
                         "properties": {
-                            "Note ID": { 
-                                "description": "Name (ID) of the Note",
-                                "$ref": "#/$defs/saptune note name"
-                            },
+                            "Note ID": { "$ref": "#/$defs/saptune note id" },
                             "Note description": {
                                 "description": "Description of the Note",
                                 "type": "string" 
@@ -28,14 +25,8 @@
                                 "type": "array",
                                 "items": { "$ref": "#/$defs/saptune note reference" }
                             },
-                            "Note version": { 
-                                "description": "Version of the Note", 
-                                "$ref": "#/$defs/saptune note version"
-                            },
-                            "Note release date": { 
-                                "description": "Release date of the Note",
-                                "$ref": "#/$defs/saptune note release date"
-                            }, 
+                            "Note version": { "$ref": "#/$defs/saptune note version"  },
+                            "Note release date": { "$ref": "#/$defs/saptune note release date" }, 
                             "Note enabled manually": {
                                 "description": "States if the Note was enabled manually.",
                                 "type": "boolean"
@@ -62,11 +53,7 @@
                 "enabled Notes": {
                     "description": "List of the enabled Notes in the order they have been enabled",
                     "type":  "array",
-                    "items": {
-                        "description": "Name (ID) of the Note",
-                        "type": "string", 
-                        "$ref": "#/$defs/saptune note name"
-                    }
+                    "items": { "$ref": "#/$defs/saptune note id" }
                 },
                 "remember message": {
                     "description": "The remember message.",

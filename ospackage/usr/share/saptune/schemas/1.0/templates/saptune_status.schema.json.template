@@ -4,21 +4,31 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["services", "system state", "configured version", "package version", "enabled Solution", "Notes configured", "Notes enabled", "Notes applied", "staging", "remember message"]{% endblock %}
+{% block result_required %}["services", "system state", "virtualization", "configured version", "package version", "enabled Solution", "Notes configured", "Notes enabled", "Notes applied", "staging", "remember message"]{% endblock %}
 
 {% block result_properties %}
                 "services": {
                     "description": "The states of various systemd services related to saptune.",
                     "type": "object",
+                    "required": [ "saptune", "sapconf", "tuned" ],
+                    "additionalProperties": true,  
+                    "propertyNames": {
+                        "enum": [ "saptune", "sapconf", "tuned", "tuned profile" ]
+                    },
                     "properties": {
                         "saptune": { "$ref": "#/$defs/systemd state" },
                         "sapconf": { "$ref": "#/$defs/systemd state" },
-                        "tuned": { "$ref": "#/$defs/systemd state" }
+                        "tuned": { "$ref": "#/$defs/systemd state" },
+                        "tuned profile": {
+                            "description": "The currently set tuned profile, if `tuned.service` is active.",
+                            "type": "string"
+                        }
                     }
                 },
-                "system state": { 
-                    "description": "The system state from systemd point of view.",
-                    "$ref": "#/$defs/systemd system state"
+                "system state": { "$ref": "#/$defs/systemd system state" },
+                "virtualization": {
+                    "description":  "The virtualization technology of the system (see `systemd-detect-virt --list`).",
+                    "enum": [ "none","kvm","amazon","qemu","bochs","xen","uml","vmware","oracle","microsoft","zvm","parallels","bhyve","qnx","acrn","powervm","vm-other","systemd-nspawn","lxc-libvirt","lxc","openvz","docker","podman","rkt","wsl","proot","container-other" ]
                 },
                 "configured version": {
                     "description":  "The saptune major version as configured in `SAPTUNE_VERSION` of `/etc/sysconfig/saptune`.",
@@ -37,21 +47,23 @@
                 "Notes configured": {
                     "description": "List of enabled Notes, which have been manually enabled and not by a Solution.",
                     "type": "array",
-                    "items": { "$ref": "#/$defs/saptune note name" }
+                    "items": { "$ref": "#/$defs/saptune note id" }
                 },
                 "Notes enabled": {
                     "description": "List of enabled Notes.",
                     "type": "array",
-                    "items": { "$ref": "#/$defs/saptune note name" }
+                    "items": { "$ref": "#/$defs/saptune note id" }
                 },
                 "Notes applied": {
                     "description": "List of applied Notes.",
                     "type": "array",
-                    "items": { "$ref": "#/$defs/saptune note name" }
+                    "items": { "$ref": "#/$defs/saptune note id" }
                 },
                 "staging": {
                     "description": "Details about staging.",
                     "type": "object",
+                    "required": [ "enabled", "staged Notes", "staged Solutions" ],
+                    "additionalProperties": false,
                     "properties": {
                         "enabled" : {
                             "description": "States if staging is enabled or not.",
@@ -60,7 +72,7 @@
                         "staged Notes": {
                             "description": "List of Notes present in the staging area.",
                             "type": "array",
-                            "items": { "$ref": "#/$defs/saptune note name" }
+                            "items": { "$ref": "#/$defs/saptune note id" }
                         },
                         "staged Solutions": {
                             "description": "List of Solutions present in the staging area.",
@@ -75,7 +87,3 @@
                 }
 {% endblock %}
 
-
-configured Notes:       1656250 1980196 2382421 2534844 2684254 2993054 
-order of enabled Notes: 941735 1771258 1980196 2578899 2684254 2382421 2534844 2993054 1656250
-applied Notes:          

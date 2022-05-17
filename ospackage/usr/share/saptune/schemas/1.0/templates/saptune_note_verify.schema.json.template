@@ -15,9 +15,9 @@
                         "required": [ "Note ID", "Note version", "parameter", "expected value", "override value", "actual value"],
                         "additionalProperties": false,
                         "properties": {
-                            "Note ID": { "$ref": "#/$defs/saptune note name" },
+                            "Note ID": { "$ref": "#/$defs/saptune note id" },
                             "Note version": { "$ref": "#/$defs/saptune note version" },
-                            "parameter": { "$ref": "#/$defs/saptune parameter name" },
+                            "parameter": { "$ref": "#/$defs/saptune parameter id" },
                             "expected value": { "$ref": "#/$defs/saptune parameter value" },
                             "override value": { "$ref": "#/$defs/saptune parameter value" },
                             "actual value": { "$ref": "#/$defs/saptune parameter value" },
@@ -30,7 +30,7 @@
                     "type":  "array",
                     "items": {
                         "type": "string",
-                        "$ref": "#/$defs/saptune note name"
+                        "$ref": "#/$defs/saptune note id"
                     }                       
                 },
                 "system compliance": {
@@ -39,4 +39,5 @@
                 }
 {% endblock %}
 
+                            
                             

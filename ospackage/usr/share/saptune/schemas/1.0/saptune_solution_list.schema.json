@@ -24,7 +24,7 @@
             "description": "The entire saptune command as it was called.",
             "type": "string",
             "minLength": 7,
-            "examples": ["saptune --format json note list", "saptune --format json version", "saptune --format json status"]
+            "examples": ["saptune --format=json note list", "saptune --format=json version", "saptune --format=json json status"]
         },
 
         "pid": {
@@ -55,16 +55,11 @@
                         "required": [ "Solution name", "Note list", "Solution enabled", "Solution override exists", "custom Solution", "Solution deprecated" ],
                         "additionalProperties": false,
                         "properties": {
-                            "Solution name": { 
-                                "description": "Name of the Solution",
-                                "$ref": "#/$defs/saptune solution name"
-                            },
+                            "Solution name": { "$ref": "#/$defs/saptune solution name" },
                             "Note list": {
                                 "description": "List of Notes belonging to the Solution.",
                                 "type": "array",
-                                "items": {
-                                    "$ref": "#/$defs/saptune note name" 
-                                } 
+                                "items": { "$ref": "#/$defs/saptune note id" } 
                             },
                             "Solution enabled": {
                                 "description": "States if the Solution is enabled.",
@@ -127,7 +122,6 @@
         }
     },
 
-
     "$defs": { 
 
         "saptune timestamp": {
@@ -151,8 +145,8 @@
             "examples": ["1.3.5", "0.3.45"]
         },
 
-        "saptune note name": {
-            "description": "Format of Note name (simplified).",
+        "saptune note id": {
+            "description": "Format of Note ID (simplified).",
             "type": "string",
             "pattern": "^[^ ]+$",
             "examples": ["1656250", "SAP_BOBJ"]
@@ -199,23 +193,38 @@
 
         "systemd state": {
             "description": "Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages.",
-            "oneOf": [
-                { 
-                    "type": "array",
-                    "prefixItems": [
-                        { "$ref": "#/$defs/systemd state is-enabled" },
-                        { "$ref": "#/$defs/systemd state is-active" }
-                    ]                    
-                },
-                { "type": "string", "const": "not available" }
+            "type": "array",
+            "prefixItems": [
+                { "$ref": "#/$defs/systemd state is-enabled" },
+                { "$ref": "#/$defs/systemd state is-active" }
             ],
             "examples": [["disabled", "inactive"], ["enabled", "active"]]
         },
-
+    
         "systemd system state": {
             "description": "Possible systemd system states reported by 'systemctl is-system-running'.",
             "type": "string",
             "enum": ["initializing", "starting", "running", "degraded", "maintenance", "stopping", "offline", "unknown"]    
-        }
+        },
+
+        "saptune parameter id": {
+            "description": "Name of the parameter.",
+            "type": "string",
+            "pattern": "^[^ ]+$"
+        },
+
+         "saptune parameter value": {
+             "description": "Value of a parameter.",
+             "type": "string",
+             "pattern": "UNDER DISCUSSION"
+         },
+
+         "saptune parameter compliance": {
+             "description": "States if the parameter is compliant or not.",
+             "onOf": [
+                 { "type": "boolean" },
+                 { "type": "null" }
+             ]
+         }
     }
 }

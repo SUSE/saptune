@@ -15,16 +15,11 @@
                         "required": [ "Solution name", "Note list", "Solution enabled", "Solution override exists", "custom Solution", "Solution deprecated" ],
                         "additionalProperties": false,
                         "properties": {
-                            "Solution name": { 
-                                "description": "Name of the Solution",
-                                "$ref": "#/$defs/saptune solution name"
-                            },
+                            "Solution name": { "$ref": "#/$defs/saptune solution name" },
                             "Note list": {
                                 "description": "List of Notes belonging to the Solution.",
                                 "type": "array",
-                                "items": {
-                                    "$ref": "#/$defs/saptune note name" 
-                                } 
+                                "items": { "$ref": "#/$defs/saptune note id" } 
                             },
                             "Solution enabled": {
                                 "description": "States if the Solution is enabled.",

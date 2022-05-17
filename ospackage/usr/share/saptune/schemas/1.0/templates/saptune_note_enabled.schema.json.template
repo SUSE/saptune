@@ -10,9 +10,6 @@
                 "enabled Notes": {
                     "description": "List of the enabled Notes.",
                     "type":  "array",
-                    "items": {
-                        "type": "string",
-                        "$ref": "#/$defs/saptune note name"
-                    }                       
+                    "items": { "$ref": "#/$defs/saptune note id" }                       
                 }            
 {% endblock %}

@@ -11,8 +11,9 @@
         "services": {
             "saptune": ["disabled", "inactive"],
             "sapconf": ["enabled", "active"],
-            "tuned": "not available"
+            "tuned": []
         },
+        "virtualization": "none",
         "system state": "running",
         "configured version": "3",
         "package version": "3.0.2", 
