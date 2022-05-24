@@ -68,11 +68,12 @@ saptune.service:        disabled/active
 saptune package:        'undef'
 configured version:     '3'
 configured Solution:    sol1
-configured Notes:       2205917 
-order of enabled Notes: 2205917
+manually enabled Notes: 2205917 
+enabled Notes:          2205917
 applied Notes:          
 staging:                disabled
-staging area:           
+staged Notes:           
+staged Solutions:       
 
 sapconf.service:        not available
 tuned.service:          disabled/active (profile: '%s')
@@ -197,11 +198,12 @@ saptune.service:        disabled/active
 saptune package:        'undef'
 configured version:     '3'
 configured Solution:    sol1
-configured Notes:       2205917 
-order of enabled Notes: 2205917
+manually enabled Notes: 2205917 
+enabled Notes:          2205917
 applied Notes:          
 staging:                disabled
-staging area:           
+staged Notes:           
+staged Solutions:       
 
 sapconf.service:        not available
 tuned.service:          disabled/active (profile: '%s')

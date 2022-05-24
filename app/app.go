@@ -59,11 +59,23 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 	return
 }
 
-// PrintNoteApplyOrder prints out the order of the currently applied notes
+// PrintNoteApplyOrder prints out the order of the currently enabled notes
 func (app *App) PrintNoteApplyOrder(writer io.Writer) {
 	if len(app.NoteApplyOrder) != 0 {
 		fmt.Fprintf(writer, "\ncurrent order of enabled notes is: %s\n\n", strings.Join(app.NoteApplyOrder, " "))
 	}
+}
+
+// AppliedNotes returns the currently applied Notes in 'NoteApplyOrder' order
+func (app *App) AppliedNotes() string {
+	var notesApplied string
+	for _, note := range app.NoteApplyOrder {
+		if _, ok := app.IsNoteApplied(note); ok {
+			notesApplied = fmt.Sprintf("%s%s ", notesApplied, note)
+		}
+	}
+	notesApplied = strings.TrimSpace(notesApplied)
+	return notesApplied
 }
 
 // PositionInNoteApplyOrder returns the position of the note within the slice.

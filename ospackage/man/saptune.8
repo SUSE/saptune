@@ -124,15 +124,15 @@ configured Solution
 .br
 The entry 'configured Solution' shows the Solution, which was manually applied by '\fIsaptune solution apply <solution name>\fP'.
 .IP \[bu]
-configured Notes
+manually enabled Notes, sorted lexicographically
 .br
-The entry 'configured Notes' shows all Notes, which were manually applied by '\fIsaptune note apply <note name>\fP'. They are \fBone\fP part of the list of notes in the entry 'applied Notes' and 'order of enabled Notes'.
+The entry 'manually enabled Notes' shows all Notes, which were manually applied by '\fIsaptune note apply <note name>\fP'. They are \fBone\fP part of the list of notes in the entry 'applied Notes' and 'enabled Notes'.
 .IP \[bu]
 all selected Notes in applied order
 .br
-The list of 'order of enabled Notes' includes all Notes from 'configured Notes' and additional all the Notes related to the 'configured Solution' too. The list shows the order in which these Notes were applied and will be re-applied after a system reboot, if the \fBsaptune.service\fP is enabled.
+The list of 'enabled Notes' includes all Notes from 'manually enabled Notes' and additional all the Notes related to the 'configured Solution' too. The list shows the order in which these Notes were applied and will be re-applied after a system reboot, if the \fBsaptune.service\fP is enabled.
 .IP \[bu]
-all currently applied Notes, sorted lexicographically
+all currently applied Notes in applied order
 .br
 The list of 'applied Notes' includes the \fBmanually\fP applied Notes. Additional it includes all the Notes related to the 'configured Solution' too. These Notes get applied when using '\fIsaptune solution apply\fP'. The solutions and their related notes can be listed by '\fIsaptune solution list\fP'.
 
@@ -140,7 +140,9 @@ And additional 'applied Notes' shows you, if your system is '\fBactively\fP' tun
 .IP \[bu]
 state of staging
 .IP \[bu]
-all objects in staging area
+staged Notes
+.IP \[bu]
+staged Solutions
 .IP \[bu]
 status of sapconf.service (enabled/disabled, active/inactive/failed/...the other possible unit states...)
 .IP \[bu]

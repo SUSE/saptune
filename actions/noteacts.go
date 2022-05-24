@@ -428,12 +428,7 @@ func NoteActionEnabled(writer io.Writer, tuneApp *app.App) {
 // NoteActionApplied lists all applied Note definitions as list separated
 // by blanks
 func NoteActionApplied(writer io.Writer, tuneApp *app.App) {
-	var notesApplied string
-	for _, note := range tuneApp.NoteApplyOrder {
-		if _, ok := tuneApp.IsNoteApplied(note); ok {
-			notesApplied = fmt.Sprintf("%s%s ", notesApplied, note)
-		}
-	}
-	fmt.Fprintf(writer, "%s", strings.TrimSpace(notesApplied))
+	notesApplied := tuneApp.AppliedNotes()
+	fmt.Fprintf(writer, "%s", notesApplied)
 	system.Jcollect(strings.Split(notesApplied, " "))
 }

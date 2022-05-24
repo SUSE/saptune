@@ -517,7 +517,7 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App) bool {
 		notTuned = false
 	}
 	fmt.Fprintf(writer, "\n")
-	fmt.Fprintf(writer, "configured Notes:       ")
+	fmt.Fprintf(writer, "manually enabled Notes: ")
 	if len(tuneApp.TuneForNotes) > 0 {
 		for _, noteID := range tuneApp.TuneForNotes {
 			fmt.Fprintf(writer, noteID+" ")
@@ -525,16 +525,14 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App) bool {
 		notTuned = false
 	}
 	fmt.Fprintf(writer, "\n")
-	fmt.Fprintf(writer, "order of enabled Notes: ")
+	fmt.Fprintf(writer, "enabled Notes:          ")
 	if len(tuneApp.NoteApplyOrder) != 0 {
 		fmt.Fprintf(writer, "%s", strings.Join(tuneApp.NoteApplyOrder, " "))
 	}
 	fmt.Fprintf(writer, "\n")
 	fmt.Fprintf(writer, "applied Notes:          ")
-	appliedNotes, _ := tuneApp.State.List()
-	if len(appliedNotes) != 0 {
-		fmt.Fprintf(writer, "%s", strings.Join(appliedNotes, " "))
-	}
+	appliedNotes := tuneApp.AppliedNotes()
+	fmt.Fprintf(writer, "%s", appliedNotes)
 	fmt.Fprintf(writer, "\n")
 	return notTuned
 }
@@ -563,8 +561,9 @@ func printStagingStatus(writer io.Writer) {
 	} else {
 		fmt.Fprintf(writer, "disabled\n")
 	}
-	_, files := system.ListDir(StagingSheets, "")
-	fmt.Fprintf(writer, "staging area:           %s\n", strings.Join(files, " "))
+	stNotes, stSols := listStageNotesAndSols()
+	fmt.Fprintf(writer, "staged Notes:           %s\n", strings.Join(stNotes, " "))
+	fmt.Fprintf(writer, "staged Solutions:       %s\n", strings.Join(stSols, " "))
 	fmt.Fprintln(writer, "")
 }
 
