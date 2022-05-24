@@ -52,7 +52,7 @@ var RPMVersion = "undef"
 // built and released packages (not possible because of 'reproducible' builds)
 var RPMDate = "undef"
 
-// solutionSelector used in solutionacts and statgingacts
+// solutionSelector used in solutionacts and stagingacts
 var solutionSelector = system.GetSolutionSelector()
 
 // saptune configuration file
@@ -81,7 +81,7 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 
 	// check for test packages
 	if RPMDate != "undef" {
-		system.NoticeLog("ATTENTION: You are running a test version of saptune which is not supported for production use")
+		system.NoticeLog("ATTENTION: You are running a test version (%s from %s) of saptune which is not supported for production use", RPMVersion, RPMDate)
 	}
 
 	switch system.CliArg(1) {
@@ -263,7 +263,7 @@ func switchOffColor() {
 
 // PrintHelpAndExit prints the usage and exit
 func PrintHelpAndExit(writer io.Writer, exitStatus int) {
-	if system.GetFlagVal("output") == "json" {
+	if system.GetFlagVal("format") == "json" {
 		system.JInvalid(exitStatus)
 	}
 	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.

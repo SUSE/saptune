@@ -78,12 +78,12 @@ func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 
 // SolutionActionList lists all available solution definitions
 func SolutionActionList(writer io.Writer, tuneApp *app.App) {
-	solutionList := []system.SolListEntry{}
-	solutionListEntry := system.SolListEntry{}
+	jsolutionList := []system.JSolListEntry{}
+	jsolutionListEntry := system.JSolListEntry{}
 	setColor := false
 	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):\n")
 	for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
-		solutionListEntry = system.SolListEntry{
+		jsolutionListEntry = system.JSolListEntry{
 			SolName:     "",
 			NotesList:   []string{},
 			SolEnabled:  false,
@@ -95,22 +95,22 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 		if len(solution.OverrideSolutions[solutionSelector][solName]) != 0 {
 			// override solution
 			format = " O" + format
-			solutionListEntry.SolOverride = true
+			jsolutionListEntry.SolOverride = true
 		}
 		if len(solution.CustomSolutions[solutionSelector][solName]) != 0 {
 			// custom solution
 			format = " C" + format
-			solutionListEntry.CustomSol = true
+			jsolutionListEntry.CustomSol = true
 		}
 		if _, ok := solution.DeprecSolutions[solutionSelector][solName]; ok {
 			// deprecated solution
 			format = " D" + format
-			solutionListEntry.DepSol = true
+			jsolutionListEntry.DepSol = true
 		}
 		if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
 			// enabled solution
 			format = " " + setGreenText + "*" + format
-			solutionListEntry.SolEnabled = true
+			jsolutionListEntry.SolEnabled = true
 			setColor = true
 		}
 
@@ -138,17 +138,17 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 		format = format + "\n"
 		//fmt.Printf(format, solName)
 		fmt.Fprintf(writer, format, solName)
-		solutionListEntry.SolName = solName
-		solutionListEntry.NotesList = solution.AllSolutions[solutionSelector][solName]
-		solutionList = append(solutionList, solutionListEntry)
+		jsolutionListEntry.SolName = solName
+		jsolutionListEntry.NotesList = solution.AllSolutions[solutionSelector][solName]
+		jsolutionList = append(jsolutionList, jsolutionListEntry)
 	}
 	remember := bytes.Buffer{}
-	if system.GetFlagVal("output") == "json" {
+	if system.GetFlagVal("format") == "json" {
 		writer = &remember
 	}
 	rememberMessage(writer)
-	result := system.SolList{
-		SolsList: solutionList,
+	result := system.JSolList{
+		SolsList: jsolutionList,
 		Msg:      remember.String(),
 	}
 	system.Jcollect(result)
@@ -214,7 +214,8 @@ func SolutionActionEnabled(writer io.Writer, tuneApp *app.App) {
 	if len(tuneApp.TuneForSolutions) != 0 {
 		fmt.Fprintf(writer, "%s", tuneApp.TuneForSolutions[0])
 	}
-	system.Jcollect(strings.Join(tuneApp.TuneForSolutions, " "))
+	system.Jcollect(tuneApp.TuneForSolutions)
+	//system.Jcollect(strings.Join(tuneApp.TuneForSolutions, " "))
 }
 
 // SolutionActionApplied prints out the applied solution
@@ -230,7 +231,7 @@ func SolutionActionApplied(writer io.Writer, tuneApp *app.App) {
 			}
 		}
 	}
-	system.Jcollect(solName)
+	system.Jcollect(strings.Split(solName, " "))
 }
 
 // SolutionActionCustomise creates an override file and allows to editing the

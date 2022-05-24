@@ -77,14 +77,17 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 // NoteActionList lists all available Note definitions
 func NoteActionList(writer io.Writer, tuneApp *app.App) {
 	fmt.Fprintf(writer, "\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note):\n")
-	noteList := []system.NoteListEntry{}
-	noteListEntry := system.NoteListEntry{}
+	jnoteList := []system.JNoteListEntry{}
+	jnoteListEntry := system.JNoteListEntry{}
 
 	solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 	for _, noteID := range tuneApp.GetSortedAllNotes() {
-		noteListEntry = system.NoteListEntry{
+		jnoteListEntry = system.JNoteListEntry{
 			NoteID:       "",
 			NoteDesc:     "",
+			NoteRef:      make([]string, 0),
+			NoteVers:     "",
+			NoteRdate:    "",
 			ManEnabled:   false,
 			SolEnabled:   false,
 			ManReverted:  false,
@@ -99,43 +102,43 @@ func NoteActionList(writer io.Writer, tuneApp *app.App) {
 		if _, err := os.Stat(fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)); err == nil {
 			// override file exists
 			format = " O" + format
-			noteListEntry.NoteOverride = true
+			jnoteListEntry.NoteOverride = true
 		}
 		if _, err := os.Stat(fmt.Sprintf("%s%s.conf", ExtraTuningSheets, noteID)); err == nil {
 			// custom note
 			format = " C" + format
-			noteListEntry.CustomNote = true
+			jnoteListEntry.CustomNote = true
 		}
 		if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
 			j := tuneApp.PositionInNoteApplyOrder(noteID)
 			if j < 0 { // noteID was reverted manually
 				format = " " + setGreenText + "-" + format + resetTextColor
-				noteListEntry.ManReverted = true
+				jnoteListEntry.ManReverted = true
 			} else {
 				format = " " + setGreenText + "*" + format + resetTextColor
-				noteListEntry.SolEnabled = true
+				jnoteListEntry.SolEnabled = true
 			}
 		} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
 			format = " " + setGreenText + "+" + format + resetTextColor
-			noteListEntry.ManEnabled = true
+			jnoteListEntry.ManEnabled = true
 		}
 		// handle special highlighting in Note description
 		// like the 'only' in SAP Note 1656250
 		bonly := " " + setBoldText + "only" + resetBoldText + " "
 		nname := strings.Replace(noteObj.Name(), " only ", bonly, 1)
 		fmt.Fprintf(writer, format, noteID, nname)
-		noteListEntry.NoteID = noteID
-		noteListEntry.NoteDesc = noteObj.Name()
-		noteList = append(noteList, noteListEntry)
+		jnoteListEntry.NoteID = noteID
+		jnoteListEntry.NoteDesc, jnoteListEntry.NoteVers, jnoteListEntry.NoteRdate, jnoteListEntry.NoteRef = note.GetNoteHeadData(noteObj)
+		jnoteList = append(jnoteList, jnoteListEntry)
 	}
 	tuneApp.PrintNoteApplyOrder(writer)
 	remember := bytes.Buffer{}
-	if system.GetFlagVal("output") == "json" {
+	if system.GetFlagVal("format") == "json" {
 		writer = &remember
 	}
 	rememberMessage(writer)
-	result := system.NoteList{
-		NotesList:  noteList,
+	result := system.JNoteList{
+		NotesList:  jnoteList,
 		NotesOrder: tuneApp.NoteApplyOrder,
 		Msg:        remember.String(),
 	}

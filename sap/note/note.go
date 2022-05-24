@@ -122,6 +122,19 @@ func (opts *TuningOptions) GetSortedIDs() (ret []string) {
 	return
 }
 
+// GetNoteHeadData provides description, reference, version and released date
+// of a given noteObj
+func GetNoteHeadData(obj Note) (desc, vers, date string, refs []string) {
+	objConfFile := reflect.ValueOf(obj).FieldByName("ConfFilePath").String()
+	if objConfFile != "" {
+		desc = txtparser.GetINIFileVersionSectionEntry(objConfFile, "name")
+		vers = txtparser.GetINIFileVersionSectionEntry(objConfFile, "version")
+		date = txtparser.GetINIFileVersionSectionEntry(objConfFile, "date")
+		refs = txtparser.GetINIFileVersionSectionRefs(objConfFile)
+	}
+	return
+}
+
 // FieldComparison records the actual value versus expected value for
 // a note field. The field name has to be the actual name in Go struct.
 type FieldComparison struct {

@@ -50,13 +50,13 @@ func GetFlagVal(flag string) string {
 // 'normal' arguments
 // returns a map of Flags (set/not set or value) and a slice containing the
 // remaining arguments
-// possible Flags - force, dryrun, help, version, output, colorscheme
-// on command line - --force, --dry-run or --dryrun, --help, --version, --color-scheme, --out or --output
-// Some Flags (like 'output') can have a value (--out=json or --output=csv)
+// possible Flags - force, dryrun, help, version, format, colorscheme
+// on command line - --force, --dry-run or --dryrun, --help, --version, --color-scheme, --format
+// Some Flags (like 'format') can have a value (--format=json or --format=csv)
 func ParseCliArgs() ([]string, map[string]string) {
 	stArgs := []string{os.Args[0]}
 	// supported flags
-	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "show-non-compliant": "false", "output": "", "colorscheme": "", "notSupported": ""}
+	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "show-non-compliant": "false", "format": "", "colorscheme": "", "notSupported": ""}
 	for _, arg := range os.Args[1:] {
 		if strings.HasPrefix(arg, "--") || strings.HasPrefix(arg, "-") {
 			// argument is a flag
@@ -83,10 +83,9 @@ func handleFlags(arg string, flags map[string]string) {
 
 // handleValueFlags checks for valid flags with value in the CLI arg list
 func handleValueFlags(arg string, matches []string, flags map[string]string) {
-	if strings.Contains(arg, "-out") {
-		// --out=screen or --output=json
-		matches[1] = "--output"
-		flags["output"] = matches[2]
+	if strings.Contains(arg, "--format") {
+		// --format=json
+		flags["format"] = matches[2]
 	}
 	if strings.Contains(arg, "-colorscheme") {
 		// --colorscheme=zebra
@@ -138,7 +137,7 @@ func ChkCliSyntax() bool {
 	cmd := 2
 	cmdOpt := 3
 
-	if IsFlagSet("output") {
+	if IsFlagSet("format") {
 		realm = realm + 1
 		realmOpt = realmOpt + 1
 		cmd = cmd + 1
@@ -190,9 +189,8 @@ func chkGlobalSyntax(stArgs []string, pglob, pcopt int) bool {
 
 	// check global option
 	// saptune -out=FORMAT
-	// falls sich Sören nicht darauf einlässt
 	// && !strings.HasPrefix(sArgs[1], "-o="
-	if IsFlagSet("output") && !strings.Contains(stArgs[pglob], "-out") {
+	if IsFlagSet("format") && !strings.Contains(stArgs[pglob], "--format") {
 		ret = false
 	}
 	return ret

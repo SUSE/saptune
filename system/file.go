@@ -209,7 +209,7 @@ func WriteBackupValue(value, fileName string) {
 
 // AddGap adds an empty line to improve readability of the screen output
 func AddGap(writer io.Writer) {
-	if GetFlagVal("output") == "" {
+	if GetFlagVal("format") == "" {
 		fmt.Fprintf(writer, "\n")
 	}
 }
