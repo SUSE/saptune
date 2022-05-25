@@ -84,7 +84,7 @@ func TestIsValidGovernor(t *testing.T) {
 	if err != nil {
 		t.Skip("directory '/sys/devices/system/cpu/cpu0/cpufreq' does not exist. System does not support scaling governor, skipping test")
 	}
-	gov, _ := GetSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
+	gov, _ := GetSysString("devices/system/cpu/cpu0/cpufreq/scaling_governor")
 	if !isValidGovernor("cpu0", gov) {
 		t.Fatal(gov)
 	}

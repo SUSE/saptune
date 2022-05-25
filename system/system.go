@@ -183,13 +183,15 @@ func OutIsTerm(writer *os.File) bool {
 // InitOut initializes the various output methodes
 // currently only json and screen are supported
 func InitOut(logSwitch map[string]string) {
-	if GetFlagVal("output") == "json" {
+	if GetFlagVal("format") == "json" {
 		// if writing json format, switch off
 		// the stdout and stderr output of the log messages
 		logSwitch["verbose"] = "off"
 		logSwitch["error"] = "off"
 		// switch off stdout
-		os.Stdout, _ = os.Open(os.DevNull)
+		if os.Getenv("SAPTUNE_JDEBUG") != "on" {
+			os.Stdout, _ = os.Open(os.DevNull)
+		}
 		jInit()
 	}
 }

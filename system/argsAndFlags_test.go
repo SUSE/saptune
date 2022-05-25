@@ -50,11 +50,11 @@ func TestCliArg(t *testing.T) {
 	if IsFlagSet("version") {
 		t.Errorf("Test failed, expected 'version' flag as 'false', but got 'true'")
 	}
-	if IsFlagSet("output") {
-		t.Errorf("Test failed, expected 'output' flag as 'false', but got 'true'")
+	if IsFlagSet("format") {
+		t.Errorf("Test failed, expected 'format' flag as 'false', but got 'true'")
 	}
 	expected = ""
-	actual = GetFlagVal("output")
+	actual = GetFlagVal("format")
 	if actual != expected {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
 	}
@@ -70,7 +70,7 @@ func TestCliArg(t *testing.T) {
 }
 
 func TestCliFlags(t *testing.T) {
-	os.Args = []string{"saptune", "note", "list", "--out=json", "--force", "--dryrun", "--help", "--version"}
+	os.Args = []string{"saptune", "note", "list", "--format=json", "--force", "--dryrun", "--help", "--version"}
 	// parse command line, to get the test parameters
 	saptArgs, saptFlags = ParseCliArgs()
 
@@ -86,11 +86,11 @@ func TestCliFlags(t *testing.T) {
 	if !IsFlagSet("version") {
 		t.Errorf("Test failed, expected 'version' flag as 'true', but got 'false'")
 	}
-	if !IsFlagSet("output") {
-		t.Errorf("Test failed, expected 'output' flag as 'true', but got 'false'")
+	if !IsFlagSet("format") {
+		t.Errorf("Test failed, expected 'format' flag as 'true', but got 'false'")
 	}
 	expected := "json"
-	actual := GetFlagVal("output")
+	actual := GetFlagVal("format")
 	if actual != expected {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
 	}

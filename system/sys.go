@@ -16,7 +16,7 @@ func GetSysString(parameter string) (string, error) {
 	val, err := ioutil.ReadFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)))
 	if err != nil {
 		WarningLog("failed to read sys string key '%s': %v", parameter, err)
-		return "", err
+		return "PNA", err
 	}
 	return strings.TrimSpace(string(val)), nil
 }
@@ -27,7 +27,7 @@ func GetSysChoice(parameter string) (string, error) {
 	val, err := ioutil.ReadFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)))
 	if err != nil {
 		WarningLog("failed to read sys key of choices '%s': %v", parameter, err)
-		return "", err
+		return "PNA", err
 	}
 	// Split up the choices
 	allChoices := consecutiveSpaces.Split(string(val), -1)
@@ -51,6 +51,10 @@ func GetSysInt(parameter string) (int, error) {
 
 // SetSysString write a string /sys/ value.
 func SetSysString(parameter, value string) error {
+	if value == "PNA" {
+		WarningLog("value is '%s', so sys key '%s' is/was not supported by os, skipping.", value, parameter)
+		return nil
+	}
 	err := ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
 	if os.IsNotExist(err) {
 		WarningLog("sys key '%s' is not supported by os, skipping.", parameter)

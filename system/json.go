@@ -9,7 +9,7 @@ import (
 )
 
 var schemaDir = "file:///usr/share/saptune/schemas/1.0/"
-var supportedRAC = map[string]bool{"daemon start": false, "daemon status": false, "daemon stop": false, "service start": false, "service status": false, "service stop": false, "service restart": false, "service takeover": false, "service enable": false, "service disable": false, "service enablestart": false, "service disablestop": false, "note list": true, "note revertall": false, "note enabled": true, "note applied": true, "note apply": false, "note simulate": false, "note customise": false, "note create": false, "note edit": false, "note revert": false, "note show": false, "note delete": false, "note verify": false, "note rename": false, "solution list": true, "solution verify": false, "solution enabled": true, "solution applied": true, "solution apply": false, "solution simulate": false, "solution customise": false, "solution create": false, "solution edit": false, "solution revert": false, "solution show": false, "solution delete": false, "solution rename": false, "staging status": false, "staging enable": false, "staging disable": false, "staging is-enabled": false, "staging list": false, "staging diff": false, "staging analysis": false, "staging release": false, "revert all": false, "lock remove": false, "check": false, "status": true, "version": true, "help": false}
+var supportedRAC = map[string]bool{"daemon start": false, "daemon status": true, "daemon stop": false, "service start": false, "service status": true, "service stop": false, "service restart": false, "service takeover": false, "service enable": false, "service disable": false, "service enablestart": false, "service disablestop": false, "note list": true, "note revertall": false, "note enabled": true, "note applied": true, "note apply": false, "note simulate": false, "note customise": false, "note create": false, "note edit": false, "note revert": false, "note show": false, "note delete": false, "note verify": false, "note rename": false, "solution list": true, "solution verify": false, "solution enabled": true, "solution applied": true, "solution apply": false, "solution simulate": false, "solution customise": false, "solution create": false, "solution edit": false, "solution revert": false, "solution show": false, "solution delete": false, "solution rename": false, "staging status": false, "staging enable": false, "staging disable": false, "staging is-enabled": false, "staging list": false, "staging diff": false, "staging analysis": false, "staging release": false, "revert all": false, "lock remove": false, "check": false, "status": true, "version": true, "help": false}
 
 // jentry is the json entry to display
 var jentry JEntry
@@ -30,6 +30,10 @@ type JMessages []JMsg
 
 // JResult is the result (output) of the command.
 type JResult interface{}
+
+// JObj is a string, a string pointer or a bool for some parts in the result
+// of the command.
+type JObj interface{}
 
 // JEntry defines the global structure of our json object
 type JEntry struct {
@@ -70,56 +74,93 @@ type versResults struct {
 
 // configuredSol is for 'saptune solution enabled'
 type configuredSol struct {
-	ConfiguredSol string `json:"solution configured"`
+	ConfiguredSol []string `json:"enabled Solution"`
 }
+
+//type configuredSol struct {
+	//ConfiguredSol JObj `json:"enabled Solution"`
+//}
 
 // appliedSol is for 'saptune solution applied'
 type appliedSol struct {
-	AppliedSol string `json:"solution applied"`
+	AppliedSol []string `json:"applied Solution"`
 }
 
 // appliedNotes is for 'saptune note applied'
 type appliedNotes struct {
-	AppliedNotes []string `json:"notes applied"`
+	AppliedNotes []string `json:"applied Notes"`
 }
 
 // notesOrder is for 'saptune note enabled'
 type notesOrder struct {
-	NotesOrder []string `json:"notes order"`
+	NotesOrder []string `json:"enabled Notes"`
 }
 
-// NoteListEntry is one line of 'saptune note list'
-type NoteListEntry struct {
-	NoteID       string `json:"Note ID"`
-	NoteDesc     string `json:"Note description"`
-	ManEnabled   bool   `json:"Note manually enabled"`
-	SolEnabled   bool   `json:"Note enabled by solution"`
-	ManReverted  bool   `json:"Note manually revertd"`
-	NoteOverride bool   `json:"Note override exists"`
-	CustomNote   bool   `json:"Custom note"`
+// JNoteListEntry is one line of 'saptune note list'
+type JNoteListEntry struct {
+	NoteID       string   `json:"Note ID"`
+	NoteDesc     string   `json:"Note description"`
+	NoteRef      JObj     `json:"Note reference"`
+	NoteVers     string   `json:"Note version"`
+	NoteRdate    string   `json:"Note release date"`
+	ManEnabled   bool     `json:"Note enabled manually"`
+	SolEnabled   bool     `json:"Note enabled by Solution"`
+	ManReverted  bool     `json:"Note reverted manually"`
+	NoteOverride bool     `json:"Note override exists"`
+	CustomNote   bool     `json:"custom Note"`
 }
 
-// NoteList is the whole 'saptune note list'
-type NoteList struct {
-	NotesList  []NoteListEntry `json:"Note list"`
-	NotesOrder []string        `json:"Notes order"`
-	Msg        string          `json:"Remember message"`
+// JNoteList is the whole 'saptune note list'
+type JNoteList struct {
+	NotesList  []JNoteListEntry `json:"available Notes"`
+	NotesOrder []string         `json:"enabled Notes"`
+	Msg        string           `json:"remember message"`
 }
 
-// SolListEntry is one line of 'saptune solution list'
-type SolListEntry struct {
-	SolName     string   `json:"Solution Name"`
+// JStatus is the whole 'saptune status'
+type JStatus struct {
+	Services        JStatusServs   `json:"services"`
+	SystemState     string         `json:"system state"`
+	VirtEnv         string         `json:"virtualization"`
+	SaptuneVersion  string         `json:"configured version"`
+	RPMVersion      string         `json:"package version"`
+	ConfiguredSol   []string       `json:"enabled Solution"`
+	ConfiguredNotes []string       `json:"Notes configured"`
+	EnabledNotes    []string       `json:"Notes enabled"`
+	AppliedNotes    []string       `json:"Notes applied"`
+	Staging         JStatusStaging `json:"staging"`
+	Msg             string         `json:"remember message"`
+}
+
+// JStatusStaging contains the staging infos for 'saptune status'
+type JStatusStaging struct {
+	StagingEnabled bool     `json:"enabled"`
+	StagedNotes    []string `json:"staged Notes"`
+	StagedSols     []string `json:"staged Solutions"`
+}
+
+// JStatusServs are the mentioned systemd services in 'saptune status'
+type JStatusServs struct {
+	SaptuneService JObj   `json:"saptune"`
+	SapconfService JObj   `json:"sapconf"`
+	TunedService   JObj   `json:"tuned"`
+	TunedProfile   *string `json:"tuned profile,omitempty"`
+}
+
+// JSolListEntry is one line of 'saptune solution list'
+type JSolListEntry struct {
+	SolName     string   `json:"Solution name"`
 	NotesList   []string `json:"Note list"`
 	SolEnabled  bool     `json:"Solution enabled"`
-	SolOverride bool     `json:"Note override exists"`
-	CustomSol   bool     `json:"Custom note"`
+	SolOverride bool     `json:"Solution override exists"`
+	CustomSol   bool     `json:"custom Solution"`
 	DepSol      bool     `json:"Solution deprecated"`
 }
 
-// SolList is the whole 'saptune solution list'
-type SolList struct {
-	SolsList []SolListEntry `json:"Solution list"`
-	Msg      string         `json:"Remember message"`
+// JSolList is the whole 'saptune solution list'
+type JSolList struct {
+	SolsList []JSolListEntry `json:"available Solutions"`
+	Msg      string         `json:"remember message"`
 }
 
 // jInit creates an initial json entry
@@ -143,7 +184,7 @@ func jInit() {
 // used in system/logging
 func jWriteMsg(prio, msg string) {
 	var jmsg JMsg
-	if GetFlagVal("output") != "json" {
+	if GetFlagVal("format") != "json" {
 		return
 	}
 	jmsg.Prio = prio
@@ -155,14 +196,12 @@ func jWriteMsg(prio, msg string) {
 // used in function system/ErrorExit
 func jOut(exit int) error {
 	var err error
-	if GetFlagVal("output") != "json" {
+	if GetFlagVal("format") != "json" {
 		return err
 	}
 	// reset stdout to original setting
 	os.Stdout = stdOutOrg
-	//fmt.Printf("ANGI: JStore - jentry is '%+v'\n", jentry)
 	jentry.CmdRet = exit
-	//fmt.Printf("ANGI: JStore 2 - jentry is '%+v'\n", jentry)
 	data, err := json.Marshal(jentry)
 	if err == nil {
 		fmt.Println(string(data))
@@ -184,7 +223,7 @@ func JInvalid(exitStatus int) {
 // used in function action/SelectAction
 func JnotSupportedYet() {
 	rac := realmAndCmd()
-	if GetFlagVal("output") != "json" || racIsSupported(rac) {
+	if GetFlagVal("format") != "json" || racIsSupported(rac) {
 		return
 	}
 	jentry.CmdResult = notSupportedResult{Implemented: false}
@@ -193,14 +232,37 @@ func JnotSupportedYet() {
 
 // Jcollect collects the result data
 func Jcollect(data interface{}) {
+	var val JObj
 	rac := realmAndCmd()
-	if GetFlagVal("output") != "json" || !racIsSupported(rac) {
+	if GetFlagVal("format") != "json" || !racIsSupported(rac) {
 		return
 	}
 	switch res := data.(type) {
 	case string:
+		if res == "" {
+			val = nil
+		} else {
+			val = res
+		}
 		if rac == "version" {
 			jentry.CmdResult = versResults{ConfVers: res}
+		}
+		//if rac == "solution enabled" {
+			//jentry.CmdResult = configuredSol{ConfiguredSol: val}
+		//}
+		//if rac == "solution applied" {
+		//	jentry.CmdResult = appliedSol{AppliedSol: val}
+		//}
+	case []string:
+		if len(res) == 1 && res[0] == "" {
+			// replace empty string by empty slice
+			res = make([]string, 0)
+		}
+		if rac == "note enabled" {
+			jentry.CmdResult = notesOrder{NotesOrder: res}
+		}
+		if rac == "note applied" {
+			jentry.CmdResult = appliedNotes{AppliedNotes: res}
 		}
 		if rac == "solution enabled" {
 			jentry.CmdResult = configuredSol{ConfiguredSol: res}
@@ -208,15 +270,9 @@ func Jcollect(data interface{}) {
 		if rac == "solution applied" {
 			jentry.CmdResult = appliedSol{AppliedSol: res}
 		}
-	case []string:
-		if rac == "note enabled" {
-			jentry.CmdResult = notesOrder{NotesOrder: res}
-		}
-		if rac == "note applied" {
-			jentry.CmdResult = appliedNotes{AppliedNotes: res}
-		}
-	case SolList, NoteList:
-		if rac == "solution list" || rac == "note list" {
+	case JSolList, JNoteList, JStatus:
+		switch rac {
+		case "solution list" , "note list" , "status", "daemon status", "service status":
 			jentry.CmdResult = res
 		}
 	default:

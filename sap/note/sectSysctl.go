@@ -11,8 +11,9 @@ import (
 // OptSysctlVal optimises a sysctl parameter value
 // use exactly the value from the config file. No calculation any more
 func OptSysctlVal(operator txtparser.Operator, key, actval, cfgval string) string {
-	if actval == "" {
+	if actval == "PNA" || actval == "" {
 		// sysctl parameter not available in system
+		// or system value is 'empty'
 		return cfgval
 	}
 	if cfgval == "" {

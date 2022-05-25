@@ -78,6 +78,8 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 		re = regexp.MustCompile(`# .*NOTE=.*VERSION=([\w.+-_]+)\s*DATE=.*"`)
 	case "category":
 		re = regexp.MustCompile(`# .*NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
+	case "reference":
+		re = regexp.MustCompile(`# .*NOTE=.*REFERENCE="([^"]*)"\s*VERSION=.*"`)
 	case "date":
 		re = regexp.MustCompile(`# .*NOTE=.*VERSION=[\w.+-_]+\s*DATE=(.*)\s*NAME=.*"`)
 	case "name":
@@ -93,6 +95,22 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 	matches := re.FindStringSubmatch(string(content))
 	if len(matches) != 0 {
 		rval = fmt.Sprintf("%s", strings.TrimSpace(matches[1]))
+	}
+	return rval
+}
+
+// GetINIFileVersionSectionRefs returns the reference field from the version
+// section of the Note configuration file
+func GetINIFileVersionSectionRefs(fileName string) []string {
+	rval := make([]string, 0)
+	var re = regexp.MustCompile(`# .*NOTE=.*REFERENCE="([^"]*)"\s*VERSION=.*"`)
+	content, err := ioutil.ReadFile(fileName)
+	if err != nil {
+		return rval
+	}
+	matches := re.FindStringSubmatch(string(content))
+	if len(matches) != 0 {
+		rval = append(rval, matches[1])
 	}
 	return rval
 }

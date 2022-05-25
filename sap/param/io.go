@@ -318,7 +318,7 @@ func IsValidScheduler(blockdev, scheduler string) bool {
 // in a better way.
 func IsValidforNrRequests(blockdev, nrreq string) bool {
 	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
-	if elev != "" {
+	if elev != "" && elev != "NA" && elev != "PNA" {
 		file := path.Join("block", blockdev, "queue", "nr_requests")
 		if tstErr := system.TestSysString(file, nrreq); tstErr == nil {
 			return true
@@ -333,7 +333,7 @@ func IsValidforNrRequests(blockdev, nrreq string) bool {
 // in a better way.
 func IsValidforReadAheadKB(blockdev, readahead string) bool {
 	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
-	if elev != "" {
+	if elev != "" && elev != "NA" && elev != "PNA" {
 		file := path.Join("block", blockdev, "queue", "read_ahead_kb")
 		if tstErr := system.TestSysString(file, readahead); tstErr == nil {
 			return true

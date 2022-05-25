@@ -944,3 +944,21 @@ func chkStageExit(writer io.Writer) {
 		system.ErrorExit("", 0)
 	}
 }
+
+// listStageNotesAndSols gives the list of Notes in the staging area and
+// the list of Solutions in the staging area
+func listStageNotesAndSols() (notes, sols []string) {
+	notes = make([]string, 0)
+	sols = make([]string, 0)
+	for _, sName := range stagingOptions.GetSortedIDs() {
+		if strings.HasSuffix(sName, ".sol") {
+			// stage file is a solution file
+			sols = append(sols, sName)
+		} else {
+			notes = append(notes, sName)
+		}
+	}
+	sort.Strings(notes)
+	sort.Strings(sols)
+	return notes, sols
+}

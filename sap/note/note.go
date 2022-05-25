@@ -122,6 +122,19 @@ func (opts *TuningOptions) GetSortedIDs() (ret []string) {
 	return
 }
 
+// GetNoteHeadData provides description, reference, version and released date
+// of a given noteObj
+func GetNoteHeadData(obj Note) (desc, vers, date string, refs []string) {
+	objConfFile := reflect.ValueOf(obj).FieldByName("ConfFilePath").String()
+	if objConfFile != "" {
+		desc = txtparser.GetINIFileVersionSectionEntry(objConfFile, "name")
+		vers = txtparser.GetINIFileVersionSectionEntry(objConfFile, "version")
+		date = txtparser.GetINIFileVersionSectionEntry(objConfFile, "date")
+		refs = txtparser.GetINIFileVersionSectionRefs(objConfFile)
+	}
+	return
+}
+
 // FieldComparison records the actual value versus expected value for
 // a note field. The field name has to be the actual name in Go struct.
 type FieldComparison struct {
@@ -212,7 +225,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					// if this should change in the future use
 					// !strings.Contains(key.String(), "grub")
 					// instead of !isInternalGrub(key.String())
-					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && actualValue.(string) != "" && key.String() != "VSZ_TMPFS_PERCENT" {
+					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && actualValue.(string) != "PNA" && key.String() != "VSZ_TMPFS_PERCENT" {
 						allMatch = false
 					}
 				}
