@@ -70,7 +70,8 @@ Valid values for \fBvendor=\fP are the values found in \fB/sys/class/dmi/id/boar
 .br
 The value of the vendor tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the vendor file.
 
-Attention: not usable on IBM Power platform (hardware architecture 'ppc64le')
+For IBM Power platform (hardware architecture 'ppc64le') the value is set to 'IBM'.
+
 .TP
 .BI model= <hardware model>
 to define a special \fIsystem hardware model\fP
@@ -79,7 +80,7 @@ Valid values for \fBmodel=\fP are the values found in \fB/sys/class/dmi/id/produ
 .br
 The value of the model tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the model file.
 
-Attention: not usable on IBM Power platform (hardware architecture 'ppc64le')
+On IBM Power platform (hardware architecture 'ppc64le') the file \fB/sys/firmware/devicetree/base/model\fP is used to identify the hardware model.
 
 .RS 4
 Example:
@@ -188,7 +189,7 @@ See detailed description below:
 .SH "[version]"
 This section is a mandatory section and is used to display version, description and last change date of the underlying Note during saptune action 'list'.
 
-Syntax:
+Old Syntax: \fBATTENTION: deprecated\fP
 .br
 .nf
 .B # <prefix>NOTE=<noteId> CATEGORY=<category> VERSION=<versionNo> DATE=<release date of used note and related values> NAME="<description of the note>"
@@ -211,6 +212,46 @@ DATE is the date of the last changes.
 NAME is the description of the Note, which will be displayed during the action 'saptune note list'
 .br
 Attention: The note description from the field NAME must be placed in double quotes even if there are no spaces used inside the description.
+
+\fBATTENTION:\fP The old syntax for the version section is deprecated. A Warning message will point to the affected Note definition file. Customer specific Note definition files need to be adapted to the new syntax by the admin.
+
+Only in the Solution definition files the old syntax is still valid. This may change with a next saptune version.
+
+New Syntax:
+.br
+.nf
+.B
+VERSION=<versionNo>
+.br
+DATE=<release date of used note and related values>
+.br
+NAME="<description of the note>"
+.br
+REFERENCES="<list of URLs containing information regarding the Note separated by blank>
+
+Example:
+.br
+VERSION=5
+.br
+DATE=16.04.2019
+.br
+DESCRIPTION=VIP: this is VIP Note 1, which contains Very Important Parameters
+.br
+REFERENCES=https://inter.net.addr.com/path/Note_Info http://inter.net.addr.com/another_path/A_second_Note_Info
+
+The entries are treated as 'Key Value' pairs. The equal operator (=) is mandatory, but can be used with spaces around. The value can be placed in double quotes. The entries can be placed in any order inside the version section.
+
+We skipped the fields 'CATEGORY' and '<noteId>' from the old syntax because these values are not in use. The '<noteId>' was always taken from the filename of the Note definition file and we stay with this behaviour for now.
+
+\"The <noteId> must be a text string without spaces, which will be used as the unique identifier of this Note definition. It will be displayed during the action 'saptune note list' and used for all other actions, where the NoteID is needed as parameter.
+
+VERSION is a number that should indicate how many changes are done for this Note definition in the past. Allowed are digits, upper-case and lower-case letters, dots, underscores, minus and plus signs.
+
+DATE is the date of the last changes.
+
+NAME is the description of the Note, which will be displayed during the action 'saptune note list'
+
+REFERENCES is a list of URLs separated by blank, which contain additional information about the Note definition and the content. 
 \" section block
 .SH "[block]"
 The settings of the "[block]" section will be set on \fBall\fP block devices found in \fI/sys/block\fP, which are considered as \fBvalid\fP.

@@ -65,7 +65,7 @@ func TestPrintNoteFields(t *testing.T) {
 
 	var printMatchText1 = `
 941735 - Configuration drop in for simple tests
-			Version 1 from 09.07.2019  
+			Version 1 from 09.07.2019 
 
    SAPNote, Version | Parameter                  | Expected             | Override  | Actual               | Compliant
 --------------------+----------------------------+----------------------+-----------+----------------------+-----------
@@ -90,7 +90,7 @@ func TestPrintNoteFields(t *testing.T) {
 `
 	var printMatchText2 = `
 941735 - Configuration drop in for simple tests
-			Version 1 from 09.07.2019  
+			Version 1 from 09.07.2019 
 
    Parameter                  | Value set            | Value expected       | Override  | Comment
 ------------------------------+----------------------+----------------------+-----------+--------------
@@ -173,7 +173,7 @@ func TestPrintNoteFields(t *testing.T) {
 	cfgFile := fmt.Sprintf("%ssimpleNote.conf", ExtraFilesInGOPATH)
 	fcomp1 := note.FieldComparison{ReflectFieldName: "ConfFilePath", ReflectMapKey: "", ActualValue: cfgFile, ExpectedValue: cfgFile, ActualValueJS: cfgFile, ExpectedValueJS: cfgFile, MatchExpectation: true}
 	fcomp2 := note.FieldComparison{ReflectFieldName: "ID", ReflectMapKey: "", ActualValue: "941735", ExpectedValue: "941735", ActualValueJS: "941735", ExpectedValueJS: "941735", MatchExpectation: true}
-	fcomp3 := note.FieldComparison{ReflectFieldName: "DescriptiveName", ReflectMapKey: "", ActualValue: "", ExpectedValue: "", ActualValueJS: "", ExpectedValueJS: "", MatchExpectation: true}
+	fcomp3 := note.FieldComparison{ReflectFieldName: "DescriptiveName", ReflectMapKey: "", ActualValue: "Configuration drop in for simple tests\n\t\t\tVersion 1 from 09.07.2019", ExpectedValue: "Configuration drop in for simple tests\n\t\t\tVersion 1 from 09.07.2019", ActualValueJS: "Configuration drop in for simple tests\n\t\t\tVersion 1 from 09.07.2019", ExpectedValueJS: "Configuration drop in for simple tests\n\t\t\tVersion 1 from 09.07.2019", MatchExpectation: true}
 	fcomp4 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "ShmFileSystemSizeMB", ActualValue: "488", ExpectedValue: "1714", ActualValueJS: "488", ExpectedValueJS: "1714", MatchExpectation: false}
 	fcomp5 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "kernel.shmmax", ActualValue: "18446744073709551615", ExpectedValue: "18446744073709551615", ActualValueJS: "18446744073709551615", ExpectedValueJS: "18446744073709551615", MatchExpectation: true}
 	fcomp6 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "IO_SCHEDULER_vda", ActualValue: "all:none", ExpectedValue: "noop", ActualValueJS: "all:none", ExpectedValueJS: "noop", MatchExpectation: false}

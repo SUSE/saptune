@@ -267,7 +267,10 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 	for _, entryLine := range content {
 		matches := re.FindStringSubmatch(entryLine)
 		if len(matches) > 1 {
-			val := system.StripComment(matches[1], "#")
+			val := matches[1]
+			if entryName != "reference" {
+				val = system.StripComment(val, "#")
+			}
 			rval = fmt.Sprintf("%s", strings.TrimSpace(val))
 			break
 		}

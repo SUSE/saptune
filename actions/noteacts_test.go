@@ -22,10 +22,10 @@ func TestNoteActions(t *testing.T) {
 All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note):
 	NEWSOL2NOTE	
 	extraNote	Configuration drop in for extra tests
-			Version 0 from 04.06.2019 
+			Version 0 from 04.06.2019
 	oldFile		Name_syntax
 	simpleNote	Configuration drop in for simple tests
-			Version 1 from 09.07.2019 
+			Version 1 from 09.07.2019
 	wrongFileNamesyntax	
 
 Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
@@ -43,7 +43,7 @@ Remember: if you wish to automatically activate the solution's tuning options af
 		var simulateMatchText = `If you run ` + "`saptune note apply simpleNote`" + `, the following changes will be applied to your system:
 
 simpleNote - Configuration drop in for simple tests
-			Version 1 from 09.07.2019  
+			Version 1 from 09.07.2019 
 
    Parameter                    | Value set   | Value expected  | Override  | Comment
 --------------------------------+-------------+-----------------+-----------+--------------
@@ -107,7 +107,7 @@ current order of enabled notes is: simpleNote
 	t.Run("NoteActionVerify", func(t *testing.T) {
 		var verifyMatchText = `
 simpleNote - Configuration drop in for simple tests
-			Version 1 from 09.07.2019  
+			Version 1 from 09.07.2019 
 
    SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
 --------------------+------------------------------+-------------+-----------+-------------+-----------
