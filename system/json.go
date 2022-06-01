@@ -232,27 +232,15 @@ func JnotSupportedYet() {
 
 // Jcollect collects the result data
 func Jcollect(data interface{}) {
-	var val JObj
 	rac := realmAndCmd()
 	if GetFlagVal("format") != "json" || !racIsSupported(rac) {
 		return
 	}
 	switch res := data.(type) {
 	case string:
-		if res == "" {
-			val = nil
-		} else {
-			val = res
-		}
 		if rac == "version" {
 			jentry.CmdResult = versResults{ConfVers: res}
 		}
-		//if rac == "solution enabled" {
-			//jentry.CmdResult = configuredSol{ConfiguredSol: val}
-		//}
-		//if rac == "solution applied" {
-		//	jentry.CmdResult = appliedSol{AppliedSol: val}
-		//}
 	case []string:
 		if len(res) == 1 && res[0] == "" {
 			// replace empty string by empty slice

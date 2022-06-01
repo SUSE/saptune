@@ -3,7 +3,10 @@
 # Version 20 from 02.07.2021 in English
 
 [version]
-# SAP-NOTE=2684254 CATEGORY=HANA VERSION=20 DATE=02.07.2021 NAME="SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15"
+VERSION=20
+DATE=02.07.2021
+DESCRIPTION=SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
+REFERENCES=https://launchpad.support.sap.com/#/notes/2684254
 
 [vm]
 # Disable transparent hugepages (THP)

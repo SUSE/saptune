@@ -1,9 +1,12 @@
 # 2205917 - SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12
 # Description:    HANA DB settings
-# Version 61 from 12.11.2020 in English
+# Version 63 from 18.05.2021 in English
 
 [version]
-# SAP-NOTE=2205917 CATEGORY=HANA VERSION=61 DATE=12.11.2020 NAME="SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12"
+VERSION=63
+DATE=18.05.2021
+DESCRIPTION=SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12
+REFERENCES=https://launchpad.support.sap.com/#/notes/2205917
 
 [login]
 # /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf UserTasksMax setting

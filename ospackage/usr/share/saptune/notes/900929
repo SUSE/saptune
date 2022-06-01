@@ -2,7 +2,10 @@
 # Version 7 from 31.07.2017 in English
 
 [version]
-# SAP-NOTE=900929 CATEGORY=LINUX VERSION=7 DATE=31.07.2017 NAME="Linux: STORAGE_PARAMETERS_WRONG_SET and 'mmap() failed'"
+VERSION=7
+DATE=31.07.2017
+DESCRIPTION=Linux: STORAGE_PARAMETERS_WRONG_SET and 'mmap() failed'
+REFERENCES=https://launchpad.support.sap.com/#/notes/900929
 
 [sysctl]
 # vm.max_map_count

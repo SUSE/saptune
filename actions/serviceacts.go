@@ -598,7 +598,6 @@ func printStagingStatus(writer io.Writer, jstage *system.JStatusStaging) {
 	fmt.Fprintln(writer, "")
 }
 
-
 // printSaptuneStatus checks for running saptune.service and print status
 func printSaptuneStatus(writer io.Writer, jstat *system.JStatusServs) (bool, bool, bool) {
 	remember := false

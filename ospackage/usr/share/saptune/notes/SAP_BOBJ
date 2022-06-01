@@ -1,14 +1,17 @@
 # BOBJ - operating system tuning for SAP Business OBJects (BOBJ)
 #
-# https://help.sap.com/doc/46b1602a6e041014910aba7db0e91070/4.2/en-US/sbo42sp4_bip_inst_unix_en.pdf
+# https://help.sap.com/doc/46b1602a6e041014910aba7db0e91070/4.3/en-US/sbo43_bip_inst_unix_en.pdf
 #
 # SAP BusinessObjects Business Intelligence platform
-# Document Version: 4.2 Support Package 04 – 2017-03-10
+# Document Version: 4.3 – 2020-06-12
 # Business Intelligence Platform Installation Guide for Unix
 # section '4.1.3 Additional requirements for SUSE'
 
 [version]
-# SAP-NOTE=INST-DOC CATEGORY=BOBJ VERSION=0 DATE=10.03.2017 NAME="operating system tuning for SAP Business OBJects (BOBJ)"
+VERSION=1
+DATE=12.06.2020
+DESCRIPTION=operating system tuning for SAP Business OBJects (BOBJ)
+REFERENCES=https://help.sap.com/doc/46b1602a6e041014910aba7db0e91070/4.3/en-US/sbo43_bip_inst_unix_en.pdf
 
 [sysctl]
 kernel.sem = 250 32000 32 1024

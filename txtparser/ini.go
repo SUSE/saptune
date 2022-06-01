@@ -3,7 +3,6 @@ package txtparser
 import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
-	"io/ioutil"
 	"regexp"
 	"strings"
 )
@@ -25,8 +24,6 @@ var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.
 
 // regKey gives the parameter part of the line from the note definition file
 var regKey = regexp.MustCompile(`(.*)\s*[<=>]+\s*["']*.*?["']*$`)
-
-var saptuneSectionDir = system.SaptuneSectionDir
 
 // counter to control the [login] section info message
 var loginCnt = 0
@@ -56,61 +53,15 @@ type INIFile struct {
 
 // GetINIFileDescriptiveName return the descriptive name of the Note
 func GetINIFileDescriptiveName(fileName string) string {
-	var re = regexp.MustCompile(`# .*NOTE=.*VERSION=([\w.+-_]+)\s*DATE=(.*)\s*NAME="([^"]*)"`)
 	rval := ""
-	content, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return ""
-	}
-	matches := re.FindStringSubmatch(string(content))
-	if len(matches) != 0 {
-		rval = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", matches[3], "", matches[1], matches[2])
-	}
-	return rval
-}
-
-// GetINIFileVersionSectionEntry returns the field 'entryName' from the version
-// section of the Note configuration file
-func GetINIFileVersionSectionEntry(fileName, entryName string) string {
-	var re = regexp.MustCompile(`# .*NOTE=.*TEST=([\w.+-_]+)\s*DATE=.*"`)
-	switch entryName {
-	case "version":
-		re = regexp.MustCompile(`# .*NOTE=.*VERSION=([\w.+-_]+)\s*DATE=.*"`)
-	case "category":
-		re = regexp.MustCompile(`# .*NOTE=.*CATEGORY=(\w*)\s*VERSION=.*"`)
-	case "reference":
-		re = regexp.MustCompile(`# .*NOTE=.*REFERENCE="([^"]*)"\s*VERSION=.*"`)
-	case "date":
-		re = regexp.MustCompile(`# .*NOTE=.*VERSION=[\w.+-_]+\s*DATE=(.*)\s*NAME=.*"`)
-	case "name":
-		re = regexp.MustCompile(`# .*NOTE=.*VERSION=[\w.+-_]+\s*DATE=.*\s*NAME="([^"]*)"`)
-	default:
-		return ""
-	}
-	rval := ""
-	content, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return ""
-	}
-	matches := re.FindStringSubmatch(string(content))
-	if len(matches) != 0 {
-		rval = fmt.Sprintf("%s", strings.TrimSpace(matches[1]))
-	}
-	return rval
-}
-
-// GetINIFileVersionSectionRefs returns the reference field from the version
-// section of the Note configuration file
-func GetINIFileVersionSectionRefs(fileName string) []string {
-	rval := make([]string, 0)
-	var re = regexp.MustCompile(`# .*NOTE=.*REFERENCE="([^"]*)"\s*VERSION=.*"`)
-	content, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return rval
-	}
-	matches := re.FindStringSubmatch(string(content))
-	if len(matches) != 0 {
-		rval = append(rval, matches[1])
+	desc := GetINIFileVersionSectionEntry(fileName, "description")
+	vers := GetINIFileVersionSectionEntry(fileName, "version")
+	refs := GetINIFileVersionSectionEntry(fileName, "reference")
+	date := GetINIFileVersionSectionEntry(fileName, "date")
+	if desc != "" && vers != "" && date != "" && refs != "" {
+		rval = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s\n\t\t\t%s", desc, "", vers, date, refs)
+	} else if desc != "" && vers != "" && date != "" {
+		rval = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", desc, "", vers, date)
 	}
 	return rval
 }

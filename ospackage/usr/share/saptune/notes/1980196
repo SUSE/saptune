@@ -2,7 +2,10 @@
 # Version 7 from 18.10.2017 in English
 
 [version]
-# SAP-NOTE=1980196 CATEGORY=HANA VERSION=7 DATE=18.10.2017 NAME="Setting Linux Kernel Parameter /proc/sys/vm/max_map_count on SAP HANA Systems"
+VERSION=7
+DATE=18.10.2017
+DESCRIPTION=Setting Linux Kernel Parameter /proc/sys/vm/max_map_count on SAP HANA Systems
+REFERENCES=https://launchpad.support.sap.com/#/notes/1980196
 
 [sysctl]
 # vm.max_map_count
