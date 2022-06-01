@@ -265,19 +265,34 @@ func GetDmiID(file string) (string, error) {
 func GetHWIdentity(info string) (string, error) {
 	var err error
 	var content []byte
+	fix := ""
 	fileName := ""
 	ret := ""
 
 	switch info {
 	case "vendor":
-		fileName = fmt.Sprintf("%s/board_vendor", DmiID)
+		if runtime.GOARCH == "ppc64le" {
+			fix = "IBM"
+		} else {
+			fileName = fmt.Sprintf("%s/board_vendor", DmiID)
+		}
 	case "model":
-		fileName = fmt.Sprintf("%s/product_name", DmiID)
+		if runtime.GOARCH == "ppc64le" {
+			fileName = "/sys/firmware/devicetree/base/model"
+		} else {
+			fileName = fmt.Sprintf("%s/product_name", DmiID)
+		}
 	}
-	if content, err = ioutil.ReadFile(fileName); err == nil {
-		ret = strings.TrimSpace(string(content))
-	} else {
-		InfoLog("failed to read %s - %v", fileName, err)
+	if fileName != "" {
+		if content, err = ioutil.ReadFile(fileName); err == nil {
+			ret = strings.TrimSpace(string(content))
+		} else {
+			InfoLog("failed to read %s - %v", fileName, err)
+		}
+	}
+	if fix != "" {
+		ret = fix
+		err = nil
 	}
 	return ret, err
 }
