@@ -1,9 +1,9 @@
 package txtparser
 
 import (
-	"github.com/SUSE/saptune/system"
 	"encoding/json"
 	"fmt"
+	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"
@@ -128,7 +128,7 @@ func readVersionSection(fileName string) ([]string, bool, error) {
 			if skipSection {
 				skipSection = false
 			}
-			if line[1 : len(line)-1] != "version" {
+			if line[1:len(line)-1] != "version" {
 				// skip whole section
 				skipSection = true
 				continue
@@ -162,7 +162,7 @@ func getVersionRunInfo(versRun string) ([]string, bool, error) {
 	content, err := ioutil.ReadFile(versRun)
 	if err == nil && len(content) != 0 {
 		err = json.Unmarshal(content, &dest)
-		vsection = dest[0:len(dest)-1]
+		vsection = dest[0 : len(dest)-1]
 		if dest[len(dest)-1] == "ISNEW=false" {
 			isNew = false
 		}
@@ -173,8 +173,8 @@ func getVersionRunInfo(versRun string) ([]string, bool, error) {
 // storeVersionRunInfo stores the version section info for re-use
 // in saptuneSectionDir (/run/saptune/sections)
 func storeVersionRunInfo(versRun string, vsection []string, isNew bool) error {
+	var obj []string
 	overwriteExisting := true
-	obj := []string{}
 	if isNew {
 		obj = append(vsection, "ISNEW=true")
 	} else {
@@ -244,10 +244,8 @@ func chkVersEntriesResult(fileName string, chkVents map[string]bool) error {
 				// version section mismatch
 				system.ErrorLog("version section mismatch in Note definition file '%s - old and (partial) new style version header found. Please check", fileName)
 			}
-			err = system.ErrorLog("wrong version section found in Note definition file '%s'. At least one of the mandatory fields is missing. Please check", fileName)
+			system.ErrorLog("wrong version section found in Note definition file '%s'. At least one of the mandatory fields is missing. Please check", fileName)
 			missVersionCnt[fileName] = missVersionCnt[fileName] + 1
-		} else {
-			err = fmt.Errorf("2")
 		}
 	}
 	return err
@@ -259,19 +257,17 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 	var re = regexp.MustCompile(`.*(ID\s*=).*`)
 	rval := ""
 	content, isNewStyle, err := readVersionSection(fileName)
-        if err != nil {
-                return ""
-        }
+	if err != nil {
+		return ""
+	}
 	regex := selectVersionExpression(isNewStyle, entryName, fileName)
 	re = regexp.MustCompile(regex)
 	for _, entryLine := range content {
 		matches := re.FindStringSubmatch(entryLine)
 		if len(matches) > 1 {
 			val := matches[1]
-			if entryName != "reference" {
-				val = system.StripComment(val, "#")
-			}
-			rval = fmt.Sprintf("%s", strings.TrimSpace(val))
+			val = system.StripComment(val, `\s#[^#]|"\s#[^#]`)
+			rval = strings.TrimSpace(val)
 			break
 		}
 	}
@@ -281,9 +277,8 @@ func GetINIFileVersionSectionEntry(fileName, entryName string) string {
 // GetINIFileVersionSectionRefs returns the reference field from the version
 // section of the Note configuration file
 func GetINIFileVersionSectionRefs(fileName string) []string {
-	rval := make([]string, 0)
 	refs := GetINIFileVersionSectionEntry(fileName, "reference")
-	rval = strings.Fields(refs)
+	rval := strings.Fields(refs)
 	return rval
 }
 
@@ -312,15 +307,15 @@ func newStyleVersionSectionEntry(entryName string) string {
 	//case "id":
 	//	re = `^\s*ID\s*=\s*"?([^\s].*?)"?$`
 	case "version":
-		re = `^\s*VERSION\s*=\s*"?([\w.+-_]+)"?$`
+		re = `^\s*VERSION\s*=\s*"?([\w.+-_]+)"?.*$`
 	case "category":
 		re = `^\s*CATEGORY\s*=\s*"?(\w*)"?$`
 	case "reference":
-		re = `^\s*REFERENCES\s*=\s*"?(.*?)"?$`
+		re = `^\s*REFERENCES\s*=\s*"?(.*)"?$`
 	case "date":
-		re = `^\s*DATE\s*=\s*"?(\d{2}[-./]{1}\d{2}[-./]{1}\d{4}|\d{4}[-./]{1}\d{2}[-./]{1}\d{2})"?$`
+		re = `^\s*DATE\s*=\s*"?(\d{2}[-./]{1}\d{2}[-./]{1}\d{4}|\d{4}[-./]{1}\d{2}[-./]{1}\d{2})"?.*$`
 	case "name", "description":
-		re = `^\s*DESCRIPTION\s*=\s*"?([^"]*)"?$`
+		re = `^\s*DESCRIPTION\s*=\s*"?(.*)"?$`
 	}
 	return re
 }

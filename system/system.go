@@ -300,11 +300,17 @@ func GetHWIdentity(info string) (string, error) {
 // StripComment will strip everything right from the given comment character
 // (including the comment character) and returns the resulting string
 // comment characters can be '#' or ';' or something else
+// or a regex like `\s#[^#]|"\s#[^#]`
 func StripComment(str, commentChars string) string {
-	if cut := strings.IndexAny(str, commentChars); cut >= 0 {
-		return strings.TrimRightFunc(str[:cut], unicode.IsSpace)
+	ret := str
+	re := regexp.MustCompile(commentChars)
+	if cut := re.FindStringIndex(str); cut != nil {
+		ret = strings.TrimRightFunc(str[:cut[0]], unicode.IsSpace)
+		// strip masked # (\s## -> \s#) inside the text
+		re = regexp.MustCompile(`\s(##)`)
+		ret = re.ReplaceAllString(ret, "#")
 	}
-	return str
+	return ret
 }
 
 // GetVirtStatus gets the status of virtualization environment

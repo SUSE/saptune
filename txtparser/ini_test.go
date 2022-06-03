@@ -16,7 +16,6 @@ var tstFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testd
 var tst2File = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/wrong_limit_test.ini")
 var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1557506")
 var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s\n\t\t\t%s", "Linux paging improvements", "", "16", "06.02.2020", "https://launchpad.support.sap.com/#/notes/1557506")
-//var noteCategory = "LINUX"
 var noteVersion = "16"
 var noteDate = "06.02.2020"
 var noteTitle = "Linux paging improvements"

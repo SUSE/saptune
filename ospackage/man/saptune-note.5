@@ -27,6 +27,10 @@ The \fBNote definition\fP files use the INI file format.
 .br
 A comment line starts with #.
 .br
+Inline comments are possible and start with a blank followed by a # followed by any non-# character. (' #anything except #')
+.br
+If you need to add a character sequenze of ' #anything' to your description, please write it as ' ##anything' (double the #) to give saptune the chance to distinguish this text from an inline comment. saptune will strip the second # from the output result, so that the resulting text will appear as ' #anything'.
+.br
 Lines starting with '[' indicate the begin of a new section.
 .SH SECTIONS
 A section starts with a '[section_name]' keyword in the first line, followed by lines with options and comments.
@@ -239,7 +243,7 @@ DESCRIPTION=VIP: this is VIP Note 1, which contains Very Important Parameters
 .br
 REFERENCES=https://inter.net.addr.com/path/Note_Info http://inter.net.addr.com/another_path/A_second_Note_Info
 
-The entries are treated as 'Key Value' pairs. The equal operator (=) is mandatory, but can be used with spaces around. The value can be placed in double quotes. The entries can be placed in any order inside the version section.
+The entries are treated as 'Key Value' pairs. The equal operator (=) is mandatory, but can be used with spaces around. The entries can be placed in any order inside the version section.
 
 We skipped the fields 'CATEGORY' and '<noteId>' from the old syntax because these values are not in use. The '<noteId>' was always taken from the filename of the Note definition file and we stay with this behaviour for now.
 
@@ -249,9 +253,9 @@ VERSION is a number that should indicate how many changes are done for this Note
 
 DATE is the date of the last changes.
 
-NAME is the description of the Note, which will be displayed during the action 'saptune note list'
+DESCRIPTION is the description of the Note, which will be displayed during the action 'saptune note list'.
 
-REFERENCES is a list of URLs separated by blank, which contain additional information about the Note definition and the content. 
+REFERENCES is a list of URLs separated by blank, which contain additional information about the Note definition and the content. If you need to use a 'blank' inside the URL definition please mask it as '%20'.
 \" section block
 .SH "[block]"
 The settings of the "[block]" section will be set on \fBall\fP block devices found in \fI/sys/block\fP, which are considered as \fBvalid\fP.

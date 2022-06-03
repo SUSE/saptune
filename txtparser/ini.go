@@ -58,9 +58,12 @@ func GetINIFileDescriptiveName(fileName string) string {
 	vers := GetINIFileVersionSectionEntry(fileName, "version")
 	refs := GetINIFileVersionSectionEntry(fileName, "reference")
 	date := GetINIFileVersionSectionEntry(fileName, "date")
-	if desc != "" && vers != "" && date != "" && refs != "" {
+	if desc == "" && vers == "" && refs == "" && date == "" {
+		// no version section found in file
+		rval = ""
+	} else if refs != "" {
 		rval = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s\n\t\t\t%s", desc, "", vers, date, refs)
-	} else if desc != "" && vers != "" && date != "" {
+	} else {
 		rval = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", desc, "", vers, date)
 	}
 	return rval
@@ -68,7 +71,7 @@ func GetINIFileDescriptiveName(fileName string) string {
 
 // splitLineIntoKOV break apart a line into key, operator, value.
 func splitLineIntoKOV(curSection, line string) []string {
-	kov := make([]string, 0)
+	var kov []string
 	if curSection == "rpm" {
 		kov = splitRPM(line)
 	} else if curSection == "ArchX86" || curSection == "ArchPPC64LE" {
@@ -90,8 +93,8 @@ func splitLineIntoKOV(curSection, line string) []string {
 
 // splitRPM split line of section rpm into the needed syntax
 func splitRPM(line string) []string {
+	var kov []string
 	fields := strings.Fields(line)
-	kov := make([]string, 0)
 	kov = nil
 	if len(fields) == 3 {
 		// old syntax - rpm to check | os version | expected package version
@@ -230,7 +233,7 @@ func ParseINI(input string) *INIFile {
 		}
 
 		// remove trailing comments from line
-		line = system.StripComment(line, "#")
+		line = system.StripComment(line, `\s#[^#]|"\s#[^#]`)
 		// Break apart a line into key, operator, value.
 		kov := splitLineIntoKOV(currentSection, line)
 		if kov == nil {
