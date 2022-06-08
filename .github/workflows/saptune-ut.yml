@@ -24,6 +24,7 @@ jobs:
           git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ github.head_ref }}:refs/remotes/origin/${{ github.head_ref }}
           echo "GIT_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
           echo "GIT_COMMIT_SHA=$(git rev-parse origin/${{ github.head_ref }})" >> $GITHUB_ENV
+          echo "CC_TEST_REPORTER_ID=a3b62a56eae998a9e6684d9fa1ca2abe8f479c3d9e43ca69bdfa7a62115d388f" >> $GITHUB_ENV
         if: github.event_name == 'pull_request'
 
       - name: Set ENV for codeclimate (push)
