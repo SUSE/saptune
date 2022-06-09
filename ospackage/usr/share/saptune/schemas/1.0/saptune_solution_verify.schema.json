@@ -86,7 +86,11 @@
                     }
                 },
                 "attentions": {
+<<<<<<< HEAD
                     "description": "WHAT WAS THIS EXACTLY????",
+=======
+                    "description": "Attentions printed for a Note.",
+>>>>>>> 408930a (Schema for note verify finished.)
                     "type": "array",
                     "items": {
                         "required": [ "Note ID", "attention" ],

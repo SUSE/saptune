@@ -2,7 +2,7 @@
    "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_note_applied.schema.json",
 
    "publish time": "2022-01-31 12:49:01.343",
-   "argv": "saptune --out=json note verify",
+   "argv": "saptune --format=json note verify",
    "pid": 2225,
    "command": "note verify",
    "exit code": 100,
