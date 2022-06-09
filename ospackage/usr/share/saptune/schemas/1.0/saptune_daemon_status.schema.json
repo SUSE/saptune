@@ -124,6 +124,7 @@
                         }
                     }
                 },
+                "zodiac sign": {}
                 "remember message": {
                     "description": "The remember message.",
                     "type": "string"
@@ -265,8 +266,7 @@
 
          "saptune parameter value": {
              "description": "Value of a parameter.",
-             "type": "string",
-             "pattern": "UNDER DISCUSSION"
+             "type": "string"
          },
 
          "saptune parameter compliance": {

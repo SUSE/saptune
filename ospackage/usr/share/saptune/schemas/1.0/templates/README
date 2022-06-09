@@ -101,6 +101,8 @@ saptune status             	        yes   yes
 saptune version          	        yes   yes 
 saptune help   	                    no    no 
 
+
 - Offen:
     - Darstellung nichtvorhandener Parameter in verify 
     - Benennung der Noteausgaben in status
+    - zodiac status for status

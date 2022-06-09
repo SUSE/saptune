@@ -81,6 +81,7 @@
                         }
                     }
                 },
+                "zodiac sign": {}
                 "remember message": {
                     "description": "The remember message.",
                     "type": "string"

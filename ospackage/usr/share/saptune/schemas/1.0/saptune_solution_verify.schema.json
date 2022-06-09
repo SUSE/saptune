@@ -45,7 +45,7 @@
         "result": {
             "description": "The result (output) of the command.",
             "type": "object",
-            "required": ["verifications"],
+            "required": ["verifications", "attentions", "enabled Notes", "system compliance"],
             "additionalProperties": false,
             
             "properties": {
@@ -55,8 +55,11 @@
                     "type": "array",
                     "items": {
                         "type": "object",
-                        "required": [ "Note ID", "Note version", "parameter", "expected value", "override value", "actual value"],
-                        "additionalProperties": false,
+                        "required": [ "Note ID", "Note version", "parameter", "compliant" ],
+                        "additionalProperties": true,  
+                        "propertyNames": {
+                            "enum": [ "Note ID", "Note version", "parameter", "compliant", "expected value", "override value", "actual value", "amendments" ]
+                        },
                         "properties": {
                             "Note ID": { "$ref": "#/$defs/saptune note id" },
                             "Note version": { "$ref": "#/$defs/saptune note version" },
@@ -64,7 +67,33 @@
                             "expected value": { "$ref": "#/$defs/saptune parameter value" },
                             "override value": { "$ref": "#/$defs/saptune parameter value" },
                             "actual value": { "$ref": "#/$defs/saptune parameter value" },
-                            "compliant": { "$ref": "#/$defs/saptune parameter compliance" }
+                            "compliant": { "$ref": "#/$defs/saptune parameter compliance" },
+                            "amendments": {
+                                "desccription": "Optional amendments (footnotes).",
+                                "type": "array",
+                                "items": {
+                                    "desccription": "Amendment (footnote) consists of an id and the explaining text.",
+                                    "type": "object",
+                                    "required": [ "index", "text" ],
+                                    "additionalProperties": false,  
+                                    "properties": {
+                                        "index": { "type": "integer" },
+                                        "text": { "type": "string", "minLength": 1 }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "attentions": {
+                    "description": "WHAT WAS THIS EXACTLY????",
+                    "type": "array",
+                    "items": {
+                        "required": [ "Note ID", "attention" ],
+                        "additionalProperties": false,  
+                        "properties": {
+                            "Note ID": { "$ref": "#/$defs/saptune note id" },
+                            "attention": { "type": "string", "minLength": 1 }
                         }
                     }
                 },
@@ -217,8 +246,7 @@
 
          "saptune parameter value": {
              "description": "Value of a parameter.",
-             "type": "string",
-             "pattern": "UNDER DISCUSSION"
+             "type": "string"
          },
 
          "saptune parameter compliance": {
