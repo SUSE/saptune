@@ -67,7 +67,7 @@ func TestDaemonActions(t *testing.T) {
 saptune.service:          disabled/active
 saptune package:          'undef'
 configured version:       '3'
-enabled Solution:         sol1
+enabled Solution:         sol1 (simpleNote)
 applied Solution:         
 additional enabled Notes: 2205917 
 enabled Notes:            2205917
@@ -198,7 +198,7 @@ func TestServiceActions(t *testing.T) {
 saptune.service:          disabled/active
 saptune package:          'undef'
 configured version:       '3'
-enabled Solution:         sol1
+enabled Solution:         sol1 (simpleNote)
 applied Solution:         
 additional enabled Notes: 2205917 
 enabled Notes:            2205917
