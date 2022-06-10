@@ -205,6 +205,18 @@ func (app *App) IsSolutionApplied(sol string) (string, bool) {
 	return state, ret
 }
 
+// AppliedSolution returns the currently applied Solution
+func (app *App) AppliedSolution() string {
+	var solApplied string
+	if len(app.TuneForSolutions) != 0 {
+		solName := app.TuneForSolutions[0]
+		if _, ok := app.IsSolutionApplied(solName); ok {
+			solApplied = solName
+		}
+	}
+	return solApplied
+}
+
 // NoteSanityCheck checks, if for all notes listed in
 // NoteApplyOrder and TuneForNotes a note definition file exists.
 // if not, remove the NoteID from the variables, save the new config and

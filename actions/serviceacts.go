@@ -470,7 +470,7 @@ func getInfoTxt(action string, state bool) (string, string, bool, bool) {
 // printSapconfStatus prints status of sapconf.service
 func printSapconfStatus(writer io.Writer, jstat *system.JStatusServs) bool {
 	scenabled := false
-	fmt.Fprintf(writer, "sapconf.service:        ")
+	fmt.Fprintf(writer, "sapconf.service:          ")
 	if system.IsServiceAvailable(SapconfService) {
 		stat := ""
 		enabled, err := system.SystemctlIsEnabled(SapconfService)
@@ -498,7 +498,7 @@ func printSapconfStatus(writer io.Writer, jstat *system.JStatusServs) bool {
 
 // printTunedStatus prints status of tuned.service
 func printTunedStatus(writer io.Writer, jstat *system.JStatusServs) {
-	fmt.Fprintf(writer, "tuned.service:          ")
+	fmt.Fprintf(writer, "tuned.service:            ")
 	if system.IsServiceAvailable(TunedService) {
 		stat := ""
 		enabled, err := system.SystemctlIsEnabled(TunedService)
@@ -532,13 +532,26 @@ func printTunedStatus(writer io.Writer, jstat *system.JStatusServs) {
 // printNoteAndSols prints all enabled/active notes and solutions
 func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus) bool {
 	notTuned := true
-	fmt.Fprintf(writer, "configured Solution:    ")
+	fmt.Fprintf(writer, "enabled Solution:         ")
 	if len(tuneApp.TuneForSolutions) > 0 {
-		fmt.Fprintf(writer, "%s", tuneApp.TuneForSolutions[0])
+		solName := tuneApp.TuneForSolutions[0]
+		fmt.Fprintf(writer, "%s (%s)", solName, strings.Join(tuneApp.AllSolutions[solName], ", "))
 		notTuned = false
 	}
 	fmt.Fprintf(writer, "\n")
-	fmt.Fprintf(writer, "manually enabled Notes: ")
+	fmt.Fprintf(writer, "applied Solution:         ")
+	appliedSol := tuneApp.AppliedSolution()
+	if appliedSol != "" {
+		appliedSolNotes := []string{}
+		for _, note := range tuneApp.AllSolutions[appliedSol] {
+			if _, ok := tuneApp.IsNoteApplied(note); ok {
+				appliedSolNotes = append(appliedSolNotes, note)
+			}
+		}
+		fmt.Fprintf(writer, "%s (%s)", appliedSol, strings.Join(appliedSolNotes, ", "))
+	}
+	fmt.Fprintf(writer, "\n")
+	fmt.Fprintf(writer, "additional enabled Notes: ")
 	if len(tuneApp.TuneForNotes) > 0 {
 		for _, noteID := range tuneApp.TuneForNotes {
 			fmt.Fprintf(writer, noteID+" ")
@@ -546,12 +559,12 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 		notTuned = false
 	}
 	fmt.Fprintf(writer, "\n")
-	fmt.Fprintf(writer, "enabled Notes:          ")
+	fmt.Fprintf(writer, "enabled Notes:            ")
 	if len(tuneApp.NoteApplyOrder) != 0 {
 		fmt.Fprintf(writer, "%s", strings.Join(tuneApp.NoteApplyOrder, " "))
 	}
 	fmt.Fprintf(writer, "\n")
-	fmt.Fprintf(writer, "applied Notes:          ")
+	fmt.Fprintf(writer, "applied Notes:            ")
 	appliedNotes := tuneApp.AppliedNotes()
 	fmt.Fprintf(writer, "%s", appliedNotes)
 	fmt.Fprintf(writer, "\n")
@@ -570,19 +583,19 @@ func printSaptuneVers(writer io.Writer, saptuneVersion string, jstat *system.JSt
 	// because of the need of 'reproducible' builds, we can not use a
 	// build date in the 'official' saptune binary, so 'RPMDate' will
 	// report 'undef'
-	fmt.Fprintf(writer, "saptune package:        '%s'", RPMVersion)
+	fmt.Fprintf(writer, "saptune package:          '%s'", RPMVersion)
 	if RPMDate != "undef" {
 		fmt.Fprintf(writer, " (%s)", RPMDate)
 	}
 	fmt.Fprintf(writer, "\n")
-	fmt.Fprintf(writer, "configured version:     '%s'\n", saptuneVersion)
+	fmt.Fprintf(writer, "configured version:       '%s'\n", saptuneVersion)
 	jstat.RPMVersion = RPMVersion
 	jstat.SaptuneVersion = saptuneVersion
 }
 
 // printStagingStatus prints the status of the staging area
 func printStagingStatus(writer io.Writer, jstage *system.JStatusStaging) {
-	fmt.Fprintf(writer, "staging:                ")
+	fmt.Fprintf(writer, "staging:                  ")
 	stagingSwitch := getStagingFromConf()
 	if stagingSwitch {
 		fmt.Fprintf(writer, "enabled\n")
@@ -590,8 +603,8 @@ func printStagingStatus(writer io.Writer, jstage *system.JStatusStaging) {
 		fmt.Fprintf(writer, "disabled\n")
 	}
 	stNotes, stSols := listStageNotesAndSols()
-	fmt.Fprintf(writer, "staged Notes:           %s\n", strings.Join(stNotes, " "))
-	fmt.Fprintf(writer, "staged Solutions:       %s\n", strings.Join(stSols, " "))
+	fmt.Fprintf(writer, "staged Notes:             %s\n", strings.Join(stNotes, " "))
+	fmt.Fprintf(writer, "staged Solutions:         %s\n", strings.Join(stSols, " "))
 	jstage.StagingEnabled = stagingSwitch
 	jstage.StagedNotes = stNotes
 	jstage.StagedSols = stSols
@@ -603,7 +616,7 @@ func printSaptuneStatus(writer io.Writer, jstat *system.JStatusServs) (bool, boo
 	remember := false
 	saptuneStopped := false
 	stenabled := false
-	fmt.Fprintf(writer, "saptune.service:        ")
+	fmt.Fprintf(writer, "saptune.service:          ")
 	if system.IsServiceAvailable(SaptuneService) {
 		stat := ""
 		enabled, err := system.SystemctlIsEnabled(SaptuneService)
@@ -637,7 +650,7 @@ func printSaptuneStatus(writer io.Writer, jstat *system.JStatusServs) (bool, boo
 func printSystemStatus(writer io.Writer, jstat *system.JStatus) bool {
 	chkHint := false
 	state, err := system.GetSystemState()
-	fmt.Fprintf(writer, "system state:           %s\n", state)
+	fmt.Fprintf(writer, "system state:             %s\n", state)
 	jstat.SystemState = state
 	if err != nil {
 		chkHint = true
@@ -649,7 +662,7 @@ func printSystemStatus(writer io.Writer, jstat *system.JStatus) bool {
 func printVirtStatus(writer io.Writer, jstat *system.JStatus) {
 	vtype := system.GetVirtStatus()
 	system.InfoLog("Following virtualized environment was detected: %s", vtype)
-	fmt.Fprintf(writer, "virtualization:         %s\n", vtype)
+	fmt.Fprintf(writer, "virtualization:           %s\n", vtype)
 	jstat.VirtEnv = vtype
 }
 

@@ -220,18 +220,9 @@ func SolutionActionEnabled(writer io.Writer, tuneApp *app.App) {
 
 // SolutionActionApplied prints out the applied solution
 func SolutionActionApplied(writer io.Writer, tuneApp *app.App) {
-	solName := ""
-	if len(tuneApp.TuneForSolutions) != 0 {
-		solName = tuneApp.TuneForSolutions[0]
-		if state, ok := tuneApp.IsSolutionApplied(solName); ok {
-			if state == "partial" {
-				fmt.Fprintf(writer, "%s (partial)", solName)
-			} else {
-				fmt.Fprintf(writer, "%s", solName)
-			}
-		}
-	}
-	system.Jcollect(strings.Split(solName, " "))
+	solApplied := tuneApp.AppliedSolution()
+	fmt.Fprintf(writer, "%s", solApplied)
+	system.Jcollect(strings.Split(solApplied, " "))
 }
 
 // SolutionActionCustomise creates an override file and allows to editing the

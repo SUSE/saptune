@@ -120,17 +120,21 @@ saptune package version
 .IP \[bu]
 configured saptune major version (from \fI/etc/sysconfig/saptune\fP)
 .IP \[bu]
-configured Solution
+enabled Solution
 .br
-The entry 'configured Solution' shows the Solution, which was manually applied by '\fIsaptune solution apply <solution name>\fP'.
+The entry 'enabled Solution' shows the Solution, which was manually applied by '\fIsaptune solution apply <solution name>\fP' and it's related Notes.
 .IP \[bu]
-manually enabled Notes, sorted lexicographically
+applied Solution
 .br
-The entry 'manually enabled Notes' shows all Notes, which were manually applied by '\fIsaptune note apply <note name>\fP'. They are \fBone\fP part of the list of notes in the entry 'applied Notes' and 'enabled Notes'.
+The entry 'applied Solution' shows the Solution, which is currently applied and it's related and applied Notes.
+.IP \[bu]
+additional enabled Notes, sorted lexicographically
+.br
+The entry 'additional enabled Notes' shows all Notes, which were additional manually applied by '\fIsaptune note apply <note name>\fP'. They are \fBone\fP part of the list of notes in the entry 'applied Notes' and 'enabled Notes'.
 .IP \[bu]
 all selected Notes in applied order
 .br
-The list of 'enabled Notes' includes all Notes from 'manually enabled Notes' and additional all the Notes related to the 'configured Solution' too. The list shows the order in which these Notes were applied and will be re-applied after a system reboot, if the \fBsaptune.service\fP is enabled.
+The list of 'enabled Notes' includes all Notes from 'additional enabled Notes' and additional all the Notes related to the 'enabled Solution' too. The list shows the order in which these Notes were applied and will be re-applied after a system reboot, if the \fBsaptune.service\fP is enabled.
 .IP \[bu]
 all currently applied Notes in applied order
 .br
