@@ -265,19 +265,34 @@ func GetDmiID(file string) (string, error) {
 func GetHWIdentity(info string) (string, error) {
 	var err error
 	var content []byte
+	fix := ""
 	fileName := ""
 	ret := ""
 
 	switch info {
 	case "vendor":
-		fileName = fmt.Sprintf("%s/board_vendor", DmiID)
+		if runtime.GOARCH == "ppc64le" {
+			fix = "IBM"
+		} else {
+			fileName = fmt.Sprintf("%s/board_vendor", DmiID)
+		}
 	case "model":
-		fileName = fmt.Sprintf("%s/product_name", DmiID)
+		if runtime.GOARCH == "ppc64le" {
+			fileName = "/sys/firmware/devicetree/base/model"
+		} else {
+			fileName = fmt.Sprintf("%s/product_name", DmiID)
+		}
 	}
-	if content, err = ioutil.ReadFile(fileName); err == nil {
-		ret = strings.TrimSpace(string(content))
-	} else {
-		InfoLog("failed to read %s - %v", fileName, err)
+	if fileName != "" {
+		if content, err = ioutil.ReadFile(fileName); err == nil {
+			ret = strings.TrimSpace(string(content))
+		} else {
+			InfoLog("failed to read %s - %v", fileName, err)
+		}
+	}
+	if fix != "" {
+		ret = fix
+		err = nil
 	}
 	return ret, err
 }
@@ -285,11 +300,17 @@ func GetHWIdentity(info string) (string, error) {
 // StripComment will strip everything right from the given comment character
 // (including the comment character) and returns the resulting string
 // comment characters can be '#' or ';' or something else
+// or a regex like `\s#[^#]|"\s#[^#]`
 func StripComment(str, commentChars string) string {
-	if cut := strings.IndexAny(str, commentChars); cut >= 0 {
-		return strings.TrimRightFunc(str[:cut], unicode.IsSpace)
+	ret := str
+	re := regexp.MustCompile(commentChars)
+	if cut := re.FindStringIndex(str); cut != nil {
+		ret = strings.TrimRightFunc(str[:cut[0]], unicode.IsSpace)
+		// strip masked # (\s## -> \s#) inside the text
+		re = regexp.MustCompile(`\s(##)`)
+		ret = re.ReplaceAllString(ret, "#")
 	}
-	return str
+	return ret
 }
 
 // GetVirtStatus gets the status of virtualization environment

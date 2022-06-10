@@ -1,9 +1,12 @@
 # 3024346 - Linux Kernel Settings for NetApp NFS
-# Version 3 from 17.02.2021 in English
-# See TR-4290/TR-4435.
+# Version 6 from 29.04.2022 in English
+# See TR-4290 (FAS) or TR-4435 (AFF).
 
 [version]
-# SAP-NOTE=3024346 CATEGORY=Consulting VERSION=3 DATE=17.02.2021 NAME="Linux Kernel Settings for NetApp NFS"
+VERSION=6
+DATE=29.04.2022
+DESCRIPTION=Linux Kernel Settings for NetApp NFS
+REFERENCES=https://launchpad.support.sap.com/#/notes/3024346 https://docs.netapp.com/us-en/netapp-solutions-sap/bp/saphana-fas-nfs_introduction.html https://docs.netapp.com/us-en/netapp-solutions-sap/bp/saphana_aff_nfs_introduction.html
 
 [sysctl]
 net.core.rmem_max = 16777216

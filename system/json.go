@@ -98,16 +98,16 @@ type notesOrder struct {
 
 // JNoteListEntry is one line of 'saptune note list'
 type JNoteListEntry struct {
-	NoteID       string   `json:"Note ID"`
-	NoteDesc     string   `json:"Note description"`
-	NoteRef      JObj     `json:"Note reference"`
-	NoteVers     string   `json:"Note version"`
-	NoteRdate    string   `json:"Note release date"`
-	ManEnabled   bool     `json:"Note enabled manually"`
-	SolEnabled   bool     `json:"Note enabled by Solution"`
-	ManReverted  bool     `json:"Note reverted manually"`
-	NoteOverride bool     `json:"Note override exists"`
-	CustomNote   bool     `json:"custom Note"`
+	NoteID       string `json:"Note ID"`
+	NoteDesc     string `json:"Note description"`
+	NoteRef      JObj   `json:"Note reference"`
+	NoteVers     string `json:"Note version"`
+	NoteRdate    string `json:"Note release date"`
+	ManEnabled   bool   `json:"Note enabled manually"`
+	SolEnabled   bool   `json:"Note enabled by Solution"`
+	ManReverted  bool   `json:"Note reverted manually"`
+	NoteOverride bool   `json:"Note override exists"`
+	CustomNote   bool   `json:"custom Note"`
 }
 
 // JNoteList is the whole 'saptune note list'
@@ -141,9 +141,9 @@ type JStatusStaging struct {
 
 // JStatusServs are the mentioned systemd services in 'saptune status'
 type JStatusServs struct {
-	SaptuneService JObj   `json:"saptune"`
-	SapconfService JObj   `json:"sapconf"`
-	TunedService   JObj   `json:"tuned"`
+	SaptuneService JObj    `json:"saptune"`
+	SapconfService JObj    `json:"sapconf"`
+	TunedService   JObj    `json:"tuned"`
 	TunedProfile   *string `json:"tuned profile,omitempty"`
 }
 
@@ -160,7 +160,7 @@ type JSolListEntry struct {
 // JSolList is the whole 'saptune solution list'
 type JSolList struct {
 	SolsList []JSolListEntry `json:"available Solutions"`
-	Msg      string         `json:"remember message"`
+	Msg      string          `json:"remember message"`
 }
 
 // jInit creates an initial json entry
@@ -232,27 +232,15 @@ func JnotSupportedYet() {
 
 // Jcollect collects the result data
 func Jcollect(data interface{}) {
-	var val JObj
 	rac := realmAndCmd()
 	if GetFlagVal("format") != "json" || !racIsSupported(rac) {
 		return
 	}
 	switch res := data.(type) {
 	case string:
-		if res == "" {
-			val = nil
-		} else {
-			val = res
-		}
 		if rac == "version" {
 			jentry.CmdResult = versResults{ConfVers: res}
 		}
-		//if rac == "solution enabled" {
-			//jentry.CmdResult = configuredSol{ConfiguredSol: val}
-		//}
-		//if rac == "solution applied" {
-		//	jentry.CmdResult = appliedSol{AppliedSol: val}
-		//}
 	case []string:
 		if len(res) == 1 && res[0] == "" {
 			// replace empty string by empty slice
@@ -272,7 +260,7 @@ func Jcollect(data interface{}) {
 		}
 	case JSolList, JNoteList, JStatus:
 		switch rac {
-		case "solution list" , "note list" , "status", "daemon status", "service status":
+		case "solution list", "note list", "status", "daemon status", "service status":
 			jentry.CmdResult = res
 		}
 	default:

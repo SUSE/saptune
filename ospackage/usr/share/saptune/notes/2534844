@@ -1,8 +1,11 @@
 # 2534844 - Indexserver Crash During Startup due to Insufficient Shared Memory Segment
-# Version 12 from 15.11.2017 in English
+# Version 13 from 09.04.2020 in English
 
 [version]
-# SAP-NOTE=2534844 CATEGORY=HANA VERSION=12 DATE=15.11.2017 NAME="Indexserver Crash During Startup due to Insufficient Shared Memory Segment"
+VERSION=13
+DATE=09.04.2020
+DESCRIPTION=Indexserver Crash During Startup due to Insufficient Shared Memory Segment
+REFERENCES=https://launchpad.support.sap.com/#/notes/2534844
 
 [sysctl]
 # kernel.shmmni

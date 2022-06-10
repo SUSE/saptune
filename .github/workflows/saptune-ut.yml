@@ -54,6 +54,7 @@ jobs:
 
       - name: Code Climate report coverage
         run: ./cc-test-reporter after-build --debug --prefix ${{ env.CC_PREFIX }} --exit-code $?
+        if: github.event_name != 'pull_request'
 
       - name: Stop and remove Docker Image
         run: |

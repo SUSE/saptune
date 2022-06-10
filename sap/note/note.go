@@ -51,7 +51,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		ret[fileName] = INISettings{
 			ConfFilePath:    path.Join(saptuneTuningDir, fileName),
 			ID:              fileName,
-			DescriptiveName: "",
+			DescriptiveName: txtparser.GetINIFileDescriptiveName(path.Join(saptuneTuningDir, fileName)),
 		}
 	}
 

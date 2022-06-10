@@ -15,11 +15,11 @@ var fileNotExist = "/file_does_not_exist"
 var tstFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_all_test.ini")
 var tst2File = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/wrong_limit_test.ini")
 var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1557506")
-var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "Linux paging improvements", "", "14", "10.08.2015 ")
-var noteCategory = "LINUX"
-var noteVersion = "14"
-var noteDate = "10.08.2015"
+var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s\n\t\t\t%s", "Linux paging improvements", "", "16", "06.02.2020", "https://launchpad.support.sap.com/#/notes/1557506")
+var noteVersion = "16"
+var noteDate = "06.02.2020"
 var noteTitle = "Linux paging improvements"
+var noteRefs = "https://launchpad.support.sap.com/#/notes/1557506"
 
 var iniExample = `
 # comment
@@ -226,11 +226,11 @@ func TestGetINIFileDescriptiveName(t *testing.T) {
 }
 
 func TestGetINIFileVersionSectionEntry(t *testing.T) {
-	str := GetINIFileVersionSectionEntry(fileName, "category")
-	if str != noteCategory {
-		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, noteCategory)
+	str := GetINIFileVersionSectionEntry(fileName, "reference")
+	if str != noteRefs {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, noteRefs)
 	}
-	str = GetINIFileVersionSectionEntry(fileNotExist, "category")
+	str = GetINIFileVersionSectionEntry(fileNotExist, "reference")
 	if str != "" {
 		t.Errorf(str)
 	}

@@ -1,8 +1,11 @@
 # 2382421 - Optimizing the Network Configuration on HANA- and OS-Level
-# Version 38 from 29.06.2020 in English
+# Version 40 from 01.03.2021 in English
 
 [version]
-# SAP-NOTE=2382421 CATEGORY=HANA VERSION=38 DATE=29.06.2020 NAME="Optimizing the Network Configuration on HANA- and OS-Level"
+VERSION=40
+DATE=01.03.2021
+DESCRIPTION=Optimizing the Network Configuration on HANA- and OS-Level
+REFERENCES=https://launchpad.support.sap.com/#/notes/2382421
 
 [sysctl]
 # This parameter limits the size of the accept backlog of a listening socket.

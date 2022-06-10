@@ -165,7 +165,7 @@ func setupTableFormat(skeys []string, noteCompare map[string]map[string]note.Fie
 // printHeadline prints a headline for the table
 func printHeadline(writer io.Writer, header, id string, noteComparisons map[string]map[string]note.FieldComparison) {
 	if header != "NONE" {
-		nName := txtparser.GetINIFileDescriptiveName(noteComparisons[id]["ConfFilePath"].ActualValue.(string))
+		nName := noteComparisons[id]["DescriptiveName"].ActualValue.(string)
 		fmt.Fprintf(writer, "\n%s - %s \n\n", id, nName)
 	} else {
 		fmt.Fprintf(writer, "\n")
