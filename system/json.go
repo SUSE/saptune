@@ -9,7 +9,7 @@ import (
 )
 
 var schemaDir = "file:///usr/share/saptune/schemas/1.0/"
-var supportedRAC = map[string]bool{"daemon start": false, "daemon status": true, "daemon stop": false, "service start": false, "service status": true, "service stop": false, "service restart": false, "service takeover": false, "service enable": false, "service disable": false, "service enablestart": false, "service disablestop": false, "note list": true, "note revertall": false, "note enabled": true, "note applied": true, "note apply": false, "note simulate": false, "note customise": false, "note create": false, "note edit": false, "note revert": false, "note show": false, "note delete": false, "note verify": false, "note rename": false, "solution list": true, "solution verify": false, "solution enabled": true, "solution applied": true, "solution apply": false, "solution simulate": false, "solution customise": false, "solution create": false, "solution edit": false, "solution revert": false, "solution show": false, "solution delete": false, "solution rename": false, "staging status": false, "staging enable": false, "staging disable": false, "staging is-enabled": false, "staging list": false, "staging diff": false, "staging analysis": false, "staging release": false, "revert all": false, "lock remove": false, "check": false, "status": true, "version": true, "help": false}
+var supportedRAC = map[string]bool{"daemon start": false, "daemon status": true, "daemon stop": false, "service start": false, "service status": true, "service stop": false, "service restart": false, "service takeover": false, "service enable": false, "service disable": false, "service enablestart": false, "service disablestop": false, "note list": true, "note revertall": false, "note enabled": true, "note applied": true, "note apply": false, "note simulate": false, "note customise": false, "note create": false, "note edit": false, "note revert": false, "note show": false, "note delete": false, "note verify": true, "note rename": false, "solution list": true, "solution verify": true, "solution enabled": true, "solution applied": true, "solution apply": false, "solution simulate": false, "solution customise": false, "solution create": false, "solution edit": false, "solution revert": false, "solution show": false, "solution delete": false, "solution rename": false, "staging status": false, "staging enable": false, "staging disable": false, "staging is-enabled": false, "staging list": false, "staging diff": false, "staging analysis": false, "staging release": false, "revert all": false, "lock remove": false, "check": false, "status": true, "version": true, "help": false}
 
 // jentry is the json entry to display
 var jentry JEntry
@@ -78,7 +78,7 @@ type configuredSol struct {
 }
 
 //type configuredSol struct {
-	//ConfiguredSol JObj `json:"enabled Solution"`
+//ConfiguredSol JObj `json:"enabled Solution"`
 //}
 
 // appliedSol is for 'saptune solution applied'
@@ -117,6 +117,48 @@ type JNoteList struct {
 	Msg        string           `json:"remember message"`
 }
 
+// JPNotesLine one row of 'saptune note verify|simulate'
+// from PrintNoteFields
+type JPNotesLine struct {
+	NoteID       string       `json:"Note ID,omitempty"`
+	NoteVers     string       `json:"Note version,omitempty"`
+	Parameter    string       `json:"parameter"`
+	ExpValue     string       `json:"expected value,omitempty"`
+	OverValue    string       `json:"override value,omitempty"`
+	ActValue     *string      `json:"actual value,omitempty"`
+	Compliant    *bool        `json:"compliant,omitempty"`
+	Comment      string       `json:"comment,omitempty"`
+	Footnotes    []JFootNotes `json:"amendments,omitempty"`
+}
+
+// JFootNotes collects the footnotes per parameter
+type JFootNotes struct {
+	FNoteNumber int    `json:"index,omitempty"`
+	FNoteTxt    string `json:"text,omitempty"`
+}
+
+// JPNotesRemind is the reminder section
+type JPNotesRemind struct {
+	NoteID       string `json:"Note ID,omitempty"`
+	NoteReminder string `json:"attention,omitempty"`
+}
+
+// JPrintNotes is the whole 'PrintNoteFields' function
+// if we need to differ between 'verify' and 'simulate' this
+// can be done in PrintNoteFields' or in jcollect.
+type JPNotes struct {
+	Verifications []JPNotesLine   `json:"verifications"`
+	Attentions    []JPNotesRemind `json:"attentions,omitempty"`
+	NotesOrder    []string        `json:"enabled Notes,omitempty"`
+	SysCompliance *bool           `json:"system compliance,omitempty"`
+}
+
+// JSol - Solution name and related Note list
+type JSol struct {
+	SolName     string   `json:"Solution name"`
+	NotesList   []string `json:"Note list"`
+}
+
 // JStatus is the whole 'saptune status'
 type JStatus struct {
 	Services        JStatusServs   `json:"services"`
@@ -124,7 +166,10 @@ type JStatus struct {
 	VirtEnv         string         `json:"virtualization"`
 	SaptuneVersion  string         `json:"configured version"`
 	RPMVersion      string         `json:"package version"`
-	ConfiguredSol   []string       `json:"enabled Solution"`
+	ConfiguredSol   []string       `json:"Solution enabled"`
+	ConfSolNotes    []JSol         `json:"Notes enabled by Solution"`
+	AppliedSol      []string       `json:"Solution applied"`
+	AppliedSolNotes []JSol         `json:"Notes applied by Solution"`
 	ConfiguredNotes []string       `json:"Notes configured"`
 	EnabledNotes    []string       `json:"Notes enabled"`
 	AppliedNotes    []string       `json:"Notes applied"`
@@ -258,9 +303,13 @@ func Jcollect(data interface{}) {
 		if rac == "solution applied" {
 			jentry.CmdResult = appliedSol{AppliedSol: res}
 		}
-	case JSolList, JNoteList, JStatus:
+	case JSolList, JNoteList, JStatus, JPNotes:
 		switch rac {
-		case "solution list", "note list", "status", "daemon status", "service status":
+		case "note simulate":
+			// if we add 'note simulate' we need to switch off/skip
+			// some fields in JPNotes
+		default:
+			//"solution list", "note list", "status", "daemon status", "service status", "note verify":
 			jentry.CmdResult = res
 		}
 	default:

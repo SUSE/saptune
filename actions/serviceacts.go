@@ -533,16 +533,17 @@ func printTunedStatus(writer io.Writer, jstat *system.JStatusServs) {
 func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus) bool {
 	notTuned := true
 	fmt.Fprintf(writer, "enabled Solution:         ")
+	solName := ""
 	if len(tuneApp.TuneForSolutions) > 0 {
-		solName := tuneApp.TuneForSolutions[0]
+		solName = tuneApp.TuneForSolutions[0]
 		fmt.Fprintf(writer, "%s (%s)", solName, strings.Join(tuneApp.AllSolutions[solName], ", "))
 		notTuned = false
 	}
 	fmt.Fprintf(writer, "\n")
 	fmt.Fprintf(writer, "applied Solution:         ")
 	appliedSol := tuneApp.AppliedSolution()
+	appliedSolNotes := []string{}
 	if appliedSol != "" {
-		appliedSolNotes := []string{}
 		for _, note := range tuneApp.AllSolutions[appliedSol] {
 			if _, ok := tuneApp.IsNoteApplied(note); ok {
 				appliedSolNotes = append(appliedSolNotes, note)
@@ -571,7 +572,22 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 	if appliedNotes != "" {
 		jstat.AppliedNotes = strings.Split(appliedNotes, " ")
 	}
+	if appliedSol != "" {
+		jstat.AppliedSol = strings.Split(appliedSol, " ")
+		appSolNotes := system.JSol{
+			SolName:   appliedSol,
+			NotesList: appliedSolNotes,
+		}
+		jstat.AppliedSolNotes = append(jstat.AppliedSolNotes, appSolNotes)
+	}
 	jstat.ConfiguredSol = tuneApp.TuneForSolutions
+	if solName != "" {
+		confSolNotes := system.JSol{
+			SolName: solName,
+			NotesList: tuneApp.AllSolutions[solName],
+		}
+		jstat.ConfSolNotes = append(jstat.ConfSolNotes, confSolNotes)
+	}
 	jstat.ConfiguredNotes = tuneApp.TuneForNotes
 	jstat.EnabledNotes = tuneApp.NoteApplyOrder
 	return notTuned

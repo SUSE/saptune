@@ -151,6 +151,8 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
 		VerifyAllParameters(writer, tuneApp)
 	} else {
+		result := system.JPNotes{}
+
 		// Check system parameters against the specified note, no matter the note has been tuned for or not.
 		conforming, comparisons, _, err := tuneApp.VerifyNote(noteID)
 		if err != nil {
@@ -158,8 +160,11 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 		}
 		noteComp := make(map[string]map[string]note.FieldComparison)
 		noteComp[noteID] = comparisons
-		PrintNoteFields(writer, "HEAD", noteComp, true)
+		PrintNoteFields(writer, "HEAD", noteComp, true, &result)
 		tuneApp.PrintNoteApplyOrder(writer)
+		result.NotesOrder = tuneApp.NoteApplyOrder
+		result.SysCompliance = &conforming
+		system.Jcollect(result)
 		if !conforming {
 			system.ErrorExit("The parameters listed above have deviated from the specified note.\n", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
 		} else {
@@ -171,6 +176,7 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 // NoteActionSimulate shows all changes that will be applied to the system if
 // the Note will be applied.
 func NoteActionSimulate(writer io.Writer, noteID string, tuneApp *app.App) {
+	result := system.JPNotes{}
 	if noteID == "" {
 		PrintHelpAndExit(writer, 1)
 	}
@@ -181,7 +187,8 @@ func NoteActionSimulate(writer io.Writer, noteID string, tuneApp *app.App) {
 		fmt.Fprintf(writer, "If you run `saptune note apply %s`, the following changes will be applied to your system:\n", noteID)
 		noteComp := make(map[string]map[string]note.FieldComparison)
 		noteComp[noteID] = comparisons
-		PrintNoteFields(writer, "HEAD", noteComp, false)
+		PrintNoteFields(writer, "HEAD", noteComp, false, &result)
+		result.SysCompliance = nil
 	}
 }
 

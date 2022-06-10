@@ -160,12 +160,13 @@ func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
 		VerifyAllParameters(writer, tuneApp)
 	} else {
+		result := system.JPNotes{}
 		// Check system parameters against the specified solution, no matter the solution has been tuned for or not.
 		unsatisfiedNotes, comparisons, err := tuneApp.VerifySolution(solName)
 		if err != nil {
 			system.ErrorExit("Failed to test the current system against the specified SAP solution: %v", err)
 		}
-		PrintNoteFields(writer, "NONE", comparisons, true)
+		PrintNoteFields(writer, "NONE", comparisons, true, &result)
 		if len(unsatisfiedNotes) == 0 {
 			fmt.Fprintf(writer, "%s%sThe system fully conforms to the tuning guidelines of the specified SAP solution.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
 		} else {
@@ -177,6 +178,7 @@ func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 // SolutionActionSimulate shows all changes that will be applied to the system if
 // the solution will be applied.
 func SolutionActionSimulate(writer io.Writer, solName string, tuneApp *app.App) {
+	result := system.JPNotes{}
 	if solName == "" {
 		PrintHelpAndExit(writer, 1)
 	}
@@ -185,7 +187,7 @@ func SolutionActionSimulate(writer io.Writer, solName string, tuneApp *app.App) 
 		system.ErrorExit("Failed to test the current system against the specified note: %v", err)
 	} else {
 		fmt.Fprintf(writer, "If you run `saptune solution apply %s`, the following changes will be applied to your system:\n", solName)
-		PrintNoteFields(writer, "NONE", comparisons, false)
+		PrintNoteFields(writer, "NONE", comparisons, false, &result)
 	}
 }
 

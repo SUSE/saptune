@@ -12,8 +12,7 @@ import (
 )
 
 // PrintNoteFields Print mismatching fields in the note comparison result.
-func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool) {
-
+func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool, result *system.JPNotes) {
 	// initialise
 	colFormat := ""
 	colCompliant := ""
@@ -25,8 +24,9 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	override := ""
 	comment := ""
 	hasDiff := false
-	pAct := "NA"
 	pExp := ""
+	noteLine := system.JPNotesLine{}
+	noteList := []system.JPNotesLine{}
 
 	colorScheme := getColorScheme()
 
@@ -65,11 +65,13 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 		}
 
 		// print table body
+		// define variable pAct here and not at the beginning as we need
+		// the 'address' of the variable some lines below
+		pAct := strings.Replace(comparison.ActualValueJS, "\t", " ", -1)
 		if comparison.ActualValueJS == "PNA" {
 			pAct = "NA"
-		} else {
-			pAct = strings.Replace(comparison.ActualValueJS, "\t", " ", -1)
 		}
+		noteLine.ActValue = &pAct
 		pExp = strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1)
 		if printComparison {
 			// verify
@@ -83,9 +85,57 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 			// simulate
 			fmt.Fprintf(writer, format, comparison.ReflectMapKey, pAct, pExp, override, comment)
 		}
+		noteLine = collectMRO(noteLine, compliant, noteID, noteComparisons, comparison, pExp, override, printComparison, comment, footnote, pAct)
+		noteList = append(noteList, noteLine)
 	}
+
 	// print footer
-	printTableFooter(writer, header, footnote, reminder, hasDiff)
+	reminderList := []system.JPNotesRemind{}
+	printTableFooter(writer, header, footnote, reminder, hasDiff, &reminderList)
+	result.Verifications = noteList
+	result.Attentions = reminderList
+}
+
+// collectMRO collects the data for machine readable output
+// parameter: noteLine, compliant, noteID, noteComparisons, comparison,
+//            pExp, override, printComparison, comment, footnote, pAct
+// Attention - order of parameter important!
+func collectMRO(stuff ...interface{}) system.JPNotesLine {
+	nLine := stuff[0].(system.JPNotesLine)
+	noteComp := !strings.Contains(stuff[1].(string), "no")
+	nLine.NoteID = stuff[2].(string)
+	nLine.NoteVers = txtparser.GetINIFileVersionSectionEntry(stuff[3].(map[string]map[string]note.FieldComparison)[stuff[2].(string)]["ConfFilePath"].ActualValue.(string), "version")
+	nLine.Parameter = stuff[4].(note.FieldComparison).ReflectMapKey
+	nLine.ExpValue = stuff[5].(string)
+	nLine.OverValue = stuff[6].(string)
+	nLine.Compliant = &noteComp
+
+	if strings.Contains(stuff[1].(string), "-") {
+		nLine.Compliant = nil
+	}
+	if stuff[7].(bool) {
+		// verify
+		noteFNs := []system.JFootNotes{}
+		fns := system.JFootNotes{}
+		for _, fn := range strings.Fields(stuff[8].(string)) {
+			indx := fn[1:len(fn)-1]
+			idx, _ := strconv.Atoi(indx)
+			if idx > 0 {
+				fns.FNoteNumber = idx
+				fns.FNoteTxt = stuff[9].([]string)[idx - 1]
+			}
+			noteFNs = append(noteFNs, fns)
+		}
+		nLine.Footnotes = noteFNs
+		nLine.Comment = ""
+	} else {
+		// simulate
+		nLine.Comment = stuff[8].(string)
+	}
+	if stuff[10].(string) == "NA" || stuff[10].(string) == "PNA" || stuff[10].(string) == "all:none" {
+		nLine.ActValue = nil
+	}
+	return nLine
 }
 
 // sortNoteComparisonsOutput sorts the output of the Note comparison
@@ -201,7 +251,7 @@ func printTableHeader(writer io.Writer, format string, col0, col1, col2, col3, c
 
 // printTableFooter prints the footer of the table
 // footnotes and reminder section
-func printTableFooter(writer io.Writer, header string, footnote []string, reminder map[string]string, hasDiff bool) {
+func printTableFooter(writer io.Writer, header string, footnote []string, reminder map[string]string, hasDiff bool, noteReminder *[]system.JPNotesRemind) {
 	if header != "NONE" && !hasDiff {
 		fmt.Fprintf(writer, "\n   (no change)\n")
 	}
@@ -211,11 +261,15 @@ func printTableFooter(writer io.Writer, header string, footnote []string, remind
 		}
 	}
 	fmt.Fprintf(writer, "\n\n")
+	noteRem := system.JPNotesRemind{}
 	for noteID, reminde := range reminder {
 		if reminde != "" {
 			reminderHead := fmt.Sprintf("Attention for SAP Note %s:\nHints or values not yet handled by saptune. So please read carefully, check and set manually, if needed:\n", noteID)
 			fmt.Fprintf(writer, "%s\n", setRedText+reminderHead+reminde+resetTextColor)
+			noteRem.NoteID = noteID
+			noteRem.NoteReminder = reminderHead+reminde
 		}
+		*noteReminder = append(*noteReminder, noteRem)
 	}
 }
 

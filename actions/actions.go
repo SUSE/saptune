@@ -139,6 +139,7 @@ func rememberMessage(writer io.Writer) {
 
 // VerifyAllParameters Verify that all system parameters do not deviate from any of the enabled solutions/notes.
 func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
+	result := system.JPNotes{}
 	if len(tuneApp.NoteApplyOrder) == 0 {
 		fmt.Fprintf(writer, "No notes or solutions enabled, nothing to verify.\n")
 	} else {
@@ -146,8 +147,12 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
 		if err != nil {
 			system.ErrorExit("Failed to inspect the current system: %v", err)
 		}
-		PrintNoteFields(writer, "NONE", comparisons, true)
+		PrintNoteFields(writer, "NONE", comparisons, true, &result)
 		tuneApp.PrintNoteApplyOrder(writer)
+		result.NotesOrder = tuneApp.NoteApplyOrder
+		sysComp := len(unsatisfiedNotes) == 0
+		result.SysCompliance = &sysComp
+		system.Jcollect(result)
 		if len(unsatisfiedNotes) == 0 {
 			fmt.Fprintf(writer, "%s%sThe running system is currently well-tuned according to all of the enabled notes.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
 		} else {
