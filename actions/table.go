@@ -92,8 +92,10 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	// print footer
 	reminderList := []system.JPNotesRemind{}
 	printTableFooter(writer, header, footnote, reminder, hasDiff, &reminderList)
-	result.Verifications = noteList
-	result.Attentions = reminderList
+	if result != nil {
+		result.Verifications = noteList
+		result.Attentions = reminderList
+	}
 }
 
 // collectMRO collects the data for machine readable output
