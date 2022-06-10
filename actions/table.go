@@ -118,11 +118,11 @@ func collectMRO(stuff ...interface{}) system.JPNotesLine {
 		noteFNs := []system.JFootNotes{}
 		fns := system.JFootNotes{}
 		for _, fn := range strings.Fields(stuff[8].(string)) {
-			indx := fn[1:len(fn)-1]
+			indx := fn[1 : len(fn)-1]
 			idx, _ := strconv.Atoi(indx)
 			if idx > 0 {
 				fns.FNoteNumber = idx
-				fns.FNoteTxt = stuff[9].([]string)[idx - 1]
+				fns.FNoteTxt = stuff[9].([]string)[idx-1]
 			}
 			noteFNs = append(noteFNs, fns)
 		}
@@ -267,7 +267,7 @@ func printTableFooter(writer io.Writer, header string, footnote []string, remind
 			reminderHead := fmt.Sprintf("Attention for SAP Note %s:\nHints or values not yet handled by saptune. So please read carefully, check and set manually, if needed:\n", noteID)
 			fmt.Fprintf(writer, "%s\n", setRedText+reminderHead+reminde+resetTextColor)
 			noteRem.NoteID = noteID
-			noteRem.NoteReminder = reminderHead+reminde
+			noteRem.NoteReminder = reminderHead + reminde
 		}
 		*noteReminder = append(*noteReminder, noteRem)
 	}

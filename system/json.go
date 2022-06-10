@@ -120,15 +120,15 @@ type JNoteList struct {
 // JPNotesLine one row of 'saptune note verify|simulate'
 // from PrintNoteFields
 type JPNotesLine struct {
-	NoteID       string       `json:"Note ID,omitempty"`
-	NoteVers     string       `json:"Note version,omitempty"`
-	Parameter    string       `json:"parameter"`
-	ExpValue     string       `json:"expected value,omitempty"`
-	OverValue    string       `json:"override value,omitempty"`
-	ActValue     *string      `json:"actual value,omitempty"`
-	Compliant    *bool        `json:"compliant,omitempty"`
-	Comment      string       `json:"comment,omitempty"`
-	Footnotes    []JFootNotes `json:"amendments,omitempty"`
+	NoteID    string       `json:"Note ID,omitempty"`
+	NoteVers  string       `json:"Note version,omitempty"`
+	Parameter string       `json:"parameter"`
+	ExpValue  string       `json:"expected value,omitempty"`
+	OverValue string       `json:"override value,omitempty"`
+	ActValue  *string      `json:"actual value,omitempty"`
+	Compliant *bool        `json:"compliant,omitempty"`
+	Comment   string       `json:"comment,omitempty"`
+	Footnotes []JFootNotes `json:"amendments,omitempty"`
 }
 
 // JFootNotes collects the footnotes per parameter
@@ -143,7 +143,7 @@ type JPNotesRemind struct {
 	NoteReminder string `json:"attention,omitempty"`
 }
 
-// JPrintNotes is the whole 'PrintNoteFields' function
+// JPNotes is the whole 'PrintNoteFields' function
 // if we need to differ between 'verify' and 'simulate' this
 // can be done in PrintNoteFields' or in jcollect.
 type JPNotes struct {
@@ -155,8 +155,8 @@ type JPNotes struct {
 
 // JSol - Solution name and related Note list
 type JSol struct {
-	SolName     string   `json:"Solution name"`
-	NotesList   []string `json:"Note list"`
+	SolName   string   `json:"Solution name"`
+	NotesList []string `json:"Note list"`
 }
 
 // JStatus is the whole 'saptune status'

@@ -583,7 +583,7 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 	jstat.ConfiguredSol = tuneApp.TuneForSolutions
 	if solName != "" {
 		confSolNotes := system.JSol{
-			SolName: solName,
+			SolName:   solName,
 			NotesList: tuneApp.AllSolutions[solName],
 		}
 		jstat.ConfSolNotes = append(jstat.ConfSolNotes, confSolNotes)

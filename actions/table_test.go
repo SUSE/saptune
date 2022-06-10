@@ -193,25 +193,25 @@ func TestPrintNoteFields(t *testing.T) {
 
 	t.Run("verify with header", func(t *testing.T) {
 		buffer := bytes.Buffer{}
-		PrintNoteFields(&buffer, "HEAD", noteComp, true)
+		PrintNoteFields(&buffer, "HEAD", noteComp, true, nil)
 		txt := buffer.String()
 		checkCorrectMessage(t, txt, printMatchText1)
 	})
 	t.Run("simulate with header", func(t *testing.T) {
 		buffer := bytes.Buffer{}
-		PrintNoteFields(&buffer, "HEAD", noteComp, false)
+		PrintNoteFields(&buffer, "HEAD", noteComp, false, nil)
 		txt := buffer.String()
 		checkCorrectMessage(t, txt, printMatchText2)
 	})
 	t.Run("verify without header", func(t *testing.T) {
 		buffer := bytes.Buffer{}
-		PrintNoteFields(&buffer, "NONE", noteComp, true)
+		PrintNoteFields(&buffer, "NONE", noteComp, true, nil)
 		txt := buffer.String()
 		checkCorrectMessage(t, txt, printMatchText3)
 	})
 	t.Run("simulate without header", func(t *testing.T) {
 		buffer := bytes.Buffer{}
-		PrintNoteFields(&buffer, "NONE", noteComp, false)
+		PrintNoteFields(&buffer, "NONE", noteComp, false, nil)
 		txt := buffer.String()
 		checkCorrectMessage(t, txt, printMatchText4)
 	})
