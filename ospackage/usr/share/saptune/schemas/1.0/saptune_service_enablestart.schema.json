@@ -1,206 +1,127 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_service_enablestart.schema.json",  
-
+    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_service_enablestart.schema.json",
     "title": "",
     "description": "Describes the output of 'saptune service enablestart.",
-
     "type": "object",
-    "required": [ "$schema", "publish time", "argv", "pid", "command", "exit code", "result", "messages"],
+    "required": [
+        "$schema",
+        "publish time",
+        "argv",
+        "pid",
+        "command",
+        "exit code",
+        "result",
+        "messages"
+    ],
     "additionalProperties": true,
-        "propertyNames": {
-        "enum": [ "$schema", "publish time", "argv", "pid", "command", "exit code", "result", "messages", "Angela's pieces of wisdom" ]
+    "propertyNames": {
+        "enum": [
+            "$schema",
+            "publish time",
+            "argv",
+            "pid",
+            "command",
+            "exit code",
+            "result",
+            "messages",
+            "Angela's pieces of wisdom"
+        ]
     },
     "properties": {
-
         "$schema": {
             "description": "URI to the schema definition",
             "type": "string"
         },
-
         "publish time": {
             "description": "saptune timestamp of the time this JSON object was created.",
-            "$ref": "#/$defs/saptune timestamp"
+            "type": "string",
+            "pattern": "^((?:(\\d{4}-\\d{2}-\\d{2}) (\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?)))$",
+            "examples": [
+                "2022-02-16 10:51:41.163",
+                "2022-01-28 17:26:19.661"
+            ]
         },
-
         "argv": {
             "description": "The entire saptune command as it was called.",
             "type": "string",
             "minLength": 7,
-            "examples": ["saptune --format=json note list", "saptune --format=json version", "saptune --format=json json status"]
+            "examples": [
+                "saptune --format=json note list",
+                "saptune --format=json version",
+                "saptune --format=json json status"
+            ]
         },
-
         "pid": {
             "description": "PID of the saptune process creating this object.",
             "type": "integer",
             "minimum": 2
         },
-
         "command": {
             "description": "The saptune command (classifier), which was executed.",
             "type": "string",
-            "enum": ["service enablestart"]
+            "enum": [
+                "service enablestart"
+            ]
         },
-
         "result": {
             "description": "The result (output) of the command.",
             "type": "object",
-            "required": ["implemented"],
+            "required": [
+                "implemented"
+            ],
             "additionalProperties": false,
-            
             "properties": {
-                
                 "implemented": {
                     "description": "Indicates that JSON output has not yet been implemented yet.",
                     "type": "boolean",
-                    "enum": [false]
-                }            
-
+                    "enum": [
+                        false
+                    ]
+                }
             }
         },
-
         "exit code": {
             "description": "The return code the saptune command terminated with.",
             "type": "integer",
             "minimum": 0,
             "maximum": 255
-        }, 
-
+        },
         "messages": {
-            "description": "Contains all log messages normally printed on the screen in the order they were created",
+            "description": "Contains all log messages normally printed on the screen in the order they were created.",
             "type": "array",
             "items": {
                 "description": "A single message.",
                 "type": "object",
-                "required": ["priority", "message"],
+                "required": [
+                    "priority",
+                    "message"
+                ],
                 "additionalProperties": false,
                 "properties": {
-
                     "priority": {
-                        "description": "Priority of the log messages as defined AT https://confluence.suse.com/display/SAP/Logging+Guide",
+                        "description": "Priority of the log messages as defined at https://confluence.suse.com/display/SAP/Logging+Guide.",
                         "type": "string",
-                        "enum": ["CRITICAL", "ERROR" ,"WARNING" ,"NOTICE" ,"INFO", "DEBUG"]
+                        "enum": [
+                            "CRITICAL",
+                            "ERROR",
+                            "WARNING",
+                            "NOTICE",
+                            "INFO",
+                            "DEBUG"
+                        ]
                     },
-
                     "message": {
-                        "description": "The log message itself",
+                        "description": "The log message itself.",
                         "type": "string",
                         "minLength": 1,
-                        "examples": ["main.go:57: saptune (3.0.2) started with 'saptune status'", "system.go:235: saptune terminated with exit code '1'"]
+                        "examples": [
+                            "main.go:57: saptune (3.0.2) started with 'saptune status'",
+                            "system.go:235: saptune terminated with exit code '1'"
+                        ]
                     }
                 }
             }
-        },
-
-        "Angela's pieces of wisdom": {
-            "description": "Short pieces of wisdomw given from Angela to the world.",
-            "type": "string",
-            "examples": ["Software architects are a source of infinite joy."]
-        }    
-    },
-
-    "$defs": { 
-
-        "saptune timestamp": {
-            "description": "Definition of the saptune timestamp used in v2/3.",
-            "type": "string",
-            "pattern": "^((?:(\\d{4}-\\d{2}-\\d{2}) (\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?)))$",
-            "examples": ["2022-02-16 10:51:41.163", "2022-01-28 17:26:19.661"]
-        },
-
-        "major saptune version": {
-
-            "description": "The major part of the saptune version, a string with a single digit.",
-            "type": "string",
-            "pattern": "^[0-9]$"
-        },
-
-        "rpm version string": {
-            "description": "Format of a RPM version string (simplified).",
-            "type": "string",
-            "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
-            "examples": ["1.3.5", "0.3.45"]
-        },
-
-        "saptune note id": {
-            "description": "Format of Note ID (simplified).",
-            "type": "string",
-            "pattern": "^[^ ]+$",
-            "examples": ["1656250", "SAP_BOBJ"]
-        },
-
-        "saptune note version": {
-            "description": "Format of Note version (defined in `man 5 saptune-note`).",
-            "type": "string",
-            "pattern": "^[0-9A-Za-z._+-]*$",
-            "examples": ["7", "1.3-prod"]
-        },
-
-        "saptune note release date": {
-            "description": "Format of Note release date (simplified).",
-            "type": "string",
-            "pattern": "^[0-9A-Za-z.]*$",
-            "examples": ["18.10.2017", "Aug 14th 2020"]
-        },
-
-        "saptune note reference": {
-            "description": "Format of a Note reference.",
-            "type": "string",
-            "examples": ["https://launchpad.support.sap.com/#/notes/1410736"]
-        },
-
-        "saptune solution name": {
-            "description": "Format of Solution name (simplified).",
-            "type": "string",
-            "pattern": "^[^ ]+$",
-            "examples": ["HANA", "myNetWeaver"]
-        },
-
-        "systemd state is-enabled": {
-            "description": "Possible systemd states for 'is-enabled' of a service.",
-            "type": "string",
-            "enum": ["enabled", "enabled-runtime", "linked", "linked-runtime", "alias", "masked", "masked-runtime", "static", "indirect", "disabled", "generated", "transient", "bad"]   
-        },
-
-        "systemd state is-active": {
-            "description": "Possible systemd states for 'is-active' of a service.",
-            "type": "string",
-            "enum": ["active", "inactive", "failed"]
-        },
-
-        "systemd state": {
-            "description": "Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages.",
-            "type": "array",
-            "prefixItems": [
-                { "$ref": "#/$defs/systemd state is-enabled" },
-                { "$ref": "#/$defs/systemd state is-active" }
-            ],
-            "examples": [["disabled", "inactive"], ["enabled", "active"]]
-        },
-    
-        "systemd system state": {
-            "description": "Possible systemd system states reported by 'systemctl is-system-running'.",
-            "type": "string",
-            "enum": ["initializing", "starting", "running", "degraded", "maintenance", "stopping", "offline", "unknown"]    
-        },
-
-        "saptune parameter id": {
-            "description": "Name of the parameter.",
-            "type": "string",
-            "pattern": "^[^ ]+$"
-        },
-
-         "saptune parameter value": {
-             "description": "Value of a parameter.",
-             "type": "string"
-         },
-
-         "saptune parameter compliance": {
-             "description": "States if the parameter is compliant or not.",
-             "onOf": [
-                 { "type": "boolean" },
-                 { "type": "null" }
-             ]
-         }
+        }
     }
 }

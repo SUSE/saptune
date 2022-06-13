@@ -7,9 +7,5 @@
 {% block result_required %}["enabled Notes"]{% endblock %}
 
 {% block result_properties %}
-                "enabled Notes": {
-                    "description": "List of the enabled Notes.",
-                    "type":  "array",
-                    "items": { "$ref": "#/$defs/saptune note id" }                       
-                }            
+                "enabled Notes": { "$ref": "#/$defs/saptune enabled Notes" }
 {% endblock %}

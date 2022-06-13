@@ -7,9 +7,5 @@
 {% block result_required %}["applied Notes"]{% endblock %}
 
 {% block result_properties %}
-                "applied Notes": {
-                    "description": "List of the applied Notes.",
-                    "type":  "array",
-                    "items": { "$ref": "#/$defs/saptune note id" }                       
-                }            
+                "applied Notes": { "$ref": "#/$defs/saptune applied Notes" }                       
 {% endblock %}

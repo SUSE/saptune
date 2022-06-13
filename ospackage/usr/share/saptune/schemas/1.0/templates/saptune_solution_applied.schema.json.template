@@ -7,10 +7,5 @@
 {% block result_required %}["applied Solution"]{% endblock %}
 
 {% block result_properties %}
-                "applied Solution": {
-                    "description": "The applied Solution.",
-                    "type": "array",
-                    "items": { "$ref": "#/$defs/saptune solution name" },            
-                    "maxItems": 1                                            
-                }            
+                "applied Solution": { "$ref": "#/$defs/saptune applied Solution" }
 {% endblock %}

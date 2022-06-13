@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
 """
 Builds schema definitions in ../ from all templates in this directory.
+It will resolv all references and remove the $defs section before writing
+the final json schema.
 Existing files get overwritten!
 
 Usage: FORCE=1 ./build.py
 
 """
 
+from copy import deepcopy
 import glob
 import os
 import sys
 import jinja2
+import json
+import jsonref
+import pprint
 
 
 def main():
@@ -35,8 +41,10 @@ def main():
 
         try:
             template = templateEnv.get_template(file)
-            schema = template.render()
-            #print(schema)
+            schema_dict = jsonref.loads(template.render())    # Render the template, load teh JSON
+            schema_dict_touched = deepcopy(schema_dict)   # We have to touch the properties to resolve references.
+            del schema_dict_touched["$defs"]  # With references resolved, we don't need '$defs' anymore. 
+            schema = json.dumps(schema_dict_touched, indent=4)   # Format JSON nicely and write out.
             with open(dest, 'w') as f:
                 f.write(schema)
                 print(f'[\033[32m OK \033[39m] "{src}" -> "{dest}"')

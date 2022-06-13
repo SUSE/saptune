@@ -81,6 +81,12 @@
                     "description": "The version string of the installed saptune package.",
                     "$ref": "#/$defs/rpm version string" 
                 }, 
+                "saptune package release date": {
+                    "description": "The release date of the installed saptune package.",
+                    "type": "string",
+                    "pattern": "^20(2[2-9]|[3-9][0-9])/(0[1-9]|1[12]/(0[1-9]|[12][0-9]|3[01]",
+                    "examples": ["2022/06/03"]
+                },
                 "enabled Solution": {
                     "description": "The enabled Solution.",
                     "type": "array",
@@ -271,10 +277,7 @@
 
          "saptune parameter compliance": {
              "description": "States if the parameter is compliant or not.",
-             "onOf": [
-                 { "type": "boolean" },
-                 { "type": "null" }
-             ]
+             "type": "boolean" 
          }
     }
 }

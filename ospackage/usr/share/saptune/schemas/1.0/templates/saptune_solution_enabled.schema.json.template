@@ -7,10 +7,5 @@
 {% block result_required %}["enabled Solution"]{% endblock %}
 
 {% block result_properties %}
-                "enabled Solution": {
-                    "description": "The enabled Solution.",
-                    "type": "array",
-                    "items": { "$ref": "#/$defs/saptune solution name" },            
-                    "maxItems": 1
-                }            
+                "enabled Solution": { "$ref": "#/$defs/saptune enabled Solution" }
 {% endblock %}

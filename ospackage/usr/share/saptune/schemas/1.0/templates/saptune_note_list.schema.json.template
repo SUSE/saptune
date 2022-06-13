@@ -17,16 +17,22 @@
                         "properties": {
                             "Note ID": { "$ref": "#/$defs/saptune note id" },
                             "Note description": {
-                                "description": "Description of the Note",
-                                "type": "string" 
+                                "description": "Description of the Note.",
+                                "type": "string",
+                                "examples": [ "Sybase - SAP Adaptive Server Enterprise", "Linux Kernel Settings for NetApp NFS" ]
                             },
                             "Note reference": { 
-                                "description": "References (URL) for the Note",
+                                "description": "References (URL) for the Note.",
                                 "type": "array",
-                                "items": { "$ref": "#/$defs/saptune note reference" }
+                                "items": { "$ref": "#/$defs/reference format" }
                             },
                             "Note version": { "$ref": "#/$defs/saptune note version"  },
-                            "Note release date": { "$ref": "#/$defs/saptune note release date" }, 
+                            "Note release date": { 
+                                "description": "Release date of the Note.",
+                                "type": "string",
+                                "pattern": "^[0-9A-Za-z.]*$",
+                                "examples": ["18.10.2017", "Aug 14th 2020"]
+                            },                        
                             "Note enabled manually": {
                                 "description": "States if the Note was enabled manually.",
                                 "type": "boolean"
@@ -50,13 +56,10 @@
                         }
                     }                       
                 },
-                "enabled Notes": {
-                    "description": "List of the enabled Notes in the order they have been enabled",
-                    "type":  "array",
-                    "items": { "$ref": "#/$defs/saptune note id" }
+                "enabled Notes": { 
+                    "$ref": "#/$defs/saptune enabled Notes list" 
                 },
-                "remember message": {
-                    "description": "The remember message.",
-                    "type": "string"
+                "remember message": { 
+                    "$ref": "#/$defs/saptune remember message"
                 }            
 {% endblock %}
