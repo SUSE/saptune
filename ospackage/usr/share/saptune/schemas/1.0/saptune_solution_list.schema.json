@@ -79,7 +79,7 @@
                     "items": {
                         "type": "object",
                         "required": [
-                            "Solution name",
+                            "Solution ID",
                             "Note list",
                             "Solution enabled",
                             "Solution override exists",
@@ -88,8 +88,8 @@
                         ],
                         "additionalProperties": false,
                         "properties": {
-                            "Solution name": {
-                                "description": "Format of Solution name (simplified).",
+                            "Solution ID": {
+                                "description": "The Solution ID.",
                                 "type": "string",
                                 "pattern": "^[^ ]+$",
                                 "examples": [
@@ -110,7 +110,7 @@
                                     ]
                                 }
                             },
-                            "Solution enabled": {
+                            "Solution enabled manually": {
                                 "description": "States if the Solution is enabled.",
                                 "type": "boolean"
                             },

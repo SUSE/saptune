@@ -45,12 +45,9 @@
                     "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
                     "examples": ["3.0.1", "3.1.0"]
                 }, 
-                "enabled Solution": {
-                    "description": "The enabled Solution.",
-                    "type": "array",
-                    "items": { "$ref": "#/$defs/saptune solution name" },            
-                    "maxItems": 1
-                },
+                "enabled Solution": { "$ref": "#/$defs/saptune enabled Solution" },
+                "applied Solution": { "$ref": "#/$defs/saptune applied Solution" },
+
                 "Notes configured": {
                     "description": "List of enabled Notes, which have been manually enabled and not by a Solution.",
                     "type": "array",

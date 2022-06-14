@@ -15,7 +15,7 @@
                         "required": [ "Solution ID", "Note list", "Solution enabled", "Solution override exists", "custom Solution", "Solution deprecated" ],
                         "additionalProperties": false,
                         "properties": {
-                            "Solution ID": { "$ref": "#/$defs/saptune solution in" },
+                            "Solution ID": { "$ref": "#/$defs/saptune solution id" },
                             "Note list": {
                                 "description": "List of Notes belonging to the Solution.",
                                 "type": "array",
@@ -40,6 +40,5 @@
                         }
                     }                       
                 },
-                "remember message": { "$ref": "#/$defs/saptune remember message" }
-                }            
+                "remember message": { "$ref": "#/$defs/saptune remember message" }    
 {% endblock %}

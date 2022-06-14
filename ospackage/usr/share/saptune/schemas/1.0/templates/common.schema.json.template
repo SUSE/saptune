@@ -228,14 +228,14 @@
         "saptune enabled Solution": {
             "description": "The enabled Solution.",
             "type": "array",
-            "items": { "$ref": "#/$defs/saptune solution name" },            
+            "items": { "$ref": "#/$defs/saptune solution id" },            
             "maxItems": 1
         },
 
         "saptune applied Solution": {
             "description": "The applied Solution.",
             "type": "array",
-            "items": { "$ref": "#/$defs/saptune solution name" },            
+            "items": { "$ref": "#/$defs/saptune solution id" },            
             "maxItems": 1                                            
         }        
 

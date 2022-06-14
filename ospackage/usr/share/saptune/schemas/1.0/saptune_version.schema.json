@@ -72,8 +72,8 @@
             ],
             "additionalProperties": false,
             "properties": {
-                "configured version": {
-                    "description": "The major part of the saptune version, a string with a single digit.",
+                "major saptune version": {
+                    "description": "The major saptune version.",
                     "type": "string",
                     "pattern": "^[0-9]$"
                 }

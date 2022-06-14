@@ -19,6 +19,8 @@
         "package version": "3.0.2",
         "saptune package release date": "2022/06/03", 
         "enabled Solution": [],
+        "applied Solution": [],
+
         "Notes configured": [],
         "Notes enabled": ["941735", "1771258", "1980196", "2578899", "2684254", "2382421", "2534844", "2993054", "1656250"],
         "Notes applied": ["1656250", "1771258", "1980196", "2382421", "2534844", "2578899", "2684254", "2993054", "941735"],
@@ -34,9 +36,9 @@
 }
 
 
-saptune package:        '3.1.0' (2022/06/03)     <--- Extra Feld "saptune package release date"
-configured Solution:    MAXDB  <--- configured vs. enabled  
+
 manually enabled Notes: 1656250 1980196 2382421 2534844 2684254 2993054 
+
 enabled Notes:          941735 1771258 1980196 2578899 2684254 2382421 2534844 2993054 1656250
 applied Notes:          
 

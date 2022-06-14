@@ -194,11 +194,19 @@ Each saptune output has always the same properties:
 | ``               | `result`   | yes       | string   |  | `saptune [daemon\|service} status` | ``
 | ``               | `result`   | yes       | string   |  | `saptune [daemon\|service} status` | ``
 | ``               | `result`   | yes       | string   |  | `saptune [daemon\|service} status` | ``
-| ``               | `result`   | yes       | string   |  | `saptune [daemon\|service} status` | ``
+
+
+nabled Solution	result	yes	array of strings	The enabled Solution.	saptune [daemon|service} status,
+saptune solution enabled	"enabled Solution": [ "MAXDB" ]
+
+
+
 
 | `major saptune version`  | `result`   | string    | The major saptune version. | `saptune version` |  `3`
 
  
+
+
 
 | saptune status             	      | yes |  yes  |
 

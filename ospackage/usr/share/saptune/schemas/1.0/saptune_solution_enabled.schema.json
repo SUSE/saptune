@@ -76,7 +76,7 @@
                     "description": "The enabled Solution.",
                     "type": "array",
                     "items": {
-                        "description": "Format of Solution name (simplified).",
+                        "description": "The Solution ID.",
                         "type": "string",
                         "pattern": "^[^ ]+$",
                         "examples": [
