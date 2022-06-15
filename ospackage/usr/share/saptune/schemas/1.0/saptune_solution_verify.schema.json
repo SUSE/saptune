@@ -165,7 +165,7 @@
                                     "type": "object",
                                     "required": [
                                         "index",
-                                        "text"
+                                        "amendment"
                                     ],
                                     "additionalProperties": false,
                                     "properties": {
@@ -177,7 +177,7 @@
                                                 "15"
                                             ]
                                         },
-                                        "text": {
+                                        "amendment": {
                                             "description": "Describes the meaning of the amendment (footnote).",
                                             "type": "string",
                                             "minLength": 1,

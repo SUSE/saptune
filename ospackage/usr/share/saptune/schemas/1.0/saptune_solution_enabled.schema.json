@@ -83,8 +83,7 @@
                             "HANA",
                             "myNetWeaver"
                         ]
-                    },
-                    "maxItems": 1
+                    }
                 }
             }
         },

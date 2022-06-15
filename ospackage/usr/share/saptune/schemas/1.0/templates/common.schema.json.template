@@ -91,13 +91,6 @@
 
     "$defs": { 
 
-        "saptune enabled Notes list": {
-            "description": "List of the enabled Notes in the order they have been enabled.",
-            "type":  "array",
-            "items": { "$ref": "#/$defs/saptune note id" },
-            "examples": [ ["1656250", "SAP_BOBJ"] ]
-        },
-
         "saptune remember message": {
             "description": "The remember message.",
             "type": "string",
@@ -177,7 +170,7 @@
             "items": {
                 "description": "Amendment (footnote) consists of an id and the explaining text.",
                 "type": "object",
-                "required": [ "index", "text" ],
+                "required": [ "index", "amendment" ],
                 "additionalProperties": false,  
                 "properties": {
                     "index": { 
@@ -185,7 +178,7 @@
                         "type": "integer",
                         "examples": ["11", "15"] 
                     },
-                    "text": { 
+                    "amendment": { 
                         "description": "Describes the meaning of the amendment (footnote).",
                         "type": "string", 
                         "minLength": 1,
@@ -220,6 +213,18 @@
             "items": { "$ref": "#/$defs/saptune note id" }                       
         },    
 
+        "saptune staged Notes": {
+            "description": "List of the staged Notes.",
+            "type":  "array",
+            "items": { "$ref": "#/$defs/saptune note id" }                       
+        },
+         
+        "saptune additional enabled Notes": {
+            "description": "List of additional (to a Solution) applied Notes. ",
+            "type":  "array",
+            "items": { "$ref": "#/$defs/saptune note id" }                       
+        },
+
         "saptune system compliance": {
             "description": "Overall compliance of all currently applied SAP Notes.",
             "type": "boolean"
@@ -228,17 +233,20 @@
         "saptune enabled Solution": {
             "description": "The enabled Solution.",
             "type": "array",
-            "items": { "$ref": "#/$defs/saptune solution id" },            
-            "maxItems": 1
+            "items": { "$ref": "#/$defs/saptune solution id" }            
         },
 
         "saptune applied Solution": {
             "description": "The applied Solution.",
             "type": "array",
-            "items": { "$ref": "#/$defs/saptune solution id" },            
-            "maxItems": 1                                            
-        }        
+            "items": { "$ref": "#/$defs/saptune solution id" }
+        },
 
+        "saptune staged Solutions": {
+            "description": "List of staged Solutions.",
+            "type": "array",
+            "items": { "$ref": "#/$defs/saptune solution id" }                                                  
+        }        
     }
 }
 

@@ -4,10 +4,10 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["services", "system state", "virtualization", "configured version", "package version", "enabled Solution", "Notes configured", "Notes enabled", "Notes applied", "staging", "remember message"]{% endblock %}
+{% block result_required %}["services", "systemd system state", "virtualization", "configured version", "package version", "enabled Solution", "additional enabled Notes", "enabled Notes", "applied Notes", "staging", "remember message"]{% endblock %}
 
 {% block result_properties %}
-                "services": {
+                 "services": {
                     "description": "The states of various systemd services related to saptune.",
                     "type": "object",
                     "required": [ "saptune", "sapconf", "tuned" ],
@@ -24,7 +24,7 @@
                             "type": "string"
                         }
                     }
-                },  
+                }, 
                 "systemd system state": {
                     "description": "Possible systemd system states reported by 'systemctl is-system-running'.",
                     "type": "string",
@@ -40,52 +40,31 @@
                 },
                 "package version": { 
                     "description": "The version string of the installed saptune package.",
-                    "$ref": "#/$defs/rpm version string",
                     "type": "string",
                     "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
                     "examples": ["3.0.1", "3.1.0"]
                 }, 
                 "enabled Solution": { "$ref": "#/$defs/saptune enabled Solution" },
                 "applied Solution": { "$ref": "#/$defs/saptune applied Solution" },
+                "additional enabled Notes": { "$ref": "#/$defs/saptune additional enabled Notes" },
+                "enabled Notes": { "$ref": "#/$defs/saptune enabled Notes" },
+                "applied Notes": { "$ref": "#/$defs/saptune applied Notes" },
 
-                "Notes configured": {
-                    "description": "List of enabled Notes, which have been manually enabled and not by a Solution.",
-                    "type": "array",
-                    "items": { "$ref": "#/$defs/saptune note id" }
-                },
-                "Notes enabled": {
-                    "description": "List of enabled Notes.",
-                    "type": "array",
-                    "items": { "$ref": "#/$defs/saptune note id" }
-                },
-                "Notes applied": {
-                    "description": "List of applied Notes.",
-                    "type": "array",
-                    "items": { "$ref": "#/$defs/saptune note id" }
-                },
+
                 "staging": {
                     "description": "Details about staging.",
                     "type": "object",
-                    "required": [ "enabled", "staged Notes", "staged Solutions" ],
+                    "required": [ "staging enabled", "staged Notes", "staged Solutions" ],
                     "additionalProperties": false,
                     "properties": {
-                        "enabled" : {
+                        "staging enabled" : {
                             "description": "States if staging is enabled or not.",
                             "type": "boolean"
                         },
-                        "staged Notes": {
-                            "description": "List of Notes present in the staging area.",
-                            "type": "array",
-                            "items": { "$ref": "#/$defs/saptune note id" }
-                        },
-                        "staged Solutions": {
-                            "description": "List of Solutions present in the staging area.",
-                            "type": "array",
-                            "items": { "$ref": "#/$defs/saptune solution name" }
-                        }
+                        "staged Notes": { "$ref": "#/$defs/saptune staged Notes" },
+                        "staged Solutions": { "$ref": "#/$defs/saptune staged Solutions" }
                     }
                 },
-                "zodiac sign": {}
                 "remember message": { 
                     "$ref": "#/$defs/saptune remember message"
                 }    

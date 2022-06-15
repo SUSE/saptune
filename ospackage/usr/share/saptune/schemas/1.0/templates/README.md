@@ -50,192 +50,165 @@ Overview about implemented commands and their schema
 | invalid saptune command           | yes |  yes  |  
 | saptune daemon start	            | no  |  no   |
 | saptune daemon status	            | yes |  yes  |
-| saptune daemon stop	            | no  |  no   |
-| saptune service status	        | yes |  yes  |
-| saptune service start 	        | no  |  no   |
+| saptune daemon stop               | no  |  no   |
+| saptune service status            | yes |  yes  |
+| saptune service start             | no  |  no   |
 | saptune service reload            | no  |  no   |
-| saptune service restart	        | no  |  no   |
-| saptune service stop   	        | no  |  no   |
-| saptune service enable        	| no  |  no   |
-| saptune service disable         	| no  |  no   |
+| saptune service restart           | no  |  no   |
+| saptune service stop              | no  |  no   |
+| saptune service enable            | no  |  no   |
+| saptune service disable           | no  |  no   |
 | saptune service enablestart       | no  |  no   |
 | saptune service disablestop       | no  |  no   |
 | saptune service apply    	        | no  |  no   |
 | saptune service revert            | no  |  no   |
 | saptune service takeover          | no  |  no   |
-| saptune note list  	            | yes |  yes  |
+| saptune note list                 | yes |  yes  |
 | saptune note verify 	            | yes |  yes  |
 | saptune note enabled    	        | yes |  yes  |  
 | saptune note applied	            | yes |  yes  |
-| saptune note apply	            | no  |  no   |
+| saptune note apply                | no  |  no   |
 | saptune note simulate   	        | no  |  no   |
 | saptune note customise|customize  | no  |  no   | 
-| saptune note create	            | no  |  no   |
-| saptune note edit 	            | no  |  no   |
+| saptune note create	              | no  |  no   |
+| saptune note edit 	              | no  |  no   |
 | saptune note show	                | no  |  no   |
-| saptune note revert	            | no  |  no   |
-| saptune note delete	            | no  |  no   |
-| saptune note rename	            | no  |  no   |
+| saptune note revert	              | no  |  no   |
+| saptune note delete	              | no  |  no   |
+| saptune note rename	              | no  |  no   |
 | saptune note revertall|revert all |	no  |  no   |
-| saptune solution list  	        | yes |  yes  |   
-| saptune solution verify	        | yes |  yes  |
+| saptune solution list  	          | yes |  yes  |   
+| saptune solution verify	          | yes |  yes  |
 | saptune solution enabled	        | yes |  yes  |
-| saptune solution applied  	    | yes |  yes  |
-| saptune solution apply	        | no  |  no   |
+| saptune solution applied          | yes |  yes  |
+| saptune solution apply	          | no  |  no   |
 | saptune solution simulate	        | no  |  no   |
-| saptune solution revert	        | no  |  no   | 
-| saptune solution create	        | no  |  no   |
+| saptune solution revert           | no  |  no   | 
+| saptune solution create	          | no  |  no   |
 | saptune solution edit	            | no  |  no   |
-| saptune solution delete	        | no  |  no   |
-| saptune solution rename	        | no  |  no   |
-| saptune staging status	        | no  |  no   |
+| saptune solution delete	          | no  |  no   |
+| saptune solution rename	          | no  |  no   |
+| saptune staging status	          | no  |  no   |
 | saptune staging is-enabled      	| no  |  no   |
-| saptune staging enable|disable	| no  |  no   |
+| saptune staging enable|disable    | no  |  no   |
 | saptune staging list	            | no  |  no   |
 | saptune staging diff	            | no  |  no   |
 | saptune staging analysis	        | no  |  no   |
 | saptune staging release           | no  |  no   |
-| saptune log status	            | no  |  no   | 
+| saptune log status	              | no  |  no   | 
 | saptune log set                 	| no  |  no   |
-| saptune lock remove    	        | no  |  no   |
-| saptune status             	    | yes |  yes  | (in discussion)
+| saptune lock remove    	          | no  |  no   |
+| saptune status                    | yes |  yes  | (in discussion)
 | saptune version          	        | yes |  yes  |
-| saptune help   	                | no  |  no   |
-
-
-- Offen:
-    - Benennung der Noteausgaben in status
-    - "Solution enabled" / "enabled Soultion" hat verschiedene Bedeutungen!  Gleichziehen und mit "Notes *" in Einklang bringen!
-
-
-solution list    : "available Solutions" array  "Solution enabled" boolean
-solution applied : "applied Solution" array
-solution enabled : "enabled Solution" array
-status           : "enabled Solution" array <-- conflict!
-
-
-note list        : "enabled Notes" array 
-note applied     :
-note enabled     : "enabled Notes" array 
-note verify      : "enabled Notes" array
-status           : "Notes enabled" array
-
-SHOULD I PUT ALL DEFINITIONS INTO COMMON AND HAVE ONLY REFERENCES IN THE TEWMPLATES???
+| saptune help   	                  | no  |  no   |
 
 
 
-Rules:
-  - undefined scalars will not be part of the JSON output
-  - lists can be empty (shall we remove them too???) 
+Overview of the properties used in the JSON output
+==================================================
 
-
-Each saptune output has always the same properties:
-
-| Property       | Part Of | Mandatory | Data Type | Description | Commnand | Example |
-| :------------- | :-----: | :-------: | :-------: | :-----------| :------- | :------ |
-| `$schema`      | `{}`    | yes       | string    | URI to the schema definition. | _all_ | `file:///usr/share/saptune/schemas/1.0/saptune_note_applied.schema.json`
-| `publish time` | `{}`    | yes       | string    | The timestamp of the time this JSON object was created. | _all_ |  `2022-02-16 10:51:41.163661`
-| `argv`         | `{}`    | yes       | string    | The entire saptune command as it was called. | _all_ |  `saptune --format=json note list` 
-| `pid`          | `{}`    | yes       | integer   | PID of the saptune process creating this object. | _all_ |  `1502`
-| `command`      | `{}`    | yes       | string    | The saptune command (classifier), which was executed. | _all_ |  `note list`
-| `exit code`    | `{}`    | yes       | integer   | The return code the saptune command terminated with. | _all_ |  `1`
-| `result`       | `{}`    | yes       | object    | The result (output) of the command. | _all_ |  `"result": {}`
-| `messages`     | `{}`    | yes       | array of objects     | Contains all log messages normally printed on the screen in the order they were created. | _all_ |   `"messages": [{ "priority": "WARNING", "message": "section.go:293: You are still using the old ..."}]`
-| `priority`     | `messages` | yes       | string    | Priority of the log messages as defined at https://confluence.suse.com/display/SAP/Logging+Guide". | _all_ |  `INFO` 
-| `message`      | `messages` | yes       | string    | The log message itself. | _all_ |   `main.go:57: saptune (3.0.2) started with 'saptune status'"`
-| `implemented`  | `result`   | yes       | boolean   | Indicates that JSON output has not yet been implemented yet. | _invalid command_ |  `false` 
-| `available Notes`     | `result`   | yes       | array of objects  | List of the available Notes. | `saptune note list` |  `"available Notes": [ {"Note ID": "1410736", ...} ]`
-| `enabled Notes`       | `result`   | yes       | array of strings  | List of the enabled Notes in the order they have been enabled. | `saptune note list`,</br> `saptune note verify`,</br> `saptune solution verify`,</br> `saptune [daemon\|service] status`</br>, `saptune note enabled` | yes       | `"enabled Notes": [ "941735", "1771258" ]`
-| `remember message`    | `result`   | yes       | string   |  | `saptune [daemon\|service] status`,</br> `saptune note list`,</br> `saptune solution list` |  `"remember message": "\nRemember: ..."` 
-| `Note ID`             | `available Notes`, </br>`verifications`,</br> `attentions` | yes       | string   | ID of the Note. | `saptune note list`,</br> `saptune note verify`,</br> `saptune solution verify` |  `"1656250"` 
-| `Note description`    | `available Notes`   | yes       | string   | Description of the Note. | `saptune note list` |  `"Linux Kernel Settings for NetApp NFS"` 
-| `Note reference`      | `available Notes`   | yes       | array of strings | References (URL) for the Note. | `saptune note list` |  `["https://launchpad.support.sap.com/#/notes/1410736"]` 
-| `Note version`        | `available Notes`, </br>`verifications`   | yes       | string   | The Note version (defined in `man 5 saptune-note`). | `saptune note list`,</br> `saptune note verify`,</br> `saptune solution verify` |  `"7"` 
-| `Note release date`   | `available Notes`   | yes       | string   | Release date of the Note. | `saptune note list` | `"18.10.2017"`
-| `Note enabled manually`     | `available Notes`   | yes       | boolean   | States if the Note was enabled manually. | `saptune note list` | `true`
-| `Note enabled by Solution`  | `available Notes`   | yes       | boolean   | States if the Note was enabled by a Solution. | `saptune note list` | `true`
-| `Note reverted manually`    | `available Notes`   | yes       | boolean   | States if the Note was reverted manually. | `saptune note list` | `true`
-| `Note override exists`      | `available Notes`   | yes       | boolean   | States if an override file exists for the Note. | `saptune note list` | `true`
-| `custom Note`               | `available Notes`   | yes       | boolean   | States if the Note is a custom Note. | `saptune note list` | `true`
-| `verifications`             | `result`   | yes       | list of objects    | List of verifications (lines of the table output of `saptune note verify`. | `saptune note verify`,</br> `saptune solution verify` | `"verifications": [ { "Note ID": "1771258", ... },`
+| Property                | Part Of  | Mandatory | Data Type          | Description                                             | Commnand | Example                                                                                     |
+| :---------------------- | :------: | :-------: | :----------------: | :-------------------------------------------------------| :------- | :------------------------------------------------------------------------------------------ |
+| `$schema`               | `{}`     | yes       | string             | URI to the schema definition.                           |  _all_   | `file:///usr/share/saptune/schemas/1.0/saptune_note_applied.schema.json`
+| `publish time`          | `{}`     | yes       | string             | The timestamp of the time this JSON object was created. |  _all_   |  `2022-02-16 10:51:41.163661`
+| `argv`                  | `{}`     | yes       | string             | The entire saptune command as it was called.            |  _all_   |  `saptune --format=json note list` 
+| `pid`                   | `{}`     | yes       | integer            | PID of the saptune process creating this object.        |  _all_   |  `1502`
+| `command`               | `{}`     | yes       | string             | The saptune command (classifier), which was executed.   |  _all_   |  `note list`
+| `exit code`             | `{}`     | yes       | integer            | The return code the saptune command terminated with.    |  _all_   |  `1`
+| `result`                | `{}`     | yes       | object             | The result (output) of the command.                     |  _all_   |  `{}`
+| `messages`              | `{}`     | yes       | array of objects   | Contains all log messages normally printed on the screen in the order they were created. | _all_             |   `[{ "priority": "WARNING", "message": "section.go:293: You are still using the old ..."}]`
+| `implemented`           | `result` | yes       | boolean            | Indicates that JSON output has not yet been implemented yet.                             | _invalid command_ |  `false` 
+| `available Notes`       | `result` | yes       | array of objects   | List of the available Notes.                            | `saptune note list`                                |  `[ {"Note ID": "1410736", ...}, ... ]`
+| `enabled Notes`         | `result` | yes       | array of strings   | List of the enabled Notes.                              | `saptune note list`,</br> `saptune note verify`,</br> `saptune solution verify`,</br> `saptune [daemon\|service] status`</br>, `saptune note enabled` | `[ "941735", "1771258" ]`
+| `applied Notes`         | `result` | yes       | array of strings   | List of the applied Notes.                              | `saptune [daemon\|service} status`,</br> `saptune note applied`     | `[ "941735", "1771258"]`
+| `additional enabled Notes` | `result` | yes    | array of strings   | List of additional (to a Solution) applied Notes.                              | `saptune [daemon\|service} status` | `[ "941735", "1771258"]`
+| `available Solutions`   | `result` | yes       | array of objects   | List of the available Solutions.                        | `saptune solution list`                                             | `[ { "Solution name": "BOBJ", ... }, ... ]`
+| `enabled Solution`      | `result` | yes       | array of strings   | The enabled Solution.                                   | `saptune [daemon\|service} status`,</br> `saptune solution enabled` | `[ "MAXDB" ]`
+| `applied Solution`      | `result` | yes       | array of strings   | The applied Solution.                                   | `saptune [daemon\|service} status`,</br> `saptune solution enabled` | `[ "MAXDB" ]`
+| `remember message`      | `result` | yes       | string             | The remember message.                                   | `saptune [daemon\|service] status`,</br> `saptune note list`,</br> `saptune solution list` |  `"\nRemember: ..."` 
+| `verifications`         | `result` | yes       | list of objects    | List of verifications (lines of the table output of `saptune note verify`. | `saptune note verify`,</br> `saptune solution verify` | `[ { "Note ID": "1771258", ... },`
+| `attentions`            | `result` | yes       | array of objects   | Attentions printed for a Note.                                             | `saptune note verify`,</br> `saptune solution verify` | `[ { "Note ID": "2382421", ...}, ... ]`
+| `system compliance`     | `result` | yes       | boolean            | Overall compliance of all currently applied SAP Notes.                     | `saptune note verify`,</br> `saptune solution verify` | `false`
+| `services`              | `result` | yes       | object             | The states of various systemd services related to saptune.                 | `saptune [daemon\|service} status` | `{ "saptune": [ "disabled", "inactive" ], ... }`
+| `system state`          | `result` | yes       | string             | Possible systemd system states reported by 'systemctl is-system-running'.  | `saptune [daemon\|service} status` | `"running"`
+| `virtualization`        | `result` | yes       | string             | The virtualization technology of the system (see `systemd-detect-virt --list`). | `saptune [daemon\|service} status` | `"amazon"`
+| `configured version`    | `result` | yes       | string             | The configured saptune version (SAPTUNE_VERSION of /etc/sysconfig/saptune).     | `saptune [daemon\|service} status` |  `"1"`
+| `package version`       | `result` | yes       | string             | The version string of the installed saptune package.    | `saptune [daemon\|service} status` | `"3.0.1"`
+| `staging`               | `result` | yes       | object             | Details about staging.                                  | `saptune [daemon\|service} status` | `{ "enabled": false, "staged Notes": [], "staged Solutions": [] }`
+| `major saptune version` | `result` | yes       | string             | The major saptune version.                              | `saptune version`                  |  `"3"`
+| `Note ID`               | `available Notes`, </br>`verifications`,</br> `attentions` | yes       | string   | ID of the Note. | `saptune note list`,</br> `saptune note verify`,</br> `saptune solution verify` |  `"1656250"` 
+| `Note description`      | `available Notes`    | yes       | string   | Description of the Note. | `saptune note list` |  `"Linux Kernel Settings for NetApp NFS"` 
+| `Note reference`        | `available Notes`    | yes       | array of strings | References (URL) for the Note. | `saptune note list` |  `["https://launchpad.support.sap.com/#/notes/1410736"]` 
+| `Note version`          | `available Notes`, </br>`verifications`   | yes       | string   | The Note version (defined in `man 5 saptune-note`). | `saptune note list`,</br> `saptune note verify`,</br> `saptune solution verify` |  `"7"` 
+| `Note release date`     | `available Notes`    | yes       | string   | Release date of the Note. | `saptune note list` | `"18.10.2017"`
+| `Note enabled manually`     | `available Notes`   | yes    | boolean   | States if the Note was enabled manually. | `saptune note list` | `true`
+| `Note enabled by Solution`  | `available Notes`   | yes    | boolean   | States if the Note was enabled by a Solution. | `saptune note list` | `true`
+| `Note reverted manually`    | `available Notes`   | yes    | boolean   | States if the Note was reverted manually. | `saptune note list` | `true`
+| `Note override exists`      | `available Notes`   | yes    | boolean   | States if an override file exists for the Note. | `saptune note list` | `true`
+| `custom Note`               | `available Notes`   | yes    | boolean   | States if the Note is a custom Note. | `saptune note list` | `true`
 | `parameter`               | `verifications`   | no       | string   | Name of the parameter. | `saptune note verify`,</br> `saptune solution verify` | `"kernel.shmall"`
 | `expected value`          | `verifications`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify` | `"18446744073709551615"`
 | `override value`          | `verifications`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify` | `"-nobarrier"`
 | `actual value`            | `verifications`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify` | `"never"`
 | `compliant`               | `verifications`   | no       | string   | States if the parameter is compliant or not. | `saptune note verify`,</br> `saptune solution verify` | `true`
-| `amendments`              | `verifications`   | yes      | array of objects  | Optional amendments (footnotes). | `saptune note verify`,</br> `saptune solution verify` | `"amendments": [ { "index": 11, ...}, ... ]`
-| `index`                   | `amendments`      | yes      | integer  | Index of the amendment (footnote). | `saptune note verify`,</br> `saptune solution verify` | `15`
-| `text`                    | `amendments`      | yes      | string   | Describes the meaning of the amendment (footnote). | `saptune note verify`,</br> `saptune solution verify` | `the parameter is only used to calculate the size of tmpfs (/dev/shm)`
-| `attentions`              | `result`          | yes      | array of objects  | Attentions printed for a Note.  | `saptune note verify`,</br> `saptune solution verify` | `"attentions": [ { "Note ID": "2382421", ...}, ... ]`
-| `text`                    | `attentions`      | yes      | string   | Describes the meaning of the amendment (footnote). | `saptune note verify`,</br> `saptune solution verify` | ``
-| `enabled Notes`           | `result`          | yes      | array of strings  | List of the enabled Notes. | `saptune [daemon\|service] status`,</br> `saptune note enabled`,</br> `saptune note list`,</br> `saptune note verify`,</br> `saptune solution verify` | `"enabled Notes": [ "941735", "1771258", ...],`
-| `system compliance`       | `result`          | yes      | boolean  | Overall compliance of all currently applied SAP Notes. | `saptune note verify`,</br> `saptune solution verify` | `false`
-| `applied Notes`           | `result`          | yes      | array of strings  | List of the applied Notes. | `saptune [daemon\|service} status`,</br> `saptune note applied` | `"applied Notes": [ "941735", "1771258", ...],`
-| `enabled Solution`        | `result`          | yes      | array of strings  | The enabled Solution. | `saptune [daemon\|service} status`,</br> `saptune solution enabled` | `"enabled Solution": [ "MAXDB" ]`
-| `applied Solution`        | `result`          | yes      | array of strings  | he applied Solution.  | `saptune [daemon\|service} status`,</br> `saptune solution enabled` | `"applied Solution": [ "MAXDB" ]`
-| `available Solutions`     | `result`          | yes      | array of objects  | List of the available Solutions.  | `saptune solution list` | `"available Solutions": [ { "Solution name": "BOBJ", ... }, ... ]`
+| `amendments`              | `verifications`   | yes      | array of objects  | Optional amendments (footnotes). | `saptune note verify`,</br> `saptune solution verify` | `[ { "index": 11, ...}, ... ]`
+| `index`                   | `amendments`      | yes      | integer  | Index of the amendment (footnote).                 | `saptune note verify`,</br> `saptune solution verify` | `15`
+| `amendments`              | `amendments`      | yes      | string   | Describes the meaning of the amendment (footnote). | `saptune note verify`,</br> `saptune solution verify` | `the parameter is only used to calculate the size of tmpfs (/dev/shm)`
+| `attention`               | `attentions`      | yes      | string   | Attentions printed for a Note.                     | `saptune note verify`,</br> `saptune solution verify` | `Attention for SAP Note 2382421:\nHints or values not yet handled...`
 | `Solution ID`               | `available Solutions`  | yes     | string      | The Solution ID. | `saptune solution list` | `Remember: if you wish to automatically activate the solution's ...`
-| `Note list`                 | `available Solutions`  | yes     | array of strings   | List of Notes belonging to the Solution. | `saptune solution list` | `"Note list": [ "941735", "1410736", ..]`
+| `Note list`                 | `available Solutions`  | yes     | array of strings   | List of Notes belonging to the Solution. | `saptune solution list` | `[ "941735", "1410736" ]`
 | `Solution enabled manually` | `available Solutions`  | yes     | boolean     | States if the Solution is enabled. | `saptune solution list` | `true`
 | `Solution override exists`  | `available Solutions`  | yes     | boolean     | States if an override file exists for the Solution. | `saptune solution list` | `true`
 | `custom Solution`           | `available Solutions`  | yes     | boolean     | States if the Note is a custom Solution. | `saptune solution list` | `true`
 | `Solution deprecated`       | `available Solutions`  | yes     | boolean     | States if the Solution is deprecated. | `saptune solution list` | `true`
-| `services`           | `result`     | yes       | object   | The states of various systemd services related to saptune. | `saptune [daemon\|service} status` | `"services": { "saptune": [ "disabled", "inactive" ], ... }`
-| `saptune`            | `services`   | yes       | array of strings | Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages. | `saptune [daemon\|service} status` | `"saptune": ["disabled", "inactive" ]`
-| `sapconf`            | `services`   | yes       | array of strings | Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages. | `saptune [daemon\|service} status` | `"sapconf": ["disabled", "inactive" ]` 
-| `tuned`              | `services`   | yes       | array of strings | Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages. | `saptune [daemon\|service} status` | `"tuned": ["disabled", "inactive" ]`
-| `tuned profile`      | `services`   | no        | string   | The currently set tuned profile, if `tuned.service` is active. | `saptune [daemon\|service} status` | `powersave`
-| `system state`       | `result`     | yes       | string   | Possible systemd system states reported by 'systemctl is-system-running'. | `saptune [daemon\|service} status` | `"running"`
-| `virtualization`     | `result`     | yes       | string   | The virtualization technology of the system (see `systemd-detect-virt --list`). | `saptune [daemon\|service} status` | `amazon`
-| `configured version` | `result`     | yes       | string   | The configured saptune version (SAPTUNE_VERSION of /etc/sysconfig/saptune). | `saptune [daemon\|service} status` |  `1`
-| `package version`    | `result`     | yes       | string   | The version string of the installed saptune package. | `saptune [daemon\|service} status` | `"3.0.1"`
+| `saptune`                 | `services`       | yes       | array of strings | Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages. | `saptune [daemon\|service} status` | `["disabled", "inactive" ]`
+| `sapconf`                 | `services`       | yes       | array of strings | Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages. | `saptune [daemon\|service} status` | `["disabled", "inactive" ]` 
+| `tuned`                   | `services`       | yes       | array of strings | Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages. | `saptune [daemon\|service} status` | `["disabled", "inactive" ]`
+| `tuned profile`           | `services`       | no        | string           | The currently set tuned profile, if `tuned.service` is active.                                                            | `saptune [daemon\|service} status` | `"powersave"`
+| `satging enabled`         | `staging`        | yes       | boolean          | States if staging is enabled or not. | `saptune [daemon\|service} status` | `true`
+| `staged Notes`            | `staging`        | yes       | list of strings  | List of the staged Notes. | `saptune [daemon\|service} status` | `["941735", "1771258"]`
+| `staged Solutions`        | `staging`        | yes       | list of strings  | List of staged Solutions. | `saptune [daemon\|service} status` | `["MAXDB", "HANA"]`
+| `priority`                | `messages`       | yes       | string           | Priority of the log messages as defined at https://confluence.suse.com/display/SAP/Logging+Guide". | _all_ |  `"INFO"` 
+| `message`                 | `messages`       | yes       | string           | The log message itself. | _all_ |   `main.go:57: saptune (3.0.2) started with 'saptune status'"`
 
 
-| ``               | `result`   | yes       | string   |  | `saptune [daemon\|service} status` | ``
-| ``               | `result`   | yes       | string   |  | `saptune [daemon\|service} status` | ``
-| ``               | `result`   | yes       | string   |  | `saptune [daemon\|service} status` | ``
-
-
-nabled Solution	result	yes	array of strings	The enabled Solution.	saptune [daemon|service} status,
-saptune solution enabled	"enabled Solution": [ "MAXDB" ]
-
-
-
-
-| `major saptune version`  | `result`   | string    | The major saptune version. | `saptune version` |  `3`
-
- 
-
-
-
-| saptune status             	      | yes |  yes  |
-
+RULES
+=====
+- undefined scalars will not be part of the JSON output
+- lists can be empty (shall we remove them too???) 
 
 
 CHANGELOG
 =========
 
 - To be more consistent:
-    - "Solution name" renamed to "Solution ID"
-    - "Solution enabled" renamed to "Solution enabled manually"
+    - `Solution name` renamed to `Solution ID`
+    - `Solution enabled` renamed to `Solution enabled manually`
+    - `amendments`:  `text` renamed to `amendment`
+
+- Renamed `enabled` to `satging enabled` in `staging` to be more clear.
+
+- Renamed `system state` to `systemd system state` in `saptune status`
 
 - `saptune version`: `configured version` -> `major saptune version` because it is not only the configured one (which stops at "3").
   (What is the purpose of this command exactly?) 
 
+- `applied Notes`/`applied Notes`
 
-  messages{}:   message --> text  (text can be reused!)
+- Renaming of properties in `saptune status`:
+  - `Solution enabled` -->  `enabled Solution`
+  - `Solution applied` -->  `applied Solution`
+  - `Notes enabled`    -->  `enabled Notes` 
+  - `Notes applied`    -->  `applied Notes`
+  - `Notes configured` -->  `additional enabled Notes`
 
-- "attentions": [ { "Note ID": ... , "attention": ...   ---> "attention" renamed to "text"
-      
-SHALL WE REALLY USE `text` SEVERAL TIMES????
 
-
-Redesign
-========
+Possible Redesign
+=================
 
 - saptune note list:     No array of Notes, but a (result) object with Note ID as keys:  "234532": { "description": "....", "reference": [...], ...}
 - saptune ... verify:    No array of Notes, but a (result) object with Note ID as keys:  "234532": { "Note version": "....", "compliant": true, ...}
 - saptune solution list: No array of Solutions, but a (result) object with Solution ID as keys: "BOBJ": { "Note list": [...], ...}
-}
+
 
 - Shall we leave out empty lists as well?

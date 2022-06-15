@@ -12,7 +12,7 @@
                     "type":  "array",
                     "items": {
                         "type": "object",
-                        "required": [ "Solution ID", "Note list", "Solution enabled", "Solution override exists", "custom Solution", "Solution deprecated" ],
+                        "required": [ "Solution ID", "Note list", "Solution enabled manually", "Solution override exists", "custom Solution", "Solution deprecated" ],
                         "additionalProperties": false,
                         "properties": {
                             "Solution ID": { "$ref": "#/$defs/saptune solution id" },

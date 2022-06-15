@@ -81,7 +81,7 @@
                         "required": [
                             "Solution ID",
                             "Note list",
-                            "Solution enabled",
+                            "Solution enabled manually",
                             "Solution override exists",
                             "custom Solution",
                             "Solution deprecated"

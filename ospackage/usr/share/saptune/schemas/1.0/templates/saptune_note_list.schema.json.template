@@ -57,7 +57,7 @@
                     }                       
                 },
                 "enabled Notes": { 
-                    "$ref": "#/$defs/saptune enabled Notes list" 
+                    "$ref": "#/$defs/saptune enabled Solution" 
                 },
                 "remember message": { 
                     "$ref": "#/$defs/saptune remember message"

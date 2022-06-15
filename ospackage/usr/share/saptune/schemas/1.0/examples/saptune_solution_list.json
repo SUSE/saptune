@@ -8,7 +8,7 @@
     "result": {
         "available Solutions": [
             {
-                "Solution name": "BOBJ",
+                "Solution ID": "BOBJ",
                 "Note list": [
                     "941735",
                     "1771258",
@@ -17,13 +17,13 @@
                     "2993054",
                     "1656250"
                 ],
-                "Solution enabled": false,
+                "Solution enabled manually": false,
                 "Solution override exists": false,
                 "custom Solution": false,
                 "Solution deprecated": false
             },
             {
-                "Solution name": "HANA",
+                "Solution ID": "HANA",
                 "Note list": [
                     "941735",
                     "1771258",
@@ -35,25 +35,25 @@
                     "2993054",
                     "1656250"
                 ],
-                "Solution enabled": false,
+                "Solution enabled manually": false,
                 "Solution override exists": false,
                 "custom Solution": false,
                 "Solution deprecated": false
             },
             {
-                "Solution name": "MAXDB",
+                "Solution ID": "MAXDB",
                 "Note list": [
                     "941735",
                     "1771258",
                     "2578899"
                 ],
-                "Solution enabled": true,
+                "Solution enabled manually": true,
                 "Solution override exists": false,
                 "custom Solution": false,
                 "Solution deprecated": false
             },
             {
-                "Solution name": "NETWEAVER",
+                "Solution ID": "NETWEAVER",
                 "Note list": [
                     "941735",
                     "1771258",
@@ -62,13 +62,13 @@
                     "1656250",
                     "900929"
                 ],
-                "Solution enabled": false,
+                "Solution enabled manually": false,
                 "Solution override exists": false,
                 "custom Solution": false,
                 "Solution deprecated": false
             },
             {
-                "Solution name": "NETWEAVER+HANA",
+                "Solution ID": "NETWEAVER+HANA",
                 "Note list": [
                     "941735",
                     "1771258",
@@ -80,13 +80,13 @@
                     "2993054",
                     "1656250"
                 ],
-                "Solution enabled": false,
+                "Solution enabled manually": false,
                 "Solution override exists": false,
                 "custom Solution": false,
                 "Solution deprecated": false
             },
             {
-                "Solution name": "S4HANA-APP+DB",
+                "Solution ID": "S4HANA-APP+DB",
                 "Note list": [
                     "941735",
                     "1771258",
@@ -98,13 +98,13 @@
                     "2993054",
                     "1656250"
                 ],
-                "Solution enabled": false,
+                "Solution enabled manually": false,
                 "Solution override exists": false,
                 "custom Solution": false,
                 "Solution deprecated": false
             },
             {
-                "Solution name": "S4HANA-APPSERVER",
+                "Solution ID": "S4HANA-APPSERVER",
                 "Note list": [
                     "941735",
                     "1771258",
@@ -113,13 +113,13 @@
                     "1656250",
                     "900929"
                 ],
-                "Solution enabled": false,
+                "Solution enabled manually": false,
                 "Solution override exists": false,
                 "custom Solution": false,
                 "Solution deprecated": false
             },
             {
-                "Solution name": "S4HANA-DBSERVER",
+                "Solution ID": "S4HANA-DBSERVER",
                 "Note list": [
                     "941735",
                     "1771258",
@@ -131,13 +131,13 @@
                     "2993054",
                     "1656250"
                 ],
-                "Solution enabled": false,
+                "Solution enabled manually": false,
                 "Solution override exists": false,
                 "custom Solution": false,
                 "Solution deprecated": false
             },
             {
-                "Solution name": "SAP-ASE",
+                "Solution ID": "SAP-ASE",
                 "Note list": [
                     "941735",
                     "1410736",
@@ -147,7 +147,7 @@
                     "2993054",
                     "1656250"
                 ],
-                "Solution enabled": false,
+                "Solution enabled manually": false,
                 "Solution override exists": false,
                 "custom Solution": false,
                 "Solution deprecated": false

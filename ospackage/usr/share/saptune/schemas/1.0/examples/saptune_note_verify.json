@@ -26,11 +26,11 @@
             "amendments": [
                {
                   "index": 2,
-                  "text": "setting is not available on the system"
+                  "amendment": "setting is not available on the system"
                },
                {
                   "index": 7,
-                  "text": "parameter value is untouched by default"
+                  "amendment": "parameter value is untouched by default"
                }
             ]
          },
@@ -53,11 +53,11 @@
             "amendments": [
                {
                   "index": 2,
-                  "text": "setting is not available on the system"
+                  "amendment": "setting is not available on the system"
                },
                {
                   "index": 3,
-                  "text": "value is only checked, but NOT set"
+                  "amendment": "value is only checked, but NOT set"
                }
             ]
          },
@@ -71,7 +71,7 @@
             "amendments": [
                {
                   "index": 15,
-                  "text": "the parameter is only used to calculate the size of tmpfs (/dev/shm)"
+                  "amendment": "the parameter is only used to calculate the size of tmpfs (/dev/shm)"
                }
             ]
          }

@@ -163,23 +163,17 @@
                     }
                 },
                 "enabled Notes": {
-                    "description": "List of the enabled Notes in the order they have been enabled.",
+                    "description": "The enabled Solution.",
                     "type": "array",
                     "items": {
-                        "description": "The Note ID.",
+                        "description": "The Solution ID.",
                         "type": "string",
                         "pattern": "^[^ ]+$",
                         "examples": [
-                            "1656250",
-                            "SAP_BOBJ"
+                            "HANA",
+                            "myNetWeaver"
                         ]
-                    },
-                    "examples": [
-                        [
-                            "1656250",
-                            "SAP_BOBJ"
-                        ]
-                    ]
+                    }
                 },
                 "remember message": {
                     "description": "The remember message.",

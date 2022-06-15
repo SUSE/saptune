@@ -1,13 +1,11 @@
 {
     "$schema" : "file:///home/sschmidt/Dokumente/Projekte/saptune/github.com scmschmidt saptune/ospackage/usr/share/saptune/schemas/1.0/saptune.schema.json",
 
-    "timestamp": "2022-01-31T12:49:01.343448+01:00",
-    "args": "saptune help",
+    "publish time": "2022-06-15 18:04:00.428",
+    "argv": "saptune help",
     "pid": 2361,
-    "command": "unsupported",
-    "rc": 0,
-
-    "result": {},
-
+    "command": "help",
+    "exit code": 0,
+    "result": { "implemented": false },
     "messages": []
 } 
