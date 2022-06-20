@@ -98,7 +98,7 @@ Overview about implemented commands and their schema
 | saptune log status	              | no  |  no   | 
 | saptune log set                 	| no  |  no   |
 | saptune lock remove    	          | no  |  no   |
-| saptune status                    | yes |  yes  | (in discussion)
+| saptune status                    | yes |  yes  | 
 | saptune version          	        | yes |  yes  |
 | saptune help   	                  | no  |  no   |
 
@@ -146,7 +146,7 @@ Overview of the properties used in the JSON output
 | `Note reverted manually`    | `available Notes`   | yes    | boolean   | States if the Note was reverted manually. | `saptune note list` | `true`
 | `Note override exists`      | `available Notes`   | yes    | boolean   | States if an override file exists for the Note. | `saptune note list` | `true`
 | `custom Note`               | `available Notes`   | yes    | boolean   | States if the Note is a custom Note. | `saptune note list` | `true`
-| `parameter`               | `verifications`   | no       | string   | Name of the parameter. | `saptune note verify`,</br> `saptune solution verify` | `"kernel.shmall"`
+| `parameter`               | `verifications`   | yes      | string   | Name of the parameter. | `saptune note verify`,</br> `saptune solution verify` | `"kernel.shmall"`
 | `expected value`          | `verifications`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify` | `"18446744073709551615"`
 | `override value`          | `verifications`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify` | `"-nobarrier"`
 | `actual value`            | `verifications`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify` | `"never"`
@@ -186,7 +186,7 @@ CHANGELOG
     - `Solution enabled` renamed to `Solution enabled manually`
     - `amendments`:  `text` renamed to `amendment`
 
-- Renamed `enabled` to `satging enabled` in `staging` to be more clear.
+- Renamed `enabled` to `staging enabled` in `staging` to be more clear.
 
 - Renamed `system state` to `systemd system state` in `saptune status`
 
@@ -206,9 +206,21 @@ CHANGELOG
 Possible Redesign
 =================
 
-- saptune note list:     No array of Notes, but a (result) object with Note ID as keys:  "234532": { "description": "....", "reference": [...], ...}
-- saptune ... verify:    No array of Notes, but a (result) object with Note ID as keys:  "234532": { "Note version": "....", "compliant": true, ...}
-- saptune solution list: No array of Solutions, but a (result) object with Solution ID as keys: "BOBJ": { "Note list": [...], ...}
+- `saptune note list`:     No array of Notes, but a (result) object with Note ID as keys:  `"234532": { "description": "....", "reference": [...], ...}`
+- `saptune ... verify`:    No array of Notes, but a (result) object with Note ID as keys:  `"234532": { "Note version": "....", "compliant": true, ...}`
+- `saptune solution list`: No array of Solutions, but a (result) object with Solution ID as keys: `"BOBJ": { "Note list": [...], ...}`
 
+Bugs in JSON output
+===================
 
-- Shall we leave out empty lists as well?
+| saptune command                   |Bug |
+|:----------------------------------|:---|
+| saptune [daemon|service] status	  | (changes are not yet implemented) |
+| saptune service reload            | empty result object instead of `"implemented": false` |
+| saptune service apply    	        | empty result object instead of `"implemented": false` |
+| saptune service revert            | empty result object instead of `"implemented": false` |
+| saptune note verify 	            | (changes are not yet implemented) |
+| saptune solution list  	          | (changes are not yet implemented) |   
+| saptune solution verify	          | (changes are not yet implemented) |   
+| saptune version          	        | (changes are not yet implemented) |
+| saptune help   	                  | empty result object instead of `"implemented": false` |
