@@ -45,6 +45,7 @@ func main() {
 		system.ErrorExit("", 0)
 	}
 	if arg1 == "help" || system.IsFlagSet("help") {
+		system.JnotSupportedYet()
 		actions.PrintHelpAndExit(os.Stdout, 0)
 	}
 	if arg1 == "" {
