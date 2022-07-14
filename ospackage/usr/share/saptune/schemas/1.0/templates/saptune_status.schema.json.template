@@ -45,22 +45,9 @@
                     "examples": ["3.0.1", "3.1.0"]
                 }, 
                 "Solution enabled": { "$ref": "#/$defs/saptune enabled Solution" },
-                "Notes enabled by Solution" : {  
-                    "description": "Lists the Solution and the enabled Notes belonging to it.",
-                    "type": "array",
-                    "items": {
-                        "description":  "The Solution ID and its Notes.",
-                        "type": "object",
-                        "required": [ "Solution ID", "Note list" ],
-                        "additionalProperties": false,  
-                        "properties": {
-                            "Solution ID": { "$ref": "#/$defs/saptune solution id" },
-                            "Note list": { "$ref": "#/$defs/saptune Note list" }
-                        }
-                    }
-                },              
+                "Notes enabled by Solution" : {  "$ref": "#/$defs/saptune Solution and their Notes" },            
                 "Solution applied": { "$ref": "#/$defs/saptune applied Solution" },
-                "Notes applied by Solution": { "$ref": "#/$defs/saptune applied Notes" },             
+                "Notes applied by Solution":  {  "$ref": "#/$defs/saptune Solution and their Notes" },
                 "Notes enabled additionally" : { "$ref": "#/$defs/saptune additional enabled Notes" },
                 "Notes enabled": { "$ref": "#/$defs/saptune enabled Notes" },
                 "Notes applied": { "$ref": "#/$defs/saptune applied Notes" },

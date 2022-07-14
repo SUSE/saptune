@@ -231,6 +231,21 @@
             "items": { "$ref": "#/$defs/saptune note id" }                       
         },
 
+        "saptune Solution and their Notes" : {  
+            "description": "Lists the Solution and the Notes belonging to it.",
+            "type": "array",
+            "items": {
+                "description":  "The Solution ID and its Notes.",
+                "type": "object",
+                "required": [ "Solution ID", "Note list" ],
+                "additionalProperties": false,  
+                "properties": {
+                    "Solution ID": { "$ref": "#/$defs/saptune solution id" },
+                    "Note list": { "$ref": "#/$defs/saptune Note list" }
+                }
+            }
+        },        
+
         "saptune system compliance": {
             "description": "Overall compliance of all currently applied SAP Notes.",
             "type": "boolean"

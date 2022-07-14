@@ -318,7 +318,7 @@
                     }
                 },
                 "Notes enabled by Solution": {
-                    "description": "Lists the Solution and the enabled Notes belonging to it.",
+                    "description": "Lists the Solution and the Notes belonging to it.",
                     "type": "array",
                     "items": {
                         "description": "The Solution ID and its Notes.",
@@ -383,16 +383,40 @@
                     }
                 },
                 "Notes applied by Solution": {
-                    "description": "List of the applied Notes.",
+                    "description": "Lists the Solution and the Notes belonging to it.",
                     "type": "array",
                     "items": {
-                        "description": "The Note ID.",
-                        "type": "string",
-                        "pattern": "^[^ ]+$",
-                        "examples": [
-                            "1656250",
-                            "SAP_BOBJ"
-                        ]
+                        "description": "The Solution ID and its Notes.",
+                        "type": "object",
+                        "required": [
+                            "Solution ID",
+                            "Note list"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "Solution ID": {
+                                "description": "The Solution ID.",
+                                "type": "string",
+                                "pattern": "^[^ ]+$",
+                                "examples": [
+                                    "HANA",
+                                    "myNetWeaver"
+                                ]
+                            },
+                            "Note list": {
+                                "description": "List of Notes.",
+                                "type": "array",
+                                "items": {
+                                    "description": "The Note ID.",
+                                    "type": "string",
+                                    "pattern": "^[^ ]+$",
+                                    "examples": [
+                                        "1656250",
+                                        "SAP_BOBJ"
+                                    ]
+                                }
+                            }
+                        }
                     }
                 },
                 "Notes enabled additionally": {
