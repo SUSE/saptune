@@ -4,8 +4,8 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["applied Solution"]{% endblock %}
+{% block result_required %}["Solution applied"]{% endblock %}
 
 {% block result_properties %}
-                "applied Solution": { "$ref": "#/$defs/saptune applied Solution" }
+                "Solution applied": { "$ref": "#/$defs/saptune applied Solution" }
 {% endblock %}

@@ -70,7 +70,7 @@
             "required": [
                 "verifications",
                 "attentions",
-                "enabled Notes",
+                "Notes enabled",
                 "system compliance"
             ],
             "additionalProperties": false,
@@ -218,7 +218,7 @@
                         }
                     }
                 },
-                "enabled Notes": {
+                "Notes enabled": {
                     "description": "List of the enabled Notes.",
                     "type": "array",
                     "items": {

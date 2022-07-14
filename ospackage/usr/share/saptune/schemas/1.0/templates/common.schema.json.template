@@ -207,6 +207,12 @@
             "items": { "$ref": "#/$defs/saptune note id" }                       
         },
 
+        "saptune Note list": {
+            "description": "List of Notes.",
+            "type": "array",
+            "items": { "$ref": "#/$defs/saptune note id" } 
+        },
+
         "saptune applied Notes": {
             "description": "List of the applied Notes.",
             "type":  "array",
@@ -237,9 +243,21 @@
         },
 
         "saptune applied Solution": {
-            "description": "The applied Solution.",
+            "description": "The applied Solution (with information if partially applied).",
             "type": "array",
-            "items": { "$ref": "#/$defs/saptune solution id" }
+            "items": { 
+                "description": "Solution information object.",
+                "type": "object",
+                "required": [ "Solution ID", "applied partially" ],
+                "additionalProperties": false,  
+                "properties": {
+                    "Solution ID": { "$ref": "#/$defs/saptune solution id" },
+                    "applied partially": {
+                        "description": "States if the Solution is only partially applied.",
+                        "type": "boolean"
+                    } 
+                }
+            }
         },
 
         "saptune staged Solutions": {

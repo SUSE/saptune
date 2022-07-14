@@ -6,7 +6,7 @@
     "command": "solution applied",
     "exit code": 0,
     "result": {
-        "applied Solution": ["MAXDB"]
+        "Solution applied": [ {"Solution ID":"HANA", "applied partially": true} ] 
     },
     "messages": [
         {

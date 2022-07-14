@@ -4,10 +4,10 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["available Solutions", "remember message"]{% endblock %}
+{% block result_required %}["Solutions available", "remember message"]{% endblock %}
 
 {% block result_properties %}
-                "available Solutions": {
+                "Solutions available": {
                     "description": "List of the available Solutions.",
                     "type":  "array",
                     "items": {
@@ -16,11 +16,7 @@
                         "additionalProperties": false,
                         "properties": {
                             "Solution ID": { "$ref": "#/$defs/saptune solution id" },
-                            "Note list": {
-                                "description": "List of Notes belonging to the Solution.",
-                                "type": "array",
-                                "items": { "$ref": "#/$defs/saptune note id" } 
-                            },
+                            "Note list": { "$ref": "#/$defs/saptune Note list" },
                             "Solution enabled manually": {
                                 "description": "States if the Solution is enabled.",
                                 "type": "boolean"

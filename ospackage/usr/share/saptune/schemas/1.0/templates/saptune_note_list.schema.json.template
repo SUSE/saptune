@@ -4,10 +4,10 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["available Notes", "enabled Notes", "remember message"]{% endblock %}
+{% block result_required %}["Notes available", "Notes enabled", "remember message"]{% endblock %}
 
 {% block result_properties %}
-                "available Notes": {
+                "Notes available": {
                     "description": "List of the available Notes.",
                     "type":  "array",
                     "items": {
@@ -56,7 +56,7 @@
                         }
                     }                       
                 },
-                "enabled Notes": { 
+                "Notes enabled": { 
                     "$ref": "#/$defs/saptune enabled Solution" 
                 },
                 "remember message": { 

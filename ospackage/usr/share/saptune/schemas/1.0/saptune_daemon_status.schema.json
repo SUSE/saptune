@@ -73,10 +73,13 @@
                 "virtualization",
                 "configured version",
                 "package version",
-                "enabled Solution",
-                "additional enabled Notes",
-                "enabled Notes",
-                "applied Notes",
+                "Solution enabled",
+                "Notes enabled by Solution",
+                "Solution applied",
+                "Notes applied by Solution",
+                "Notes enabled additionally",
+                "Notes enabled",
+                "Notes applied",
                 "staging",
                 "remember message"
             ],
@@ -301,7 +304,7 @@
                         "3.1.0"
                     ]
                 },
-                "enabled Solution": {
+                "Solution enabled": {
                     "description": "The enabled Solution.",
                     "type": "array",
                     "items": {
@@ -314,20 +317,85 @@
                         ]
                     }
                 },
-                "applied Solution": {
-                    "description": "The applied Solution.",
+                "Notes enabled by Solution": {
+                    "description": "Lists the Solution and the enabled Notes belonging to it.",
                     "type": "array",
                     "items": {
-                        "description": "The Solution ID.",
+                        "description": "The Solution ID and its Notes.",
+                        "type": "object",
+                        "required": [
+                            "Solution ID",
+                            "Note list"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "Solution ID": {
+                                "description": "The Solution ID.",
+                                "type": "string",
+                                "pattern": "^[^ ]+$",
+                                "examples": [
+                                    "HANA",
+                                    "myNetWeaver"
+                                ]
+                            },
+                            "Note list": {
+                                "description": "List of Notes.",
+                                "type": "array",
+                                "items": {
+                                    "description": "The Note ID.",
+                                    "type": "string",
+                                    "pattern": "^[^ ]+$",
+                                    "examples": [
+                                        "1656250",
+                                        "SAP_BOBJ"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                "Solution applied": {
+                    "description": "The applied Solution (with information if partially applied).",
+                    "type": "array",
+                    "items": {
+                        "description": "Solution information object.",
+                        "type": "object",
+                        "required": [
+                            "Solution ID",
+                            "applied partially"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "Solution ID": {
+                                "description": "The Solution ID.",
+                                "type": "string",
+                                "pattern": "^[^ ]+$",
+                                "examples": [
+                                    "HANA",
+                                    "myNetWeaver"
+                                ]
+                            },
+                            "applied partially": {
+                                "description": "States if the Solution is only partially applied.",
+                                "type": "boolean"
+                            }
+                        }
+                    }
+                },
+                "Notes applied by Solution": {
+                    "description": "List of the applied Notes.",
+                    "type": "array",
+                    "items": {
+                        "description": "The Note ID.",
                         "type": "string",
                         "pattern": "^[^ ]+$",
                         "examples": [
-                            "HANA",
-                            "myNetWeaver"
+                            "1656250",
+                            "SAP_BOBJ"
                         ]
                     }
                 },
-                "additional enabled Notes": {
+                "Notes enabled additionally": {
                     "description": "List of additional (to a Solution) applied Notes. ",
                     "type": "array",
                     "items": {
@@ -340,7 +408,7 @@
                         ]
                     }
                 },
-                "enabled Notes": {
+                "Notes enabled": {
                     "description": "List of the enabled Notes.",
                     "type": "array",
                     "items": {
@@ -353,7 +421,7 @@
                         ]
                     }
                 },
-                "applied Notes": {
+                "Notes applied": {
                     "description": "List of the applied Notes.",
                     "type": "array",
                     "items": {
@@ -371,8 +439,8 @@
                     "type": "object",
                     "required": [
                         "staging enabled",
-                        "staged Notes",
-                        "staged Solutions"
+                        "Notes staged",
+                        "Solutions staged"
                     ],
                     "additionalProperties": false,
                     "properties": {
@@ -380,7 +448,7 @@
                             "description": "States if staging is enabled or not.",
                             "type": "boolean"
                         },
-                        "staged Notes": {
+                        "Notes staged": {
                             "description": "List of the staged Notes.",
                             "type": "array",
                             "items": {
@@ -393,7 +461,7 @@
                                 ]
                             }
                         },
-                        "staged Solutions": {
+                        "Solutions staged": {
                             "description": "List of staged Solutions.",
                             "type": "array",
                             "items": {

@@ -4,7 +4,7 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["verifications", "attentions", "enabled Notes", "system compliance"]{% endblock %}
+{% block result_required %}["verifications", "attentions", "Notes enabled", "system compliance"]{% endblock %}
 
 {% block result_properties %}
                 "verifications": {
@@ -30,7 +30,7 @@
                     }
                 },
                 "attentions": { "$ref": "#/$defs/saptune attentions" },
-                "enabled Notes": { "$ref": "#/$defs/saptune enabled Notes" },
+                "Notes enabled": { "$ref": "#/$defs/saptune enabled Notes" },
                 "system compliance": { "$ref": "#/$defs/saptune system compliance" }
 {% endblock %}
 

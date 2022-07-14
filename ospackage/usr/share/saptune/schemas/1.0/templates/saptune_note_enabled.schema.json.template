@@ -4,8 +4,8 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["enabled Notes"]{% endblock %}
+{% block result_required %}["Notes enabled"]{% endblock %}
 
 {% block result_properties %}
-                "enabled Notes": { "$ref": "#/$defs/saptune enabled Notes" }
+                "Notes enabled": { "$ref": "#/$defs/saptune enabled Notes" }
 {% endblock %}
