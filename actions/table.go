@@ -93,7 +93,15 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	reminderList := []system.JPNotesRemind{}
 	printTableFooter(writer, header, footnote, reminder, hasDiff, &reminderList)
 	if result != nil {
-		result.Verifications = noteList
+		if printComparison {
+			// verify
+			result.Verifications = noteList
+			result.Simulations = []system.JPNotesLine{}
+		} else {
+			// simulate
+			result.Verifications = []system.JPNotesLine{}
+			result.Simulations = noteList
+		}
 		result.Attentions = reminderList
 	}
 }
@@ -117,23 +125,27 @@ func collectMRO(stuff ...interface{}) system.JPNotesLine {
 	}
 	if stuff[7].(bool) {
 		// verify
-		noteFNs := []system.JFootNotes{}
-		fns := system.JFootNotes{}
-		for _, fn := range strings.Fields(stuff[8].(string)) {
-			indx := fn[1 : len(fn)-1]
-			idx, _ := strconv.Atoi(indx)
-			if idx > 0 {
-				fns.FNoteNumber = idx
-				fns.FNoteTxt = stuff[9].([]string)[idx-1]
-			}
-			noteFNs = append(noteFNs, fns)
-		}
-		nLine.Footnotes = noteFNs
 		nLine.Comment = ""
 	} else {
 		// simulate
+		nLine.NoteID = ""
+		nLine.NoteVers = ""
 		nLine.Comment = stuff[8].(string)
+		nLine.Compliant = nil
 	}
+	noteFNs := []system.JFootNotes{}
+	fns := system.JFootNotes{}
+	for _, fn := range strings.Fields(stuff[8].(string)) {
+		indx := fn[1 : len(fn)-1]
+		idx, _ := strconv.Atoi(indx)
+		if idx > 0 {
+			fns.FNoteNumber = idx
+			fns.FNoteTxt = stuff[9].([]string)[idx-1]
+		}
+		noteFNs = append(noteFNs, fns)
+	}
+	nLine.Footnotes = noteFNs
+
 	if stuff[10].(string) == "NA" || stuff[10].(string) == "PNA" || stuff[10].(string) == "all:none" {
 		nLine.ActValue = nil
 	}

@@ -74,26 +74,33 @@ type versResults struct {
 
 // configuredSol is for 'saptune solution enabled'
 type configuredSol struct {
-	ConfiguredSol []string `json:"enabled Solution"`
+	ConfiguredSol []string `json:"Solution enabled"`
 }
 
 //type configuredSol struct {
 //ConfiguredSol JObj `json:"enabled Solution"`
 //}
 
+// JAppliedSol is for 'Solution applied' in
+// 'saptune status' and 'saptune solution applied'
+type JAppliedSol struct {
+	SolName string `json:"Solution ID"`
+	Partial bool   `json:"applied partially"`
+}
+
 // appliedSol is for 'saptune solution applied'
 type appliedSol struct {
-	AppliedSol []string `json:"applied Solution"`
+	AppliedSol []JAppliedSol `json:"Solution applied"`
 }
 
 // appliedNotes is for 'saptune note applied'
 type appliedNotes struct {
-	AppliedNotes []string `json:"applied Notes"`
+	AppliedNotes []string `json:"Notes applied"`
 }
 
 // notesOrder is for 'saptune note enabled'
 type notesOrder struct {
-	NotesOrder []string `json:"enabled Notes"`
+	NotesOrder []string `json:"Notes enabled"`
 }
 
 // JNoteListEntry is one line of 'saptune note list'
@@ -112,8 +119,8 @@ type JNoteListEntry struct {
 
 // JNoteList is the whole 'saptune note list'
 type JNoteList struct {
-	NotesList  []JNoteListEntry `json:"available Notes"`
-	NotesOrder []string         `json:"enabled Notes"`
+	NotesList  []JNoteListEntry `json:"Notes available"`
+	NotesOrder []string         `json:"Notes enabled"`
 	Msg        string           `json:"remember message"`
 }
 
@@ -123,10 +130,10 @@ type JPNotesLine struct {
 	NoteID    string       `json:"Note ID,omitempty"`
 	NoteVers  string       `json:"Note version,omitempty"`
 	Parameter string       `json:"parameter"`
+	Compliant *bool        `json:"compliant,omitempty"`
 	ExpValue  string       `json:"expected value,omitempty"`
 	OverValue string       `json:"override value,omitempty"`
 	ActValue  *string      `json:"actual value,omitempty"`
-	Compliant *bool        `json:"compliant,omitempty"`
 	Comment   string       `json:"comment,omitempty"`
 	Footnotes []JFootNotes `json:"amendments,omitempty"`
 }
@@ -134,7 +141,7 @@ type JPNotesLine struct {
 // JFootNotes collects the footnotes per parameter
 type JFootNotes struct {
 	FNoteNumber int    `json:"index,omitempty"`
-	FNoteTxt    string `json:"text,omitempty"`
+	FNoteTxt    string `json:"amendment,omitempty"`
 }
 
 // JPNotesRemind is the reminder section
@@ -147,30 +154,31 @@ type JPNotesRemind struct {
 // if we need to differ between 'verify' and 'simulate' this
 // can be done in PrintNoteFields' or in jcollect.
 type JPNotes struct {
-	Verifications []JPNotesLine   `json:"verifications"`
+	Verifications []JPNotesLine   `json:"verifications,omitempty"`
+	Simulations   []JPNotesLine   `json:"simulations,omitempty"`
 	Attentions    []JPNotesRemind `json:"attentions,omitempty"`
-	NotesOrder    []string        `json:"enabled Notes,omitempty"`
+	NotesOrder    []string        `json:"Notes enabled,omitempty"`
 	SysCompliance *bool           `json:"system compliance,omitempty"`
 }
 
 // JSol - Solution name and related Note list
 type JSol struct {
-	SolName   string   `json:"Solution name"`
+	SolName   string   `json:"Solution ID"`
 	NotesList []string `json:"Note list"`
 }
 
 // JStatus is the whole 'saptune status'
 type JStatus struct {
 	Services        JStatusServs   `json:"services"`
-	SystemState     string         `json:"system state"`
+	SystemdSysState string         `json:"systemd system state"`
 	VirtEnv         string         `json:"virtualization"`
 	SaptuneVersion  string         `json:"configured version"`
 	RPMVersion      string         `json:"package version"`
 	ConfiguredSol   []string       `json:"Solution enabled"`
 	ConfSolNotes    []JSol         `json:"Notes enabled by Solution"`
-	AppliedSol      []string       `json:"Solution applied"`
+	AppliedSol      []JAppliedSol  `json:"Solution applied"`
 	AppliedSolNotes []JSol         `json:"Notes applied by Solution"`
-	ConfiguredNotes []string       `json:"Notes configured"`
+	ConfiguredNotes []string       `json:"Notes enabled additionally"`
 	EnabledNotes    []string       `json:"Notes enabled"`
 	AppliedNotes    []string       `json:"Notes applied"`
 	Staging         JStatusStaging `json:"staging"`
@@ -179,9 +187,9 @@ type JStatus struct {
 
 // JStatusStaging contains the staging infos for 'saptune status'
 type JStatusStaging struct {
-	StagingEnabled bool     `json:"enabled"`
-	StagedNotes    []string `json:"staged Notes"`
-	StagedSols     []string `json:"staged Solutions"`
+	StagingEnabled bool     `json:"staging enabled"`
+	StagedNotes    []string `json:"Notes staged"`
+	StagedSols     []string `json:"Solutions staged"`
 }
 
 // JStatusServs are the mentioned systemd services in 'saptune status'
@@ -194,7 +202,7 @@ type JStatusServs struct {
 
 // JSolListEntry is one line of 'saptune solution list'
 type JSolListEntry struct {
-	SolName     string   `json:"Solution name"`
+	SolName     string   `json:"Solution ID"`
 	NotesList   []string `json:"Note list"`
 	SolEnabled  bool     `json:"Solution enabled"`
 	SolOverride bool     `json:"Solution override exists"`
@@ -204,7 +212,7 @@ type JSolListEntry struct {
 
 // JSolList is the whole 'saptune solution list'
 type JSolList struct {
-	SolsList []JSolListEntry `json:"available Solutions"`
+	SolsList []JSolListEntry `json:"Solutions available"`
 	Msg      string          `json:"remember message"`
 }
 
@@ -300,18 +308,17 @@ func Jcollect(data interface{}) {
 		if rac == "solution enabled" {
 			jentry.CmdResult = configuredSol{ConfiguredSol: res}
 		}
-		if rac == "solution applied" {
-			jentry.CmdResult = appliedSol{AppliedSol: res}
-		}
+		//if rac == "solution applied" {
+		//	jentry.CmdResult = appliedSol{AppliedSol: res}
+		//}
+	case JAppliedSol:
+		// "saptune solution applied"
+		var appSol appliedSol
+		appSol.AppliedSol = append(appSol.AppliedSol, res)
+		jentry.CmdResult = appSol
 	case JSolList, JNoteList, JStatus, JPNotes:
-		switch rac {
-		case "note simulate":
-			// if we add 'note simulate' we need to switch off/skip
-			// some fields in JPNotes
-		default:
-			//"solution list", "note list", "status", "daemon status", "service status", "note verify":
-			jentry.CmdResult = res
-		}
+		//"solution list", "note list", "status", "daemon status", "service status", "note verify", "solution verify", "note simulate", "solution simulate":
+		jentry.CmdResult = res
 	default:
 		WarningLog("Unknown data type '%T' for command '%s' in Jcollect, skipping", data, rac)
 	}

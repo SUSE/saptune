@@ -532,6 +532,7 @@ func printTunedStatus(writer io.Writer, jstat *system.JStatusServs) {
 // printNoteAndSols prints all enabled/active notes and solutions
 func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus) bool {
 	notTuned := true
+	partial := false
 	fmt.Fprintf(writer, "enabled Solution:         ")
 	solName := ""
 	if len(tuneApp.TuneForSolutions) > 0 {
@@ -541,7 +542,7 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 	}
 	fmt.Fprintf(writer, "\n")
 	fmt.Fprintf(writer, "applied Solution:         ")
-	appliedSol := tuneApp.AppliedSolution()
+	appliedSol, state := tuneApp.AppliedSolution()
 	appliedSolNotes := []string{}
 	if appliedSol != "" {
 		for _, note := range tuneApp.AllSolutions[appliedSol] {
@@ -549,7 +550,12 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 				appliedSolNotes = append(appliedSolNotes, note)
 			}
 		}
-		fmt.Fprintf(writer, "%s (%s)", appliedSol, strings.Join(appliedSolNotes, ", "))
+		if state == "partial" {
+			fmt.Fprintf(writer, "%s (%s -> %s)", appliedSol, strings.Join(appliedSolNotes, ", "), state)
+			partial = true
+		} else {
+			fmt.Fprintf(writer, "%s (%s)", appliedSol, strings.Join(appliedSolNotes, ", "))
+		}
 	}
 	fmt.Fprintf(writer, "\n")
 	fmt.Fprintf(writer, "additional enabled Notes: ")
@@ -569,11 +575,20 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 	appliedNotes := tuneApp.AppliedNotes()
 	fmt.Fprintf(writer, "%s", appliedNotes)
 	fmt.Fprintf(writer, "\n")
+	// initialise
+	jstat.ConfSolNotes = []system.JSol{}
+	jstat.AppliedNotes = []string{}
+	jstat.AppliedSol = []system.JAppliedSol{}
+	jstat.AppliedSolNotes = []system.JSol{}
 	if appliedNotes != "" {
 		jstat.AppliedNotes = strings.Split(appliedNotes, " ")
 	}
 	if appliedSol != "" {
-		jstat.AppliedSol = strings.Split(appliedSol, " ")
+		appSol := system.JAppliedSol{
+			SolName: appliedSol,
+			Partial: partial,
+		}
+		jstat.AppliedSol = append(jstat.AppliedSol, appSol)
 		appSolNotes := system.JSol{
 			SolName:   appliedSol,
 			NotesList: appliedSolNotes,
@@ -667,7 +682,7 @@ func printSystemStatus(writer io.Writer, jstat *system.JStatus) bool {
 	chkHint := false
 	state, err := system.GetSystemState()
 	fmt.Fprintf(writer, "system state:             %s\n", state)
-	jstat.SystemState = state
+	jstat.SystemdSysState = state
 	if err != nil {
 		chkHint = true
 	}

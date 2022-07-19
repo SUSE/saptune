@@ -189,6 +189,7 @@ func NoteActionSimulate(writer io.Writer, noteID string, tuneApp *app.App) {
 		noteComp[noteID] = comparisons
 		PrintNoteFields(writer, "HEAD", noteComp, false, &result)
 		result.SysCompliance = nil
+		system.Jcollect(result)
 	}
 }
 
@@ -418,11 +419,40 @@ func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 	if err := tuneApp.RevertNote(noteID, true); err != nil {
 		system.ErrorExit("Failed to revert note %s: %v", noteID, err)
 	}
+	// if a solution is enabled (available in the configuration), check, if
+	// this note is the last note in NoteApplyOrder, which is related to
+	// this solution. If yes, remove solution for the configuration.
+	solutionStillEnabled(tuneApp)
+
 	if ok {
 		system.InfoLog("Parameters tuned by the note '%s' have been successfully reverted.", noteID)
 		fmt.Fprintf(writer, "Parameters tuned by the note have been successfully reverted.\n")
 	} else {
 		system.NoticeLog("Note '%s' is not applied, so nothing to revert.", noteID)
+	}
+}
+
+// if a solution is enabled (available in the configuration), check, if
+// this note is the last note in NoteApplyOrder, which is related to
+// this solution. If yes, remove solution for the configuration.
+func solutionStillEnabled(tuneApp *app.App) {
+	if len(tuneApp.TuneForSolutions) == 0 {
+		return
+	}
+	for _, sol := range tuneApp.TuneForSolutions {
+		solNoteAvail := false
+		for _, solNote := range tuneApp.AllSolutions[sol] {
+			if tuneApp.PositionInNoteApplyOrder(solNote) < 0 {
+				continue
+			} else {
+				solNoteAvail = true // sol weiter gültig
+				break
+			}
+		}
+		if !solNoteAvail {
+			system.InfoLog("The last, still enabled Note got reverted and removed from the configuration, so remove the enabled Solution from the configuration too.")
+			_ = tuneApp.RemoveSolFromConfig(sol)
+		}
 	}
 }
 
