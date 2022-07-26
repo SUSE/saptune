@@ -122,7 +122,9 @@ func setUsNa(actVal, compliant, comment string, footnote []string) (string, stri
 		compliant = compliant + " [16]"
 		compliant = strings.Replace(compliant, "no ", " - ", 1)
 		comment = comment + " [16]"
-		footnote[15] = footnote16
+		if !system.IsFlagSet("show-non-compliant") {
+			footnote[15] = footnote16
+		}
 	}
 	return compliant, comment, footnote
 }
@@ -165,7 +167,8 @@ func setSecBoot(mapKey, compliant, comment string, footnote []string) (string, s
 // setFLdiffs sets footnote for diffs in force_latency parameter
 func setFLdiffs(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
 	if mapKey == "force_latency" && info == "hasDiffs" {
-		compliant = "no  [4]"
+		compliant = compliant + " [4]"
+		compliant = strings.Replace(compliant, " - ", "no ", 1)
 		comment = comment + " [4]"
 		footnote[3] = footnote4
 	}

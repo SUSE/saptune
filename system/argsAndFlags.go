@@ -118,7 +118,7 @@ func handleSimpleFlags(arg string, flags map[string]string) {
 // setUnsupportedFlag sets or appends a value to the unsupported Flag
 // collection of unsupported Flags
 func setUnsupportedFlag(val string, flags map[string]string) {
-	if flags["notSupported"] != "" {
+	if flags["notSupported"] == "" {
 		flags["notSupported"] = flags["notSupported"] + val
 	} else {
 		flags["notSupported"] = flags["notSupported"] + " " + val
@@ -156,14 +156,17 @@ func ChkCliSyntax() bool {
 
 	// check command options
 	if len(sArgs) < cmdOpt || (!IsFlagSet("force") && !IsFlagSet("dryrun") && !IsFlagSet("colorscheme") && !IsFlagSet("show-non-compliant")) {
-		// no command options set or  too few options
+		// no command options set or too few options
+		// and/or non of the flags set, which need further checks
+		// so let the 'old' default checks (in main and/or actions) set
+		// the appropriate result
 		return true
 	}
 	// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
 	if !chkStagingReleaseSyntax(sArgs, realm, cmd, cmdOpt) {
 		ret = false
 	}
-	// saptune note verify [--coloscheme=<color scheme>] [--show-non-compliant] [NOTEID]
+	// saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NOTEID]
 	if !chkNoteVerifySyntax(sArgs, realm, cmd, cmdOpt) {
 		ret = false
 	}
@@ -188,7 +191,7 @@ func chkGlobalSyntax(stArgs []string, pglob, pcopt int) bool {
 	}
 
 	// check global option
-	// saptune -out=FORMAT
+	// saptune -format=FORMAT
 	// && !strings.HasPrefix(sArgs[1], "-o="
 	if IsFlagSet("format") && !strings.Contains(stArgs[pglob], "--format") {
 		ret = false
@@ -202,7 +205,7 @@ func chkGlobalSyntax(stArgs []string, pglob, pcopt int) bool {
 func chkStagingReleaseSyntax(stArgs []string, prealm, pcmd, popt int) bool {
 	ret := true
 	if IsFlagSet("dryrun") || IsFlagSet("force") {
-		if stArgs[prealm] != "staging" && stArgs[pcmd] != "release" {
+		if !(stArgs[prealm] == "staging" && stArgs[pcmd] == "release") {
 			ret = false
 		}
 		if stArgs[popt] != "--dry-run" && stArgs[popt] != "--force" {
@@ -214,32 +217,25 @@ func chkStagingReleaseSyntax(stArgs []string, prealm, pcmd, popt int) bool {
 
 // chkNoteVerifySyntax checks the syntax of 'saptune note verify' command line
 // regarding command line options
-// saptune note verify [--coloscheme=<color scheme>] [--show-non-compliant] [NOTEID]
+// saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NOTEID]
 func chkNoteVerifySyntax(stArgs []string, prealm, pcmd, popt int) bool {
 	ret := true
-	if IsFlagSet("colorscheme") {
-		if stArgs[prealm] != "note" && stArgs[pcmd] != "verify" {
-			ret = false
-		}
-		if IsFlagSet("show-non-compliant") {
-			if !strings.HasPrefix(stArgs[popt], "--colorscheme=") && !strings.HasPrefix(stArgs[popt+1], "--colorscheme=") {
-				ret = false
-			}
-		} else if !strings.HasPrefix(stArgs[popt], "--colorscheme=") {
+	if IsFlagSet("colorscheme") || IsFlagSet("show-non-compliant") {
+		if !(stArgs[prealm] == "note" && stArgs[pcmd] == "verify") {
 			ret = false
 		}
 	}
-	if IsFlagSet("show-non-compliant") {
-		if stArgs[prealm] != "note" && stArgs[pcmd] != "verify" {
+	if IsFlagSet("colorscheme") && IsFlagSet("show-non-compliant") {
+		// both flags set, check order
+		if !(strings.HasPrefix(stArgs[popt], "--colorscheme=") && stArgs[popt+1] == "--show-non-compliant") {
 			ret = false
 		}
-		if IsFlagSet("colorscheme") {
-			if stArgs[popt] != "--show-non-compliant" && stArgs[popt+1] != "--show-non-compliant" {
-				ret = false
-			}
-		} else if stArgs[popt] != "--show-non-compliant" {
-			ret = false
-		}
+	} else if IsFlagSet("colorscheme") && !strings.HasPrefix(stArgs[popt], "--colorscheme=") {
+		// flag at wrong place in arg list
+		ret = false
+	} else if IsFlagSet("show-non-compliant") && stArgs[popt] != "--show-non-compliant" {
+		// flag at wrong place in arg list
+		ret = false
 	}
 	return ret
 }

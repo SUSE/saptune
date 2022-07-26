@@ -60,9 +60,7 @@ func GetSolutionDefintion(solsDir, extraDir, noteDir string) map[string]map[stri
 	solAllVals := getAllSolsFromDir(solsDir, "", "")
 	// add custom solutions to the list
 	custAllVals := getAllSolsFromDir(extraDir, noteDir, extraDir)
-	for _, p := range custAllVals {
-		solAllVals = append(solAllVals, p)
-	}
+	solAllVals = append(solAllVals, custAllVals...)
 
 	for _, param := range solAllVals {
 		if param.Section == "reminder" || param.Section == "version" {
@@ -144,7 +142,10 @@ func GetOtherSolution(solsDir, noteFiles, extraFiles string) map[string]map[stri
 		}
 		// Do not allow customer/vendor to override built-in solutions
 		if extra && IsShippedSolution(param.Key) {
-			system.WarningLog("extra solution '%s' will not override built-in solution implementation", param.Key)
+			// as the function most of the time is called
+			// before the logging is initialized use
+			// Fprintf instead to give customers a hint.
+			fmt.Fprintf(os.Stderr, "Warning: extra solution '%s' will not override built-in solution implementation\n",param.Key)
 			continue
 		}
 		sol[param.Key] = strings.Split(param.Value, "\t")

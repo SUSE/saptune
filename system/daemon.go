@@ -211,8 +211,7 @@ func SystemctlIsRunning(thing string) (bool, error) {
 	return match, nil
 }
 
-// SystemctlIsActive return true only if systemctl suggests that the thing is
-// running.
+// SystemctlIsActive returns the output of 'systemctl is-active'
 func SystemctlIsActive(thing string) (string, error) {
 	out, err := exec.Command(systemctlCmd, "is-active", thing).CombinedOutput()
 	DebugLog("SystemctlIsActive - /usr/bin/systemctl is-active : '%+v %s'", err, string(out))
