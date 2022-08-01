@@ -155,7 +155,7 @@ func ErrorExit(template string, stuff ...interface{}) {
 		if len(stuff) > 0 && stuff[0] == "colorPrint" {
 			// color, bold, text/template, reset bold, reset color
 			stuff = stuff[1:]
-			fmt.Printf("%s%sERROR: "+template+"%s%s\n", stuff...)
+			fmt.Fprintf(os.Stderr, "%s%sERROR: "+template+"%s%s\n", stuff...)
 			if len(stuff) >= 4 {
 				stuff = stuff[2 : len(stuff)-2]
 			}
