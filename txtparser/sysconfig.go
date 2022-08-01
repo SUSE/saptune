@@ -40,10 +40,10 @@ func ParseSysconfigFile(fileName string, autoCreate bool) (*Sysconfig, error) {
 // ParseSysconfig read sysconfig text and parse the text into memory structures.
 func ParseSysconfig(input string) (*Sysconfig, error) {
 	conf := &Sysconfig{
-		AllValues: make([]*SysconfigEntry, 0, 0),
+		AllValues: make([]*SysconfigEntry, 0),
 		KeyValue:  make(map[string]*SysconfigEntry),
 	}
-	leadingComments := make([]string, 0, 0)
+	leadingComments := make([]string, 0)
 	for _, line := range strings.Split(input, "\n") {
 		line = strings.TrimSpace(line)
 		if strings.HasPrefix(line, "#") {
@@ -61,7 +61,7 @@ func ParseSysconfig(input string) (*Sysconfig, error) {
 			conf.AllValues = append(conf.AllValues, kv)
 			conf.KeyValue[key] = kv
 			// Clear comments to be ready for the next key-value pair
-			leadingComments = make([]string, 0, 0)
+			leadingComments = make([]string, 0)
 		} else {
 			// Consider other lines (such as blank lines) as comments
 			leadingComments = append(leadingComments, line)
@@ -206,8 +206,5 @@ func (conf *Sysconfig) ToText() string {
 // false, if the key does not exist.
 func (conf *Sysconfig) IsKeyAvail(key string) bool {
 	_, exists := conf.KeyValue[key]
-	if !exists {
-		return false
-	}
-	return true
+	return exists
 }

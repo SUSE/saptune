@@ -60,7 +60,7 @@ func (paging LinuxPagingImprovements) Optimise() (Note, error) {
 
 // Apply sets the new values in the system
 func (paging LinuxPagingImprovements) Apply() error {
-	errs := make([]error, 0, 0)
+	errs := make([]error, 0)
 	errs = append(errs, system.SetSysctlUint64(system.SysctlPagecacheLimitMB, paging.VMPagecacheLimitMB))
 	errs = append(errs, system.SetSysctlInt(system.SysctlPagecacheLimitIgnoreDirty, paging.VMPagecacheLimitIgnoreDirty))
 

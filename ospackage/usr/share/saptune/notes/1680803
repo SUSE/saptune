@@ -85,9 +85,9 @@ net.ipv4.tcp_rmem = 4096 87380 16777216
 net.ipv4.tcp_wmem = 4096 65536 16777216
 
 # Set the keepalive interval to a value higher than 1200 seconds.
-# The ABAP dispatcher initiates an empty network request to the database connection
-# every 1200 seconds. If the keepalive interval is lower, the operating system might
-# close the database connection.
+# The ABAP dispatcher initiates an empty network request to the database
+# connection every 1200 seconds. If the keepalive interval is lower, the
+# operating system might close the database connection.
 net.ipv4.tcp_keepalive_time = 1250
 
 # Increase the max packet backlog

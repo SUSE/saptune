@@ -18,36 +18,36 @@ import (
 var solTemplate = "/usr/share/saptune/SolutionTemplate.conf"
 
 // SolutionAction  Solution actions like apply, revert, verify asm.
-func SolutionAction(actionName, solName, newSolName string, tuneApp *app.App) {
+func SolutionAction(writer io.Writer, actionName, solName, newSolName string, tuneApp *app.App) {
 	switch actionName {
 	case "apply":
-		SolutionActionApply(os.Stdout, solName, tuneApp)
+		SolutionActionApply(writer, solName, tuneApp)
 	case "list":
-		SolutionActionList(os.Stdout, tuneApp)
+		SolutionActionList(writer, tuneApp)
 	case "verify":
-		SolutionActionVerify(os.Stdout, solName, tuneApp)
+		SolutionActionVerify(writer, solName, tuneApp)
 	case "simulate":
-		SolutionActionSimulate(os.Stdout, solName, tuneApp)
+		SolutionActionSimulate(writer, solName, tuneApp)
 	case "customise", "customize":
-		SolutionActionCustomise(os.Stdout, solName, tuneApp)
+		SolutionActionCustomise(writer, solName, tuneApp)
 	case "edit":
-		SolutionActionEdit(os.Stdout, solName, tuneApp)
+		SolutionActionEdit(writer, solName, tuneApp)
 	case "create":
-		SolutionActionCreate(os.Stdout, solName)
+		SolutionActionCreate(writer, solName)
 	case "show":
-		SolutionActionShow(os.Stdout, solName)
+		SolutionActionShow(writer, solName)
 	case "delete":
-		SolutionActionDelete(os.Stdin, os.Stdout, solName, tuneApp)
+		SolutionActionDelete(os.Stdin, writer, solName, tuneApp)
 	case "rename":
-		SolutionActionRename(os.Stdin, os.Stdout, solName, newSolName, tuneApp)
+		SolutionActionRename(os.Stdin, writer, solName, newSolName, tuneApp)
 	case "revert":
-		SolutionActionRevert(os.Stdout, solName, tuneApp)
+		SolutionActionRevert(writer, solName, tuneApp)
 	case "applied":
-		SolutionActionApplied(os.Stdout, tuneApp)
+		SolutionActionApplied(writer, tuneApp)
 	case "enabled":
-		SolutionActionEnabled(os.Stdout, tuneApp)
+		SolutionActionEnabled(writer, tuneApp)
 	default:
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 }
 

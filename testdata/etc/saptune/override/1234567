@@ -1,0 +1,9 @@
+# 1234567 - ini_test
+# Description:    SAP Note file for ini_test
+# Version 2 from 02.11.2017 in English
+
+[version]
+# SAP-NOTE=1234567 CATEGORY=Linux VERSION=2 DATE=02.11.2017 NAME="ini_test: SAP Note file for ini_test"
+
+[sysctl]
+vm.swappiness = 30

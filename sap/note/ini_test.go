@@ -28,7 +28,7 @@ func TestVendorSettings(t *testing.T) {
 	if ini.Name() == "" {
 		t.Error(ini.Name())
 	}
-	if ini.Name() != fmt.Sprintf("ini_test: SAP Note file for ini_test\n\t\t\tVersion 2 from 02.11.2017") {
+	if ini.Name() != "ini_test: SAP Note file for ini_test\n\t\t\tVersion 2 from 02.11.2017" {
 		t.Error(ini.Name())
 	}
 
@@ -100,7 +100,7 @@ func TestAllSettings(t *testing.T) {
 	if ini.Name() == "" {
 		t.Error(ini.Name())
 	}
-	if ini.Name() != fmt.Sprintf("ini_all_test: SAP Note file for ini_all_test\n\t\t\tVersion 3 from 02.01.2019") {
+	if ini.Name() != "ini_all_test: SAP Note file for ini_all_test\n\t\t\tVersion 3 from 02.01.2019" {
 		t.Error(ini.Name())
 	}
 
@@ -301,7 +301,7 @@ func TestOverrideAllSettings(t *testing.T) {
 	if ini.Name() == "" {
 		t.Error(ini.Name())
 	}
-	if ini.Name() != fmt.Sprintf("ini_all_test: SAP Note file for ini_all_test\n\t\t\tVersion 3 from 02.01.2019") {
+	if ini.Name() != "ini_all_test: SAP Note file for ini_all_test\n\t\t\tVersion 3 from 02.01.2019" {
 		t.Error(ini.Name())
 	}
 
@@ -424,7 +424,7 @@ func TestPageCacheSettings(t *testing.T) {
 	if ini.Name() == "" {
 		t.Error(ini.Name())
 	}
-	if ini.Name() != fmt.Sprintf("Linux paging improvements\n\t\t\tVersion 14 from 10.08.2015") {
+	if ini.Name() != "Linux paging improvements\n\t\t\tVersion 14 from 10.08.2015" {
 		t.Error(ini.Name())
 	}
 

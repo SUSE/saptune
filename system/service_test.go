@@ -29,7 +29,7 @@ func TestGetAvailServices(t *testing.T) {
 		t.Error(err)
 	}
 	value := GetAvailServices()
-	if value != nil && len(value) != 0 {
+	if len(value) != 0 {
 		t.Error("found services")
 	}
 	service := GetServiceName("sysstat")

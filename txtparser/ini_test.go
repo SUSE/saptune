@@ -14,12 +14,22 @@ import (
 var fileNotExist = "/file_does_not_exist"
 var tstFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_all_test.ini")
 var tst2File = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/wrong_limit_test.ini")
+var fileNameOld = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_test.ini")
+var fileNameNew = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_new_test.ini")
+var fileNameWrong = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_wrong_test.ini")
+var fileNameMissing = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_missing_test.ini")
 var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1557506")
 var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s\n\t\t\t%s", "Linux paging improvements", "", "16", "06.02.2020", "https://launchpad.support.sap.com/#/notes/1557506")
+var descNameNew = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "Linux paging improvements", "", "16", "06.02.2020")
 var noteVersion = "16"
 var noteDate = "06.02.2020"
 var noteTitle = "Linux paging improvements"
 var noteRefs = "https://launchpad.support.sap.com/#/notes/1557506"
+var oldDescName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "ini_test: SAP Note file for ini_test", "", "2", "02.11.2017")
+var oldNoteVersion = "2"
+var oldNoteDate = "02.11.2017"
+var oldNoteTitle = "ini_test: SAP Note file for ini_test"
+var oldNoteCategory = "Linux"
 
 var iniExample = `
 # comment
@@ -197,13 +207,13 @@ func TestParseINI(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	newINI := ParseINI(string(content))
+	_ = ParseINI(string(content))
 
 	content, err = ioutil.ReadFile(tst2File)
 	if err != nil {
 		t.Error(err)
 	}
-	newINI = ParseINI(string(content))
+	newINI := ParseINI(string(content))
 	var wrongINI INIFile
 	if err := json.Unmarshal([]byte(iniWrongJSON), &wrongINI); err != nil {
 		t.Error(err)
@@ -219,9 +229,30 @@ func TestGetINIFileDescriptiveName(t *testing.T) {
 	if str != descName {
 		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, descName)
 	}
+	str = GetINIFileDescriptiveName(fileNameNew)
+	if str != descNameNew {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, descNameNew)
+	}
+	str = GetINIFileDescriptiveName(fileNameOld)
+	if str != oldDescName {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, oldDescName)
+	}
 	str = GetINIFileDescriptiveName(fileNotExist)
 	if str != "" {
 		t.Errorf(str)
+	}
+}
+
+func TestGetINIFileVersionSectionRefs(t *testing.T) {
+	refs := GetINIFileVersionSectionRefs(fileName)
+	for _, ref := range refs {
+		if ref != noteRefs {
+			t.Errorf("\n'%+v'\nis not\n'%+v'\n", ref, noteRefs)
+		}
+	}
+	refs = GetINIFileVersionSectionRefs(fileNameNew)
+	if len(refs) > 0 {
+		t.Errorf("refs contain '%+v'\n", refs)
 	}
 }
 
@@ -238,6 +269,10 @@ func TestGetINIFileVersionSectionEntry(t *testing.T) {
 	if str != noteVersion {
 		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, noteVersion)
 	}
+	str = GetINIFileVersionSectionEntry(fileNameOld, "version")
+	if str != oldNoteVersion {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, oldNoteVersion)
+	}
 	str = GetINIFileVersionSectionEntry(fileNotExist, "version")
 	if str != "" {
 		t.Errorf(str)
@@ -245,6 +280,10 @@ func TestGetINIFileVersionSectionEntry(t *testing.T) {
 	str = GetINIFileVersionSectionEntry(fileName, "date")
 	if str != noteDate {
 		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, noteDate)
+	}
+	str = GetINIFileVersionSectionEntry(fileNameOld, "date")
+	if str != oldNoteDate {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, oldNoteDate)
 	}
 	str = GetINIFileVersionSectionEntry(fileNotExist, "date")
 	if str != "" {
@@ -254,12 +293,43 @@ func TestGetINIFileVersionSectionEntry(t *testing.T) {
 	if str != noteTitle {
 		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, noteTitle)
 	}
+	str = GetINIFileVersionSectionEntry(fileNameOld, "name")
+	if str != oldNoteTitle {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, oldNoteTitle)
+	}
 	str = GetINIFileVersionSectionEntry(fileNotExist, "name")
 	if str != "" {
 		t.Errorf(str)
 	}
+	str = GetINIFileVersionSectionEntry(fileNameNew, "category")
+	if str != oldNoteCategory {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, oldNoteCategory)
+	}
+	str = GetINIFileVersionSectionEntry(fileNameOld, "category")
+	if str != oldNoteCategory {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, oldNoteCategory)
+	}
 	str = GetINIFileVersionSectionEntry(fileName, "not_avail")
 	if str != "" {
 		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, "")
+	}
+	str = GetINIFileVersionSectionEntry(fileNameWrong, "name")
+	if str != "" {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, "")
+	}
+	str = GetINIFileVersionSectionEntry(fileNameMissing, "name")
+	if str != "" {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, "")
+	}
+}
+
+func TestBlkInfoNeeded(t *testing.T) {
+	sectFields := []string{"hugo", "blkvendor=HUGO", "blkmodel=EGON"}
+	if !blkInfoNeeded(sectFields) {
+		t.Error("should be 'true', but returns 'false'")
+	}
+	sectFields = []string{"hugo", "HUGO", "EGON"}
+	if blkInfoNeeded(sectFields) {
+		t.Error("should be 'false', but returns 'true'")
 	}
 }

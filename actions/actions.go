@@ -74,7 +74,7 @@ var dfltColorScheme = "full-red-noncmpl"
 
 // SelectAction selects the chosen action depending on the first command line
 // argument
-func SelectAction(stApp *app.App, saptuneVers string) {
+func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 	// switch off color and highlighting, if Stdout is not a terminal
 	switchOffColor()
 	system.JnotSupportedYet()
@@ -86,21 +86,21 @@ func SelectAction(stApp *app.App, saptuneVers string) {
 
 	switch system.CliArg(1) {
 	case "daemon":
-		DaemonAction(os.Stdout, system.CliArg(2), saptuneVers, stApp)
+		DaemonAction(writer, system.CliArg(2), saptuneVers, stApp)
 	case "service":
-		ServiceAction(system.CliArg(2), saptuneVers, stApp)
+		ServiceAction(writer, system.CliArg(2), saptuneVers, stApp)
 	case "note":
-		NoteAction(system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
+		NoteAction(writer, system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "solution":
-		SolutionAction(system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
+		SolutionAction(writer, system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "revert":
-		RevertAction(os.Stdout, system.CliArg(2), stApp)
+		RevertAction(writer, system.CliArg(2), stApp)
 	case "staging":
 		StagingAction(system.CliArg(2), system.CliArgs(3), stApp)
 	case "status":
-		ServiceAction("status", saptuneVers, stApp)
+		ServiceAction(writer, "status", saptuneVers, stApp)
 	default:
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 }
 

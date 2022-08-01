@@ -17,9 +17,19 @@ var tstosExit = func(val int) {
 	tstRetErrorExit = val
 }
 var tstwriter io.Writer
+var errwriter io.Writer
 var tstErrorExitOut = func(str string, out ...interface{}) error {
 	fmt.Fprintf(tstwriter, "ERROR: "+str, out...)
 	return fmt.Errorf(str+"\n", out...)
+}
+var tstErrExitOut = func(errw io.Writer, str string, out ...interface{}) {
+	out = out[1:]
+	fmt.Printf("%v\n", errw)
+	fmt.Fprintf(errwriter, "%s%sERROR: "+str+"%s%s\n", out...)
+	if len(out) >= 4 {
+		out = out[2 : len(out)-2]
+	}
+	fmt.Fprintf(tstwriter, "ERROR: "+str, out...)
 }
 
 var checkOut = func(t *testing.T, got, want string) {
@@ -156,12 +166,20 @@ func TestCalledFrom(t *testing.T) {
 }
 
 func TestErrorExit(t *testing.T) {
+	var setRedText = "\033[31m"
+	var setBoldText = "\033[1m"
+	var resetBoldText = "\033[22m"
+	var resetTextColor = "\033[0m"
+
 	oldOSExit := OSExit
 	defer func() { OSExit = oldOSExit }()
 	OSExit = tstosExit
 	oldErrorExitOut := ErrorExitOut
 	defer func() { ErrorExitOut = oldErrorExitOut }()
 	ErrorExitOut = tstErrorExitOut
+	oldErrExitOut := ErrExitOut
+	defer func() { ErrExitOut = oldErrExitOut }()
+	ErrExitOut = tstErrExitOut
 	buffer := bytes.Buffer{}
 	tstwriter = &buffer
 
@@ -171,7 +189,23 @@ func TestErrorExit(t *testing.T) {
 	}
 	txt := buffer.String()
 	checkOut(t, txt, "ERROR: Hallo\n")
-	//buffer.Reset() - if we plan to check more test cases
+
+	buffer.Reset()
+	errbuf := bytes.Buffer{}
+	errwriter = &errbuf
+	ErrorExit("Colored Hallo", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
+	txt = buffer.String()
+	checkOut(t, txt, "ERROR: Colored Hallo")
+	errtxt := errbuf.String()
+	//lint:ignore ST1018 Unicode control characters are expected here
+	checkOut(t, errtxt, "[31m[1mERROR: Colored Hallo[22m[0m\n")
+
+	// check errExitOut function
+	outbuf := bytes.Buffer{}
+	errExitOut(&outbuf, "Colored Hallo direct", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
+	txt = outbuf.String()
+	//lint:ignore ST1018 Unicode control characters are expected here
+	checkOut(t, txt, "[31m[1mERROR: Colored Hallo direct[22m[0m\n")
 
 	SaptuneLock()
 	// to reach ErrorExit("saptune currently in use, try later ...", 11)
@@ -309,7 +343,7 @@ func TestGetDmiID(t *testing.T) {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, dmi)
 	}
 	file = "no_dmi_file_found"
-	dmi, err := GetDmiID(file)
+	_, err := GetDmiID(file)
 	if err == nil {
 		t.Errorf("file '%s' exists, but shouldn't", file)
 	}

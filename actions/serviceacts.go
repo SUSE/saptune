@@ -15,7 +15,7 @@ var ignoreFlag = "/run/.saptune.ignore"
 
 // ServiceAction handles service actions like start, stop, status, enable, disable
 // it controls the systemd saptune.service
-func ServiceAction(actionName, saptuneVersion string, tApp *app.App) {
+func ServiceAction(writer io.Writer, actionName, saptuneVersion string, tApp *app.App) {
 	switch actionName {
 	case "apply":
 		// This action name is only used by saptune service, hence it is not advertised to end user.
@@ -43,13 +43,13 @@ func ServiceAction(actionName, saptuneVersion string, tApp *app.App) {
 	case "start":
 		ServiceActionStart(false, tApp)
 	case "status":
-		ServiceActionStatus(os.Stdout, tApp, saptuneVersion)
+		ServiceActionStatus(writer, tApp, saptuneVersion)
 	case "stop":
 		ServiceActionStop(false)
 	case "takeover":
 		ServiceActionTakeover(tApp)
 	default:
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 }
 
@@ -744,6 +744,6 @@ func DaemonAction(writer io.Writer, actionName, saptuneVersion string, tuneApp *
 		// disablestop
 		ServiceActionStop(true)
 	default:
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 }

@@ -7,7 +7,7 @@ import (
 
 func TestLog(t *testing.T) {
 	logFile := "/tmp/saptune_tst.log"
-	logSwitch := map[string]string{"verbose": "on", "debug": "1"}
+	logSwitch := map[string]string{"verbose": "on", "debug": "1", "error": "on"}
 
 	LogInit(logFile, logSwitch)
 	DebugLog("TestMessage%s_%s", "1", "Debug")
@@ -28,6 +28,10 @@ func TestLog(t *testing.T) {
 	}
 	NoticeLog("TestMessage%s_%s", "5", "Notice")
 	if !CheckForPattern(logFile, "TestMessage5_Notice") {
+		t.Error("Error message not found in log file")
+	}
+	ErrLog("TestMessage%s_%s", "6", "Error")
+	if !CheckForPattern(logFile, "TestMessage6_Error") {
 		t.Error("Error message not found in log file")
 	}
 	SwitchOffLogging()

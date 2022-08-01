@@ -4,6 +4,7 @@ import (
 	"github.com/SUSE/saptune/system"
 	"os"
 	"path"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
@@ -16,6 +17,15 @@ var DeprecFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/s
 var TstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/")
 
 func TestGetSolutionDefintion(t *testing.T) {
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/sols/BWA.sol")
+	if err := os.MkdirAll(ShippedSolSheets, 0755); err != nil {
+		t.Error(err)
+	}
+	dst := path.Join(ShippedSolSheets, "BWA.sol")
+	err := system.CopyFile(src, dst)
+	if err != nil {
+		t.Error(err)
+	}
 	// prepare custom solution and override
 	noteFiles := TstFilesInGOPATH + "/"
 	extraNoteFiles := TstFilesInGOPATH + "/extra/"
@@ -36,11 +46,14 @@ func TestGetSolutionDefintion(t *testing.T) {
 	if strings.Join(solutions[runtime.GOARCH]["NETW"], " ") != nwsols {
 		t.Error(solutions)
 	}
+	t.Logf("CustomSolutions is '%+v', OverrideSolutions is '%+v', solutions is '%+v'}n", CustomSolutions, OverrideSolutions, solutions)
 
 	sols := GetSolutionDefintion("/saptune_file_not_avail", "", "")
 	if len(sols) != 0 {
 		t.Error(sols)
 	}
+	os.Remove(dst)
+	os.RemoveAll(ShippedSolSheets)
 }
 
 func TestAvailableShippedSolution(t *testing.T) {
@@ -162,5 +175,28 @@ func TestGetDeprecatedSolution(t *testing.T) {
 func TestGetSortedSolutionIDs(t *testing.T) {
 	if len(GetSortedSolutionNames(runtime.GOARCH)) != len(AllSolutions[runtime.GOARCH]) {
 		t.Error(GetSortedSolutionNames(runtime.GOARCH))
+	}
+}
+
+func TestRefresh(t *testing.T) {
+	custSols := map[string]map[string]Solution{}
+	ovSols := map[string]map[string]Solution{}
+	sol1 := Solution{"SAP_BWA"}
+	sol2 := Solution{"941735", "1771258", "1980196", "1984787", "2205917", "2382421", "2534844"}
+	sol3 := Solution{"941735", "1771258", "1984787"}
+	sol4 := Solution{"941735", "1771258", "1980196", "1984787", "2534844"}
+	amdSols := map[string]Solution{"BWA": sol1, "HANA": sol2, "MAXDB": sol3, "NETW": sol4}
+	ppcSols := map[string]Solution{"BWA": sol1, "HANA": sol2, "MAXDB": sol3, "NETW": sol4}
+	allSols := map[string]map[string]Solution{"amd64": amdSols, "ppc64le": ppcSols}
+
+	Refresh()
+	if !reflect.DeepEqual(custSols, CustomSolutions) {
+		t.Errorf("got: %+v, expected: %+v\n", CustomSolutions, custSols)
+	}
+	if !reflect.DeepEqual(ovSols, OverrideSolutions) {
+		t.Errorf("got: %+v, expected: %+v\n", OverrideSolutions, ovSols)
+	}
+	if !reflect.DeepEqual(allSols, AllSolutions) {
+		t.Errorf("got: %+v, expected: %+v\n", AllSolutions, allSols)
 	}
 }

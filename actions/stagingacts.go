@@ -220,12 +220,12 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				system.ErrorExit("Flag 'dryrun' set, so staging action 'release' finished now without releasing anything", 0)
 			}
 			if !system.IsFlagSet("force") {
-				txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
+				txtConfirm := "Releasing is irreversible! Are you sure"
 				if !readYesNo(txtConfirm, reader, writer) {
 					system.ErrorExit("Staging action 'release' aborted by user interaction", 0)
 				}
 			}
-			errs := make([]error, 0, 0)
+			errs := make([]error, 0)
 			for _, stageName := range stgFiles.AllStageFiles {
 				stagingFile = stgFiles.StageAttributes[stageName]["sfilename"]
 				if _, err := os.Stat(stagingFile); err != nil {
@@ -257,7 +257,7 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				system.ErrorExit("Flag 'dryrun' set, so staging action 'release' finished now without releasing anything", 0)
 			}
 			if !system.IsFlagSet("force") {
-				txtConfirm := fmt.Sprintf("Releasing is irreversible! Are you sure")
+				txtConfirm := "Releasing is irreversible! Are you sure"
 				if !readYesNo(txtConfirm, reader, writer) {
 					system.ErrorExit("Staging action 'release' aborted by user interaction", 0)
 				}
@@ -328,19 +328,19 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool
 	}
 
 	if stgFiles.StageAttributes[stageName]["override"] == "true" {
-		fmt.Fprintf(writer, txtOverrideExists)
+		fmt.Fprint(writer, txtOverrideExists)
 	}
 	if flag != "new" {
 		if stgFiles.StageAttributes[stageName]["applied"] == "true" {
-			fmt.Fprintf(writer, txtSolApplied)
+			fmt.Fprint(writer, txtSolApplied)
 			retVal = system.MaxI(retVal, 1)
 		} else if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
-			fmt.Fprintf(writer, txtSolEnabled)
+			fmt.Fprint(writer, txtSolEnabled)
 			if flag == "deleted" {
 				retVal = system.MaxI(retVal, 1)
 			}
 		} else {
-			fmt.Fprintf(writer, txtSolNotEnabled)
+			fmt.Fprint(writer, txtSolNotEnabled)
 		}
 	}
 
@@ -376,7 +376,7 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool
 		}
 	}
 	if flag == "new" {
-		fmt.Fprintf(writer, txtSolNew)
+		fmt.Fprint(writer, txtSolNew)
 	}
 	return releaseable, retVal
 }
@@ -408,19 +408,19 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (boo
 		fmt.Fprintf(writer, txtDeleteNote, stageName)
 	}
 	if stgFiles.StageAttributes[stageName]["override"] == "true" {
-		fmt.Fprintf(writer, txtOverrideExists)
+		fmt.Fprint(writer, txtOverrideExists)
 	}
 	if flag != "new" {
 		if stgFiles.StageAttributes[stageName]["applied"] == "true" {
-			fmt.Fprintf(writer, txtNoteApplied)
+			fmt.Fprint(writer, txtNoteApplied)
 			retVal = system.MaxI(retVal, 1)
 		} else if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
-			fmt.Fprintf(writer, txtNoteEnabled)
+			fmt.Fprint(writer, txtNoteEnabled)
 			if flag == "deleted" {
 				retVal = system.MaxI(retVal, 1)
 			}
 		} else {
-			fmt.Fprintf(writer, txtNoteNotEnabled)
+			fmt.Fprint(writer, txtNoteNotEnabled)
 		}
 	}
 	if stgFiles.StageAttributes[stageName]["inSolution"] != "" {
@@ -449,7 +449,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (boo
 		}
 	}
 	if flag == "new" {
-		fmt.Fprintf(writer, txtNoteNew)
+		fmt.Fprint(writer, txtNoteNew)
 	}
 	return releaseable, retVal
 }
@@ -457,7 +457,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (boo
 // mvStageToWork moves a file from the staging area to the working area
 // or removes deleted files from the working area
 func mvStageToWork(stageName string) error {
-	errs := make([]error, 0, 0)
+	errs := make([]error, 0)
 	stagingFile := stgFiles.StageAttributes[stageName]["sfilename"]
 	workingFile := stgFiles.StageAttributes[stageName]["wfilename"]
 	packageFile := stgFiles.StageAttributes[stageName]["pfilename"]
@@ -520,11 +520,9 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 		AllStageFiles:   make([]string, 0, 64),
 		StageAttributes: make(map[string]map[string]string),
 	}
-	stageMap := make(map[string]string)
-
 	for _, stageName := range stagingOptions.GetSortedIDs() {
 		// add new stage file
-		stageMap = make(map[string]string)
+		stageMap := make(map[string]string)
 
 		// get Note/Solution Description and setup absolute filenames
 		solStageName, name, workingFile, packageFile := getSolOrNoteEnv(stageName)
@@ -580,7 +578,7 @@ func getSolOrNoteEnv(stgName string) (string, string, string, string) {
 		// stage file is a solution file
 		sName = strings.TrimSuffix(stgName, ".sol")
 		if dName == "" {
-			dName = fmt.Sprintf("Definition of saptune solutions\n\t\t\tVersion 1")
+			dName = "Definition of saptune solutions\n\t\t\tVersion 1"
 		}
 		wFile = fmt.Sprintf("%s%s", SolutionSheets, stgName)
 		pFile = fmt.Sprintf("%ssols/%s", PackageArea, stgName)
@@ -816,10 +814,10 @@ func PrintStageFields(writer io.Writer, stageName string, comparison map[string]
 	fmtdash, fmtplus, format, colwidth := setupStageTableFormat(comparison)
 
 	// print table header
-	fmt.Fprintf(writer, fmtdash)
+	fmt.Fprint(writer, fmtdash)
 	fmt.Fprintf(writer, format, stageName, headWork, headStage)
 	fmt.Fprintf(writer, format, "", "(working area)", "(staging area)")
-	fmt.Fprintf(writer, fmtplus)
+	fmt.Fprint(writer, fmtplus)
 	for _, skey := range sortkeys {
 		// print table body
 		if skey == "reminder" {
@@ -857,7 +855,7 @@ func PrintStageFields(writer io.Writer, stageName string, comparison map[string]
 		}
 	}
 	// print footer
-	fmt.Fprintf(writer, fmtdash)
+	fmt.Fprint(writer, fmtdash)
 	fmt.Fprintf(writer, "\n")
 }
 
@@ -875,9 +873,7 @@ func sortStageComparisonsOutput(noteCompare map[string]stageComparison) []string
 		}
 	}
 	sort.Strings(skeys)
-	for _, rem := range rkeys {
-		skeys = append(skeys, rem)
-	}
+	skeys = append(skeys, rkeys...)
 	return skeys
 }
 

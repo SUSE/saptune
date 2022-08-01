@@ -72,8 +72,8 @@ func ParseSecLimitsFile(fileName string) (*SecLimits, error) {
 
 // ParseSecLimits read limits.conf text and parse the text into memory structures.
 func ParseSecLimits(input string) *SecLimits {
-	limits := &SecLimits{Entries: make([]*SecLimitsEntry, 0, 0)}
-	leadingComments := make([]string, 0, 0)
+	limits := &SecLimits{Entries: make([]*SecLimitsEntry, 0)}
+	leadingComments := make([]string, 0)
 	splitInput := strings.Split(input, "\n")
 	noOfLines := len(splitInput)
 	for lineNo, line := range splitInput {
@@ -96,7 +96,7 @@ func ParseSecLimits(input string) *SecLimits {
 			}
 			limits.Entries = append(limits.Entries, entry)
 			// Get ready for the next entry by clearing comments
-			leadingComments = make([]string, 0, 0)
+			leadingComments = make([]string, 0)
 		} else {
 			// Consider other lines (such as blank lines) as comments
 			// seems that strings.Split(input, "\n") adds an additional new line to the split result, which should not end up in the resulting SecLimits structure

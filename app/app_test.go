@@ -6,10 +6,12 @@ import (
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/sap/param"
 	"github.com/SUSE/saptune/sap/solution"
+	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -139,6 +141,7 @@ func TestReadConfig(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 	// Read from testdata config 'testdata/etc/sysconfig/saptune'
+	_ = system.CopyFile(path.Join(TstFilesInGOPATH, "etc/sysconfig/saptune_tstorg"), path.Join(TstFilesInGOPATH, "etc/sysconfig/saptune"))
 	tApp := InitialiseApp(TstFilesInGOPATH, "", AllTestNotes, AllTestSolutions)
 	matchTxt := `
 current order of enabled notes is: 2205917 2684254 1680803
@@ -476,27 +479,90 @@ func TestGetNoteByID(t *testing.T) {
 	if _, err := tuneApp.GetNoteByID("8932147"); err == nil {
 		t.Errorf("Note ID '8932147' should NOT be available, but is reported as available. AllNote is '%+v'\n", tuneApp.AllNotes)
 	}
-	tuneApp = InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 }
 
 func TestNoteSanityCheck(t *testing.T) {
 	os.RemoveAll(SampleNoteDataDir)
 	defer os.RemoveAll(SampleNoteDataDir)
 	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+
+	sectPath := "/run/saptune/sections"
+	sectFile := "/run/saptune/sections/8932147.sections"
+	// copy empty file
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/saptune_NOEXIT")
+	dest := tuneApp.State.GetPathToNote("8932147")
+	os.MkdirAll(path.Join(SampleNoteDataDir, "/data/run/saptune/saved_state"), 0755)
+	err := system.CopyFile(src, dest)
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(dest)
+	os.MkdirAll(sectPath, 0755)
+	err = system.CopyFile(src, sectFile)
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(sectFile)
+
 	if err := tuneApp.TuneNote("1002"); err != nil {
 		t.Error(err)
 	}
 	if err := tuneApp.TuneNote("1001"); err != nil {
 		t.Error(err)
 	}
-
 	if err := tuneApp.NoteSanityCheck(); err != nil {
 		t.Errorf("Error during NoteSanityCheck - '%v'\n", err)
 	}
 
 	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "8932147")
-	err := tuneApp.NoteSanityCheck()
-	t.Logf("NoteSanityCheck - '%v'\n", err)
+	if err := tuneApp.NoteSanityCheck(); err != nil {
+		t.Errorf("Error during NoteSanityCheck - '%v'\n", err)
+	}
+
+	os.Remove(dest)
+	os.Remove(sectFile)
+	// existing, but empty section file
+	err = system.CopyFile(src, sectFile)
+	if err != nil {
+		t.Error(err)
+	}
+	// copy NON empty file
+	src = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/product_name")
+	err = system.CopyFile(src, dest)
+	if err != nil {
+		t.Error(err)
+	}
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "8932147")
+	if err := tuneApp.NoteSanityCheck(); err != nil {
+		t.Errorf("Error during NoteSanityCheck - '%v'\n", err)
+	}
+
+	os.Remove(dest)
+	os.Remove(sectFile)
+	// no section file
+	src = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/product_name")
+	err = system.CopyFile(src, dest)
+	if err != nil {
+		t.Error(err)
+	}
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "8932147")
+	if err := tuneApp.NoteSanityCheck(); err != nil {
+		t.Errorf("Error during NoteSanityCheck - '%v'\n", err)
+	}
+
+	os.Remove(dest)
+	os.Remove(sectFile)
+	// section file, but no state file
+	src = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/saptune_NOEXIT")
+	err = system.CopyFile(src, sectFile)
+	if err != nil {
+		t.Error(err)
+	}
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "8932147")
+	if err := tuneApp.NoteSanityCheck(); err != nil {
+		t.Errorf("Error during NoteSanityCheck - '%v'\n", err)
+	}
+
 	tuneApp = InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
 }
 
@@ -515,6 +581,151 @@ func TestTuneAll(t *testing.T) {
 		t.Errorf("Error during TuneAll - '%v'\n", err)
 	}
 	tuneApp = InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+}
+
+func TestAppliedNotes(t *testing.T) {
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "1001")
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "1002")
+
+	expNotes := ""
+	applNotes := tuneApp.AppliedNotes()
+	if expNotes != applNotes {
+		t.Errorf("got: %+v, expected: %+v\n", applNotes, expNotes)
+	}
+
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/saptune_NOEXIT")
+	dest := tuneApp.State.GetPathToNote("1001")
+	os.MkdirAll(path.Join(SampleNoteDataDir, "/data/run/saptune/saved_state"), 0755)
+	err := system.CopyFile(src, dest)
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(dest)
+
+	expNotes = "1001"
+	applNotes = tuneApp.AppliedNotes()
+	if expNotes != applNotes {
+		t.Errorf("got: %+v, expected: %+v\n", applNotes, expNotes)
+	}
+}
+
+func TestIsNoteApplied(t *testing.T) {
+	// test fix for bsc#1167618
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "1001")
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "1002")
+
+	// copy empty file
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/saptune_NOEXIT")
+	dest := tuneApp.State.GetPathToNote("8932147")
+	os.MkdirAll(path.Join(SampleNoteDataDir, "/data/run/saptune/saved_state"), 0755)
+	err := system.CopyFile(src, dest)
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(dest)
+
+	expmmatch := ""
+	mmatch, applied := tuneApp.IsNoteApplied("8932147")
+	if applied {
+		t.Errorf("expected 'false' but got '%+v'\n", applied)
+	}
+	if expmmatch != mmatch {
+		t.Errorf("got: %+v, expected: %+v\n", mmatch, expmmatch)
+	}
+
+	os.Remove(dest)
+	// copy NON empty file
+	src = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/product_name")
+	err = system.CopyFile(src, dest)
+	if err != nil {
+		t.Error(err)
+	}
+
+	expmmatch = "mismatch"
+	mmatch, applied = tuneApp.IsNoteApplied("8932147")
+	if !applied {
+		t.Errorf("expected 'false' but got '%+v'\n", applied)
+	}
+	if expmmatch != mmatch {
+		t.Errorf("got: %+v, expected: %+v\n", mmatch, expmmatch)
+	}
+}
+
+func TestGetSortedAllNotes(t *testing.T) {
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+	expNotes := "1001 1002"
+	allNotes := strings.Join(tuneApp.GetSortedAllNotes(), " ")
+	if expNotes != allNotes {
+		t.Errorf("got: %+v, expected: %+v\n", allNotes, expNotes)
+	}
+}
+
+func TestIsSolutionEnabled(t *testing.T) {
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+	tuneApp.TuneForSolutions = []string{"sol1"}
+	if tuneApp.IsSolutionEnabled("sol15") {
+		t.Error("expected 'false' but got 'true'")
+	}
+	if !tuneApp.IsSolutionEnabled("sol1") {
+		t.Error("expected 'true' but got 'false'")
+	}
+}
+
+func TestAppliedSolution(t *testing.T) {
+	os.RemoveAll(SampleNoteDataDir)
+	defer os.RemoveAll(SampleNoteDataDir)
+	tuneApp := InitialiseApp(path.Join(SampleNoteDataDir, "conf"), path.Join(SampleNoteDataDir, "data"), AllTestNotes, AllTestSolutions)
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "1001")
+	tuneApp.NoteApplyOrder = append(tuneApp.NoteApplyOrder, "1002")
+	tuneApp.TuneForSolutions = []string{"sol1"}
+
+	expSol := ""
+	expState := ""
+	applSol, state := tuneApp.AppliedSolution()
+	if expSol != applSol {
+		t.Errorf("got: %+v, expected: %+v\n", applSol, expSol)
+	}
+	if expState != state {
+		t.Errorf("got: %+v, expected: %+v\n", state, expState)
+	}
+
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/saptune_NOEXIT")
+	dest := tuneApp.State.GetPathToNote("1001")
+	os.MkdirAll(path.Join(SampleNoteDataDir, "/data/run/saptune/saved_state"), 0755)
+	err := system.CopyFile(src, dest)
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.RemoveAll(dest)
+
+	expSol = "sol1"
+	expState = "fully"
+	applSol, state = tuneApp.AppliedSolution()
+	if expSol != applSol {
+		t.Errorf("got: %+v, expected: %+v\n", applSol, expSol)
+	}
+	if expState != state {
+		t.Errorf("got: %+v, expected: %+v\n", state, expState)
+	}
+
+	tuneApp.TuneForSolutions = []string{"sol12"}
+	expSol = "sol12"
+	expState = "partial"
+	applSol, state = tuneApp.AppliedSolution()
+	if expSol != applSol {
+		t.Errorf("got: %+v, expected: %+v\n", applSol, expSol)
+	}
+	if expState != state {
+		t.Errorf("got: %+v, expected: %+v\n", state, expState)
+	}
 }
 
 func TestInitialiseApp(t *testing.T) {

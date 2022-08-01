@@ -12,21 +12,10 @@ func TestSolutionActions(t *testing.T) {
 
 	// Test SolutionActionList
 	t.Run("SolutionActionList", func(t *testing.T) {
-		var listMatchText = `
-All solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):
-	BWA                - 941735 2534844 SAP_BWA
-	HANA               - 941735 1771258 1980196 1984787 2205917 2382421 2534844
-	MAXDB              - 941735 1771258 1984787
-	NETW               - 941735 1771258 1980196 1984787 2534844
-
-Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
-    saptune service enablestart
-`
-
 		buffer := bytes.Buffer{}
 		SolutionActionList(&buffer, tApp)
 		txt := buffer.String()
-		checkOut(t, txt, listMatchText)
+		checkOut(t, txt, solutionListMatchText)
 	})
 
 	// Test SolutionActionListCustomOverride
@@ -36,7 +25,7 @@ Remember: if you wish to automatically activate the solution's tuning options af
 
 		var listMatchText = `
 All solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):
-	BWA                - 941735 2534844 SAP_BWA
+ C	BWA                - SAP_BWA
  O	HANA               - HANA1 NEWNOTE HANA2
  D	MAXDB              - 941735 1771258 1984787
 	NETW               - 941735 1771258 1980196 1984787 2534844
@@ -125,6 +114,16 @@ Hints or values not yet handled by saptune. So please read carefully, check and 
 		SolutionActionEnabled(&buffer, tApp)
 		txt := buffer.String()
 		checkOut(t, txt, enabledMatchText)
+	})
+
+	// Test SolutionActionApplied
+	t.Run("SolutionActionApplied", func(t *testing.T) {
+		appliedMatchText := "sol1"
+
+		buffer := bytes.Buffer{}
+		SolutionActionApplied(&buffer, tApp)
+		txt := buffer.String()
+		checkOut(t, txt, appliedMatchText)
 	})
 
 	// Test SolutionActionRevert
@@ -227,40 +226,11 @@ Remember: if you wish to automatically activate the solution's tuning options af
 		defer func() { system.ErrorExitOut = oldErrorExitOut }()
 		system.ErrorExitOut = tstErrorExitOut
 
-		var errExitMatchText = `ERROR: Failed to test the current system against the specified note: solution name "" is not recognised by saptune.
+		errExitMatchText := `ERROR: Failed to test the current system against the specified note: solution name "" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
 and then please double check your input and /etc/sysconfig/saptune
 `
-		var simErrorMatchText = `saptune: Comprehensive system optimisation management for SAP solutions.
-Daemon control:
-  saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
-Tune system according to SAP and SUSE notes:
-  saptune note [ list | revertall | enabled | applied ]
-  saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
-  saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
-  saptune note rename NoteID newNoteID
-Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled | applied ]
-  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
-  saptune solution rename SolutionName newSolutionName
-Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
-   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
-   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
-Revert all parameters tuned by the SAP notes or solutions:
-  saptune revert all
-Remove the pending lock file from a former saptune call
-  saptune lock remove
-Call external script '/usr/sbin/saptune_check'
-  saptune check
-Print current saptune status:
-  saptune status
-Print current saptune version:
-  saptune version
-Print this message:
-  saptune help
-`
+		simErrorMatchText := PrintHelpAndExitMatchText
 
 		simBuf := bytes.Buffer{}
 		errExitbuffer := bytes.Buffer{}
@@ -285,46 +255,16 @@ Print this message:
 		defer func() { system.ErrorExitOut = oldErrorExitOut }()
 		system.ErrorExitOut = tstErrorExitOut
 
-		var errExitMatchText = `ERROR: There is already one solution applied. Applying another solution is NOT supported.
+		errExitMatchText := `ERROR: There is already one solution applied. Applying another solution is NOT supported.
 ERROR: Failed to tune for solution : solution name "" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
 and then please double check your input and /etc/sysconfig/saptune
 `
-		var applyErrorMatchText = `saptune: Comprehensive system optimisation management for SAP solutions.
-Daemon control:
-  saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
-Tune system according to SAP and SUSE notes:
-  saptune note [ list | revertall | enabled | applied ]
-  saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
-  saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
-  saptune note rename NoteID newNoteID
-Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled | applied ]
-  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
-  saptune solution rename SolutionName newSolutionName
-Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
-   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
-   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
-Revert all parameters tuned by the SAP notes or solutions:
-  saptune revert all
-Remove the pending lock file from a former saptune call
-  saptune lock remove
-Call external script '/usr/sbin/saptune_check'
-  saptune check
-Print current saptune status:
-  saptune status
-Print current saptune version:
-  saptune version
-Print this message:
-  saptune help
-All tuning options for the SAP solution have been applied successfully.
+		applyErrorMatchText := PrintHelpAndExitMatchText + `All tuning options for the SAP solution have been applied successfully.
 
 Remember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:
     saptune service enablestart
 `
-
 		buffer := bytes.Buffer{}
 		errExitbuffer := bytes.Buffer{}
 		tstwriter = &errExitbuffer
@@ -348,40 +288,11 @@ Remember: if you wish to automatically activate the solution's tuning options af
 		defer func() { system.ErrorExitOut = oldErrorExitOut }()
 		system.ErrorExitOut = tstErrorExitOut
 
-		var errExitMatchText = `ERROR: Failed to revert tuning for solution : solution name "" is not recognised by saptune.
+		errExitMatchText := `ERROR: Failed to revert tuning for solution : solution name "" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
 and then please double check your input and /etc/sysconfig/saptune
 `
-		var revertErrorMatchText = `saptune: Comprehensive system optimisation management for SAP solutions.
-Daemon control:
-  saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
-Tune system according to SAP and SUSE notes:
-  saptune note [ list | revertall | enabled | applied ]
-  saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
-  saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
-  saptune note rename NoteID newNoteID
-Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled | applied ]
-  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
-  saptune solution rename SolutionName newSolutionName
-Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
-   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
-   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
-Revert all parameters tuned by the SAP notes or solutions:
-  saptune revert all
-Remove the pending lock file from a former saptune call
-  saptune lock remove
-Call external script '/usr/sbin/saptune_check'
-  saptune check
-Print current saptune status:
-  saptune status
-Print current saptune version:
-  saptune version
-Print this message:
-  saptune help
-`
+		revertErrorMatchText := PrintHelpAndExitMatchText
 
 		buffer := bytes.Buffer{}
 		errExitbuffer := bytes.Buffer{}

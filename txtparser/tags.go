@@ -61,7 +61,7 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 		default:
 			ret = chkOtherTags(tagField[0], tagField[1], secFields)
 		}
-		if ret == false {
+		if !ret {
 			break
 		}
 	}

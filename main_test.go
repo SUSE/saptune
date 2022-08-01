@@ -35,7 +35,91 @@ var checkOut = func(t *testing.T, got, want string) {
 	}
 }
 
-// func TestcheckForTuned()
+func TestCheckWorkingArea(t *testing.T) {
+	os.Remove("/usr/share/saptune")
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune")
+	target := "/usr/share/saptune"
+	if err := os.Symlink(src, target); err != nil {
+		t.Errorf("linking '%s' to '%s' failed - '%v'", src, target, err)
+	}
+	defer os.Remove("/usr/share/saptune")
+
+	// setup ErrorExit handling
+	oldOSExit := system.OSExit
+	defer func() { system.OSExit = oldOSExit }()
+	system.OSExit = tstosExit
+	oldErrorExitOut := system.ErrorExitOut
+	defer func() { system.ErrorExitOut = oldErrorExitOut }()
+	system.ErrorExitOut = tstErrorExitOut
+
+	errExitbuffer := bytes.Buffer{}
+	tstwriter = &errExitbuffer
+
+	checkWorkingArea()
+	if tstRetErrorExit != -1 {
+		t.Errorf("error exit should be '-1' and NOT '%v'\n", tstRetErrorExit)
+	}
+	errExOut := errExitbuffer.String()
+	if errExOut != "" {
+		t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+	}
+
+	// cleanup - remove link and create directory
+	os.Remove("/usr/share/saptune")
+	os.MkdirAll("/usr/share/saptune", 0755)
+	os.RemoveAll("/var/lib/saptune/working/notes")
+}
+
+func TestCallSaptuneCheckScript(t *testing.T) {
+	// setup ErrorExit handling
+	oldOSExit := system.OSExit
+	defer func() { system.OSExit = oldOSExit }()
+	system.OSExit = tstosExit
+	oldErrorExitOut := system.ErrorExitOut
+	defer func() { system.ErrorExitOut = oldErrorExitOut }()
+	system.ErrorExitOut = tstErrorExitOut
+
+	errExitbuffer := bytes.Buffer{}
+	tstwriter = &errExitbuffer
+	txt2chk := `ERROR: command '/usr/sbin/saptune_check' failed with error 'fork/exec /usr/sbin/saptune_check: no such file or directory'
+
+`
+
+	callSaptuneCheckScript("check")
+	if tstRetErrorExit != 1 {
+		t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
+	}
+	errExOut := errExitbuffer.String()
+	if errExOut != txt2chk {
+		t.Errorf("wrong text returned by ErrorExit: '%v' instead of '%v'\n", errExOut, txt2chk)
+	}
+
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/saptune_check")
+	dest := "/usr/sbin/saptune_check"
+	err := system.CopyFile(src, dest)
+	if err != nil {
+		t.Error(err)
+	}
+	err = os.Chmod(dest, 0755)
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.Remove(dest)
+	errExitbuffer.Reset()
+
+	callSaptuneCheckScript("check")
+	if tstRetErrorExit != 0 {
+		t.Errorf("error exit should be '0' and NOT '%v'\n", tstRetErrorExit)
+	}
+	errExOut = errExitbuffer.String()
+	if errExOut != "" {
+		t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+	}
+}
+
+func TestCheckForTuned(t *testing.T) {
+	checkForTuned()
+}
 
 func TestCheckUpdateLeftOvers(t *testing.T) {
 	checkUpdateLeftOvers()
@@ -75,7 +159,7 @@ func TestCheckSaptuneConfigFile(t *testing.T) {
 	saptuneConf = fmt.Sprintf("%s/saptune_NoVersion", TstFilesInGOPATH)
 	matchTxt := fmt.Sprintf("Error: File '%s' is broken. Missing variables 'SAPTUNE_VERSION'\n", saptuneConf)
 	lSwitch = logSwitch
-	saptuneVers = checkSaptuneConfigFile(&buffer, saptuneConf, lSwitch)
+	_ = checkSaptuneConfigFile(&buffer, saptuneConf, lSwitch)
 
 	txt := buffer.String()
 	checkOut(t, txt, matchTxt)
@@ -96,7 +180,7 @@ func TestCheckSaptuneConfigFile(t *testing.T) {
 	saptuneVers = ""
 	matchTxt = fmt.Sprintf("Error: Variable 'STAGING' from file '%s' contains a wrong value 'hugo'. Needs to be 'true' or 'false'\n", saptuneConf)
 	lSwitch = logSwitch
-	saptuneVers = checkSaptuneConfigFile(&buffer, saptuneConf, lSwitch)
+	_ = checkSaptuneConfigFile(&buffer, saptuneConf, lSwitch)
 
 	txt = buffer.String()
 	checkOut(t, txt, matchTxt)

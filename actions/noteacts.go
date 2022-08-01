@@ -16,38 +16,38 @@ import (
 var templateFile = "/usr/share/saptune/NoteTemplate.conf"
 
 // NoteAction  Note actions like apply, revert, verify asm.
-func NoteAction(actionName, noteID, newNoteID string, tuneApp *app.App) {
+func NoteAction(writer io.Writer, actionName, noteID, newNoteID string, tuneApp *app.App) {
 	switch actionName {
 	case "apply":
-		NoteActionApply(os.Stdout, noteID, tuneApp)
+		NoteActionApply(writer, noteID, tuneApp)
 	case "list":
-		NoteActionList(os.Stdout, tuneApp)
+		NoteActionList(writer, tuneApp)
 	case "verify":
-		NoteActionVerify(os.Stdout, noteID, tuneApp)
+		NoteActionVerify(writer, noteID, tuneApp)
 	case "simulate":
-		NoteActionSimulate(os.Stdout, noteID, tuneApp)
+		NoteActionSimulate(writer, noteID, tuneApp)
 	case "customise", "customize":
-		NoteActionCustomise(os.Stdout, noteID, tuneApp)
+		NoteActionCustomise(writer, noteID, tuneApp)
 	case "edit":
-		NoteActionEdit(os.Stdout, noteID, tuneApp)
+		NoteActionEdit(writer, noteID, tuneApp)
 	case "create":
-		NoteActionCreate(noteID, tuneApp)
+		NoteActionCreate(writer, noteID, tuneApp)
 	case "show":
-		NoteActionShow(os.Stdout, noteID, tuneApp)
+		NoteActionShow(writer, noteID, tuneApp)
 	case "delete":
-		NoteActionDelete(os.Stdin, os.Stdout, noteID, tuneApp)
+		NoteActionDelete(os.Stdin, writer, noteID, tuneApp)
 	case "rename":
-		NoteActionRename(os.Stdin, os.Stdout, noteID, newNoteID, tuneApp)
+		NoteActionRename(os.Stdin, writer, noteID, newNoteID, tuneApp)
 	case "revert":
-		NoteActionRevert(os.Stdout, noteID, tuneApp)
+		NoteActionRevert(writer, noteID, tuneApp)
 	case "revertall":
-		RevertAction(os.Stdout, "all", tuneApp)
+		RevertAction(writer, "all", tuneApp)
 	case "applied":
-		NoteActionApplied(os.Stdout, tuneApp)
+		NoteActionApplied(writer, tuneApp)
 	case "enabled":
-		NoteActionEnabled(os.Stdout, tuneApp)
+		NoteActionEnabled(writer, tuneApp)
 	default:
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 }
 
@@ -197,7 +197,7 @@ func NoteActionSimulate(writer io.Writer, noteID string, tuneApp *app.App) {
 // definition override file
 func NoteActionCustomise(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		system.ErrorExit("%v", err)
@@ -234,7 +234,7 @@ func NoteActionCustomise(writer io.Writer, noteID string, tuneApp *app.App) {
 // file and NOT the override file
 func NoteActionEdit(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		system.ErrorExit("%v", err)
@@ -265,9 +265,9 @@ func NoteActionEdit(writer io.Writer, noteID string, tuneApp *app.App) {
 }
 
 // NoteActionCreate helps the customer to create an own Note definition
-func NoteActionCreate(noteID string, tuneApp *app.App) {
+func NoteActionCreate(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err == nil {
 		system.ErrorExit("Note '%s' already exists. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, noteID)
@@ -433,8 +433,8 @@ func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 }
 
 // if a solution is enabled (available in the configuration), check, if
-// this note is the last note in NoteApplyOrder, which is related to
-// this solution. If yes, remove solution for the configuration.
+// there is a least one note in NoteApplyOrder, which is related to
+// this solution. If no, remove solution for the configuration.
 func solutionStillEnabled(tuneApp *app.App) {
 	if len(tuneApp.TuneForSolutions) == 0 {
 		return

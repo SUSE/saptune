@@ -29,7 +29,7 @@ func TestLinuxPagingImprovements(t *testing.T) {
 	if o.VMPagecacheLimitMB != 0 || o.VMPagecacheLimitIgnoreDirty != 1 {
 		t.Fatal(o)
 	}
-	err = optimised.Apply()
+	_ = optimised.Apply()
 }
 
 func TestLinuxPagingImprovementsError(t *testing.T) {

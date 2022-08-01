@@ -145,7 +145,7 @@ func GetOtherSolution(solsDir, noteFiles, extraFiles string) map[string]map[stri
 			// as the function most of the time is called
 			// before the logging is initialized use
 			// Fprintf instead to give customers a hint.
-			fmt.Fprintf(os.Stderr, "Warning: extra solution '%s' will not override built-in solution implementation\n",param.Key)
+			fmt.Fprintf(os.Stderr, "Warning: extra solution '%s' will not override built-in solution implementation\n", param.Key)
 			continue
 		}
 		sol[param.Key] = strings.Split(param.Value, "\t")

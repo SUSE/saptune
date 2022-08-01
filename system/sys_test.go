@@ -76,6 +76,9 @@ func TestWriteSys(t *testing.T) {
 	if err := SetSysInt("kernel/not_avail", 1); err == nil {
 		t.Error("writing to an non existent sys key")
 	}
+	if err := SetSysString("kernel/not_avail", "PNA"); err != nil {
+		t.Error(err)
+	}
 }
 
 func TestTestSysString(t *testing.T) {

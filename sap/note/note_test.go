@@ -48,6 +48,13 @@ func TestNoteSerialisation(t *testing.T) {
 	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl); !eq {
 		t.Fatal(diff, valapply)
 	}
+
+	sysctl = INISettings{ConfFilePath: path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/grub_test.ini"), SysctlParams: map[string]string{"grub:transparent_hugepage": "never", "grub:quiet": "", "systemd:uuidd.socket": "start", "systemd:sysstat.service": "start", "reminder": ""}, ValuesToApply: map[string]string{"": ""}}
+	newSysctl = INISettings{}
+	jsonMarshalAndBack(sysctl, &newSysctl, t)
+	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl); !eq {
+		t.Fatal(diff, valapply)
+	}
 }
 
 func TestCmpMapValue(t *testing.T) {
@@ -277,6 +284,34 @@ func TestGetTuningOptions(t *testing.T) {
 	allOpts = GetTuningOptions("", TstFilesInGOPATH)
 	if sorted := allOpts.GetSortedIDs(); len(allOpts) != len(sorted) {
 		t.Fatal(sorted, allOpts)
+	}
+	allOpts = GetTuningOptions(OSNotesInGOPATH, TstFilesInGOPATH)
+	if sorted := allOpts.GetSortedIDs(); len(allOpts) != len(sorted) {
+		t.Fatal(sorted, allOpts)
+	}
+}
+
+func TestGetNoteHeadData(t *testing.T) {
+	allOpts := GetTuningOptions("", TstFilesInGOPATH)
+	tstNote := allOpts["900929"]
+	tstDesc := "Linux: STORAGE_PARAMETERS_WRONG_SET and 'mmap() failed'"
+	tstVers := "7"
+	tstDate := "31.07.2017"
+	tstRef := "https://launchpad.support.sap.com/#/notes/900929"
+	noteDesc, noteVers, noteRdate, noteRefs := GetNoteHeadData(tstNote)
+	if noteDesc != tstDesc {
+		t.Errorf("got: %+v, expected: %+v\n", noteDesc, tstDesc)
+	}
+	if noteVers != tstVers {
+		t.Errorf("got: %+v, expected: %+v\n", noteVers, tstVers)
+	}
+	if noteRdate != tstDate {
+		t.Errorf("got: %+v, expected: %+v\n", noteRdate, tstDate)
+	}
+	for _, ref := range noteRefs {
+		if ref != tstRef {
+			t.Errorf("got: %+v, expected: %+v\n", noteRefs, tstRef)
+		}
 	}
 }
 
