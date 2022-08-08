@@ -99,11 +99,17 @@ func GetOverrides(filetype, ID string) (bool, *INIFile) {
 // readVersionSection read content of [version] section from config file
 func readVersionSection(fileName string) ([]string, bool, error) {
 	skipSection := false
+	staging := false
 	chkVersEntries := map[string]bool{"missing": false, "found": false, "isNew": false, "isOld": false, "skip": false, "mandVers": false, "mandDate": false, "mandDesc": false, "mandRefs": false}
 	vsection := []string{}
 	fName := filepath.Base(fileName)
+	if strings.Contains(filepath.Dir(fileName), "/staging/") {
+		staging = true
+	}
 	versRun := fmt.Sprintf("%s/version_%s.run", saptuneSectionDir, fName)
-	if _, err := os.Stat(versRun); err == nil {
+	// if processing a note from the staging area, read from staging file
+	// and NOT from the stored 'run' file
+	if _, err := os.Stat(versRun); err == nil && !staging {
 		return getVersionRunInfo(versRun)
 	}
 	content, err := ioutil.ReadFile(fileName)
@@ -147,7 +153,10 @@ func readVersionSection(fileName string) ([]string, bool, error) {
 	}
 
 	err = chkVersEntriesResult(fileName, chkVersEntries)
-	if !chkVersEntries["missing"] {
+	// if processing a note from the staging area do NOT store the version
+	// info in the 'run' file to not override the section info from the
+	// working area
+	if !chkVersEntries["missing"] && !staging {
 		err = storeVersionRunInfo(versRun, vsection, chkVersEntries["isNew"])
 	}
 	return vsection, chkVersEntries["isNew"], err

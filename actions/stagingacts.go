@@ -703,7 +703,7 @@ func diffStageObj(writer io.Writer, sName string) {
 		return
 	}
 	for _, param := range stagingNote.AllValues {
-		if solName != "" && param.Section != solSelect {
+		if (solName != "" && param.Section != solSelect) || param.Section == "version" {
 			continue
 		}
 		stgNote[param.Key] = param.Value
@@ -717,7 +717,7 @@ func diffStageObj(writer io.Writer, sName string) {
 			return
 		}
 		for _, param := range workingNote.AllValues {
-			if solName != "" && param.Section != solSelect {
+			if solName != "" && param.Section != solSelect || param.Section == "version" {
 				continue
 			}
 			wrkNote[param.Key] = param.Value
