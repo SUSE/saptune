@@ -3,7 +3,10 @@
 # Version 6 from Jan 13, 2020 in English
 
 [version]
-# SAP-NOTE=1410736 CATEGORY=NET VERSION=6 DATE=13.01.2020 NAME="TCP/IP: setting keepalive interval"
+VERSION=6
+DATE=13.01.2020
+DESCRIPTION=TCP/IP: setting keepalive interval
+REFERENCES=https://launchpad.support.sap.com/#/notes/1410736
 
 [sysctl]
 net.ipv4.tcp_keepalive_time = 300

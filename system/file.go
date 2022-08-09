@@ -158,8 +158,8 @@ func ListDir(dirPath, logMsg string) (dirNames, fileNames []string) {
 		// Not a fatal error
 		WarningLog("failed to read %s - %v", logMsg, err)
 	}
-	dirNames = make([]string, 0, 0)
-	fileNames = make([]string, 0, 0)
+	dirNames = make([]string, 0)
+	fileNames = make([]string, 0)
 	for _, entry := range entries {
 		if entry.IsDir() {
 			dirNames = append(dirNames, entry.Name())
@@ -204,5 +204,12 @@ func WriteBackupValue(value, fileName string) {
 	err := ioutil.WriteFile(fileName, []byte(value), 0600)
 	if err != nil {
 		DebugLog("writing backup file '%s' for value '%s' failed - '%v'", fileName, value, err)
+	}
+}
+
+// AddGap adds an empty line to improve readability of the screen output
+func AddGap(writer io.Writer) {
+	if GetFlagVal("format") == "" {
+		fmt.Fprintf(writer, "\n")
 	}
 }

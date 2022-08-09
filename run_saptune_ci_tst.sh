@@ -1,35 +1,27 @@
 #!/bin/sh
 
-# this tests do not need any HA/cluster stuff, so remove the repo
-echo "zypper remove unneeded repo"
-zypper rr network:ha-clustering:Factory
+#echo "zypper in ..."
+#zypper -n --gpg-auto-import-keys ref && zypper -n --gpg-auto-import-keys in go1.10 go rpcbind cpupower uuidd polkit tuned sysstat
 
-echo "zypper in ..."
-#/bin/systemctl start dbus -> does not work any longer
-# additional libs needed to get 'tuned' working
-zypper -n --gpg-auto-import-keys ref && zypper -n --gpg-auto-import-keys in glib2 glib2-tools libgio-2_0-0 libglib-2_0-0 libgmodule-2_0-0 libgobject-2_0-0 go1.10 go rpcbind cpupower uuidd polkit tuned sysstat
-
-# dbus can not be started directly, only by dependency - so start 'tuned' instead
-/bin/systemctl start tuned
 systemctl --no-pager status
 # try to resolve systemd status 'degraded'
 systemctl reset-failed
 systemctl --no-pager status
 
-echo "PATH is $PATH, GOPATH is $GOPATH, TRAVIS_HOME is $TRAVIS_HOME"
+echo "PATH is $PATH, GOPATH is $GOPATH, CI_TST_HOME is $CI_TST_HOME"
 
-export TRAVIS_HOME=/home/travis
-mkdir -p ${TRAVIS_HOME}/gopath/src/github.com/SUSE
-cd ${TRAVIS_HOME}/gopath/src/github.com/SUSE
+export CI_TST_HOME=/home/ci_tst
+mkdir -p ${CI_TST_HOME}/gopath/src/github.com/SUSE
+cd ${CI_TST_HOME}/gopath/src/github.com/SUSE
 if [ ! -f saptune ]; then
 	ln -s /app saptune
 fi
 export GO111MODULE=off
-export GOPATH=${TRAVIS_HOME}/gopath
-export PATH=${TRAVIS_HOME}/gopath/bin:$PATH
-export TRAVIS_BUILD_DIR=${TRAVIS_HOME}/gopath/src/github.com/SUSE/saptune
+export GOPATH=${CI_TST_HOME}/gopath
+export PATH=${CI_TST_HOME}/gopath/bin:$PATH
+export CI_TST_BUILD_DIR=${CI_TST_HOME}/gopath/src/github.com/SUSE/saptune
 
-echo "PATH is $PATH, GOPATH is $GOPATH, TRAVIS_HOME is $TRAVIS_HOME"
+echo "PATH is $PATH, GOPATH is $GOPATH, CI_TST_HOME is $CI_TST_HOME"
 echo "ls -l /etc/saptune/*"
 ls -l /etc/saptune/*
 
@@ -47,6 +39,18 @@ go version
 cd saptune
 pwd
 ls -al
+
+echo "start tuned and set profile 'balanced'"
+/bin/systemctl start tuned
+tuned-adm profile balanced
+tuned-adm list
+
+/bin/systemctl status saptune
+
+systemctl --no-pager status
+# try to resolve systemd status 'degraded'
+systemctl reset-failed
+systemctl --no-pager status
 
 # to get TasksMax settings work, needs a user login session
 echo "start nobody login session in background"

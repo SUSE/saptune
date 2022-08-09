@@ -17,27 +17,35 @@ import (
 // constant definitions
 const (
 	saptuneV1 = "/usr/sbin/saptune_v1"
+	saptcheck = "/usr/sbin/saptune_check"
 	logFile   = "/var/log/saptune/saptune.log"
 )
 
 var tuneApp *app.App                 // application configuration and tuning states
 var tuningOptions note.TuningOptions // Collection of tuning options from SAP notes and 3rd party vendors.
 // Switch to control log reaction
-var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debug": os.Getenv("SAPTUNE_DEBUG")}
+var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debug": os.Getenv("SAPTUNE_DEBUG"), "error": os.Getenv("SAPTUNE_ERROR")}
 
 // SaptuneVersion is the saptune version from /etc/sysconfig/saptune
 var SaptuneVersion = ""
 
 func main() {
-	// get saptune version
-	SaptuneVersion, logSwitch = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
+	system.InitOut(logSwitch)
+	if !system.ChkCliSyntax() {
+		actions.PrintHelpAndExit(os.Stdout, 1)
+	}
+
+	// get saptune version and log switches from saptune sysconfig file
+	SaptuneVersion = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
 
 	arg1 := system.CliArg(1)
 	if arg1 == "version" || system.IsFlagSet("version") {
 		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
+		system.Jcollect(SaptuneVersion)
 		system.ErrorExit("", 0)
 	}
 	if arg1 == "help" || system.IsFlagSet("help") {
+		system.JnotSupportedYet()
 		actions.PrintHelpAndExit(os.Stdout, 0)
 	}
 	if arg1 == "" {
@@ -62,9 +70,10 @@ func main() {
 			system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
 			system.ErrorExit("", 0)
 		} else {
-			actions.PrintHelpAndExit(os.Stdout, 0)
+			actions.PrintHelpAndExit(os.Stdout, 1)
 		}
 	}
+	callSaptuneCheckScript(arg1)
 
 	// only one instance of saptune should run
 	// check and set saptune lock file
@@ -99,7 +108,7 @@ func main() {
 
 	solutionSelector := system.GetSolutionSelector()
 	archSolutions, exist := solution.AllSolutions[solutionSelector]
-	fmt.Fprintf(os.Stdout, "\n")
+	system.AddGap(os.Stdout)
 	if !exist {
 		system.ErrorExit("The system architecture (%s) is not supported.", solutionSelector)
 		return
@@ -113,7 +122,7 @@ func main() {
 		system.ErrorExit("Error during NoteSanityCheck - '%v'\n", err)
 	}
 	checkForTuned()
-	actions.SelectAction(tuneApp, SaptuneVersion)
+	actions.SelectAction(os.Stdout, tuneApp, SaptuneVersion)
 	system.ErrorExit("", 0)
 }
 
@@ -140,6 +149,25 @@ func checkForTuned() {
 	enabled, _ := system.SystemctlIsEnabled(actions.TunedService)
 	if enabled || active {
 		system.WarningLog("ATTENTION: tuned service is active, so we may encounter conflicting tuning values")
+	}
+}
+
+// callSaptuneCheckScript will simply call the saptune_check script
+// it's done before the saptune lock is set, but after the check for
+// running as root
+func callSaptuneCheckScript(arg string) {
+	if arg == "check" {
+		// call external scrip saptune_check
+		cmd := exec.Command(saptcheck)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			system.ErrorExit("command '%+s' failed with error '%v'\n", saptcheck, err)
+		} else {
+			system.ErrorExit("", 0)
+		}
 	}
 }
 
@@ -183,10 +211,10 @@ func checkWorkingArea() {
 // checkSaptuneConfigFile checks the config file /etc/sysconfig/saptune
 // if it exists, if it contains all needed variables and for some variables
 // checks, if the values is valid
-// returns the saptune version and some log switches
-func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) (string, map[string]string) {
+// returns the saptune version and changes some log switches
+func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) string {
 	missingKey := []string{}
-	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING"}
+	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME"}
 	sconf, err := txtparser.ParseSysconfigFile(saptuneConf, false)
 	if err != nil {
 		fmt.Fprintf(writer, "Error: Unable to read file '%s': %v\n", saptuneConf, err)
@@ -213,12 +241,15 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
 	// Switch Debug on ("1") or off ("0" - default)
 	// Switch verbose mode on ("on" - default) or off ("off")
-	// check, if DEBUG or VERBOSE is set in /etc/sysconfig/saptune
+	// check, if DEBUG, ERROR or VERBOSE is set in /etc/sysconfig/saptune
 	if lswitch["debug"] == "" {
 		lswitch["debug"] = sconf.GetString("DEBUG", "0")
 	}
 	if lswitch["verbose"] == "" {
 		lswitch["verbose"] = sconf.GetString("VERBOSE", "on")
 	}
-	return saptuneVers, lswitch
+	if lswitch["error"] == "" {
+		lswitch["error"] = sconf.GetString("ERROR", "on")
+	}
+	return saptuneVers
 }

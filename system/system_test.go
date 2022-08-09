@@ -17,9 +17,19 @@ var tstosExit = func(val int) {
 	tstRetErrorExit = val
 }
 var tstwriter io.Writer
+var errwriter io.Writer
 var tstErrorExitOut = func(str string, out ...interface{}) error {
 	fmt.Fprintf(tstwriter, "ERROR: "+str, out...)
 	return fmt.Errorf(str+"\n", out...)
+}
+var tstErrExitOut = func(errw io.Writer, str string, out ...interface{}) {
+	out = out[1:]
+	fmt.Printf("%v\n", errw)
+	fmt.Fprintf(errwriter, "%s%sERROR: "+str+"%s%s\n", out...)
+	if len(out) >= 4 {
+		out = out[2 : len(out)-2]
+	}
+	fmt.Fprintf(tstwriter, "ERROR: "+str, out...)
 }
 
 var checkOut = func(t *testing.T, got, want string) {
@@ -38,151 +48,6 @@ func TestIsUserRoot(t *testing.T) {
 	if !IsUserRoot() {
 		t.Log("the test requires root access")
 	}
-}
-
-func TestCliArg(t *testing.T) {
-	os.Args = []string{"saptune", "note", "list"}
-	// parse command line, to get the test parameters
-	saptArgs, saptFlags = ParseCliArgs()
-
-	expected := "note"
-	actual := CliArg(1)
-	if actual != expected {
-		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
-	}
-	expected = "list"
-	actual = CliArg(2)
-	if actual != expected {
-		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
-	}
-	expected = ""
-	actual = CliArg(4)
-	if actual != expected {
-		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
-	}
-	expectedSlice := []string{"note", "list"}
-	actualSlice := CliArgs(1)
-	for i, arg := range actualSlice {
-		if arg != expectedSlice[i] {
-			t.Errorf("Test failed, expected: '%s', got: '%s'", expectedSlice[i], arg)
-		}
-	}
-	expectedSlice = []string{}
-	actualSlice = CliArgs(4)
-	if len(actualSlice) != 0 {
-		t.Errorf("Test failed, expected: '%v', got: '%v'", expectedSlice, actualSlice)
-	}
-
-	if IsFlagSet("force") {
-		t.Errorf("Test failed, expected 'force' flag as 'false', but got 'true'")
-	}
-	if IsFlagSet("dryrun") {
-		t.Errorf("Test failed, expected 'dryrun' flag as 'false', but got 'true'")
-	}
-	if IsFlagSet("help") {
-		t.Errorf("Test failed, expected 'help' flag as 'false', but got 'true'")
-	}
-	if IsFlagSet("version") {
-		t.Errorf("Test failed, expected 'version' flag as 'false', but got 'true'")
-	}
-	if IsFlagSet("output") {
-		t.Errorf("Test failed, expected 'output' flag as 'false', but got 'true'")
-	}
-	expected = "screen"
-	actual = GetOutTarget()
-	if actual != expected {
-		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
-	}
-	if IsFlagSet("notsupported") {
-		t.Errorf("Test failed, expected 'notsupported' flag as 'false', but got 'true'")
-	}
-	if IsFlagSet("") {
-		t.Errorf("Test failed, expected 'notsupported' flag as 'false', but got 'true'")
-	}
-	// reset CLI flags and args
-	saptArgs = []string{}
-	saptFlags = map[string]string{}
-}
-
-func TestCliFlags(t *testing.T) {
-	os.Args = []string{"saptune", "note", "list", "--out=json", "--force", "--dryrun", "--help", "--version"}
-	// parse command line, to get the test parameters
-	saptArgs, saptFlags = ParseCliArgs()
-
-	if !IsFlagSet("force") {
-		t.Errorf("Test failed, expected 'force' flag as 'true', but got 'false'")
-	}
-	if !IsFlagSet("dryrun") {
-		t.Errorf("Test failed, expected 'dryrun' flag as 'true', but got 'false'")
-	}
-	if !IsFlagSet("help") {
-		t.Errorf("Test failed, expected 'help' flag as 'true', but got 'false'")
-	}
-	if !IsFlagSet("version") {
-		t.Errorf("Test failed, expected 'version' flag as 'true', but got 'false'")
-	}
-	if IsFlagSet("output") {
-		t.Errorf("Test failed, expected 'output' flag as 'false', but got 'true'")
-	}
-	expected := "json"
-	actual := GetOutTarget()
-	if actual != expected {
-		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, actual)
-	}
-
-	// reset CLI flags and args
-	saptArgs = []string{}
-	saptFlags = map[string]string{}
-	os.Args = []string{"saptune", "-force"}
-	// parse command line, to get the test parameters
-	saptArgs, saptFlags = ParseCliArgs()
-	if !IsFlagSet("force") {
-		t.Errorf("Test failed, expected 'force' flag as 'true', but got 'false'")
-	}
-
-	// reset CLI flags and args
-	saptArgs = []string{}
-	saptFlags = map[string]string{}
-	os.Args = []string{"saptune", "-dry-run"}
-	// parse command line, to get the test parameters
-	saptArgs, saptFlags = ParseCliArgs()
-	if !IsFlagSet("dryrun") {
-		t.Errorf("Test failed, expected 'dryrun' flag as 'true', but got 'false'")
-	}
-
-	// reset CLI flags and args
-	saptArgs = []string{}
-	saptFlags = map[string]string{}
-	os.Args = []string{"saptune", "-help"}
-	// parse command line, to get the test parameters
-	saptArgs, saptFlags = ParseCliArgs()
-	if !IsFlagSet("help") {
-		t.Errorf("Test failed, expected 'help' flag as 'true', but got 'false'")
-	}
-
-	// reset CLI flags and args
-	saptArgs = []string{}
-	saptFlags = map[string]string{}
-	os.Args = []string{"saptune", "-h"}
-	// parse command line, to get the test parameters
-	saptArgs, saptFlags = ParseCliArgs()
-	if !IsFlagSet("help") {
-		t.Errorf("Test failed, expected 'help' flag as 'true', but got 'false'")
-	}
-
-	// reset CLI flags and args
-	saptArgs = []string{}
-	saptFlags = map[string]string{}
-	os.Args = []string{"saptune", "-version"}
-	// parse command line, to get the test parameters
-	saptArgs, saptFlags = ParseCliArgs()
-	if !IsFlagSet("version") {
-		t.Errorf("Test failed, expected 'version' flag as 'true', but got 'false'")
-	}
-
-	// reset CLI flags and args
-	saptArgs = []string{}
-	saptFlags = map[string]string{}
 }
 
 func TestGetSolutionSelector(t *testing.T) {
@@ -301,12 +166,20 @@ func TestCalledFrom(t *testing.T) {
 }
 
 func TestErrorExit(t *testing.T) {
+	var setRedText = "\033[31m"
+	var setBoldText = "\033[1m"
+	var resetBoldText = "\033[22m"
+	var resetTextColor = "\033[0m"
+
 	oldOSExit := OSExit
 	defer func() { OSExit = oldOSExit }()
 	OSExit = tstosExit
 	oldErrorExitOut := ErrorExitOut
 	defer func() { ErrorExitOut = oldErrorExitOut }()
 	ErrorExitOut = tstErrorExitOut
+	oldErrExitOut := ErrExitOut
+	defer func() { ErrExitOut = oldErrExitOut }()
+	ErrExitOut = tstErrExitOut
 	buffer := bytes.Buffer{}
 	tstwriter = &buffer
 
@@ -316,7 +189,23 @@ func TestErrorExit(t *testing.T) {
 	}
 	txt := buffer.String()
 	checkOut(t, txt, "ERROR: Hallo\n")
-	//buffer.Reset() - if we plan to check more test cases
+
+	buffer.Reset()
+	errbuf := bytes.Buffer{}
+	errwriter = &errbuf
+	ErrorExit("Colored Hallo", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
+	txt = buffer.String()
+	checkOut(t, txt, "ERROR: Colored Hallo")
+	errtxt := errbuf.String()
+	//lint:ignore ST1018 Unicode control characters are expected here
+	checkOut(t, errtxt, "[31m[1mERROR: Colored Hallo[22m[0m\n")
+
+	// check errExitOut function
+	outbuf := bytes.Buffer{}
+	errExitOut(&outbuf, "Colored Hallo direct", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
+	txt = outbuf.String()
+	//lint:ignore ST1018 Unicode control characters are expected here
+	checkOut(t, txt, "[31m[1mERROR: Colored Hallo direct[22m[0m\n")
 
 	SaptuneLock()
 	// to reach ErrorExit("saptune currently in use, try later ...", 11)
@@ -454,7 +343,7 @@ func TestGetDmiID(t *testing.T) {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, dmi)
 	}
 	file = "no_dmi_file_found"
-	dmi, err := GetDmiID(file)
+	_, err := GetDmiID(file)
 	if err == nil {
 		t.Errorf("file '%s' exists, but shouldn't", file)
 	}
@@ -484,4 +373,45 @@ func TestGetHWIdentity(t *testing.T) {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", expected, hwvend)
 	}
 	DmiID = "/sys/class/dmi/id"
+}
+
+func TestStripComments(t *testing.T) {
+	str := "Test string with # comment to strip"
+	exp := "Test string with"
+	res := StripComment(str, "#")
+	if res != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, res)
+	}
+	str = "Test string without comment to strip"
+	exp = "Test string without comment to strip"
+	res = StripComment(str, "#")
+	if res != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, res)
+	}
+	str = "Test string with another; comment to strip"
+	exp = "Test string with another"
+	res = StripComment(str, ";")
+	if res != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, res)
+	}
+}
+
+func TestGetVirtStatus(t *testing.T) {
+	oldSystemddvCmd := systemddvCmd
+	// test: virtualization found
+	systemddvCmd = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/systemdDVOK")
+	exp := "kvm lxc chroot"
+	vtype := GetVirtStatus()
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+
+	// test: virtualization NOT available
+	systemddvCmd = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/systemdDVNOK")
+	exp = "none"
+	vtype = GetVirtStatus()
+	if vtype != exp {
+		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
+	}
+	systemddvCmd = oldSystemddvCmd
 }

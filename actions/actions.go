@@ -52,53 +52,55 @@ var RPMVersion = "undef"
 // built and released packages (not possible because of 'reproducible' builds)
 var RPMDate = "undef"
 
-// solutionSelector used in solutionacts and statgingacts
+// solutionSelector used in solutionacts and stagingacts
 var solutionSelector = system.GetSolutionSelector()
 
+// saptune configuration file
+var saptuneSysconfig = "/etc/sysconfig/saptune"
+
 // set colors for the table and list output
-//var setBlueText = "\033[34m"
+//var setYellowText = "\033[38;5;220m"
 //var setCyanText = "\033[36m"
 //var setUnderlinedText = "\033[4m"
 var setGreenText = "\033[32m"
 var setRedText = "\033[31m"
+var setYellowText = "\033[33m"
+var setBlueText = "\033[34m"
 var setBoldText = "\033[1m"
 var resetBoldText = "\033[22m"
 var setStrikeText = "\033[9m"
 var resetTextColor = "\033[0m"
+var dfltColorScheme = "full-red-noncmpl"
 
 // SelectAction selects the chosen action depending on the first command line
 // argument
-func SelectAction(stApp *app.App, saptuneVers string) {
+func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 	// switch off color and highlighting, if Stdout is not a terminal
-	if !system.OutIsTerm(os.Stdout) {
-		setGreenText = ""
-		setRedText = ""
-		setBoldText = ""
-		setStrikeText = ""
-		resetTextColor = ""
-	}
+	switchOffColor()
+	system.JnotSupportedYet()
+
 	// check for test packages
 	if RPMDate != "undef" {
-		system.NoticeLog("ATTENTION: You are running a test version of saptune which is not supported for production use")
+		system.NoticeLog("ATTENTION: You are running a test version (%s from %s) of saptune which is not supported for production use", RPMVersion, RPMDate)
 	}
 
 	switch system.CliArg(1) {
 	case "daemon":
-		DaemonAction(os.Stdout, system.CliArg(2), saptuneVers, stApp)
+		DaemonAction(writer, system.CliArg(2), saptuneVers, stApp)
 	case "service":
-		ServiceAction(system.CliArg(2), saptuneVers, stApp)
+		ServiceAction(writer, system.CliArg(2), saptuneVers, stApp)
 	case "note":
-		NoteAction(system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
+		NoteAction(writer, system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "solution":
-		SolutionAction(system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
+		SolutionAction(writer, system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "revert":
-		RevertAction(os.Stdout, system.CliArg(2), stApp)
+		RevertAction(writer, system.CliArg(2), stApp)
 	case "staging":
 		StagingAction(system.CliArg(2), system.CliArgs(3), stApp)
 	case "status":
-		ServiceAction("status", saptuneVers, stApp)
+		ServiceAction(writer, "status", saptuneVers, stApp)
 	default:
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 }
 
@@ -137,6 +139,7 @@ func rememberMessage(writer io.Writer) {
 
 // VerifyAllParameters Verify that all system parameters do not deviate from any of the enabled solutions/notes.
 func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
+	result := system.JPNotes{}
 	if len(tuneApp.NoteApplyOrder) == 0 {
 		fmt.Fprintf(writer, "No notes or solutions enabled, nothing to verify.\n")
 	} else {
@@ -144,12 +147,16 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
 		if err != nil {
 			system.ErrorExit("Failed to inspect the current system: %v", err)
 		}
-		PrintNoteFields(writer, "NONE", comparisons, true)
+		PrintNoteFields(writer, "NONE", comparisons, true, &result)
 		tuneApp.PrintNoteApplyOrder(writer)
+		result.NotesOrder = tuneApp.NoteApplyOrder
+		sysComp := len(unsatisfiedNotes) == 0
+		result.SysCompliance = &sysComp
+		system.Jcollect(result)
 		if len(unsatisfiedNotes) == 0 {
-			fmt.Fprintf(writer, "The running system is currently well-tuned according to all of the enabled notes.\n")
+			fmt.Fprintf(writer, "%s%sThe running system is currently well-tuned according to all of the enabled notes.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
 		} else {
-			system.ErrorExit("The parameters listed above have deviated from SAP/SUSE recommendations.")
+			system.ErrorExit("The parameters listed above have deviated from SAP/SUSE recommendations.", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
 		}
 	}
 }
@@ -244,15 +251,34 @@ func deleteDefFile(fileName string) {
 	}
 }
 
+// switchOffColor turns off color and highlighting, if Stdout is not a terminal
+func switchOffColor() {
+	// switch off color and highlighting, if Stdout is not a terminal
+	if !system.OutIsTerm(os.Stdout) {
+		setGreenText = ""
+		setRedText = ""
+		setYellowText = ""
+		setBlueText = ""
+		setBoldText = ""
+		resetBoldText = ""
+		setStrikeText = ""
+		resetTextColor = ""
+	}
+}
+
 // PrintHelpAndExit prints the usage and exit
 func PrintHelpAndExit(writer io.Writer, exitStatus int) {
+	if system.GetFlagVal("format") == "json" {
+		system.JInvalid(exitStatus)
+	}
 	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune daemon [ start | status | stop ]  ATTENTION: deprecated
   saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
 Tune system according to SAP and SUSE notes:
-  saptune note [ list | verify | revertall | enabled | applied ]
-  saptune note [ apply | simulate | verify | customise | create | edit | revert | show | delete ] NoteID
+  saptune note [ list | revertall | enabled | applied ]
+  saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
+  saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
   saptune note rename NoteID newNoteID
 Tune system for all notes applicable to your SAP solution:
   saptune solution [ list | verify | enabled | applied ]
@@ -266,6 +292,8 @@ Revert all parameters tuned by the SAP notes or solutions:
   saptune revert all
 Remove the pending lock file from a former saptune call
   saptune lock remove
+Call external script '/usr/sbin/saptune_check'
+  saptune check
 Print current saptune status:
   saptune status
 Print current saptune version:

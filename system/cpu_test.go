@@ -84,7 +84,7 @@ func TestIsValidGovernor(t *testing.T) {
 	if err != nil {
 		t.Skip("directory '/sys/devices/system/cpu/cpu0/cpufreq' does not exist. System does not support scaling governor, skipping test")
 	}
-	gov, _ := GetSysString("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor")
+	gov, _ := GetSysString("devices/system/cpu/cpu0/cpufreq/scaling_governor")
 	if !isValidGovernor("cpu0", gov) {
 		t.Fatal(gov)
 	}
@@ -252,8 +252,10 @@ func TestCPUErrorCases(t *testing.T) {
 	if len(gval) != 0 {
 		t.Errorf("should return an empty value, but returns: %+v", gval)
 	}
-	if err := SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "", false); err == nil {
-		t.Error("should return an error and not 'nil'")
+	if canSetForceLatency("70", "") {
+		if err := SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "", false); err == nil {
+			t.Error("should return an error and not 'nil'")
+		}
 	}
 	cpuDir = oldCPUDir
 }

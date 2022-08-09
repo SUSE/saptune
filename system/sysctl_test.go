@@ -4,13 +4,13 @@ import "testing"
 
 func TestReadSysctl(t *testing.T) {
 	if value, err := GetSysctlInt("vm.max_map_count"); err != nil {
-		t.Fatal(value)
+		t.Error(value)
 	}
 	if value, err := GetSysctlUint64("vm.max_map_count"); err != nil {
-		t.Fatal(value)
+		t.Error(value)
 	}
 	if value, _ := GetSysctlString("vm.max_map_count"); len(value) < 2 { // indeed testing string length
-		t.Fatal(value)
+		t.Error(value)
 	}
 	if value, err := GetSysctlUint64Field("net.ipv4.ip_local_port_range", 0); err != nil {
 		t.Error(value, err)
@@ -19,13 +19,13 @@ func TestReadSysctl(t *testing.T) {
 	}
 
 	if value, err := GetSysctlInt("does not exist"); err == nil {
-		t.Fatal(value)
+		t.Error(value)
 	}
 	if value, err := GetSysctlUint64("does not exist"); err == nil {
-		t.Fatal(value)
+		t.Error(value)
 	}
 	if value, err := GetSysctlString("does not exist"); err == nil {
-		t.Fatal(value)
+		t.Error(value)
 	}
 
 	if value, err := GetSysctlUint64Field("does not exist", 0); err == nil {
@@ -36,47 +36,62 @@ func TestReadSysctl(t *testing.T) {
 func TestWriteSysctl(t *testing.T) {
 	oldval, err := GetSysctlInt("vm.max_map_count")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if err := SetSysctlInt("vm.max_map_count", 65630); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	intval, err := GetSysctlInt("vm.max_map_count")
+	if err != nil {
+		t.Error(err)
+	}
 	if intval != 65630 {
-		t.Fatal(intval)
+		t.Error(intval)
 	}
 	if err := SetSysctlUint64("vm.max_map_count", 65635); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	uintval, err := GetSysctlUint64("vm.max_map_count")
+	if err != nil {
+		t.Error(err)
+	}
 	if uintval != 65635 {
-		t.Fatal(uintval)
+		t.Error(uintval)
 	}
 	if err := SetSysctlString("vm.max_map_count", "65640"); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	sval, err := GetSysctlString("vm.max_map_count")
+	if err != nil {
+		t.Error(err)
+	}
 	if sval != "65640" {
-		t.Fatal(sval)
+		t.Error(sval)
 	}
 
 	oldfield, err := GetSysctlUint64Field("net.ipv4.ip_local_port_range", 0)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if err := SetSysctlUint64Field("net.ipv4.ip_local_port_range", 0, 31768); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	uintval, err = GetSysctlUint64Field("net.ipv4.ip_local_port_range", 0)
+	if err != nil {
+		t.Error(err)
+	}
 	if uintval != 31768 {
-		t.Fatal(uintval)
+		t.Error(uintval)
 	}
 
 	if err := SetSysctlString("vm.dirty_bytes", "100"); err == nil {
 		t.Error("should return an error and not 'nil'")
 	}
+	if err := SetSysctlString("net.ipv4.ip_local_port_range", "PNA"); err != nil {
+		t.Error(err)
+	}
 	if err := SetSysctlString("UnknownKey", "100"); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	// net.ipv4.ip_local_port_range has only 2 fields
 	if err := SetSysctlUint64Field("net.ipv4.ip_local_port_range", 3, 4711); err == nil {
@@ -87,10 +102,10 @@ func TestWriteSysctl(t *testing.T) {
 	}
 	// set test value back
 	if err := SetSysctlInt("vm.max_map_count", oldval); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if err := SetSysctlUint64Field("net.ipv4.ip_local_port_range", 0, oldfield); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 }
 

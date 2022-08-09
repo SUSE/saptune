@@ -44,6 +44,9 @@ var dmiBiosVersion = "/sys/class/dmi/id/bios_version"
 // /usr/sbin/dmidecode -s system-version
 var dmiSystemVersion = "/sys/class/dmi/id/system_version"
 
+// /usr/sbin/dmidecode -s sys-vendor
+var dmiSysVendor = "/sys/class/dmi/id/sys_vendor"
+
 // /usr/sbin/dmidecode -s system-manufacturer
 var dmiSystemManufacturer = "/sys/class/dmi/id/system-manufacturer"
 
@@ -145,6 +148,16 @@ func GetCSP() string {
 	if csp == "" {
 		// SystemVersion
 		if content, err := ioutil.ReadFile(dmiSystemVersion); err == nil {
+			// check for AWS
+			matches := isAWS.FindStringSubmatch(string(content))
+			if len(matches) != 0 {
+				csp = CSPAWS
+			}
+		}
+	}
+	if csp == "" {
+		// SysVendor
+		if content, err := ioutil.ReadFile(dmiSysVendor); err == nil {
 			// check for AWS
 			matches := isAWS.FindStringSubmatch(string(content))
 			if len(matches) != 0 {

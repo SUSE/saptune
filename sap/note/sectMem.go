@@ -65,9 +65,10 @@ func OptMemVal(key, actval, cfgval, tmpfspercent string) string {
 // SetMemVal applies the settings to the system
 func SetMemVal(key, value string) error {
 	var err error
+	var val uint64
 	switch key {
 	case "ShmFileSystemSizeMB":
-		val, err := strconv.ParseUint(value, 10, 64)
+		val, err = strconv.ParseUint(value, 10, 64)
 		if val > 0 {
 			if err = system.RemountSHM(uint64(val)); err != nil {
 				return err

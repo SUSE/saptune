@@ -8,6 +8,7 @@ import (
 	"strings"
 )
 
+var systemddvCmd = "/usr/bin/systemd-detect-virt"
 var systemctlCmd = "/usr/bin/systemctl"
 var tunedAdmCmd = "/usr/sbin/tuned-adm"
 var actTunedProfile = "/etc/tuned/active_profile"
@@ -53,7 +54,7 @@ func SystemctlRestart(thing string) error {
 		if err != nil {
 			return ErrorLog("%v - Failed to call systemctl restart on %s - %s", err, thing, string(out))
 		}
-		DebugLog("SystemctlRestart( - /usr/bin/systemctl restart '%s' : '%+v %s'", thing, err, string(out))
+		DebugLog("SystemctlRestart - /usr/bin/systemctl restart '%s' : '%+v %s'", thing, err, string(out))
 	}
 	return nil
 }
@@ -69,7 +70,49 @@ func SystemctlReloadTryRestart(thing string) error {
 		if err != nil {
 			return ErrorLog("%v - Failed to call systemctl reload-or-try-restart on %s - %s", err, thing, string(out))
 		}
-		DebugLog("SystemctlReloadTryRestart( - /usr/bin/systemctl reload-or-try-restart '%s' : '%+v %s'", thing, err, string(out))
+		DebugLog("SystemctlReloadTryRestart - /usr/bin/systemctl reload-or-try-restart '%s' : '%+v %s'", thing, err, string(out))
+	}
+	return nil
+}
+
+// SystemdDetectVirt calls systemd-detect-virt.
+// option can be '-r' (chroot), -c (container), -v (vm)
+// '-r' only returns 0 or 1 without any output
+func SystemdDetectVirt(opt string) (bool, string, error) {
+	var out []byte
+	var err error
+
+	virt := false
+	vtype := ""
+	if opt == "" {
+		out, err = exec.Command(systemddvCmd).CombinedOutput()
+	} else {
+		out, err = exec.Command(systemddvCmd, opt).CombinedOutput()
+	}
+	DebugLog("SystemdDetectVirt - /usr/bin/systemd-detect-virt %s : '%+v %s'", opt, err, string(out))
+	if err == nil {
+		// virtualized environment detected
+		virt = true
+	}
+	if len(out) == 0 && err != nil && opt != "-r" {
+		return virt, vtype, ErrorLog("%v - Failed to call systemd-detect-virt %s - %s", err, opt, string(out))
+	}
+	vtype = string(out)
+	return virt, strings.TrimSpace(vtype), err
+}
+
+// SystemctlResetFailed calls systemctl reset-failed.
+func SystemctlResetFailed() error {
+	running, err := IsSystemRunning()
+	if err != nil {
+		return ErrorLog("%v - Failed to call systemctl reset-failed", err)
+	}
+	if running {
+		out, err := exec.Command(systemctlCmd, "reset-failed").CombinedOutput()
+		if err != nil {
+			return ErrorLog("%v - Failed to call systemctl reset-failed - %s", err, string(out))
+		}
+		DebugLog("SystemctlResetFailed - /usr/bin/systemctl reset-failed : '%+v %s'", err, string(out))
 	}
 	return nil
 }
@@ -145,9 +188,9 @@ func SystemctlIsEnabled(thing string) (bool, error) {
 func SystemctlIsStarting() bool {
 	match := false
 	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
-	DebugLog("IsSystemRunning - /usr/bin/systemctl is-system-running : '%+v %s'", err, string(out))
+	DebugLog("SystemctlIsStarting - /usr/bin/systemctl is-system-running : '%+v %s'", err, string(out))
 	if strings.TrimSpace(string(out)) == "starting" {
-		DebugLog("IsSystemRunning - system is in state 'starting'")
+		DebugLog("SystemctlIsStarting - system is in state 'starting'")
 		match = true
 	}
 	return match
@@ -168,11 +211,10 @@ func SystemctlIsRunning(thing string) (bool, error) {
 	return match, nil
 }
 
-// SystemctlIsActive return true only if systemctl suggests that the thing is
-// running.
+// SystemctlIsActive returns the output of 'systemctl is-active'
 func SystemctlIsActive(thing string) (string, error) {
 	out, err := exec.Command(systemctlCmd, "is-active", thing).CombinedOutput()
-	DebugLog("SystemctlIsRunning - /usr/bin/systemctl is-active : '%+v %s'", err, string(out))
+	DebugLog("SystemctlIsActive - /usr/bin/systemctl is-active : '%+v %s'", err, string(out))
 	if len(out) == 0 && err != nil {
 		return "", ErrorLog("%v - Failed to call systemctl is-active", err)
 	}
@@ -183,7 +225,7 @@ func SystemctlIsActive(thing string) (string, error) {
 func GetSystemState() (string, error) {
 	retval := ""
 	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
-	DebugLog("IsSystemRunning - /usr/bin/systemctl is-system-running : '%+v %s'", err, string(out))
+	DebugLog("GetSystemState - /usr/bin/systemctl is-system-running : '%+v %s'", err, string(out))
 	if len(out) != 0 {
 		retval = strings.TrimSpace(string(out))
 	}

@@ -25,6 +25,8 @@ func GetLimitsVal(value string) (string, string, error) {
 		// /etc/security/limits.d/saptune-<domain>-<item>-<type>.conf
 		if len(lim) < 3 {
 			return "", info, fmt.Errorf("Wrong format of limit entry in Note definition file. Please check")
+		} else if len(lim) == 3 {
+			lim = append(lim, "")
 		} else if len(lim) > 3 {
 			info = getLimitInfo(lim[3])
 		}
@@ -54,6 +56,7 @@ func OptLimitsVal(actval, cfgval string) string {
 // SetLimitsVal applies the settings to the system
 func SetLimitsVal(key, noteID, value string, revert bool) error {
 	var err error
+	var secLimits *system.SecLimits
 	limit := value
 	if limit != "" && limit != "NA" {
 		lim := strings.Fields(limit)
@@ -68,7 +71,7 @@ func SetLimitsVal(key, noteID, value string, revert bool) error {
 			return nil
 		}
 
-		secLimits, err := system.ParseSecLimitsFile(dropInFile)
+		secLimits, err = system.ParseSecLimitsFile(dropInFile)
 		if err != nil {
 			return err
 		}

@@ -1,9 +1,12 @@
 # 1557506 - Linux paging improvements
 # Description:    Tune page cache limit to prevent eviction of SAP applications memory into swap
-# Version 14 from 10.08.2015 in English
+# Version 16 from 06.02.2020 in English
 
 [version]
-# SAP-NOTE=1557506 CATEGORY=LINUX VERSION=14 DATE=10.08.2015 NAME="Linux paging improvements"
+VERSION=16
+DATE=06.02.2020
+DESCRIPTION=Linux paging improvements
+REFERENCES=https://launchpad.support.sap.com/#/notes/1557506
 
 [pagecache]
 ## Type:    yesno
@@ -19,10 +22,11 @@ ENABLE_PAGECACHE_LIMIT=no
 ## Default: 1
 #
 # Whether or not to ignore dirty memory when enforcing the pagecache limit.
-# If set to 0, dirty memory will be freed (written onto disk) when enforcing 
-# the pagecache limit.
-# If set to 1 (default), dirty memory will not be freed when enforcing the 
-# pagecache limit.
+# If set to 0, dirty (unmapped) memory will be considered freeable and the Linux
+# kernel will try to write the pages out when enforcing the page cache limit.
+# If set to 1 (ignore all dirty memory in the page cache when enforcing the limit)
+# the page cache can actually grow well beyond the configured limit if lots of writes
+# happen to local filesystems.
 # If set to 2 - a middle ground, some dirty memory will be freed when enforcing
 # the limit.
 vm.pagecache_limit_ignore_dirty=1

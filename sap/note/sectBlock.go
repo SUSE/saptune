@@ -14,10 +14,6 @@ import (
 // GetBlkVal initialise the block device structure with the current
 // system settings
 func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) {
-	newQueue := make(map[string]string)
-	newReq := make(map[string]int)
-	newRah := make(map[string]int)
-	newMse := make(map[string]int)
 	retVal := ""
 	info := ""
 
@@ -27,7 +23,7 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 		if err != nil {
 			return "", info, err
 		}
-		newQueue = newIOQ.(param.BlockDeviceSchedulers).SchedulerChoice
+		newQueue := newIOQ.(param.BlockDeviceSchedulers).SchedulerChoice
 		retVal = newQueue[strings.TrimPrefix(key, "IO_SCHEDULER_")]
 		cur.BlockDeviceSchedulers = newIOQ.(param.BlockDeviceSchedulers)
 	case system.IsNrreq.MatchString(key):
@@ -35,7 +31,7 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 		if err != nil {
 			return "", info, err
 		}
-		newReq = newNrR.(param.BlockDeviceNrRequests).NrRequests
+		newReq := newNrR.(param.BlockDeviceNrRequests).NrRequests
 		retVal = strconv.Itoa(newReq[strings.TrimPrefix(key, "NRREQ_")])
 		cur.BlockDeviceNrRequests = newNrR.(param.BlockDeviceNrRequests)
 	case system.IsRahead.MatchString(key):
@@ -43,7 +39,7 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 		if err != nil {
 			return "", info, err
 		}
-		newRah = newRahead.(param.BlockDeviceReadAheadKB).ReadAheadKB
+		newRah := newRahead.(param.BlockDeviceReadAheadKB).ReadAheadKB
 		retVal = strconv.Itoa(newRah[strings.TrimPrefix(key, "READ_AHEAD_KB_")])
 		cur.BlockDeviceReadAheadKB = newRahead.(param.BlockDeviceReadAheadKB)
 	case system.IsMsect.MatchString(key):
@@ -51,7 +47,7 @@ func GetBlkVal(key string, cur *param.BlockDeviceQueue) (string, string, error) 
 		if err != nil {
 			return "", info, err
 		}
-		newMse = newMsect.(param.BlockDeviceMaxSectorsKB).MaxSectorsKB
+		newMse := newMsect.(param.BlockDeviceMaxSectorsKB).MaxSectorsKB
 		retVal = strconv.Itoa(newMse[strings.TrimPrefix(key, "MAX_SECTORS_KB_")])
 		cur.BlockDeviceMaxSectorsKB = newMsect.(param.BlockDeviceMaxSectorsKB)
 	}
@@ -108,7 +104,7 @@ func OptBlkVal(key, cfgval string, cur *param.BlockDeviceQueue, bOK map[string][
 		opt, _ := cur.BlockDeviceReadAheadKB.Optimise(ival)
 		cur.BlockDeviceReadAheadKB = opt.(param.BlockDeviceReadAheadKB)
 	case system.IsMsect.MatchString(key):
-		ival, _ := strconv.Atoi(sval)
+		var ival int
 		ival, sval, info = chkMaxHWsector(key, sval)
 		opt, _ := cur.BlockDeviceMaxSectorsKB.Optimise(ival)
 		cur.BlockDeviceMaxSectorsKB = opt.(param.BlockDeviceMaxSectorsKB)

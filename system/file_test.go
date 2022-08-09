@@ -1,6 +1,7 @@
 package system
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path"
@@ -96,6 +97,28 @@ func TestEditFile(t *testing.T) {
 	os.Remove(dst)
 }
 
+func TestEditAndCheckFile(t *testing.T) {
+	oldEditor := os.Getenv("EDITOR")
+	defer func() { os.Setenv("EDITOR", oldEditor) }()
+	os.Setenv("EDITOR", "/usr/bin/cat")
+	//src := "/app/testdata/tstfile"
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/tstfile")
+	dst := "/tmp/saptune_tstfile"
+	changed, err := EditAndCheckFile(src, dst, "ANGI", "note")
+	if err != nil {
+		t.Error(err)
+	}
+	if changed {
+		t.Error("got 'true', but expected 'false'")
+	}
+
+	changed, err = EditAndCheckFile("/file_does_not_exist", dst, "ANGI", "note")
+	if err == nil {
+		t.Errorf("copied from non existing file")
+	}
+	os.Remove(dst)
+}
+
 func TestMD5(t *testing.T) {
 	//src := "/app/testdata/tstfile"
 	match1 := "1fd006c2c4a9c3bebb749b43889339f6"
@@ -111,7 +134,13 @@ func TestMD5(t *testing.T) {
 		t.Error("checksum should be equal, but is not.")
 	}
 	sum1, err := GetMD5Hash(src)
+	if err != nil {
+		t.Error(sum1, err)
+	}
 	dum1, err := GetMD5Hash(dst)
+	if err != nil {
+		t.Error(dum1, err)
+	}
 	if sum1 != dum1 {
 		t.Errorf("checksum should be equal, but is not. %s - %s.\n", sum1, dum1)
 	}
@@ -176,5 +205,39 @@ func TestBackupValue(t *testing.T) {
 	val := GetBackupValue(file)
 	if val != start {
 		t.Errorf("got: %s, expected: %s\n", val, start)
+	}
+	start = ""
+	file = "/tmp/tst_backup"
+	WriteBackupValue(start, file)
+	val = GetBackupValue(file)
+	if val != "NA" {
+		t.Errorf("got: %s, expected: NA\n", val)
+	}
+}
+
+func TestAddGap(t *testing.T) {
+	os.Args = []string{"saptune", "--format=json"}
+	RereadArgs()
+	buffer := bytes.Buffer{}
+	AddGap(&buffer)
+	txt := buffer.String()
+	if txt != "" {
+		t.Errorf("got: %s, expected: empty\n", txt)
+	}
+	os.Args = []string{"saptune", "status"}
+	RereadArgs()
+	buffer2 := bytes.Buffer{}
+	AddGap(&buffer2)
+	txt2 := buffer2.String()
+	if txt2 != "\n" {
+		t.Errorf("got: %s, expected: '\n'\n", txt2)
+	}
+	os.Args = []string{"saptune", "status", "--format="}
+	RereadArgs()
+	buffer3 := bytes.Buffer{}
+	AddGap(&buffer3)
+	txt3 := buffer3.String()
+	if txt3 != "\n" {
+		t.Errorf("got: %s, expected: '\n'\n", txt3)
 	}
 }

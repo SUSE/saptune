@@ -170,7 +170,7 @@ func GetSysctlString(parameter string) (string, error) {
 	val, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)))
 	if err != nil {
 		WarningLog("Failed to read sysctl key '%s': %v", parameter, err)
-		return "", err
+		return "PNA", err
 	}
 	return strings.TrimSpace(string(val)), nil
 }
@@ -211,6 +211,10 @@ func GetSysctlUint64Field(param string, field int) (uint64, error) {
 
 // SetSysctlString write a string sysctl value.
 func SetSysctlString(parameter, value string) error {
+	if value == "PNA" {
+		WarningLog("value is '%s', so sysctl key '%s' is/was not supported by os, skipping.", value, parameter)
+		return nil
+	}
 	err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
 	if os.IsNotExist(err) {
 		WarningLog("sysctl key '%s' is not supported by os, skipping.", parameter)
@@ -252,8 +256,5 @@ func SetSysctlUint64Field(param string, field int, value uint64) error {
 // IsPagecacheAvailable check, if system supports pagecache limit
 func IsPagecacheAvailable() bool {
 	_, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(SysctlPagecacheLimitMB, ".", "/", -1)))
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }

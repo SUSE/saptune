@@ -68,6 +68,7 @@ func CmpRpmVers(vers1, vers2 string) bool {
 	}
 	// rpm version is equal, so check rpm release
 	ret = CheckRpmVers(actV[1], expV[1])
+	//lint:ignore S1008 we want to keep the comments
 	if ret < 0 {
 		// installed package release is less than expected
 		return false

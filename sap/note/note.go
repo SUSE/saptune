@@ -51,7 +51,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		ret[fileName] = INISettings{
 			ConfFilePath:    path.Join(saptuneTuningDir, fileName),
 			ID:              fileName,
-			DescriptiveName: "",
+			DescriptiveName: txtparser.GetINIFileDescriptiveName(path.Join(saptuneTuningDir, fileName)),
 		}
 	}
 
@@ -87,6 +87,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			// support of old style vendor file names for compatibility reasons
 			system.InfoLog("GetTuningOptions: no header information found in file \"%s\"", fileName)
 			system.InfoLog("falling back to old style vendor file names")
+			system.WarningLog("old style vendor files are deprecated. For future support add header information to the file - %s", fileName)
 			// By convention, the portion before dash makes up the ID.
 			idName := strings.SplitN(fileName, "-", 2)
 			if len(idName) != 2 {
@@ -118,6 +119,19 @@ func (opts *TuningOptions) GetSortedIDs() (ret []string) {
 		ret = append(ret, id)
 	}
 	sort.Strings(ret)
+	return
+}
+
+// GetNoteHeadData provides description, reference, version and released date
+// of a given noteObj
+func GetNoteHeadData(obj Note) (desc, vers, date string, refs []string) {
+	objConfFile := reflect.ValueOf(obj).FieldByName("ConfFilePath").String()
+	if objConfFile != "" {
+		desc = txtparser.GetINIFileVersionSectionEntry(objConfFile, "name")
+		vers = txtparser.GetINIFileVersionSectionEntry(objConfFile, "version")
+		date = txtparser.GetINIFileVersionSectionEntry(objConfFile, "date")
+		refs = txtparser.GetINIFileVersionSectionRefs(objConfFile)
+	}
 	return
 }
 
@@ -211,7 +225,7 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					// if this should change in the future use
 					// !strings.Contains(key.String(), "grub")
 					// instead of !isInternalGrub(key.String())
-					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && actualValue.(string) != "" && key.String() != "VSZ_TMPFS_PERCENT" {
+					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && actualValue.(string) != "PNA" && key.String() != "VSZ_TMPFS_PERCENT" {
 						allMatch = false
 					}
 				}

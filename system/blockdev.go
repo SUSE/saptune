@@ -136,15 +136,14 @@ func CollectBlockDeviceInfo() []string {
 		AllBlockDevs:    make([]string, 0, 64),
 		BlockAttributes: make(map[string]map[string]string),
 	}
-	blockMap := make(map[string]string)
 
 	for _, bdev := range getValidBlockDevices() {
 		// add new block device
-		blockMap = make(map[string]string)
+		blockMap := make(map[string]string)
 
 		// Remember, GetSysChoice does not accept the leading /sys/
 		elev, _ := GetSysChoice(path.Join("block", bdev, "queue", "scheduler"))
-		if elev == "" {
+		if elev == "" || elev == "NA" || elev == "PNA" {
 			elev, _ = GetSysString(path.Join("block", bdev, "queue", "scheduler"))
 		}
 		blockMap["IO_SCHEDULER"] = elev

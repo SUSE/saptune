@@ -59,11 +59,23 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 	return
 }
 
-// PrintNoteApplyOrder prints out the order of the currently applied notes
+// PrintNoteApplyOrder prints out the order of the currently enabled notes
 func (app *App) PrintNoteApplyOrder(writer io.Writer) {
 	if len(app.NoteApplyOrder) != 0 {
 		fmt.Fprintf(writer, "\ncurrent order of enabled notes is: %s\n\n", strings.Join(app.NoteApplyOrder, " "))
 	}
+}
+
+// AppliedNotes returns the currently applied Notes in 'NoteApplyOrder' order
+func (app *App) AppliedNotes() string {
+	var notesApplied string
+	for _, note := range app.NoteApplyOrder {
+		if _, ok := app.IsNoteApplied(note); ok {
+			notesApplied = fmt.Sprintf("%s%s ", notesApplied, note)
+		}
+	}
+	notesApplied = strings.TrimSpace(notesApplied)
+	return notesApplied
 }
 
 // PositionInNoteApplyOrder returns the position of the note within the slice.
@@ -93,7 +105,7 @@ func (app *App) SaveConfig() error {
 // GetSortedSolutionEnabledNotes returns the number of all solution-enabled
 // SAP notes, sorted.
 func (app *App) GetSortedSolutionEnabledNotes() (allNoteIDs []string) {
-	allNoteIDs = make([]string, 0, 0)
+	allNoteIDs = make([]string, 0)
 	for _, sol := range app.TuneForSolutions {
 		for _, noteID := range app.AllSolutions[sol] {
 			if i := sort.SearchStrings(allNoteIDs, noteID); !(i < len(allNoteIDs) && allNoteIDs[i] == noteID) {
@@ -107,7 +119,7 @@ func (app *App) GetSortedSolutionEnabledNotes() (allNoteIDs []string) {
 
 // GetSortedAllNotes returns all SAP notes, sorted.
 func (app *App) GetSortedAllNotes() []string {
-	allNoteIDs := make([]string, 0, 0)
+	allNoteIDs := make([]string, 0)
 	for noteID := range app.AllNotes {
 		allNoteIDs = append(allNoteIDs, noteID)
 	}
@@ -166,6 +178,16 @@ func (app *App) IsNoteApplied(noteID string) (string, bool) {
 	return rval, ret
 }
 
+// IsSolutionEnabled returns true, if the solution is enabled or false, if not
+// enbaled means - part of TuneForSolutions
+func (app *App) IsSolutionEnabled(sol string) bool {
+	i := sort.SearchStrings(app.TuneForSolutions, sol)
+	if i < len(app.TuneForSolutions) && app.TuneForSolutions[i] == sol {
+		return true
+	}
+	return false
+}
+
 // IsSolutionApplied returns true, if the solution is (partial) applied
 // or false, if not
 func (app *App) IsSolutionApplied(sol string) (string, bool) {
@@ -193,13 +215,27 @@ func (app *App) IsSolutionApplied(sol string) (string, bool) {
 	return state, ret
 }
 
+// AppliedSolution returns the currently applied Solution
+func (app *App) AppliedSolution() (string, string) {
+	solApplied := ""
+	state := ""
+	if len(app.TuneForSolutions) != 0 {
+		solName := app.TuneForSolutions[0]
+		if st, ok := app.IsSolutionApplied(solName); ok {
+			solApplied = solName
+			state = st
+		}
+	}
+	return solApplied, state
+}
+
 // NoteSanityCheck checks, if for all notes listed in
 // NoteApplyOrder and TuneForNotes a note definition file exists.
 // if not, remove the NoteID from the variables, save the new config and
 // inform the user
 func (app *App) NoteSanityCheck() error {
 	// app.NoteApplyOrder, app.TuneForNotes
-	errs := make([]error, 0, 0)
+	errs := make([]error, 0)
 	for _, note := range app.NoteApplyOrder {
 		if _, exists := app.AllNotes[note]; exists {
 			// note definition file for NoteID exists
@@ -381,7 +417,7 @@ func (app *App) TuneNote(noteID string) error {
 // of tuned solution names.
 // If the solution covers any of the additional notes, those notes will be removed.
 func (app *App) TuneSolution(solName string) (removedExplicitNotes []string, err error) {
-	removedExplicitNotes = make([]string, 0, 0)
+	removedExplicitNotes = make([]string, 0)
 	sol, err := app.GetSolutionByName(solName)
 	if err != nil {
 		return
@@ -476,6 +512,18 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 	return nil
 }
 
+// RemoveSolFromConfig removes the given solution from the configuration
+func (app *App) RemoveSolFromConfig(solName string) error {
+	i := sort.SearchStrings(app.TuneForSolutions, solName)
+	if i < len(app.TuneForSolutions) && app.TuneForSolutions[i] == solName {
+		app.TuneForSolutions = append(app.TuneForSolutions[0:i], app.TuneForSolutions[i+1:]...)
+		if err := app.SaveConfig(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // RevertSolution permanently revert notes tuned by the solution and
 // clear their stored states.
 func (app *App) RevertSolution(solName string) error {
@@ -484,13 +532,10 @@ func (app *App) RevertSolution(solName string) error {
 		return err
 	}
 	// Remove from configuration
-	i := sort.SearchStrings(app.TuneForSolutions, solName)
-	if i < len(app.TuneForSolutions) && app.TuneForSolutions[i] == solName {
-		app.TuneForSolutions = append(app.TuneForSolutions[0:i], app.TuneForSolutions[i+1:]...)
-		if err := app.SaveConfig(); err != nil {
-			return err
-		}
+	if err := app.RemoveSolFromConfig(solName); err != nil {
+		return err
 	}
+
 	// The tricky part: figure out which notes are to be reverted, do not revert manually enabled notes.
 	notesDoNotRevert := make(map[string]struct{})
 	for _, noteID := range app.TuneForNotes {
@@ -509,7 +554,7 @@ func (app *App) RevertSolution(solName string) error {
 		}
 	}
 	// Now revert the (sol notes - manually enabled - other sol notes)
-	noteErrs := make([]error, 0, 0)
+	noteErrs := make([]error, 0)
 	for _, noteID := range sol {
 		if _, found := notesDoNotRevert[noteID]; found {
 			continue // skip this one
@@ -527,7 +572,7 @@ func (app *App) RevertSolution(solName string) error {
 // RevertAll revert all tuned parameters (both solutions and additional notes),
 // and clear stored states, but NOT NoteApplyOrder.
 func (app *App) RevertAll(permanent bool) error {
-	allErrs := make([]error, 0, 0)
+	allErrs := make([]error, 0)
 
 	// Simply revert all notes from serialised states
 	otherNotes, err := app.State.List()
@@ -547,9 +592,9 @@ func (app *App) RevertAll(permanent bool) error {
 		allErrs = append(allErrs, err)
 	}
 	if permanent {
-		app.TuneForNotes = make([]string, 0, 0)
-		app.TuneForSolutions = make([]string, 0, 0)
-		app.NoteApplyOrder = make([]string, 0, 0)
+		app.TuneForNotes = make([]string, 0)
+		app.TuneForSolutions = make([]string, 0)
+		app.NoteApplyOrder = make([]string, 0)
 		if err := app.SaveConfig(); err != nil {
 			allErrs = append(allErrs, err)
 		}
@@ -606,7 +651,7 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 // to all of the notes associated to the solution.
 // The note comparison results will always contain all fields from all notes.
 func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, comparisons map[string]map[string]note.FieldComparison, err error) {
-	unsatisfiedNotes = make([]string, 0, 0)
+	unsatisfiedNotes = make([]string, 0)
 	comparisons = make(map[string]map[string]note.FieldComparison)
 	sol, err := app.GetSolutionByName(solName)
 	if err != nil {
@@ -628,7 +673,7 @@ func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, compa
 // notes/solutions.
 // The note comparison results will always contain all fields from all notes.
 func (app *App) VerifyAll() (unsatisfiedNotes []string, comparisons map[string]map[string]note.FieldComparison, err error) {
-	unsatisfiedNotes = make([]string, 0, 0)
+	unsatisfiedNotes = make([]string, 0)
 	comparisons = make(map[string]map[string]note.FieldComparison)
 	for _, solName := range app.TuneForSolutions {
 		// Collect field comparison results from solution notes

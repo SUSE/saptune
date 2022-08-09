@@ -56,6 +56,9 @@ func GetPerfBias() string {
 			str = str + fmt.Sprintf("cpu%d", k/2)
 		case isPBias.MatchString(line):
 			pb := strings.Split(line, ":")
+			if len(pb) < 2 {
+				continue
+			}
 			if oldpb == "99" {
 				oldpb = strings.TrimSpace(pb[1])
 			}
@@ -81,6 +84,9 @@ func SetPerfBias(value string) error {
 	cpu := ""
 	for k, entry := range strings.Fields(value) {
 		fields := strings.Split(entry, ":")
+		if len(fields) < 2 {
+			continue
+		}
 		if fields[0] != "all" {
 			cpu = strconv.Itoa(k)
 		} else {
@@ -186,7 +192,7 @@ func GetGovernor() map[string]string {
 				// GetSysString needs cpuDirSys as path - without /sys
 				gov, _ = GetSysString(path.Join(cpuDirSys, entry.Name(), "cpufreq", "scaling_governor"))
 			}
-			if gov == "" {
+			if gov == "" || gov == "NA" || gov == "PNA" {
 				gov = "none"
 			}
 			if oldgov == "99" {
@@ -218,6 +224,9 @@ func SetGovernor(value, info string) error {
 	tst := ""
 	for k, entry := range strings.Fields(value) {
 		fields := strings.Split(entry, ":")
+		if len(fields) < 2 {
+			continue
+		}
 		if fields[0] != "all" {
 			cpu = strconv.Itoa(k)
 			tst = cpu
@@ -349,8 +358,8 @@ func SetForceLatency(value, savedStates, info string, revert bool) error {
 	for _, entry := range dirCont {
 		// cpu0 ... cpuXY
 		if isCPU.MatchString(entry.Name()) {
-			cpudirCont, err := ioutil.ReadDir(path.Join(cpuDir, entry.Name(), "cpuidle"))
-			if err != nil {
+			cpudirCont, errns := ioutil.ReadDir(path.Join(cpuDir, entry.Name(), "cpuidle"))
+			if errns != nil {
 				WarningLog("idle settings not supported for '%s'", entry.Name())
 				continue
 			}
@@ -364,8 +373,10 @@ func SetForceLatency(value, savedStates, info string, revert bool) error {
 						// revert
 						for _, ole := range strings.Fields(savedStates) {
 							FLFields := strings.Split(ole, ":")
-							if FLFields[0] == entry.Name() && FLFields[1] == centry.Name() {
-								oldState = FLFields[2]
+							if len(FLFields) > 2 {
+								if FLFields[0] == entry.Name() && FLFields[1] == centry.Name() {
+									oldState = FLFields[2]
+								}
 							}
 						}
 						if oldState != "" {

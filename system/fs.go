@@ -95,7 +95,7 @@ func (mounts MountPoints) GetByMountOption(fstype, mountOption, chkDflt string) 
 // ParseMounts return all mount points defined in the input text.
 // Skipping malformed entry.
 func ParseMounts(txt string) (mounts MountPoints) {
-	mounts = make([]MountPoint, 0, 0)
+	mounts = make([]MountPoint, 0)
 	for _, line := range strings.Split(txt, "\n") {
 		fields := consecutiveSpaces.Split(strings.TrimSpace(line), -1)
 		if len(fields) == 0 || len(fields[0]) == 0 || fields[0][0] == '#' {
@@ -171,13 +171,11 @@ func RemountSHM(newSizeMB uint64) error {
 	return nil
 }
 
-// GetMountOpts checks if oint points with the given type exists and contain
+// GetMountOpts checks if mount points with the given type exists and contain
 // the needed/not needed option.
-// Returns a list of mount point containing the option and alist of mount
+// Returns a list of mount point containing the option and a list of mount
 // point NOT containing the option
 func GetMountOpts(mustExist bool, fstype, fsopt string) ([]string, []string) {
-	mntOk := []string{}
-	mntNok := []string{}
 	// Find out mount options
 	chkdflt := "noChk"
 	// check the mounted FS
@@ -189,8 +187,8 @@ func GetMountOpts(mustExist bool, fstype, fsopt string) ([]string, []string) {
 	}
 	// check /etc/fstab to get the not mounted FS as well
 	mountFSTOk, mountFSTNok := ParseFstab().GetByMountOption(fstype, fsopt, chkdflt)
-	mntOk = getMounts(mountProcOk, mountFSTOk)
-	mntNok = getMounts(mountProcNok, mountFSTNok)
+	mntOk := getMounts(mountProcOk, mountFSTOk)
+	mntNok := getMounts(mountProcNok, mountFSTNok)
 	return mntOk, mntNok
 }
 

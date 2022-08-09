@@ -25,6 +25,10 @@ func TestOptSysctlVal(t *testing.T) {
 	if val != "100 330 180" {
 		t.Error(val)
 	}
+	val = OptSysctlVal(op, "TestParam", "PNA", "100 330 180")
+	if val != "100 330 180" {
+		t.Error(val)
+	}
 	val = OptSysctlVal(op, "TestParam", "120 300 200", "")
 	if val != "" {
 		t.Error(val)
@@ -40,6 +44,14 @@ func TestOptSysctlVal(t *testing.T) {
 	}
 	val = OptSysctlVal(op, "TestParam", "120", "120")
 	if val != "120" {
+		t.Error(val)
+	}
+	val = OptSysctlVal(op, "TestParam", "120 300", "100 330 180")
+	if val != "" {
+		t.Error(val)
+	}
+	val = OptSysctlVal(op, "TestParam", "120 300", "100")
+	if val != "100	300" {
 		t.Error(val)
 	}
 	op = txtparser.Operator(">")

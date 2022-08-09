@@ -29,14 +29,45 @@ const (
 	footnote13   = "[13] The SAP recommendation for nr_request does not work in the context of multiqueue block framework (scheduler=none).\n      Maximal supported value by the hardware is MAXVAL"
 	footnote14   = "[14] the parameter value exceeds the maximum possible number of open files. Check and increase fs.nr_open if really needed."
 	footnote15   = "[15] the parameter is only used to calculate the size of tmpfs (/dev/shm)"
+	footnote16   = "[16] parameter not available on the system, setting not possible"
 )
 
 // set 'unsupported' footnote regarding the architecture
 var footnote1 = footnote1X86
 
+// prepFN checks, if we need to prepare the footnote for a parameter
+// if the command line flage '--show-non-compliant' is used only non compliant
+// parameter rows will be printed and that has to be reflected to the footnotes
+// too.
+func prepFN(comparison note.FieldComparison, compliant, inform string) bool {
+	prep := true
+	if system.IsFlagSet("show-non-compliant") {
+		// skip preparation of footnotes, if compliant state is not 'no'
+		if strings.Contains(compliant, "yes") || strings.Contains(compliant, "-") {
+			prep = false
+		}
+		// and now define the exceptions, which need a special handling
+		if comparison.ReflectMapKey == "force_latency" && inform == "hasDiffs" {
+			// compliant will be set to 'no' during footnote preparation
+			prep = true
+		}
+		if comparison.ReflectMapKey == "VSZ_TMPFS_PERCENT" {
+			// compliant will be set to '-' during footnote preparation
+			prep = true
+		}
+		if strings.Contains(comparison.ReflectMapKey, "xfsopt_") {
+			prep = true
+		}
+	}
+	return prep
+}
+
 // prepareFootnote prepares the content of the last column and the
 // corresponding footnotes
 func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform string, footnote []string) (string, string, []string) {
+	if !prepFN(comparison, compliant, inform) {
+		return compliant, comment, footnote
+	}
 	// set 'unsupported' footnote regarding the architecture
 	if runtime.GOARCH == "ppc64le" {
 		footnote1 = footnote1IBM
@@ -83,10 +114,17 @@ func setUsNa(actVal, compliant, comment string, footnote []string) (string, stri
 		compliant = compliant + " [1]"
 		comment = comment + " [1]"
 		footnote[0] = footnote1
-	case "NA", "":
+	case "NA":
 		compliant = compliant + " [2]"
 		comment = comment + " [2]"
 		footnote[1] = footnote2
+	case "PNA":
+		compliant = compliant + " [16]"
+		compliant = strings.Replace(compliant, "no ", " - ", 1)
+		comment = comment + " [16]"
+		if !system.IsFlagSet("show-non-compliant") {
+			footnote[15] = footnote16
+		}
 	}
 	return compliant, comment, footnote
 }
@@ -129,7 +167,8 @@ func setSecBoot(mapKey, compliant, comment string, footnote []string) (string, s
 // setFLdiffs sets footnote for diffs in force_latency parameter
 func setFLdiffs(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
 	if mapKey == "force_latency" && info == "hasDiffs" {
-		compliant = "no  [4]"
+		compliant = compliant + " [4]"
+		compliant = strings.Replace(compliant, " - ", "no ", 1)
 		comment = comment + " [4]"
 		footnote[3] = footnote4
 	}
@@ -216,7 +255,7 @@ func setSysctlGlobal(compliant, comment, info string, footnote []string) (string
 func setFSOptions(comparison note.FieldComparison, compliant, comment, info string, footnote []string) (string, string, []string) {
 	// check if there are mount points with wrong FS option settings
 	if strings.Contains(comparison.ReflectMapKey, "xfsopt_") {
-		if info != "" {
+		if !system.IsFlagSet("show-non-compliant") && info != "" {
 			// fs option info
 			compliant = compliant + " [12]"
 			comment = comment + " [12]"
@@ -242,9 +281,13 @@ func setNofile(mapKey, compliant, comment, info string, footnote []string) (stri
 // setMem sets footnote for VSZ_TMPFS_PERCENT parameter from mem section
 func setMem(mapKey, compliant, comment string, footnote []string) (string, string, []string) {
 	if mapKey == "VSZ_TMPFS_PERCENT" {
-		compliant = " -  [15]"
-		comment = comment + " [15]"
-		footnote[14] = footnote15
+		if system.IsFlagSet("show-non-compliant") {
+			compliant = " - "
+		} else {
+			compliant = " -  [15]"
+			comment = comment + " [15]"
+			footnote[14] = footnote15
+		}
 	}
 	return compliant, comment, footnote
 }

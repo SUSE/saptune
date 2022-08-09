@@ -94,3 +94,40 @@ func TestChkOtherTags(t *testing.T) {
 	}
 	system.DmiID = "/sys/class/dmi/id"
 }
+
+func TestIsTagAvail(t *testing.T) {
+	secFields := []string{"block", "blkvendor=HUGO", "blkmodel=EGON"}
+	tag := "blkvendor"
+	if !isTagAvail(tag, secFields) {
+		t.Errorf("tag '%s' is expected to be available, but is repoted as not available\n", tag)
+	}
+	tag = "blkmodel"
+	if !isTagAvail(tag, secFields) {
+		t.Errorf("tag '%s' is expected to be available, but is repoted as not available\n", tag)
+	}
+	tag = "blkpat"
+	if isTagAvail(tag, secFields) {
+		t.Errorf("tag '%s' is expected to be NOT available, but is repoted as available\n", tag)
+	}
+	tag = "blkvendor"
+	secFields = []string{"block", "blkvendor="}
+	if !isTagAvail(tag, secFields) {
+		t.Error("expected 'true', because of correct syntax, but got 'false'")
+	}
+	secFields = []string{"block", "blkvendor"}
+	if isTagAvail(tag, secFields) {
+		t.Error("expected 'false', because of wrong syntax, but got 'true'")
+	}
+	secFields = []string{"block", "=EGON"}
+	if isTagAvail(tag, secFields) {
+		t.Error("expected 'false', because of wrong syntax, but got 'true'")
+	}
+	secFields = []string{"block", "="}
+	if isTagAvail(tag, secFields) {
+		t.Error("expected 'false', because of wrong syntax, but got 'true'")
+	}
+	secFields = []string{"block", ""}
+	if isTagAvail(tag, secFields) {
+		t.Error("expected 'false', because of wrong syntax, but got 'true'")
+	}
+}

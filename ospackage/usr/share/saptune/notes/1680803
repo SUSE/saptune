@@ -12,10 +12,14 @@
 # Version 3.0 from 2020-07-31
 #
 # SAP ASE (Sybase)
-# Version 26 from 11.06.2021 in English
+# Version 27 from 04.11.2021 in English
 #
+
 [version]
-# SAP-NOTE=1680803 CATEGORY=SYBASE VERSION=26 DATE=11.06.2021 NAME="Sybase - SAP Adaptive Server Enterprise"
+VERSION=27
+DATE=04.11.2021
+DESCRIPTION=Sybase - SAP Adaptive Server Enterprise
+REFERENCES=https://launchpad.support.sap.com/#/notes/1680803
 
 [block]
 ## Type:    string
@@ -80,6 +84,12 @@ net.core.wmem_default = 16777216
 net.ipv4.tcp_rmem = 4096 87380 16777216
 net.ipv4.tcp_wmem = 4096 65536 16777216
 
+# Set the keepalive interval to a value higher than 1200 seconds.
+# The ABAP dispatcher initiates an empty network request to the database
+# connection every 1200 seconds. If the keepalive interval is lower, the
+# operating system might close the database connection.
+net.ipv4.tcp_keepalive_time = 1250
+
 # Increase the max packet backlog
 net.core.netdev_max_backlog = 30000
 
@@ -91,4 +101,5 @@ vm.swappiness = 15
 # DBMS data storage settings: use ext4 or xfs file system. 
 # For best performance, disable the journal via tune2fs ^has_journal.
 # For ext4 the recommended mount options are 'noatime,nodiratime', if journaling is disabled or 'noatime,nodiratime,cache=writeback,barrier=0', if journaling is not disabled
+# For xfs the recommended mount options are 'noatime,nodiratime,logbufs=8'.
 # network tuning including transmit queue (ifconfig <eth#> txqueuelen <value>). See the current online version of the best practice document 'Best Practice for SAP Business Suite and SAP BW' linked in the 'Solution' section of the related SAP Note 1680803 on SAP launchpad

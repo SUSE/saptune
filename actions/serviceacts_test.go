@@ -63,25 +63,28 @@ func TestDaemonActions(t *testing.T) {
 
 	// Test DaemonActionStatus
 	t.Run("DaemonActionStatus", func(t *testing.T) {
-		var daemonStatusMatchText = `
-saptune.service:        disabled/active
-saptune package:        'undef'
-configured version:     '3'
-configured Solution:    sol1
-configured Notes:       2205917 
-order of enabled Notes: 2205917
-applied Notes:          
-staging:                disabled
-staging area:           
+		daemonStatusMatchText := fmt.Sprintf(`
+saptune.service:          disabled/active
+saptune package:          'undef'
+configured version:       '3'
+enabled Solution:         sol1 (simpleNote)
+applied Solution:         
+additional enabled Notes: 2205917 
+enabled Notes:            2205917
+applied Notes:            
+staging:                  disabled
+staged Notes:             
+staged Solutions:         
 
-sapconf.service:        not available
-tuned.service:          disabled/active (profile: 'balanced')
-system state:           running
+sapconf.service:          not available
+tuned.service:            disabled/active (profile: '%s')
+system state:             running
+virtualization:           %s
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
-`
+`, system.GetTunedAdmProfile(), system.GetVirtStatus())
 		ServiceActionStart(false, sApp)
 
 		oldOSExit := system.OSExit
@@ -191,25 +194,28 @@ func TestServiceActions(t *testing.T) {
 
 	// Test ServiceActionStatus
 	t.Run("ServiceActionStatus", func(t *testing.T) {
-		var serviceStatusMatchText = `
-saptune.service:        disabled/active
-saptune package:        'undef'
-configured version:     '3'
-configured Solution:    sol1
-configured Notes:       2205917 
-order of enabled Notes: 2205917
-applied Notes:          
-staging:                disabled
-staging area:           
+		serviceStatusMatchText := fmt.Sprintf(`
+saptune.service:          disabled/active
+saptune package:          'undef'
+configured version:       '3'
+enabled Solution:         sol1 (simpleNote)
+applied Solution:         
+additional enabled Notes: 2205917 
+enabled Notes:            2205917
+applied Notes:            
+staging:                  disabled
+staged Notes:             
+staged Solutions:         
 
-sapconf.service:        not available
-tuned.service:          disabled/active (profile: 'balanced')
-system state:           running
+sapconf.service:          not available
+tuned.service:            disabled/active (profile: '%s')
+system state:             running
+virtualization:           %s
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
-`
+`, system.GetTunedAdmProfile(), system.GetVirtStatus())
 		ServiceActionStart(false, sApp)
 
 		oldOSExit := system.OSExit

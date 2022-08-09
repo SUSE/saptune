@@ -3,7 +3,10 @@
 # Version 11 from 04.05.2018 in English
 
 [version]
-# SAP-NOTE=941735 CATEGORY=LINUX VERSION=11 DATE=04.05.2018 NAME="SAP memory management system for 64-bit Linux systems"
+VERSION=11
+DATE=04.05.2018
+DESCRIPTION=SAP memory management system for 64-bit Linux systems
+REFERENCES=https://launchpad.support.sap.com/#/notes/941735
 
 [mem]
 # /dev/shm
