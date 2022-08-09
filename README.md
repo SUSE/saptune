@@ -1,5 +1,5 @@
 
-[![Build Status](https://travis-ci.org/SUSE/saptune.svg?branch=master)](https://travis-ci.org/SUSE/saptune)
+[![Build Status](https://github.com/SUSE/saptune/actions/workflows/saptune-ut.yml/badge.svg)](https://github.com/SUSE/saptune/actions/workflows/saptune-ut.yml/badge.svg)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/5375e2ca293dd0e8b322/test_coverage)](https://codeclimate.com/github/SUSE/saptune/test_coverage)
 [![Maintainability](https://api.codeclimate.com/v1/badges/5375e2ca293dd0e8b322/maintainability)](https://codeclimate.com/github/SUSE/saptune/maintainability)
 
@@ -47,7 +47,7 @@ They give our administrators and our partners a simple way to implement their ow
 
 # Migration:
 
-Guide to help you migrate to the new saptune\
+Guide to help you migrate from saptune running version <b>1</b> to the saptune version 2 or 3\
 Migration? Isn’t a simple package update enough?
 
 Not in every case.
@@ -57,8 +57,18 @@ If the update discovers applied saptune SAP notes or solutions, saptune will con
 The switch to version 2 has to be done deliberately.\
 To help you, we will provide a step-by-step guide. Just plan your switch when you are ready, no rush!
 
-We will support saptune version 1 until end of the lifetime of SLES 12 / SLES 15 SP1, which should give enough time to move. Although please bear in mind that since saptune version 1 will be deprecated, we will only do bug fixing. New features, new SAP notes or new parameters will only be done for version 2!
+We will support saptune version 1 until end of the lifetime of SLES 12 / SLES 15 SP1, which should give enough time to move. Although please bear in mind that since saptune version 1 will be deprecated, we will only do bug fixing. New features, new SAP notes or new parameters will only be done for future versions of saptune!
 
+With saptune version 3 the support for version 1 is <b>abandoned</b>.
+If the migration from version 1 to version 2 or 3 was not done before the package update, saptune will not work and that's expected.
+But all needed files for the migration are still available, so following the procedure described in the man page saptune-migrate(7) will bring you back to a working saptune.
+
+For the update from version 2 to version 3 <b>NO</b> migration is needed.
+
+But as we discontinued the use of tuned to get the tuning started during boot and instead use our own systemd service <b>saptune.service</b> we will need to stop the tuning of the system during the package update for a short timeframe to avoid tuned error messages.
+
+If you are used to start saptune using tuned directly in the past, please move to <b>'saptune service start'</b> instead.
+If you use <b>'saptune daemon start'</b>, you will now get a 'deprecated' warning, but the command will still continue to work.
 
 # Where to find documentation?
 
@@ -68,12 +78,14 @@ When the technical blog series about the details of saptune and how to do a migr
 For now:\
 <https://www.suse.com/c/a-new-saptune-is-knocking-on-your-door/>\
 <https://www.suse.com/c/a-new-saptune-is-here/>\
-<https://www.suse.com/c/saptune-a-deep-dive/>
+<https://www.suse.com/c/saptune-a-deep-dive/>\
+<https://www.suse.com/c/saptune-3-is-on-the-horizon/>\
+<https://www.suse.com/c/saptune-3-is-here/>
 
 
 # Feedback
 
-Supporters, contributors, colleagues, customers and partners are welcome to approach us with ideas and suggestions. If you miss something or you think something should be done better, then don’t hesitate to contact us. You are welcome to give further feedback via email at SapAlliance@suse.com, create an issue in this repository, carrier pigeon etc. and tell us your needs.\
+Supporters, contributors, colleagues, customers and partners are welcome to approach us with ideas and suggestions. If you miss something or you think something should be done better, then don’t hesitate to contact us. You are welcome to give further feedback via email at sapalliance@suse.com, create an issue in this repository, carrier pigeon etc. and tell us your needs.\
 With each new version of saptune we implement many of them, but the journey will continue and you can expect further enhancements in the future.
 
 

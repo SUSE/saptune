@@ -45,6 +45,7 @@ func main() {
 		system.ErrorExit("", 0)
 	}
 	if arg1 == "help" || system.IsFlagSet("help") {
+		system.JnotSupportedYet()
 		actions.PrintHelpAndExit(os.Stdout, 0)
 	}
 	if arg1 == "" {
@@ -121,7 +122,7 @@ func main() {
 		system.ErrorExit("Error during NoteSanityCheck - '%v'\n", err)
 	}
 	checkForTuned()
-	actions.SelectAction(tuneApp, SaptuneVersion)
+	actions.SelectAction(os.Stdout, tuneApp, SaptuneVersion)
 	system.ErrorExit("", 0)
 }
 

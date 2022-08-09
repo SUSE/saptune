@@ -41,6 +41,12 @@ func TestGetCSP(t *testing.T) {
 		t.Errorf("Test failed, expected 'aws', but got '%s'", val)
 	}
 	dmiBoardVendor = noCloud
+	dmiSysVendor = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_aws")
+	val = GetCSP()
+	if val != "aws" {
+		t.Errorf("Test failed, expected 'aws', but got '%s'", val)
+	}
+	dmiSysVendor = noCloud
 
 	// GoogleCloud
 	dmiBiosVendor = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_google")
@@ -97,11 +103,20 @@ func TestGetCSP(t *testing.T) {
 	}
 	dmiSystemManufacturer = noCloud
 
+	// dmiDir does not exist
+	dmiDir = "/path/does/not/exist"
+	val = GetCSP()
+	if val != "" {
+		t.Errorf("Test failed, expected empty, but got '%s'", val)
+	}
+
 	// restore original environment
+	dmiDir = "/sys/class/dmi"
 	dmiChassisAssetTag = "/sys/class/dmi/id/chassis_asset_tag"
 	dmiBoardVendor = "/sys/class/dmi/id/board_vendor"
 	dmiBiosVendor = "/sys/class/dmi/id/bios_vendor"
 	dmiBiosVersion = "/sys/class/dmi/id/bios_version"
 	dmiSystemVersion = "/sys/class/dmi/id/system_version"
 	dmiSystemManufacturer = "/sys/class/dmi/id/system-manufacturer"
+	dmiSysVendor = "/sys/class/dmi/id/sys_vendor"
 }

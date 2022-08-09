@@ -256,8 +256,5 @@ func SetSysctlUint64Field(param string, field int, value uint64) error {
 // IsPagecacheAvailable check, if system supports pagecache limit
 func IsPagecacheAvailable() bool {
 	_, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(SysctlPagecacheLimitMB, ".", "/", -1)))
-	if err == nil {
-		return true
-	}
-	return false
+	return err == nil
 }

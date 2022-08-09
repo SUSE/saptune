@@ -2,6 +2,7 @@ package system
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -29,6 +30,10 @@ var OSExit = os.Exit
 
 // ErrorExitOut defines, which exit output function should be used
 var ErrorExitOut = ErrorLog
+
+// ErrExitOut defines the output function, which should be used in case
+// of colored output
+var ErrExitOut = errExitOut
 
 // InfoOut defines, which log output function should be used
 var InfoOut = InfoLog
@@ -133,6 +138,16 @@ func CalledFrom() string {
 	return ret
 }
 
+func errExitOut(writer io.Writer, template string, stuff ...interface{}) {
+	// stuff is: color, bold, text/template, reset bold, reset color
+	stuff = stuff[1:]
+	fmt.Fprintf(writer, "%s%sERROR: "+template+"%s%s\n", stuff...)
+	if len(stuff) >= 4 {
+		stuff = stuff[2 : len(stuff)-2]
+	}
+	ErrLog(template+"\n", stuff...)
+}
+
 // ErrorExit prints the message to stderr and exit 1.
 func ErrorExit(template string, stuff ...interface{}) {
 	exState := 1
@@ -153,13 +168,7 @@ func ErrorExit(template string, stuff ...interface{}) {
 	}
 	if len(template) != 0 {
 		if len(stuff) > 0 && stuff[0] == "colorPrint" {
-			// color, bold, text/template, reset bold, reset color
-			stuff = stuff[1:]
-			fmt.Printf("%s%sERROR: "+template+"%s%s\n", stuff...)
-			if len(stuff) >= 4 {
-				stuff = stuff[2 : len(stuff)-2]
-			}
-			ErrLog(template+"\n", stuff...)
+			ErrExitOut(os.Stderr, template, stuff...)
 		} else {
 			ErrorExitOut(template+"\n", stuff...)
 		}

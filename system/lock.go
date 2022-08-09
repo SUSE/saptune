@@ -27,10 +27,7 @@ func isOwnLock() bool {
 	// file exists, check if empty or if pid inside is from a dead process
 	// if yes, remove file and return false
 	pid, _ := strconv.Atoi(string(p))
-	if pid == os.Getpid() {
-		return true
-	}
-	return false
+	return pid == os.Getpid()
 }
 
 // SaptuneLock creates the saptune lock file

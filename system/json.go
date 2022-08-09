@@ -9,7 +9,7 @@ import (
 )
 
 var schemaDir = "file:///usr/share/saptune/schemas/1.0/"
-var supportedRAC = map[string]bool{"daemon start": false, "daemon status": true, "daemon stop": false, "service start": false, "service status": true, "service stop": false, "service restart": false, "service takeover": false, "service enable": false, "service disable": false, "service enablestart": false, "service disablestop": false, "note list": true, "note revertall": false, "note enabled": true, "note applied": true, "note apply": false, "note simulate": false, "note customise": false, "note create": false, "note edit": false, "note revert": false, "note show": false, "note delete": false, "note verify": false, "note rename": false, "solution list": true, "solution verify": false, "solution enabled": true, "solution applied": true, "solution apply": false, "solution simulate": false, "solution customise": false, "solution create": false, "solution edit": false, "solution revert": false, "solution show": false, "solution delete": false, "solution rename": false, "staging status": false, "staging enable": false, "staging disable": false, "staging is-enabled": false, "staging list": false, "staging diff": false, "staging analysis": false, "staging release": false, "revert all": false, "lock remove": false, "check": false, "status": true, "version": true, "help": false}
+var supportedRAC = map[string]bool{"daemon start": false, "daemon status": true, "daemon stop": false, "service apply": false, "service start": false, "service status": true, "service stop": false, "service restart": false, "service revert": false, "service reload": false, "service takeover": false, "service enable": false, "service disable": false, "service enablestart": false, "service disablestop": false, "note list": true, "note revertall": false, "note enabled": true, "note applied": true, "note apply": false, "note simulate": false, "note customise": false, "note create": false, "note edit": false, "note revert": false, "note show": false, "note delete": false, "note verify": true, "note rename": false, "solution list": true, "solution verify": true, "solution enabled": true, "solution applied": true, "solution apply": false, "solution simulate": false, "solution customise": false, "solution create": false, "solution edit": false, "solution revert": false, "solution show": false, "solution delete": false, "solution rename": false, "staging status": false, "staging enable": false, "staging disable": false, "staging is-enabled": false, "staging list": false, "staging diff": false, "staging analysis": false, "staging release": false, "revert all": false, "lock remove": false, "check": false, "status": true, "version": true, "help": false}
 
 // jentry is the json entry to display
 var jentry JEntry
@@ -74,26 +74,33 @@ type versResults struct {
 
 // configuredSol is for 'saptune solution enabled'
 type configuredSol struct {
-	ConfiguredSol []string `json:"enabled Solution"`
+	ConfiguredSol []string `json:"Solution enabled"`
 }
 
 //type configuredSol struct {
-	//ConfiguredSol JObj `json:"enabled Solution"`
+//ConfiguredSol JObj `json:"enabled Solution"`
 //}
+
+// JAppliedSol is for 'Solution applied' in
+// 'saptune status' and 'saptune solution applied'
+type JAppliedSol struct {
+	SolName string `json:"Solution ID"`
+	Partial bool   `json:"applied partially"`
+}
 
 // appliedSol is for 'saptune solution applied'
 type appliedSol struct {
-	AppliedSol []string `json:"applied Solution"`
+	AppliedSol []JAppliedSol `json:"Solution applied"`
 }
 
 // appliedNotes is for 'saptune note applied'
 type appliedNotes struct {
-	AppliedNotes []string `json:"applied Notes"`
+	AppliedNotes []string `json:"Notes applied"`
 }
 
 // notesOrder is for 'saptune note enabled'
 type notesOrder struct {
-	NotesOrder []string `json:"enabled Notes"`
+	NotesOrder []string `json:"Notes enabled"`
 }
 
 // JNoteListEntry is one line of 'saptune note list'
@@ -112,20 +119,66 @@ type JNoteListEntry struct {
 
 // JNoteList is the whole 'saptune note list'
 type JNoteList struct {
-	NotesList  []JNoteListEntry `json:"available Notes"`
-	NotesOrder []string         `json:"enabled Notes"`
+	NotesList  []JNoteListEntry `json:"Notes available"`
+	NotesOrder []string         `json:"Notes enabled"`
 	Msg        string           `json:"remember message"`
+}
+
+// JPNotesLine one row of 'saptune note verify|simulate'
+// from PrintNoteFields
+type JPNotesLine struct {
+	NoteID    string       `json:"Note ID,omitempty"`
+	NoteVers  string       `json:"Note version,omitempty"`
+	Parameter string       `json:"parameter"`
+	Compliant *bool        `json:"compliant,omitempty"`
+	ExpValue  string       `json:"expected value,omitempty"`
+	OverValue string       `json:"override value,omitempty"`
+	ActValue  *string      `json:"actual value,omitempty"`
+	Comment   string       `json:"comment,omitempty"`
+	Footnotes []JFootNotes `json:"amendments,omitempty"`
+}
+
+// JFootNotes collects the footnotes per parameter
+type JFootNotes struct {
+	FNoteNumber int    `json:"index,omitempty"`
+	FNoteTxt    string `json:"amendment,omitempty"`
+}
+
+// JPNotesRemind is the reminder section
+type JPNotesRemind struct {
+	NoteID       string `json:"Note ID,omitempty"`
+	NoteReminder string `json:"attention,omitempty"`
+}
+
+// JPNotes is the whole 'PrintNoteFields' function
+// if we need to differ between 'verify' and 'simulate' this
+// can be done in PrintNoteFields' or in jcollect.
+type JPNotes struct {
+	Verifications []JPNotesLine   `json:"verifications,omitempty"`
+	Simulations   []JPNotesLine   `json:"simulations,omitempty"`
+	Attentions    []JPNotesRemind `json:"attentions,omitempty"`
+	NotesOrder    []string        `json:"Notes enabled,omitempty"`
+	SysCompliance *bool           `json:"system compliance,omitempty"`
+}
+
+// JSol - Solution name and related Note list
+type JSol struct {
+	SolName   string   `json:"Solution ID"`
+	NotesList []string `json:"Note list"`
 }
 
 // JStatus is the whole 'saptune status'
 type JStatus struct {
 	Services        JStatusServs   `json:"services"`
-	SystemState     string         `json:"system state"`
+	SystemdSysState string         `json:"systemd system state"`
 	VirtEnv         string         `json:"virtualization"`
 	SaptuneVersion  string         `json:"configured version"`
 	RPMVersion      string         `json:"package version"`
-	ConfiguredSol   []string       `json:"enabled Solution"`
-	ConfiguredNotes []string       `json:"Notes configured"`
+	ConfiguredSol   []string       `json:"Solution enabled"`
+	ConfSolNotes    []JSol         `json:"Notes enabled by Solution"`
+	AppliedSol      []JAppliedSol  `json:"Solution applied"`
+	AppliedSolNotes []JSol         `json:"Notes applied by Solution"`
+	ConfiguredNotes []string       `json:"Notes enabled additionally"`
 	EnabledNotes    []string       `json:"Notes enabled"`
 	AppliedNotes    []string       `json:"Notes applied"`
 	Staging         JStatusStaging `json:"staging"`
@@ -134,9 +187,9 @@ type JStatus struct {
 
 // JStatusStaging contains the staging infos for 'saptune status'
 type JStatusStaging struct {
-	StagingEnabled bool     `json:"enabled"`
-	StagedNotes    []string `json:"staged Notes"`
-	StagedSols     []string `json:"staged Solutions"`
+	StagingEnabled bool     `json:"staging enabled"`
+	StagedNotes    []string `json:"Notes staged"`
+	StagedSols     []string `json:"Solutions staged"`
 }
 
 // JStatusServs are the mentioned systemd services in 'saptune status'
@@ -149,7 +202,7 @@ type JStatusServs struct {
 
 // JSolListEntry is one line of 'saptune solution list'
 type JSolListEntry struct {
-	SolName     string   `json:"Solution name"`
+	SolName     string   `json:"Solution ID"`
 	NotesList   []string `json:"Note list"`
 	SolEnabled  bool     `json:"Solution enabled"`
 	SolOverride bool     `json:"Solution override exists"`
@@ -159,7 +212,7 @@ type JSolListEntry struct {
 
 // JSolList is the whole 'saptune solution list'
 type JSolList struct {
-	SolsList []JSolListEntry `json:"available Solutions"`
+	SolsList []JSolListEntry `json:"Solutions available"`
 	Msg      string          `json:"remember message"`
 }
 
@@ -255,14 +308,17 @@ func Jcollect(data interface{}) {
 		if rac == "solution enabled" {
 			jentry.CmdResult = configuredSol{ConfiguredSol: res}
 		}
-		if rac == "solution applied" {
-			jentry.CmdResult = appliedSol{AppliedSol: res}
-		}
-	case JSolList, JNoteList, JStatus:
-		switch rac {
-		case "solution list", "note list", "status", "daemon status", "service status":
-			jentry.CmdResult = res
-		}
+		//if rac == "solution applied" {
+		//	jentry.CmdResult = appliedSol{AppliedSol: res}
+		//}
+	case JAppliedSol:
+		// "saptune solution applied"
+		var appSol appliedSol
+		appSol.AppliedSol = append(appSol.AppliedSol, res)
+		jentry.CmdResult = appSol
+	case JSolList, JNoteList, JStatus, JPNotes:
+		//"solution list", "note list", "status", "daemon status", "service status", "note verify", "solution verify", "note simulate", "solution simulate":
+		jentry.CmdResult = res
 	default:
 		WarningLog("Unknown data type '%T' for command '%s' in Jcollect, skipping", data, rac)
 	}

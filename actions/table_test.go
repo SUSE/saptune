@@ -6,6 +6,7 @@ import (
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/system"
 	"os"
+	"path"
 	"testing"
 )
 
@@ -55,7 +56,7 @@ func TestSetWidthOfColums(t *testing.T) {
 }
 
 func TestPrintNoteFields(t *testing.T) {
-	os.Args = []string{"saptune", "note", "list", "--colorscheme=black", "--out=json", "--force", "--dryrun", "--help", "--version"}
+	os.Args = []string{"saptune", "note", "list", "--colorscheme=black", "--format=json", "--force", "--dryrun", "--help", "--version"}
 	system.RereadArgs()
 
 	footnote1 := " [1] setting is not supported by the system"
@@ -74,15 +75,38 @@ func TestPrintNoteFields(t *testing.T) {
    941735, 1        | IO_SCHEDULER_sdd           |                      |           | bfq                  | no  [7] [10]
    941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
    941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
-   941735, 1        | force_latency              | 70                   |           | all:none             | no  [4]
+   941735, 1        | force_latency              | 70                   |           | all:none             | no  [1] [4]
    941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
    941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
+   941735, 1        | kernel.shmmni              |                      |           | NA                   |  -  [16] [7]
 
  ` + footnote1 + `
   [2] setting is not available on the system
   [3] value is only checked, but NOT set
   [4] cpu idle state settings differ
   [5] expected value does not contain a supported scheduler
+  [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+  [7] parameter value is untouched by default
+ [10] parameter is defined twice, see section [sys] 'sys:block.sdd.queue.scheduler' from the other applied notes
+ [16] parameter not available on the system, setting not possible
+
+`
+	var printMatchText1NoCompl = `
+941735 - Configuration drop in for simple tests
+			Version 1 from 09.07.2019 
+
+   SAPNote, Version | Parameter                  | Expected             | Override  | Actual               | Compliant
+--------------------+----------------------------+----------------------+-----------+----------------------+-----------
+   941735, 1        | IO_SCHEDULER_sdc           |                      |           | bfq                  | no  [7]
+   941735, 1        | IO_SCHEDULER_sdd           |                      |           | bfq                  | no  [7] [10]
+   941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
+   941735, 1        | force_latency              | 70                   |           | all:none             | no  [1] [4]
+   941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
+
+ ` + footnote1 + `
+  [2] setting is not available on the system
+  [3] value is only checked, but NOT set
+  [4] cpu idle state settings differ
   [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
   [7] parameter value is untouched by default
  [10] parameter is defined twice, see section [sys] 'sys:block.sdd.queue.scheduler' from the other applied notes
@@ -102,6 +126,7 @@ func TestPrintNoteFields(t *testing.T) {
    force_latency              | all:none             | 70                   |           |  [1] [4]
    grub:intel_idle.max_cstate | NA                   | 1                    |           |  [2] [3] [6]
    kernel.shmmax              | 18446744073709551615 | 18446744073709551615 |           |   
+   kernel.shmmni              | NA                   |                      |           |  [16] [7]
 
  ` + footnote1 + `
   [2] setting is not available on the system
@@ -111,6 +136,7 @@ func TestPrintNoteFields(t *testing.T) {
   [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
   [7] parameter value is untouched by default
  [10] parameter is defined twice, see section [sys] 'sys:block.sdd.queue.scheduler' from the other applied notes
+ [16] parameter not available on the system, setting not possible
 
 `
 	var printMatchText3 = `
@@ -121,9 +147,10 @@ func TestPrintNoteFields(t *testing.T) {
    941735, 1        | IO_SCHEDULER_sdd           |                      |           | bfq                  | no  [7] [10]
    941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
    941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
-   941735, 1        | force_latency              | 70                   |           | all:none             | no  [4]
+   941735, 1        | force_latency              | 70                   |           | all:none             | no  [1] [4]
    941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
    941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
+   941735, 1        | kernel.shmmni              |                      |           | NA                   |  -  [16] [7]
 
  ` + footnote1 + `
   [2] setting is not available on the system
@@ -133,6 +160,7 @@ func TestPrintNoteFields(t *testing.T) {
   [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
   [7] parameter value is untouched by default
  [10] parameter is defined twice, see section [sys] 'sys:block.sdd.queue.scheduler' from the other applied notes
+ [16] parameter not available on the system, setting not possible
 
 `
 	var printMatchText4 = `
@@ -146,6 +174,7 @@ func TestPrintNoteFields(t *testing.T) {
    force_latency              | all:none             | 70                   |           |  [1] [4]
    grub:intel_idle.max_cstate | NA                   | 1                    |           |  [2] [3] [6]
    kernel.shmmax              | 18446744073709551615 | 18446744073709551615 |           |   
+   kernel.shmmni              | NA                   |                      |           |  [16] [7]
 
  ` + footnote1 + `
   [2] setting is not available on the system
@@ -155,6 +184,7 @@ func TestPrintNoteFields(t *testing.T) {
   [6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
   [7] parameter value is untouched by default
  [10] parameter is defined twice, see section [sys] 'sys:block.sdd.queue.scheduler' from the other applied notes
+ [16] parameter not available on the system, setting not possible
 
 `
 	checkCorrectMessage := func(t *testing.T, got, want string) {
@@ -187,32 +217,309 @@ func TestPrintNoteFields(t *testing.T) {
 	fcomp14 := note.FieldComparison{ReflectFieldName: "Inform", ReflectMapKey: "IO_SCHEDULER_sdc", ActualValue: "", ExpectedValue: "bfq", ActualValueJS: "", ExpectedValueJS: "bfq", MatchExpectation: false}
 	fcomp15 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "IO_SCHEDULER_sdd", ActualValue: "bfq", ExpectedValue: "", ActualValueJS: "bfq", ExpectedValueJS: "", MatchExpectation: false}
 	fcomp16 := note.FieldComparison{ReflectFieldName: "Inform", ReflectMapKey: "IO_SCHEDULER_sdd", ActualValue: "", ExpectedValue: "[sys] 'sys:block.sdd.queue.scheduler' from the other applied notes", ActualValueJS: "", ExpectedValueJS: "[sys] 'sys:block.sdd.queue.scheduler' from the other applied notes", MatchExpectation: false}
+	fcomp17 := note.FieldComparison{ReflectFieldName: "SysctlParams", ReflectMapKey: "kernel.shmmni", ActualValue: "PNA", ExpectedValue: "", ActualValueJS: "PNA", ExpectedValueJS: "", MatchExpectation: false}
 
-	map941735 := map[string]note.FieldComparison{"ConfFilePath": fcomp1, "ID": fcomp2, "DescriptiveName": fcomp3, "SysctlParams[ShmFileSystemSizeMB]": fcomp4, "SysctlParams[kernel.shmmax]": fcomp5, "SysctlParams[IO_SCHEDULER_vda]": fcomp6, "SysctlParams[grub:intel_idle.max_cstate]": fcomp7, "SysctlParams[force_latency]": fcomp8, "Inform[force_latency]": fcomp9, "Inform[IO_SCHEDULER_vda]": fcomp10, "SysctlParams[IO_SCHEDULER_sdb]": fcomp11, "Inform[IO_SCHEDULER_sdb]": fcomp12, "SysctlParams[IO_SCHEDULER_sdc]": fcomp13, "Inform[IO_SCHEDULER_sdc]": fcomp14, "SysctlParams[IO_SCHEDULER_sdd]": fcomp15, "Inform[IO_SCHEDULER_sdd]": fcomp16}
+	map941735 := map[string]note.FieldComparison{"ConfFilePath": fcomp1, "ID": fcomp2, "DescriptiveName": fcomp3, "SysctlParams[ShmFileSystemSizeMB]": fcomp4, "SysctlParams[kernel.shmmax]": fcomp5, "SysctlParams[IO_SCHEDULER_vda]": fcomp6, "SysctlParams[grub:intel_idle.max_cstate]": fcomp7, "SysctlParams[force_latency]": fcomp8, "Inform[force_latency]": fcomp9, "Inform[IO_SCHEDULER_vda]": fcomp10, "SysctlParams[IO_SCHEDULER_sdb]": fcomp11, "Inform[IO_SCHEDULER_sdb]": fcomp12, "SysctlParams[IO_SCHEDULER_sdc]": fcomp13, "Inform[IO_SCHEDULER_sdc]": fcomp14, "SysctlParams[IO_SCHEDULER_sdd]": fcomp15, "Inform[IO_SCHEDULER_sdd]": fcomp16, "SysctlParams[kernel.shmmni]": fcomp17}
 	noteComp := map[string]map[string]note.FieldComparison{"941735": map941735}
 
 	t.Run("verify with header", func(t *testing.T) {
 		buffer := bytes.Buffer{}
-		PrintNoteFields(&buffer, "HEAD", noteComp, true)
+		PrintNoteFields(&buffer, "HEAD", noteComp, true, nil)
 		txt := buffer.String()
 		checkCorrectMessage(t, txt, printMatchText1)
 	})
 	t.Run("simulate with header", func(t *testing.T) {
 		buffer := bytes.Buffer{}
-		PrintNoteFields(&buffer, "HEAD", noteComp, false)
+		PrintNoteFields(&buffer, "HEAD", noteComp, false, nil)
 		txt := buffer.String()
 		checkCorrectMessage(t, txt, printMatchText2)
 	})
 	t.Run("verify without header", func(t *testing.T) {
 		buffer := bytes.Buffer{}
-		PrintNoteFields(&buffer, "NONE", noteComp, true)
+		PrintNoteFields(&buffer, "NONE", noteComp, true, nil)
 		txt := buffer.String()
 		checkCorrectMessage(t, txt, printMatchText3)
 	})
 	t.Run("simulate without header", func(t *testing.T) {
 		buffer := bytes.Buffer{}
-		PrintNoteFields(&buffer, "NONE", noteComp, false)
+		PrintNoteFields(&buffer, "NONE", noteComp, false, nil)
 		txt := buffer.String()
 		checkCorrectMessage(t, txt, printMatchText4)
 	})
+
+	t.Run("verify with header and show-non-compliant", func(t *testing.T) {
+		os.Args = []string{"saptune", "note", "list", "--colorscheme=black", "--show-non-compliant", "--format=json", "--force", "--dryrun", "--help", "--version"}
+		system.RereadArgs()
+
+		buffer := bytes.Buffer{}
+		PrintNoteFields(&buffer, "HEAD", noteComp, true, nil)
+		txt := buffer.String()
+		checkCorrectMessage(t, txt, printMatchText1NoCompl)
+	})
+}
+
+func TestGetColorScheme(t *testing.T) {
+	os.Args = []string{"saptune", "status"}
+	system.RereadArgs()
+	saptuneSysconfig = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/etc/sysconfig/saptune")
+	expColorScheme := "full-green-zebra"
+	colorScheme := getColorScheme()
+	if colorScheme != expColorScheme {
+		t.Errorf("got: %+v, expected: %+v\n", colorScheme, expColorScheme)
+	}
+}
+
+func TestColorPrint(t *testing.T) {
+	format := `   %-16s | %-26s | %-15s | %-11s | %-14s | %2s
+`
+	colorScheme := "full-green-zebra"
+	compliant := "yes"
+	expFormat := `[32m   %-16s | %-26s | %-15s | %-11s | %-14s | %2s
+[0m`
+	cFormat, cCompl := colorPrint(format, compliant, colorScheme)
+	if cFormat != expFormat {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, expFormat)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = "no  [2] [3] [6]"
+	expFormat = `[31m   %-16s | %-26s | %-15s | %-11s | %-14s | %2s
+[0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != expFormat {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, expFormat)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = " -  [1]"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	colorScheme = "cmpl-green-zebra"
+	compliant = "yes"
+	expCompl := `[32myes[0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != expCompl {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, expCompl)
+	}
+
+	compliant = "no  [2] [3] [6]"
+	expCompl = `[31mno  [2] [3] [6][0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != expCompl {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, expCompl)
+	}
+
+	compliant = " -  [1]"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	colorScheme = "full-blue-zebra"
+	compliant = "yes"
+	expFormat = `[34m   %-16s | %-26s | %-15s | %-11s | %-14s | %2s
+[0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != expFormat {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, expFormat)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = "no  [2] [3] [6]"
+	expFormat = `[33m   %-16s | %-26s | %-15s | %-11s | %-14s | %2s
+[0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != expFormat {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, expFormat)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = " -  [1]"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	colorScheme = "cmpl-blue-zebra"
+	compliant = "yes"
+	expCompl = `[34myes[0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != expCompl {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, expCompl)
+	}
+
+	compliant = "no  [2] [3] [6]"
+	expCompl = `[33mno  [2] [3] [6][0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != expCompl {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, expCompl)
+	}
+
+	compliant = " -  [1]"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	colorScheme = "full-red-noncmpl"
+	compliant = "yes"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = "no  [2] [3] [6]"
+	expFormat = `[31m   %-16s | %-26s | %-15s | %-11s | %-14s | %2s
+[0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != expFormat {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, expFormat)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = " -  [1]"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	colorScheme = "red-noncmpl"
+	compliant = "yes"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = "no  [2] [3] [6]"
+	expCompl = `[31mno  [2] [3] [6][0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != expCompl {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, expCompl)
+	}
+
+	compliant = " -  [1]"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	colorScheme = "full-yellow-noncmpl"
+	compliant = "yes"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = "no  [2] [3] [6]"
+	expFormat = `[33m   %-16s | %-26s | %-15s | %-11s | %-14s | %2s
+[0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != expFormat {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, expFormat)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = " -  [1]"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	colorScheme = "yellow-noncmpl"
+	compliant = "yes"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	compliant = "no  [2] [3] [6]"
+	expCompl = `[33mno  [2] [3] [6][0m`
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != expCompl {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, expCompl)
+	}
+
+	compliant = " -  [1]"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+
+	colorScheme = "black"
+	cFormat, cCompl = colorPrint(format, compliant, colorScheme)
+	if cFormat != format {
+		t.Errorf("got: %+v, expected: %+v\n", cFormat, format)
+	}
+	if cCompl != compliant {
+		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
 }

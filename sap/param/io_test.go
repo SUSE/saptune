@@ -166,6 +166,43 @@ func TestNrRequests(t *testing.T) {
 		}
 	}
 
+	// trigger errors
+	optimised, err = applied.Optimise(104632)
+	if err != nil {
+		t.Error(err)
+	}
+	err = optimised.Apply("sda")
+	if err != nil {
+		t.Error(err)
+	}
+
+	schedInspected, err := BlockDeviceSchedulers{}.Inspect()
+	if err != nil {
+		t.Error(err, schedInspected)
+	}
+	optVal := "sda  none"
+	schedOptimised, err := schedInspected.Optimise(optVal)
+	if err != nil {
+		t.Error(err)
+	}
+	err = schedOptimised.Apply("sda")
+	if err != nil {
+		t.Error(err)
+	}
+
+	applied, err = BlockDeviceNrRequests{}.Inspect()
+	if err != nil {
+		t.Error(err, applied)
+	}
+	optimised, err = applied.Optimise(1098776544632)
+	if err != nil {
+		t.Error(err)
+	}
+	err = optimised.Apply("sda")
+	if err != nil {
+		t.Error(err)
+	}
+
 	// reset original values
 	for _, bdev := range blockDev {
 		err = oldvals.Apply(bdev)
@@ -246,6 +283,16 @@ func TestReadAheadKB(t *testing.T) {
 		if name == "" || readaheadkb != 132 {
 			t.Error(applied)
 		}
+	}
+
+	// trigger errors
+	optimised, err = applied.Optimise(2147483647)
+	if err != nil {
+		t.Error(err)
+	}
+	err = optimised.Apply("sda")
+	if err != nil {
+		t.Error(err)
 	}
 
 	// reset original values

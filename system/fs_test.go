@@ -1,6 +1,9 @@
 package system
 
 import (
+	"os"
+	"path"
+	"reflect"
 	"testing"
 )
 
@@ -137,6 +140,10 @@ UUID=12931751-bad1-4b49-992c-4eee57dda0a1 /                    ext4       acl,us
 UUID=069ea3e6-573e-48e4-87ff-00b15ab6f2db swap                 swap       defaults              0 0
 UUID=c32aa786-b9c2-4212-8f5b-c4ab01f1ad91 /                    ext4       acl,user_xattr        1 1
 UUID=92595693-aa49-45d6-9770-a767c498d40d /mass                ext4       defaults              1 2
+
+/dev/sdg /homeg xfs defaults
+/dev/sde /homee xfs
+/dev/sdf /homef xfs defaults X Y
 `
 
 func TestParseMounts(t *testing.T) {
@@ -167,7 +174,7 @@ func TestParseMounts(t *testing.T) {
 
 	// source from /etc/fstab
 	mountPoints = ParseMounts(fstabSample)
-	if len(mountPoints) != 14 {
+	if len(mountPoints) != 16 {
 		t.Fatal(len(mountPoints))
 	}
 	for _, mount := range mountPoints {
@@ -200,5 +207,69 @@ func TestMountPointGetFileSystemSizeMB(t *testing.T) {
 	}
 	if size := mount.GetFileSystemSizeMB(); size < 30 {
 		t.Fatal(size)
+	}
+}
+
+func TestGetMountOpts(t *testing.T) {
+	fstab = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/fstest/fstab")
+	procMounts = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/fstest/procMounts")
+	resOk := []string{"/home1", "/homeB", "/homeC", "/homeE"}
+	resNok := []string{"/homeE", "/app", "/homeD"}
+	mountOk, mountNok := GetMountOpts(true, "xfs", "nobarrier")
+	if !reflect.DeepEqual(mountOk, resOk) {
+		t.Errorf("got: %+v, expected: %+v\n", mountOk, resOk)
+	}
+	if !reflect.DeepEqual(mountNok, resNok) {
+		t.Errorf("got: %+v, expected: %+v\n", mountNok, resNok)
+	}
+
+	resOk = []string{"/homeE", "/app", "/home1", "/homeB", "/homeC"}
+	resNok = []string{"/homeD"}
+	mountOk, mountNok = GetMountOpts(true, "xfs", "relatime")
+	if !reflect.DeepEqual(mountOk, resOk) {
+		t.Errorf("got: %+v, expected: %+v\n", mountOk, resOk)
+	}
+	if !reflect.DeepEqual(mountNok, resNok) {
+		t.Errorf("got: %+v, expected: %+v\n", mountNok, resNok)
+	}
+
+	resOk = []string{"/homeB"}
+	resNok = []string{"/homeE", "/app", "/home1", "/homeC", "/homeD"}
+	mountOk, mountNok = GetMountOpts(false, "xfs", "nobarrier")
+	if !reflect.DeepEqual(mountOk, resOk) {
+		t.Errorf("got: %+v, expected: %+v\n", mountOk, resOk)
+	}
+	if !reflect.DeepEqual(mountNok, resNok) {
+		t.Errorf("got: %+v, expected: %+v\n", mountNok, resNok)
+	}
+
+	resOk = []string{"/homeE", "/app", "/homeB"}
+	resNok = []string{"/home1", "/homeC", "/homeD", "/homeE"}
+	mountOk, mountNok = GetMountOpts(false, "xfs", "relatime")
+	if !reflect.DeepEqual(mountOk, resOk) {
+		t.Errorf("got: %+v, expected: %+v\n", mountOk, resOk)
+	}
+	if !reflect.DeepEqual(mountNok, resNok) {
+		t.Errorf("got: %+v, expected: %+v\n", mountNok, resNok)
+	}
+
+	resOk = []string{"/home1", "/homeC", "/homeE"}
+	resNok = []string{"/homeE", "/app", "/homeB", "/homeD"}
+	mountOk, mountNok = GetMountOpts(true, "xfs", "")
+	if !reflect.DeepEqual(mountOk, resOk) {
+		t.Errorf("got: %+v, expected: %+v\n", mountOk, resOk)
+	}
+	if !reflect.DeepEqual(mountNok, resNok) {
+		t.Errorf("got: %+v, expected: %+v\n", mountNok, resNok)
+	}
+
+	resOk = []string{}
+	resNok = []string{"/homeE", "/app", "/home1", "/homeB", "/homeC", "/homeD"}
+	mountOk, mountNok = GetMountOpts(false, "xfs", "")
+	if !reflect.DeepEqual(mountOk, resOk) {
+		t.Errorf("got: %+v, expected: %+v\n", mountOk, resOk)
+	}
+	if !reflect.DeepEqual(mountNok, resNok) {
+		t.Errorf("got: %+v, expected: %+v\n", mountNok, resNok)
 	}
 }

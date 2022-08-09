@@ -64,6 +64,7 @@ func WarningLog(txt string, stuff ...interface{}) {
 func ErrLog(txt string, stuff ...interface{}) {
 	if errorLogger != nil {
 		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+		jWriteMsg("ERROR", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
 	}
 }
 

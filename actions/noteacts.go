@@ -16,38 +16,38 @@ import (
 var templateFile = "/usr/share/saptune/NoteTemplate.conf"
 
 // NoteAction  Note actions like apply, revert, verify asm.
-func NoteAction(actionName, noteID, newNoteID string, tuneApp *app.App) {
+func NoteAction(writer io.Writer, actionName, noteID, newNoteID string, tuneApp *app.App) {
 	switch actionName {
 	case "apply":
-		NoteActionApply(os.Stdout, noteID, tuneApp)
+		NoteActionApply(writer, noteID, tuneApp)
 	case "list":
-		NoteActionList(os.Stdout, tuneApp)
+		NoteActionList(writer, tuneApp)
 	case "verify":
-		NoteActionVerify(os.Stdout, noteID, tuneApp)
+		NoteActionVerify(writer, noteID, tuneApp)
 	case "simulate":
-		NoteActionSimulate(os.Stdout, noteID, tuneApp)
+		NoteActionSimulate(writer, noteID, tuneApp)
 	case "customise", "customize":
-		NoteActionCustomise(os.Stdout, noteID, tuneApp)
+		NoteActionCustomise(writer, noteID, tuneApp)
 	case "edit":
-		NoteActionEdit(os.Stdout, noteID, tuneApp)
+		NoteActionEdit(writer, noteID, tuneApp)
 	case "create":
-		NoteActionCreate(noteID, tuneApp)
+		NoteActionCreate(writer, noteID, tuneApp)
 	case "show":
-		NoteActionShow(os.Stdout, noteID, tuneApp)
+		NoteActionShow(writer, noteID, tuneApp)
 	case "delete":
-		NoteActionDelete(os.Stdin, os.Stdout, noteID, tuneApp)
+		NoteActionDelete(os.Stdin, writer, noteID, tuneApp)
 	case "rename":
-		NoteActionRename(os.Stdin, os.Stdout, noteID, newNoteID, tuneApp)
+		NoteActionRename(os.Stdin, writer, noteID, newNoteID, tuneApp)
 	case "revert":
-		NoteActionRevert(os.Stdout, noteID, tuneApp)
+		NoteActionRevert(writer, noteID, tuneApp)
 	case "revertall":
-		RevertAction(os.Stdout, "all", tuneApp)
+		RevertAction(writer, "all", tuneApp)
 	case "applied":
-		NoteActionApplied(os.Stdout, tuneApp)
+		NoteActionApplied(writer, tuneApp)
 	case "enabled":
-		NoteActionEnabled(os.Stdout, tuneApp)
+		NoteActionEnabled(writer, tuneApp)
 	default:
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 }
 
@@ -151,6 +151,8 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
 		VerifyAllParameters(writer, tuneApp)
 	} else {
+		result := system.JPNotes{}
+
 		// Check system parameters against the specified note, no matter the note has been tuned for or not.
 		conforming, comparisons, _, err := tuneApp.VerifyNote(noteID)
 		if err != nil {
@@ -158,8 +160,11 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 		}
 		noteComp := make(map[string]map[string]note.FieldComparison)
 		noteComp[noteID] = comparisons
-		PrintNoteFields(writer, "HEAD", noteComp, true)
+		PrintNoteFields(writer, "HEAD", noteComp, true, &result)
 		tuneApp.PrintNoteApplyOrder(writer)
+		result.NotesOrder = tuneApp.NoteApplyOrder
+		result.SysCompliance = &conforming
+		system.Jcollect(result)
 		if !conforming {
 			system.ErrorExit("The parameters listed above have deviated from the specified note.\n", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
 		} else {
@@ -171,6 +176,7 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 // NoteActionSimulate shows all changes that will be applied to the system if
 // the Note will be applied.
 func NoteActionSimulate(writer io.Writer, noteID string, tuneApp *app.App) {
+	result := system.JPNotes{}
 	if noteID == "" {
 		PrintHelpAndExit(writer, 1)
 	}
@@ -181,7 +187,9 @@ func NoteActionSimulate(writer io.Writer, noteID string, tuneApp *app.App) {
 		fmt.Fprintf(writer, "If you run `saptune note apply %s`, the following changes will be applied to your system:\n", noteID)
 		noteComp := make(map[string]map[string]note.FieldComparison)
 		noteComp[noteID] = comparisons
-		PrintNoteFields(writer, "HEAD", noteComp, false)
+		PrintNoteFields(writer, "HEAD", noteComp, false, &result)
+		result.SysCompliance = nil
+		system.Jcollect(result)
 	}
 }
 
@@ -189,7 +197,7 @@ func NoteActionSimulate(writer io.Writer, noteID string, tuneApp *app.App) {
 // definition override file
 func NoteActionCustomise(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		system.ErrorExit("%v", err)
@@ -226,7 +234,7 @@ func NoteActionCustomise(writer io.Writer, noteID string, tuneApp *app.App) {
 // file and NOT the override file
 func NoteActionEdit(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err != nil {
 		system.ErrorExit("%v", err)
@@ -257,9 +265,9 @@ func NoteActionEdit(writer io.Writer, noteID string, tuneApp *app.App) {
 }
 
 // NoteActionCreate helps the customer to create an own Note definition
-func NoteActionCreate(noteID string, tuneApp *app.App) {
+func NoteActionCreate(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 	if _, err := tuneApp.GetNoteByID(noteID); err == nil {
 		system.ErrorExit("Note '%s' already exists. Please use 'saptune note customise %s' instead to create an override file or choose another NoteID.", noteID, noteID)
@@ -411,11 +419,40 @@ func NoteActionRevert(writer io.Writer, noteID string, tuneApp *app.App) {
 	if err := tuneApp.RevertNote(noteID, true); err != nil {
 		system.ErrorExit("Failed to revert note %s: %v", noteID, err)
 	}
+	// if a solution is enabled (available in the configuration), check, if
+	// this note is the last note in NoteApplyOrder, which is related to
+	// this solution. If yes, remove solution for the configuration.
+	solutionStillEnabled(tuneApp)
+
 	if ok {
 		system.InfoLog("Parameters tuned by the note '%s' have been successfully reverted.", noteID)
 		fmt.Fprintf(writer, "Parameters tuned by the note have been successfully reverted.\n")
 	} else {
 		system.NoticeLog("Note '%s' is not applied, so nothing to revert.", noteID)
+	}
+}
+
+// if a solution is enabled (available in the configuration), check, if
+// there is a least one note in NoteApplyOrder, which is related to
+// this solution. If no, remove solution for the configuration.
+func solutionStillEnabled(tuneApp *app.App) {
+	if len(tuneApp.TuneForSolutions) == 0 {
+		return
+	}
+	for _, sol := range tuneApp.TuneForSolutions {
+		solNoteAvail := false
+		for _, solNote := range tuneApp.AllSolutions[sol] {
+			if tuneApp.PositionInNoteApplyOrder(solNote) < 0 {
+				continue
+			} else {
+				solNoteAvail = true // sol weiter gültig
+				break
+			}
+		}
+		if !solNoteAvail {
+			system.InfoLog("The last, still enabled Note got reverted and removed from the configuration, so remove the enabled Solution from the configuration too.")
+			_ = tuneApp.RemoveSolFromConfig(sol)
+		}
 	}
 }
 

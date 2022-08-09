@@ -81,12 +81,16 @@ func TestOptBlkVal(t *testing.T) {
 	if info == "NA" {
 		t.Logf("scheduler '%s' is not supported\n", val)
 	}
+	val, info = OptBlkVal("IO_SCHEDULER_sda", "", &tblck, blckOK)
+	if val != "" || info != "" {
+		t.Error(val, info)
+	}
 
-	val, info = OptBlkVal("NRREQ_sda", "512", &tblck, blckOK)
+	val, _ = OptBlkVal("NRREQ_sda", "512", &tblck, blckOK)
 	if val != "512" {
 		t.Error(val)
 	}
-	val, info = OptBlkVal("NRREQ_sdc", "128", &tblck, blckOK)
+	val, _ = OptBlkVal("NRREQ_sdc", "128", &tblck, blckOK)
 	if val != "128" {
 		t.Error(val)
 	}
@@ -98,14 +102,23 @@ func TestSetBlkVal(t *testing.T) {
 	val, info, err := GetBlkVal("IO_SCHEDULER_sda", &tblck)
 	oval := val
 	if err != nil {
-		t.Error(err)
+		t.Error(err, info)
 	}
 	val, info = OptBlkVal("IO_SCHEDULER_sda", "noop, none", &tblck, blckOK)
 	if val != "noop" && val != "none" {
 		t.Error(val, info)
 	}
 	// apply - value not used, but map changed above in optimise
-	err = SetBlkVal("IO_SCHEDULER_sda", "notUsed", &tblck, false)
+	_ = SetBlkVal("IO_SCHEDULER_sda", "notUsed", &tblck, false)
 	// revert - value will be used to change map before applying
-	err = SetBlkVal("IO_SCHEDULER_sda", oval, &tblck, true)
+	_ = SetBlkVal("IO_SCHEDULER_sda", oval, &tblck, true)
+}
+
+func TestChkMaxHWsector(t *testing.T) {
+	key := "MAX_SECTORS_KB_sda"
+	val := "18446744073709551615"
+	ival, sval, info := chkMaxHWsector(key, val)
+	if info != "limited" {
+		t.Errorf("expected info as 'limited', but got '%s' - '%+v' - '%+v'\n", info, ival, sval)
+	}
 }

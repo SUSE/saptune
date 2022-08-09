@@ -29,7 +29,7 @@ func GetAvailServices() map[string]string {
 // GetServiceName returns the systemd service name for supported services
 func GetServiceName(service string) string {
 	serviceName := ""
-	if services == nil || len(services) == 0 {
+	if len(services) == 0 {
 		services = GetAvailServices()
 	}
 	if _, ok := services[service]; ok {

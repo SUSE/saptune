@@ -18,36 +18,36 @@ import (
 var solTemplate = "/usr/share/saptune/SolutionTemplate.conf"
 
 // SolutionAction  Solution actions like apply, revert, verify asm.
-func SolutionAction(actionName, solName, newSolName string, tuneApp *app.App) {
+func SolutionAction(writer io.Writer, actionName, solName, newSolName string, tuneApp *app.App) {
 	switch actionName {
 	case "apply":
-		SolutionActionApply(os.Stdout, solName, tuneApp)
+		SolutionActionApply(writer, solName, tuneApp)
 	case "list":
-		SolutionActionList(os.Stdout, tuneApp)
+		SolutionActionList(writer, tuneApp)
 	case "verify":
-		SolutionActionVerify(os.Stdout, solName, tuneApp)
+		SolutionActionVerify(writer, solName, tuneApp)
 	case "simulate":
-		SolutionActionSimulate(os.Stdout, solName, tuneApp)
+		SolutionActionSimulate(writer, solName, tuneApp)
 	case "customise", "customize":
-		SolutionActionCustomise(os.Stdout, solName, tuneApp)
+		SolutionActionCustomise(writer, solName, tuneApp)
 	case "edit":
-		SolutionActionEdit(os.Stdout, solName, tuneApp)
+		SolutionActionEdit(writer, solName, tuneApp)
 	case "create":
-		SolutionActionCreate(os.Stdout, solName)
+		SolutionActionCreate(writer, solName)
 	case "show":
-		SolutionActionShow(os.Stdout, solName)
+		SolutionActionShow(writer, solName)
 	case "delete":
-		SolutionActionDelete(os.Stdin, os.Stdout, solName, tuneApp)
+		SolutionActionDelete(os.Stdin, writer, solName, tuneApp)
 	case "rename":
-		SolutionActionRename(os.Stdin, os.Stdout, solName, newSolName, tuneApp)
+		SolutionActionRename(os.Stdin, writer, solName, newSolName, tuneApp)
 	case "revert":
-		SolutionActionRevert(os.Stdout, solName, tuneApp)
+		SolutionActionRevert(writer, solName, tuneApp)
 	case "applied":
-		SolutionActionApplied(os.Stdout, tuneApp)
+		SolutionActionApplied(writer, tuneApp)
 	case "enabled":
-		SolutionActionEnabled(os.Stdout, tuneApp)
+		SolutionActionEnabled(writer, tuneApp)
 	default:
-		PrintHelpAndExit(os.Stdout, 1)
+		PrintHelpAndExit(writer, 1)
 	}
 }
 
@@ -107,7 +107,7 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 			format = " D" + format
 			jsolutionListEntry.DepSol = true
 		}
-		if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
+		if tuneApp.IsSolutionEnabled(solName) {
 			// enabled solution
 			format = " " + setGreenText + "*" + format
 			jsolutionListEntry.SolEnabled = true
@@ -160,12 +160,13 @@ func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
 		VerifyAllParameters(writer, tuneApp)
 	} else {
+		result := system.JPNotes{}
 		// Check system parameters against the specified solution, no matter the solution has been tuned for or not.
 		unsatisfiedNotes, comparisons, err := tuneApp.VerifySolution(solName)
 		if err != nil {
 			system.ErrorExit("Failed to test the current system against the specified SAP solution: %v", err)
 		}
-		PrintNoteFields(writer, "NONE", comparisons, true)
+		PrintNoteFields(writer, "NONE", comparisons, true, &result)
 		if len(unsatisfiedNotes) == 0 {
 			fmt.Fprintf(writer, "%s%sThe system fully conforms to the tuning guidelines of the specified SAP solution.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
 		} else {
@@ -177,6 +178,7 @@ func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 // SolutionActionSimulate shows all changes that will be applied to the system if
 // the solution will be applied.
 func SolutionActionSimulate(writer io.Writer, solName string, tuneApp *app.App) {
+	result := system.JPNotes{}
 	if solName == "" {
 		PrintHelpAndExit(writer, 1)
 	}
@@ -185,7 +187,8 @@ func SolutionActionSimulate(writer io.Writer, solName string, tuneApp *app.App) 
 		system.ErrorExit("Failed to test the current system against the specified note: %v", err)
 	} else {
 		fmt.Fprintf(writer, "If you run `saptune solution apply %s`, the following changes will be applied to your system:\n", solName)
-		PrintNoteFields(writer, "NONE", comparisons, false)
+		PrintNoteFields(writer, "NONE", comparisons, false, &result)
+		system.Jcollect(result)
 	}
 }
 
@@ -220,18 +223,19 @@ func SolutionActionEnabled(writer io.Writer, tuneApp *app.App) {
 
 // SolutionActionApplied prints out the applied solution
 func SolutionActionApplied(writer io.Writer, tuneApp *app.App) {
-	solName := ""
-	if len(tuneApp.TuneForSolutions) != 0 {
-		solName = tuneApp.TuneForSolutions[0]
-		if state, ok := tuneApp.IsSolutionApplied(solName); ok {
-			if state == "partial" {
-				fmt.Fprintf(writer, "%s (partial)", solName)
-			} else {
-				fmt.Fprintf(writer, "%s", solName)
-			}
-		}
+	partial := false
+	solApplied, state := tuneApp.AppliedSolution()
+	if state == "partial" {
+		fmt.Fprintf(writer, "%s (partial)", solApplied)
+		partial = true
+	} else {
+		fmt.Fprintf(writer, "%s", solApplied)
 	}
-	system.Jcollect(strings.Split(solName, " "))
+	appSol := system.JAppliedSol{
+		SolName: solApplied,
+		Partial: partial,
+	}
+	system.Jcollect(appSol)
 }
 
 // SolutionActionCustomise creates an override file and allows to editing the
@@ -269,8 +273,10 @@ func SolutionActionCustomise(writer io.Writer, customSol string, tuneApp *app.Ap
 	}
 	if changed {
 		// check, if solution is active - applied
-		if i := sort.SearchStrings(tuneApp.TuneForSolutions, customSol); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == customSol {
+		if _, ok := tuneApp.IsSolutionApplied(customSol); ok {
 			system.NoticeLog("Your just edited Solution is already applied. To get your changes to take effect, please 'revert' the Solution and apply again.\n")
+		} else if tuneApp.IsSolutionEnabled(customSol) {
+			system.NoticeLog("Your just edited Solution is enabled, but not applied yet. To get your changes to take effect, please apply the just edited Solution or start saptune.service\n")
 		} else {
 			system.NoticeLog("Do not forget to apply the just edited Solution to get your changes to take effect\n")
 		}
@@ -307,8 +313,10 @@ func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
 	}
 	if changed {
 		// check, if solution is active - applied
-		if i := sort.SearchStrings(tuneApp.TuneForSolutions, customSol); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == customSol {
+		if _, ok := tuneApp.IsSolutionApplied(customSol); ok {
 			system.NoticeLog("Your just edited Solution is already applied. To get your changes to take effect, please 'revert' the Solution and apply again.\n")
+		} else if tuneApp.IsSolutionEnabled(customSol) {
+			system.NoticeLog("Your just edited Solution is enabled, but not applied yet. To get your changes to take effect, please apply the just edited Solution or start saptune.service\n")
 		} else {
 			system.NoticeLog("Do not forget to apply the just edited Solution to get your changes to take effect\n")
 		}
@@ -388,9 +396,9 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 	fileName, extraSol := getFileName(solFName, SolutionSheets, ExtraTuningSheets)
 	ovFileName, overrideSol := getovFile(solFName, OverrideTuningSheets)
 
-	// check, if solution is active - applied
-	if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
-		system.ErrorExit("The Solution file you want to delete is currently in use, which means the Solution is already applied.\nSo please 'revert' the Solution first and then try deleting again.")
+	// check, if solution is active - enabled
+	if tuneApp.IsSolutionEnabled(solName) {
+		system.ErrorExit("The Solution file you want to delete is currently in use, which means the Solution is already enabled/applied.\nSo please 'revert' the Solution first and then try deleting again.")
 	}
 
 	if !extraSol && !overrideSol {
@@ -445,9 +453,9 @@ func SolutionActionRename(reader io.Reader, writer io.Writer, solName, newSolNam
 	ovFileName, overrideSol := getovFile(solFName, OverrideTuningSheets)
 	newovFileName := fmt.Sprintf("%s%s.sol", OverrideTuningSheets, newSolName)
 
-	// check, if solution is active - applied
-	if i := sort.SearchStrings(tuneApp.TuneForSolutions, solName); i < len(tuneApp.TuneForSolutions) && tuneApp.TuneForSolutions[i] == solName {
-		system.ErrorExit("The Solution definition file you want to rename is currently in use, which means the Solution is already applied.\nSo please 'revert' the Solution first and then try renaming again.")
+	// check, if solution is active - enabled
+	if tuneApp.IsSolutionEnabled(solName) {
+		system.ErrorExit("The Solution definition file you want to rename is currently in use, which means the Solution is already enabled/applied.\nSo please 'revert' the Solution first and then try renaming again.")
 	}
 
 	if extraSol && overrideSol {

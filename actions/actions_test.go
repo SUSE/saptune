@@ -16,9 +16,10 @@ import (
 
 var SolutionSheetsInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/sols") + "/"
 var ExtraFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/extra") + "/"
+var ExtraTstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/etc/saptune/extra") + "/"
 var OverTstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/etc/saptune/override") + "/"
 var DeprecFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/sol/deprecated") + "/"
-var TstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/")
+var TstFilesInGOPATH = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata") + "/"
 
 var AllTestSolutions = map[string]solution.Solution{
 	"sol1":  {"simpleNote"},
@@ -38,6 +39,18 @@ var tstwriter io.Writer
 var tstErrorExitOut = func(str string, out ...interface{}) error {
 	fmt.Fprintf(tstwriter, "ERROR: "+str, out...)
 	return fmt.Errorf(str+"\n", out...)
+}
+
+var switchOnColor = func(t *testing.T) {
+	setGreenText = "\033[32m"
+	setRedText = "\033[31m"
+	setYellowText = "\033[33m"
+	setBlueText = "\033[34m"
+	setBoldText = "\033[1m"
+	resetBoldText = "\033[22m"
+	setStrikeText = "\033[9m"
+	resetTextColor = "\033[0m"
+	dfltColorScheme = "full-red-noncmpl"
 }
 
 var checkOut = func(t *testing.T, got, want string) {
@@ -118,39 +131,9 @@ Parameters tuned by the notes and solutions have been successfully reverted.
 	// this errExitMatchText differs from the 'real' text by the last 2 lines
 	// because of test situation, the 'exit 1' in PrintHelpAndExit is not
 	// executed (as designed for testing)
-	errExitMatchText := fmt.Sprintf(`saptune: Comprehensive system optimisation management for SAP solutions.
-Daemon control:
-  saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
-Tune system according to SAP and SUSE notes:
-  saptune note [ list | revertall | enabled | applied ]
-  saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
-  saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
-  saptune note rename NoteID newNoteID
-Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled | applied ]
-  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
-  saptune solution rename SolutionName newSolutionName
-Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
-   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
-   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
-Revert all parameters tuned by the SAP notes or solutions:
-  saptune revert all
-Remove the pending lock file from a former saptune call
-  saptune lock remove
-Call external script '/usr/sbin/saptune_check'
-  saptune check
-Print current saptune status:
-  saptune status
-Print current saptune version:
-  saptune version
-Print this message:
-  saptune help
-Reverting all notes and solutions, this may take some time...
+	errExitMatchText := PrintHelpAndExitMatchText + `Reverting all notes and solutions, this may take some time...
 Parameters tuned by the notes and solutions have been successfully reverted.
-`)
-
+`
 	buffer.Reset()
 	// reset tApp variables, which were deleted by 'revert all'
 	tearDown(t)
@@ -206,7 +189,7 @@ func TestGetFileName(t *testing.T) {
 	// test with non-existing extra note
 	nID = "hugo"
 	getFnameMatchText := fmt.Sprintf("ERROR: Note %s not found in %s or %s.\n", nID, "", ExtraFilesInGOPATH)
-	fname, extra = getFileName(nID, "", ExtraFilesInGOPATH)
+	_, _ = getFileName(nID, "", ExtraFilesInGOPATH)
 	if tstRetErrorExit != 1 {
 		t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
 	}
@@ -215,7 +198,7 @@ func TestGetFileName(t *testing.T) {
 }
 
 func TestReadYesNo(t *testing.T) {
-	yesnoMatchText := fmt.Sprintf("Answer is [y/n]: ")
+	yesnoMatchText := "Answer is [y/n]: "
 	buffer := bytes.Buffer{}
 	input := "yes\n"
 	if !readYesNo("Answer is", strings.NewReader(input), &buffer) {
@@ -242,36 +225,7 @@ func TestPrintHelpAndExit(t *testing.T) {
 	defer func() { system.ErrorExitOut = oldErrorExitOut }()
 	system.ErrorExitOut = tstErrorExitOut
 
-	errExitMatchText := fmt.Sprintf(`saptune: Comprehensive system optimisation management for SAP solutions.
-Daemon control:
-  saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
-Tune system according to SAP and SUSE notes:
-  saptune note [ list | revertall | enabled | applied ]
-  saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
-  saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
-  saptune note rename NoteID newNoteID
-Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled | applied ]
-  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
-  saptune solution rename SolutionName newSolutionName
-Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
-   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
-   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
-Revert all parameters tuned by the SAP notes or solutions:
-  saptune revert all
-Remove the pending lock file from a former saptune call
-  saptune lock remove
-Call external script '/usr/sbin/saptune_check'
-  saptune check
-Print current saptune status:
-  saptune status
-Print current saptune version:
-  saptune version
-Print this message:
-  saptune help
-`)
+	errExitMatchText := PrintHelpAndExitMatchText
 	errExitbuffer := bytes.Buffer{}
 	tstwriter = &errExitbuffer
 	buffer := bytes.Buffer{}

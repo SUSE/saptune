@@ -259,7 +259,7 @@ func (vend INISettings) Optimise() (Note, error) {
 // revert the system to the former parameter values
 func (vend INISettings) Apply() error {
 	var err error
-	errs := make([]error, 0, 0)
+	errs := make([]error, 0)
 	revertValues := false
 	pvendID := vend.ID
 
