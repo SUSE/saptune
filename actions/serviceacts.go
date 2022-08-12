@@ -209,10 +209,13 @@ func ServiceActionStatus(writer io.Writer, tuneApp *app.App, saptuneVersion stri
 	printTunedStatus(writer, &jstatServs)
 
 	// check for system(d) state
-	infoTrigger["chkHint"] = printSystemStatus(writer, &jstatus)
+	infoTrigger["chkHint"] = printSystemdStatus(writer, &jstatus)
 
 	// check for virtualization environment
 	printVirtStatus(writer, &jstatus)
+
+	// check tuning result
+	infoTrigger["chkTuneHint"] = chkTuningResult(writer, tuneApp, &jstatus)
 
 	infoMsg := bytes.Buffer{}
 	if system.GetFlagVal("format") == "json" {
@@ -677,16 +680,46 @@ func printSaptuneStatus(writer io.Writer, jstat *system.JStatusServs) (bool, boo
 	return saptuneStopped, remember, stenabled
 }
 
-// printSystemStatus prints the state of the systemd
-func printSystemStatus(writer io.Writer, jstat *system.JStatus) bool {
+// printSystemdStatus prints the state of the systemd
+func printSystemdStatus(writer io.Writer, jstat *system.JStatus) bool {
 	chkHint := false
 	state, err := system.GetSystemState()
-	fmt.Fprintf(writer, "system state:             %s\n", state)
+	fmt.Fprintf(writer, "systemd system state:     %s\n", state)
 	jstat.SystemdSysState = state
 	if err != nil {
 		chkHint = true
 	}
 	return chkHint
+}
+
+// chkTuningResult verifies the tuning state of the system
+func chkTuningResult(writer io.Writer, tuneApp *app.App, jstat *system.JStatus) bool {
+	chkTuneHint := false
+	tuningResult := "not-present"
+	appliedNotes := tuneApp.AppliedNotes()
+	if appliedNotes == "" {
+		tuningResult = "not tuned"
+	} else if system.IsFlagSet("non-compliance-check") {
+		tuningResult = "unknown (checking disabled)"
+	} else {
+		oldStdout, oldSdterr := system.SwitchOffOut()
+		unsatisfiedNotes, _, err := tuneApp.VerifyAll()
+		system.SwitchOnOut(oldStdout, oldSdterr)
+		if err != nil {
+			system.WarningLog("Failed to verify the tuning state of the current system: %v", err)
+		} else {
+			systemCompiance := len(unsatisfiedNotes) == 0
+			if !systemCompiance {
+				tuningResult = "not compliant"
+				chkTuneHint = true
+			} else {
+				tuningResult = "compliant"
+			}
+		}
+	}
+	fmt.Fprintf(writer, "tuning:                   %s\n", tuningResult)
+	jstat.TuningState = tuningResult
+	return chkTuneHint
 }
 
 // printVirtStatus prints the virtualization environment
@@ -714,11 +747,14 @@ func printInfoBlock(writer io.Writer, infoTrigger map[string]bool) {
 	if infoTrigger["stenabled"] && infoTrigger["scenabled"] {
 		fmt.Fprintf(writer, "WARNING! saptune.service and sapconf.service are BOTH enabled!\nOnly one tool may tune the system.\n")
 	}
+	if infoTrigger["chkTuneHint"] {
+		fmt.Fprintf(writer, "Regarding the tuning state of the system please use  'saptune note verify' for detailed information.\n")
+	}
 	if infoTrigger["chkHint"] {
-		fmt.Fprintf(writer, "The system state is NOT ok.\n")
+		fmt.Fprintf(writer, "The systemd system state is NOT ok.\n")
 	}
 	if (infoTrigger["stenabled"] && infoTrigger["scenabled"]) || infoTrigger["chkHint"] {
-		fmt.Fprintf(writer, "Please call '/usr/sbin/saptune_check' to get guidance to resolve the issues!\n")
+		fmt.Fprintf(writer, "Please call 'saptune check' to get guidance to resolve the issues!\n")
 	}
 
 	fmt.Fprintln(writer, "")
