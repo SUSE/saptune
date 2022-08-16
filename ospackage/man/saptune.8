@@ -22,10 +22,16 @@ ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate 
 
 .SH SYNOPSIS
 \fBsaptune daemon\fP
-[ start | status | stop ] \fBATTENTION: deprecated\fP
+[ start | stop ] \fBATTENTION: deprecated\fP
+
+\fBsaptune daemon\fP
+status [--non-compliance-check] \fBATTENTION: deprecated\fP
 
 \fBsaptune service\fP
-[ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
+[ start | stop | restart | takeover | enable | disable | enablestart | disablestop ]
+
+\fBsaptune service\fP
+status [--non-compliance-check]
 
 \fBsaptune note\fP
 [ list | revertall | enabled | applied ]
@@ -62,7 +68,7 @@ all
 
 \fBsaptune check\fP
 
-\fBsaptune status\fP
+\fBsaptune status [--non-compliance-check]\fP
 
 \fBsaptune version\fP
 
@@ -153,6 +159,18 @@ status of sapconf.service (enabled/disabled, active/inactive/failed/...the other
 status of tuned (enabled/disabled, active/inactive/failed/...the other possible unit states..., profile)
 .IP \[bu]
 the overall systemd 'system' status, read from \fI'systemctl is-system-running'\fP (running, degraded, ....)
+.IP \[bu]
+the tuning state of the system, gathered by 'saptune note verify'.
+.br
+"not-present", if 'verify' hit an error.
+.br
+"not tuned", if \fBno\fP Solution or Note is applied.
+.br
+"not compliant", if one or more parameter value differs from the related SAP Note. For detailed information please use \fI'saptune note verify'\fP.
+.br
+"compliant", if all parameter values comply with the values from the related SAP Notes.
+.br
+"unknown (checking disabled)", if the flage '--non-compliance-check' is used.
 
 This information is not logged, but only printed to stdout.
 

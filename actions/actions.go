@@ -273,8 +273,10 @@ func PrintHelpAndExit(writer io.Writer, exitStatus int) {
 	}
 	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
-  saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
+  saptune daemon [ start | stop ]                 ATTENTION: deprecated
+  saptune daemon status [--non-compliance-check]  ATTENTION: deprecated
+  saptune service [ start | stop | restart | takeover | enable | disable | enablestart | disablestop ]
+  saptune service status [--non-compliance-check]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | revertall | enabled | applied ]
   saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
@@ -295,7 +297,7 @@ Remove the pending lock file from a former saptune call
 Call external script '/usr/sbin/saptune_check'
   saptune check
 Print current saptune status:
-  saptune status
+  saptune status [--non-compliance-check]
 Print current saptune version:
   saptune version
 Print this message:

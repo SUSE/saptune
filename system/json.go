@@ -171,6 +171,7 @@ type JSol struct {
 type JStatus struct {
 	Services        JStatusServs   `json:"services"`
 	SystemdSysState string         `json:"systemd system state"`
+	TuningState     string         `json:"tuning state"`
 	VirtEnv         string         `json:"virtualization"`
 	SaptuneVersion  string         `json:"configured version"`
 	RPMVersion      string         `json:"package version"`
