@@ -77,6 +77,7 @@ The saptune package will contain detailed man pages. You can find the pdf versio
 Also SAP note “1275776 – Linux: Preparing SLES for SAP environments” will get an update to reflect both versions.\
 When the technical blog series about the details of saptune and how to do a migration from version 1 to version 2 will be available, the link collection will be updated.\
 For now:\
+<https://www.suse.com/c/help-saptune-says-my-system-is-degraded/>\
 <https://www.suse.com/c/a-new-saptune-is-knocking-on-your-door/>\
 <https://www.suse.com/c/a-new-saptune-is-here/>\
 <https://www.suse.com/c/saptune-a-deep-dive/>\
