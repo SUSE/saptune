@@ -17,6 +17,7 @@ const (
 	TunedService       = "tuned.service"
 	exitSaptuneStopped = 1
 	exitNotTuned       = 3
+	exitNotCompliant   = 4
 )
 
 // PackageArea is the package area with all notes and solutions shipped by
