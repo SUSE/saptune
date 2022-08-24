@@ -162,19 +162,19 @@ the overall systemd 'system' status, read from \fI'systemctl is-system-running'\
 .IP \[bu]
 the tuning state of the system, gathered by 'saptune note verify'.
 .br
-"not-present", if 'verify' hit an error.
+"unknown (checking disabled)", if the flage '--non-compliance-check' is used.
 .br
 "not tuned", if \fBno\fP Solution or Note is applied.
+.br
+"not-present", if 'verify' hit an error.
 .br
 "not compliant", if one or more parameter value differs from the related SAP Note. For detailed information please use \fI'saptune note verify'\fP.
 .br
 "compliant", if all parameter values comply with the values from the related SAP Notes.
-.br
-"unknown (checking disabled)", if the flage '--non-compliance-check' is used.
 
 This information is not logged, but only printed to stdout.
 
-If saptune.service is \fBnot\fP 'active' the exit code is 1, if the system is '\fBnot tuned\fP' - which means no Note or Solution is enabled - the exit code is 3, otherwise the exit code is 0.
+If saptune.service is \fBnot\fP 'active' the exit code is 1, if the system is '\fBnot tuned\fP' - which means no Note or Solution is enabled - the exit code is 3, if the system is tuned, but the tuning is \fBnot compliant\fP the exit code is 4, otherwise the exit code is 0.
 .SS
 .TP
 .B stop
