@@ -70,6 +70,7 @@
             "required": [
                 "services",
                 "systemd system state",
+                "tuning state",
                 "virtualization",
                 "configured version",
                 "package version",
@@ -253,6 +254,17 @@
                         "stopping",
                         "offline",
                         "unknown"
+                    ]
+                },
+                "tuning state": {
+                    "description": "Tuning state reported by 'saptune note verify'.",
+                    "type": "string",
+                    "enum": [
+                        "not-present",
+                        "not tuned",
+                        "not compliant",
+                        "compliant",
+                        "unknown (checking disabled)"
                     ]
                 },
                 "virtualization": {

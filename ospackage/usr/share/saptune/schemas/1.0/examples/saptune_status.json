@@ -18,6 +18,7 @@
         "tuned": []
       },
       "systemd system state": "running",
+      "tuning state": "not tuned",
       "virtualization": "oracle",
       "configured version": "3",
       "package version": "3.1.0",

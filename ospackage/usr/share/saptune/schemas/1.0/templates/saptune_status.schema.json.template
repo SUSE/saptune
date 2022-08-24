@@ -4,7 +4,7 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["services", "systemd system state", "virtualization", "configured version", "package version", "Solution enabled", "Notes enabled by Solution", "Solution applied", "Notes applied by Solution", "Notes enabled additionally", "Notes enabled", "Notes applied", "staging", "remember message"]{% endblock %}
+{% block result_required %}["services", "systemd system state", "tuning state", "virtualization", "configured version", "package version", "Solution enabled", "Notes enabled by Solution", "Solution applied", "Notes applied by Solution", "Notes enabled additionally", "Notes enabled", "Notes applied", "staging", "remember message"]{% endblock %}
 
 {% block result_properties %}
                  "services": {
@@ -29,6 +29,13 @@
                     "description": "Possible systemd system states reported by 'systemctl is-system-running'.",
                     "type": "string",
                     "enum": ["initializing", "starting", "running", "degraded", "maintenance", "stopping", "offline", "unknown"]    
+                },
+
+
+                "tuning state": {
+                    "description": "Tuning state reported by 'saptune note verify'.",
+                    "type": "string",
+                    "enum": ["not-present", "not tuned", "not compliant", "compliant", "unknown (checking disabled)"]    
                 },
                 "virtualization": {
                     "description":  "The virtualization technology of the system (see `systemd-detect-virt --list`).",
