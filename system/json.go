@@ -336,6 +336,15 @@ func realmAndCmd() string {
 	if CliArg(2) != "" {
 		rac = rac + " " + CliArg(2)
 	}
+	if rac == "" {
+		// check for alias
+		if IsFlagSet("version") {
+			rac = "version"
+		}
+		if IsFlagSet("help") {
+			rac = "help"
+		}
+	}
 	return rac
 }
 
