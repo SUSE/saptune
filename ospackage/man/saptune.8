@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "March 2022" "" "System Optimisation For SAP"
+.TH saptune "8" "August 2022" "" "System Optimisation For SAP"
 .SH NAME
 saptune \- Comprehensive system optimisation management for SAP solutions (\fBVersion 3\fP)
 
@@ -270,10 +270,10 @@ Currently implemented notes are marked with '\fB+\fP', if manually enabled, '\fB
 If an \fBoverride\fP file exists for a NoteID, the note is marked with '\fBO\fP' and a customer or vendor specific note is marked with '\fBC\fP'..
 .TP
 .B enabled
-Print all current enabled notes as a list separated by blanks.
+Print all current enabled notes as a list separated by blanks without trailing line feed.
 .TP
 .B applied
-Print all current applied notes as a list separated by blanks.
+Print all current applied notes as a list separated by blanks without trailing line feed.
 .TP
 .B verify
 If a Note ID is specified, saptune verifies the current running system against the recommendations specified in the Note. If Note ID is not specified, saptune verifies all system parameters against all implemented Notes. As a result you will see a table containing the following columns
@@ -470,6 +470,7 @@ HANA:Solution for running an SAP HANA database.
 MAXDB:Solution for running an SAP MaxDB database.
 NETWEAVER:Solution for running SAP NetWeaver application servers.
 NETWEAVER+HANA:Solution for running both SAP application servers and SAP HANA on the same host.
+NETWEAVER+MAXDB:Solution for running both SAP application servers and SAP MaxDB on the same host.
 S4HANA-APPSERVER:Solution for running SAP S/4HANA application servers
 S4HANA-APP+DB:Solution for running both SAP S/4HANA application servers and SAP HANA on the same host
 S4HANA-DBSERVER:Solution for running the SAP HANA database of an SAP S/4HANA installation
