@@ -50,7 +50,8 @@ func GetFlagVal(flag string) string {
 // 'normal' arguments
 // returns a map of Flags (set/not set or value) and a slice containing the
 // remaining arguments
-// possible Flags - force, dryrun, help, version, format, colorscheme
+// possible Flags - force, dryrun, help, version, show-non-compliant, format,
+// colorscheme, non-compliance-check
 // on command line - --force, --dry-run or --dryrun, --help, --version, --color-scheme, --format
 // Some Flags (like 'format') can have a value (--format=json or --format=csv)
 func ParseCliArgs() ([]string, map[string]string) {
@@ -151,12 +152,15 @@ func ChkCliSyntax() bool {
 	return ret
 }
 
-// chkGlobalSyntax checks some universal syntax and the global option
+// chkGlobalSyntax checks some universal syntax and the global options
 func chkGlobalSyntax(cmdLinePos map[string]int) bool {
-	stArgs := os.Args
 	ret := true
 	// check minimum of arguments without flags (saptune + realm)
-	if len(saptArgs) < 2 {
+	if (IsFlagSet("version") || IsFlagSet("help")) && len(saptArgs) > 1 {
+		// too many arguments
+		ret = false
+	}
+	if !IsFlagSet("version") && !IsFlagSet("help") && len(saptArgs) < 2 {
 		// too few arguments
 		ret = false
 	}
@@ -169,22 +173,61 @@ func chkGlobalSyntax(cmdLinePos map[string]int) bool {
 		// even that this case is handled correctly
 		ret = false
 	}
-	if IsFlagSet("colorscheme") && IsFlagSet("show-non-compliant") && len(stArgs) < cmdLinePos["cmdOpt"]+1 {
+	if IsFlagSet("colorscheme") && IsFlagSet("show-non-compliant") && len(os.Args) < cmdLinePos["cmdOpt"]+1 {
 		// too few options for both flags set
 		ret = false
 	}
+	if ret {
+		// check global option
+		ret = chkGlobalOpts(cmdLinePos)
+	}
+	return ret
+}
 
-	// check global option
-	// saptune -format=FORMAT
+// chkGlobalOpts checks for global options
+// saptune -format=FORMAT [--version|--help]
+// saptune --version or saptune --help
+func chkGlobalOpts(cmdLinePos map[string]int) bool {
+	stArgs := os.Args
+	ret := true
+	globOpt := false
+	globPos := 1
+	if IsFlagSet("version") && IsFlagSet("help") {
+		// both together are not supported
+		ret = false
+	}
 	if IsFlagSet("format") {
 		if !strings.Contains(stArgs[1], "--format") {
 			ret = false
 		} else {
+			globPos++
 			cmdLinePos["realm"] = cmdLinePos["realm"] + 1
 			cmdLinePos["realmOpt"] = cmdLinePos["realmOpt"] + 1
 			cmdLinePos["cmd"] = cmdLinePos["cmd"] + 1
 			cmdLinePos["cmdOpt"] = cmdLinePos["cmdOpt"] + 1
 		}
+	}
+	if IsFlagSet("version") {
+		// support '--version' and '-version'
+		if !strings.Contains(stArgs[globPos], "-version") {
+			ret = false
+		} else {
+			globOpt = true
+		}
+	}
+	if IsFlagSet("help") {
+		// support '--help' and '-help'
+		if !strings.Contains(stArgs[globPos], "-help") {
+			ret = false
+		} else {
+			globOpt = true
+		}
+	}
+	if globOpt {
+		cmdLinePos["realm"] = cmdLinePos["realm"] + 1
+		cmdLinePos["realmOpt"] = cmdLinePos["realmOpt"] + 1
+		cmdLinePos["cmd"] = cmdLinePos["cmd"] + 1
+		cmdLinePos["cmdOpt"] = cmdLinePos["cmdOpt"] + 1
 	}
 	return ret
 }
