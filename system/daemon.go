@@ -43,38 +43,6 @@ func SystemctlDisable(thing string) error {
 	return nil
 }
 
-// SystemctlRestart call systemctl restart on thing.
-func SystemctlRestart(thing string) error {
-	running, err := IsSystemRunning()
-	if err != nil {
-		return ErrorLog("%v - Failed to call systemctl restart on %s", err, thing)
-	}
-	if running {
-		out, err := exec.Command(systemctlCmd, "restart", thing).CombinedOutput()
-		if err != nil {
-			return ErrorLog("%v - Failed to call systemctl restart on %s - %s", err, thing, string(out))
-		}
-		DebugLog("SystemctlRestart - /usr/bin/systemctl restart '%s' : '%+v %s'", thing, err, string(out))
-	}
-	return nil
-}
-
-// SystemctlReloadTryRestart call systemctl reload on thing.
-func SystemctlReloadTryRestart(thing string) error {
-	running, err := IsSystemRunning()
-	if err != nil {
-		return ErrorLog("%v - Failed to call systemctl reload-or-try-restart on %s", err, thing)
-	}
-	if running {
-		out, err := exec.Command(systemctlCmd, "reload-or-try-restart", thing).CombinedOutput()
-		if err != nil {
-			return ErrorLog("%v - Failed to call systemctl reload-or-try-restart on %s - %s", err, thing, string(out))
-		}
-		DebugLog("SystemctlReloadTryRestart - /usr/bin/systemctl reload-or-try-restart '%s' : '%+v %s'", thing, err, string(out))
-	}
-	return nil
-}
-
 // SystemdDetectVirt calls systemd-detect-virt.
 // option can be '-r' (chroot), -c (container), -v (vm)
 // '-r' only returns 0 or 1 without any output
@@ -101,6 +69,42 @@ func SystemdDetectVirt(opt string) (bool, string, error) {
 	return virt, strings.TrimSpace(vtype), err
 }
 
+// execSystemctlCmd will execute /usr/bin/systemctl with the requested command
+func execSystemctlCmd(service, cmd string) error {
+	running, err := IsSystemRunning()
+	if err != nil {
+		return ErrorLog("%v - Failed to call systemctl %s on %s", err, cmd, service)
+	}
+	if running {
+		out, err := exec.Command(systemctlCmd, cmd, service).CombinedOutput()
+		if err != nil {
+			return ErrorLog("%v - Failed to call systemctl %s on %s - %s", err, cmd, service, string(out))
+		}
+		DebugLog("execSystemctlCmd, called from '%v' - /usr/bin/systemctl %s '%s' : '%+v %s'", CalledFrom(), cmd, service, err, string(out))
+	}
+	return nil
+}
+
+// SystemctlRestart call systemctl restart on thing.
+func SystemctlRestart(thing string) error {
+	return execSystemctlCmd(thing, "restart")
+}
+
+// SystemctlReloadTryRestart call systemctl reload on thing.
+func SystemctlReloadTryRestart(thing string) error {
+	return execSystemctlCmd(thing, "reload-or-try-restart")
+}
+
+// SystemctlStart call systemctl start on thing.
+func SystemctlStart(thing string) error {
+	return execSystemctlCmd(thing, "start")
+}
+
+// SystemctlStop call systemctl stop on thing.
+func SystemctlStop(thing string) error {
+	return execSystemctlCmd(thing, "stop")
+}
+
 // SystemctlResetFailed calls systemctl reset-failed.
 func SystemctlResetFailed() error {
 	running, err := IsSystemRunning()
@@ -113,38 +117,6 @@ func SystemctlResetFailed() error {
 			return ErrorLog("%v - Failed to call systemctl reset-failed - %s", err, string(out))
 		}
 		DebugLog("SystemctlResetFailed - /usr/bin/systemctl reset-failed : '%+v %s'", err, string(out))
-	}
-	return nil
-}
-
-// SystemctlStart call systemctl start on thing.
-func SystemctlStart(thing string) error {
-	running, err := IsSystemRunning()
-	if err != nil {
-		return ErrorLog("%v - Failed to call systemctl start on %s", err, thing)
-	}
-	if running {
-		out, err := exec.Command(systemctlCmd, "start", thing).CombinedOutput()
-		if err != nil {
-			return ErrorLog("%v - Failed to call systemctl start on %s - %s", err, thing, string(out))
-		}
-		DebugLog("SystemctlStart - /usr/bin/systemctl start '%s' : '%+v %s'", thing, err, string(out))
-	}
-	return nil
-}
-
-// SystemctlStop call systemctl stop on thing.
-func SystemctlStop(thing string) error {
-	running, err := IsSystemRunning()
-	if err != nil {
-		return ErrorLog("%v - Failed to call systemctl stop on %s", err, thing)
-	}
-	if running {
-		out, err := exec.Command(systemctlCmd, "stop", thing).CombinedOutput()
-		if err != nil {
-			return ErrorLog("%v - Failed to call systemctl stop on %s - %s", err, thing, string(out))
-		}
-		DebugLog("SystemctlStop - /usr/bin/systemctl stop '%s' : '%+v %s'", thing, err, string(out))
 	}
 	return nil
 }
@@ -168,19 +140,30 @@ func SystemctlDisableStop(thing string) error {
 	return err
 }
 
-// SystemctlIsEnabled return true only if systemctl suggests that the thing is
-// enabled.
-func SystemctlIsEnabled(thing string) (bool, error) {
+// checkSystemctlState checks for a special state
+func checkSystemctlState(service, cmd string) (bool, error) {
 	match := false
-	out, err := exec.Command(systemctlCmd, "is-enabled", thing).CombinedOutput()
-	DebugLog("SystemctlIsEnabled - /usr/bin/systemctl is-enabled : '%+v %s'", err, string(out))
+	out, err := exec.Command(systemctlCmd, cmd, service).CombinedOutput()
+	DebugLog("checkSystemctlState, called from '%v' - /usr/bin/systemctl %s %s: '%+v %s'", CalledFrom(), cmd, service, err, string(out))
 	if err == nil {
 		match = true
 	}
 	if len(out) == 0 && err != nil {
-		return match, ErrorLog("%v - Failed to call systemctl is-enabled", err)
+		return match, ErrorLog("%v - Failed to call systemctl %s on %s", err, cmd, service)
 	}
 	return match, nil
+}
+
+// SystemctlIsEnabled return true only if systemctl suggests that the thing is
+// enabled.
+func SystemctlIsEnabled(thing string) (bool, error) {
+	return checkSystemctlState(thing, "is-enabled")
+}
+
+// SystemctlIsRunning return true only if systemctl suggests that the thing is
+// running.
+func SystemctlIsRunning(thing string) (bool, error) {
+	return checkSystemctlState(thing, "is-active")
 }
 
 // SystemctlIsStarting return true only if systemctl suggests that the system is
@@ -194,21 +177,6 @@ func SystemctlIsStarting() bool {
 		match = true
 	}
 	return match
-}
-
-// SystemctlIsRunning return true only if systemctl suggests that the thing is
-// running.
-func SystemctlIsRunning(thing string) (bool, error) {
-	match := false
-	out, err := exec.Command(systemctlCmd, "is-active", thing).CombinedOutput()
-	DebugLog("SystemctlIsRunning - /usr/bin/systemctl is-active : '%+v %s'", err, string(out))
-	if err == nil {
-		match = true
-	}
-	if len(out) == 0 && err != nil {
-		return match, ErrorLog("%v - Failed to call systemctl is-active", err)
-	}
-	return match, nil
 }
 
 // SystemctlIsActive returns the output of 'systemctl is-active'
@@ -279,41 +247,63 @@ func IsServiceAvailable(service string) bool {
 	return match
 }
 
+// checkStates checks, if the expcted state matches the active state
+func checkStates(actStates, expStates string) (string, string) {
+	start := ""
+	enable := ""
+	for _, state := range strings.Split(expStates, ",") {
+		// expected state
+		sval := strings.ToLower(strings.TrimSpace(state))
+		// check for valid states. Supported for now:
+		// 'start', 'stop', 'enable' and 'disable'
+		if sval != "start" && sval != "stop" && sval != "enable" && sval != "disable" {
+			continue
+		}
+		// check, if the expected state is already availabel in the active states
+		start, enable = chkActStates(actStates, sval, start, enable)
+	}
+	return start, enable
+}
+
+// chkActStates checks, if the expected state is already availabel in the active states
+func chkActStates(actStates, sval, start, enable string) (string, string) {
+	match := ""
+	for _, aState := range strings.Split(actStates, ",") {
+		aval := strings.ToLower(strings.TrimSpace(aState))
+		if sval == aval {
+			match = "true"
+			break
+		} else {
+			match = "false"
+		}
+	}
+	// evaluate start and enable result per expected state
+	start, enable = evalStartEnable(sval, match, start, enable)
+	return start, enable
+}
+
+// evaluate start and enable result per expected state
+func evalStartEnable(sval, match, start, enable string) (string, string) {
+	if sval == "start" || sval == "stop" {
+		if start != "true" {
+			start = match
+		}
+	} else {
+		if enable != "true" {
+			enable = match
+		}
+	}
+	return start, enable
+}
+
 // CmpServiceStates compares the expected service states with the current
 // active service states
 func CmpServiceStates(actStates, expStates string) bool {
 	ret := false
-	retStart := ""
-	retEnable := ""
 	if expStates == "" {
 		return true
 	}
-	for _, state := range strings.Split(expStates, ",") {
-		tmpret := ""
-		sval := strings.ToLower(strings.TrimSpace(state))
-		if sval != "start" && sval != "stop" && sval != "enable" && sval != "disable" {
-			continue
-		}
-		for _, aState := range strings.Split(actStates, ",") {
-			aval := strings.ToLower(strings.TrimSpace(aState))
-			if sval == aval {
-				tmpret = "true"
-				break
-			} else {
-				tmpret = "false"
-			}
-		}
-		if sval == "start" || sval == "stop" {
-			if retStart != "true" {
-				retStart = tmpret
-			}
-		} else {
-			if retEnable != "true" {
-				retEnable = tmpret
-			}
-		}
-	}
-
+	retStart, retEnable := checkStates(actStates, expStates)
 	if (retStart == "" || retStart == "true") && (retEnable == "" || retEnable == "true") {
 		ret = true
 	}
