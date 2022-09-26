@@ -31,6 +31,7 @@
 #                       tests system status and lists failed services
 # 26.08.2021  v0.2.1    added missing os_release to global arrays
 # 09.11.2021  v0.2.2    degraded system is no longer considered an error
+# 26.09.2022  v0.2.3    degraded systemd state gets explained in more detail (TEAM-6584)
 
 
 version="0.2.2"
@@ -108,6 +109,27 @@ function print_note() {
         col_off=""
     fi
     echo -e "[${col_on}NOTE${col_off}] ${1}"
+}
+
+function is_in() {
+    # Params:       NAME LIST
+    # Output:       -
+    # Returncode:   0 (true), 1 (false)
+    #
+    # Checks if NAME is in the space-separated string LIST
+    # and returns 0 (true) or 1 (false).
+    #
+    # Requires:     -
+
+    local name="${1}"
+    local list=( ${2} )
+
+    for elem in "${list[@]}" ; do
+        if [ "${name}" == "${elem}" ] ; then
+            return 1
+        fi
+    done
+    return 1
 }
 
 function get_os_version() {
@@ -358,20 +380,20 @@ function check_saptune() {
     esac
 
     # Let's test.
-    header "Checking saptune"
+    header "Checking saptune" 
     print_note "saptune package has version ${package_version['saptune']}"
-
 
     # Checking if system is "running" and has no failed units.
     case "${system_status['status']}" in
         running)
-            print_ok "System is in status \"running\""
+            print_ok "systemd reports status \"running\""
             ;;
         degraded)
-            print_warn "System is in status \"${system_status['status']}\". Failed services are: ${system_status['failed_units']}"  "Check the cause and reset the state with 'systemctl reset-failed'!"
+            print_warn "systemd reports status \"${system_status['status']}\". Failed units: ${system_status['failed_units']}"  "Check the cause and reset the state with 'systemctl reset-failed'!"
+            print_note "A degraded systemd system status means, that one or more systemd units failed. The system is still operational!"
             ((warnings++))
-            ;;   
-        *)  print_fail "System is in status \"${system_status['status']}\"."  "Check (systemd) what is wrong!"
+            ;;
+        *)  print_fail "systemd reports status \"${system_status['status']}\"."  "Check systemd to see what is wrong!"
             ((fails++))
             ;;   
     esac  
