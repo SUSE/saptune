@@ -34,7 +34,7 @@
 # 26.09.2022  v0.2.3    degraded systemd state gets explained in more detail (TEAM-6584)
 
 
-version="0.2.2"
+version="0.2.3"
 
 # We use these global arrays through out the program:
 #
