@@ -368,7 +368,7 @@ function file_check() {
     if [ -z ${package_version['sapconf']} ] ; then
         for ((i=0;i<${#sapconf_leftovers[@]};i++)) ; do
             if [ -e "${sapconf_leftovers[i]}" ] ; then 
-                print_warn "${sapconf_leftovers[i]} found. This is a leftover from a spaconf package upgrade or removal!" "Delete ${critical_sapconf_leftovers[i]}. If this happens regulary, please report a bug,"
+                print_warn "${sapconf_leftovers[i]} found. This is a leftover from a sapconf package upgrade or removal!" "Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug,"
                 ((warnings++))
             fi
         done 
@@ -378,7 +378,7 @@ function file_check() {
     if [ "${unit_state_active['sapconf.service']}" == 'inactive' ] ; then 
         for ((i=0;i<${#critical_sapconf_leftovers[@]};i++)) ; do
             if [ -e "${critical_sapconf_leftovers[i]}" ] ; then 
-                print_fail "${critical_sapconf_leftovers[i]} found. This is an unintended leftover from sapconf!" "Delete ${critical_sapconf_leftovers[i]}. If this happens regulary, please report a bug,"
+                print_fail "${critical_sapconf_leftovers[i]} found. This is an unintended leftover from sapconf!" "Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug,"
                 ((fails++))
             fi
         done 
