@@ -30,8 +30,6 @@
                     "type": "string",
                     "enum": ["initializing", "starting", "running", "degraded", "maintenance", "stopping", "offline", "unknown"]    
                 },
-
-
                 "tuning state": {
                     "description": "Tuning state reported by 'saptune note verify'.",
                     "type": "string",
