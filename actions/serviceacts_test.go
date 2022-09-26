@@ -33,8 +33,10 @@ var setupSaptuneService = func(t *testing.T) {
 	}
 
 	sApp.TuneForSolutions = []string{"sol1"}
-	sApp.TuneForNotes = []string{"2205917"}
-	sApp.NoteApplyOrder = []string{"2205917"}
+	//sApp.TuneForNotes = []string{"2205917"}
+	//sApp.NoteApplyOrder = []string{"2205917"}
+	sApp.TuneForNotes = []string{"900929"}
+	sApp.NoteApplyOrder = []string{"900929"}
 }
 
 var teardownSaptuneService = func(t *testing.T) {
@@ -63,28 +65,6 @@ func TestDaemonActions(t *testing.T) {
 
 	// Test DaemonActionStatus
 	t.Run("DaemonActionStatus", func(t *testing.T) {
-		daemonStatusMatchText := fmt.Sprintf(`
-saptune.service:          disabled/active
-saptune package:          'undef'
-configured version:       '3'
-enabled Solution:         sol1 (simpleNote)
-applied Solution:         
-additional enabled Notes: 2205917 
-enabled Notes:            2205917
-applied Notes:            
-staging:                  disabled
-staged Notes:             
-staged Solutions:         
-
-sapconf.service:          not available
-tuned.service:            disabled/active (profile: '%s')
-system state:             running
-virtualization:           %s
-
-Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
- 'saptune service enable'.
-
-`, system.GetTunedAdmProfile(), system.GetVirtStatus())
 		ServiceActionStart(false, sApp)
 
 		oldOSExit := system.OSExit
@@ -98,7 +78,7 @@ Remember: if you wish to automatically activate the note's and solution's tuning
 		tstwriter = &errExitbuffer
 		DaemonAction(&buffer, "status", saptuneVersion, sApp)
 		txt := buffer.String()
-		checkOut(t, txt, daemonStatusMatchText)
+		checkOut(t, txt, saptuneStatusMatchText)
 		errExOut := errExitbuffer.String()
 		if errExOut != "" {
 			t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
@@ -194,28 +174,6 @@ func TestServiceActions(t *testing.T) {
 
 	// Test ServiceActionStatus
 	t.Run("ServiceActionStatus", func(t *testing.T) {
-		serviceStatusMatchText := fmt.Sprintf(`
-saptune.service:          disabled/active
-saptune package:          'undef'
-configured version:       '3'
-enabled Solution:         sol1 (simpleNote)
-applied Solution:         
-additional enabled Notes: 2205917 
-enabled Notes:            2205917
-applied Notes:            
-staging:                  disabled
-staged Notes:             
-staged Solutions:         
-
-sapconf.service:          not available
-tuned.service:            disabled/active (profile: '%s')
-system state:             running
-virtualization:           %s
-
-Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
- 'saptune service enable'.
-
-`, system.GetTunedAdmProfile(), system.GetVirtStatus())
 		ServiceActionStart(false, sApp)
 
 		oldOSExit := system.OSExit
@@ -229,7 +187,7 @@ Remember: if you wish to automatically activate the note's and solution's tuning
 		tstwriter = &errExitbuffer
 		ServiceActionStatus(&buffer, sApp, saptuneVersion)
 		txt := buffer.String()
-		checkOut(t, txt, serviceStatusMatchText)
+		checkOut(t, txt, saptuneStatusMatchText)
 		errExOut := errExitbuffer.String()
 		if errExOut != "" {
 			t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)

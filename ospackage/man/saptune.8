@@ -22,10 +22,16 @@ ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate 
 
 .SH SYNOPSIS
 \fBsaptune daemon\fP
-[ start | status | stop ] \fBATTENTION: deprecated\fP
+[ start | stop ] \fBATTENTION: deprecated\fP
+
+\fBsaptune daemon\fP
+status [--non-compliance-check] \fBATTENTION: deprecated\fP
 
 \fBsaptune service\fP
-[ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
+[ start | stop | restart | takeover | enable | disable | enablestart | disablestop ]
+
+\fBsaptune service\fP
+status [--non-compliance-check]
 
 \fBsaptune note\fP
 [ list | revertall | enabled | applied ]
@@ -62,7 +68,7 @@ all
 
 \fBsaptune check\fP
 
-\fBsaptune status\fP
+\fBsaptune status [--non-compliance-check]\fP
 
 \fBsaptune version\fP
 
@@ -153,10 +159,22 @@ status of sapconf.service (enabled/disabled, active/inactive/failed/...the other
 status of tuned (enabled/disabled, active/inactive/failed/...the other possible unit states..., profile)
 .IP \[bu]
 the overall systemd 'system' status, read from \fI'systemctl is-system-running'\fP (running, degraded, ....)
+.IP \[bu]
+the tuning state of the system, gathered by 'saptune note verify'.
+.br
+"unknown (checking disabled)", if the flage '--non-compliance-check' is used.
+.br
+"not tuned", if \fBno\fP Solution or Note is applied.
+.br
+"not-present", if 'verify' hit an error.
+.br
+"not compliant", if one or more parameter value differs from the related SAP Note. For detailed information please use \fI'saptune note verify'\fP.
+.br
+"compliant", if all parameter values comply with the values from the related SAP Notes.
 
 This information is not logged, but only printed to stdout.
 
-If saptune.service is \fBnot\fP 'active' the exit code is 1, if the system is '\fBnot tuned\fP' - which means no Note or Solution is enabled - the exit code is 3, otherwise the exit code is 0.
+If saptune.service is \fBnot\fP 'active' the exit code is 1, if the system is '\fBnot tuned\fP' - which means no Note or Solution is enabled - the exit code is 3, if the system is tuned, but the tuning is \fBnot compliant\fP the exit code is 4, otherwise the exit code is 0.
 .SS
 .TP
 .B stop
@@ -229,7 +247,7 @@ Note denotes either a SAP Note, a vendor specific tuning definition or SUSE reco
 .SS
 .TP
 .B apply
-Apply optimisation settings specified in the Note. The Note will be automatically activated upon system boot if the daemon is enabled.
+Apply optimisation settings specified in the Note. The Note will be automatically activated upon system boot if the saptune service is enabled.
 
 If a Note definition contains a '\fB[reminder]\fP' section, this section will be printed after the note has applied successfully. It will be highlighted with red color.
 
@@ -468,7 +486,7 @@ e.g. V4711.sol
 .SS
 .TP
 .B apply
-Apply optimisation settings recommended by the solution. These settings will be automatically activated upon system boot if the daemon is enabled.
+Apply optimisation settings recommended by the solution. These settings will be automatically activated upon system boot if the saptune service is enabled.
 .TP
 .B list
 List all solution names that saptune is capable of implementing.
@@ -730,6 +748,20 @@ filename is \fBNEWSOL1.sol\fP with content
 .br
 1980196 CUSTOMNOTE1 CUSTOMNOTE2
 .PP
+
+.SH CHANGES
+.TP
+.B changelog
+The changelog file of the saptune rpm package contains detailed information, what was changed between the various package versions. The command
+
+rpm -q --changes saptune | more
+
+will show the content of the file
+.TP
+.B version 3
+With the update to saptune version 3 saptune does no longer use tuned(8) to restart after a system reboot. It is using it's own systemd service named "saptune.service".
+.br
+So we now \fBdeprecated\fP all "DAEMON ACTIONS" like '\fIsaptune daemon start\fP'. These commands will still work as they are internally linked to the related "SERVICE ACTIONS" like '\fIsaptune service takeover\fP'. Please refer to the related section descriptions at the top of this man page.
 
 .SH FILES
 .PP

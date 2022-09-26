@@ -39,8 +39,8 @@ saptune package:          'undef'
 configured version:       '3'
 enabled Solution:         sol1 (simpleNote)
 applied Solution:         
-additional enabled Notes: 2205917 
-enabled Notes:            2205917
+additional enabled Notes: 900929 
+enabled Notes:            900929
 applied Notes:            
 staging:                  disabled
 staged Notes:             
@@ -48,8 +48,9 @@ staged Solutions:
 
 sapconf.service:          not available
 tuned.service:            disabled/active (profile: '%s')
-system state:             running
+systemd system state:     running
 virtualization:           %s
+tuning:                   not tuned
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
@@ -71,8 +72,9 @@ staged Solutions:
 
 sapconf.service:          not available
 tuned.service:            disabled/active (profile: '%s')
-system state:             running
+systemd system state:     running
 virtualization:           %s
+tuning:                   not tuned
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enablestart'.
@@ -82,8 +84,10 @@ Your system has not yet been tuned. Please visit `+"`"+`saptune note`+"`"+` and 
 
 var PrintHelpAndExitMatchText = `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
-  saptune daemon [ start | status | stop ]  ATTENTION: deprecated
-  saptune service [ start | status | stop | restart | takeover | enable | disable | enablestart | disablestop ]
+  saptune daemon [ start | stop ]                 ATTENTION: deprecated
+  saptune daemon status [--non-compliance-check]  ATTENTION: deprecated
+  saptune service [ start | stop | restart | takeover | enable | disable | enablestart | disablestop ]
+  saptune service status [--non-compliance-check]
 Tune system according to SAP and SUSE notes:
   saptune note [ list | revertall | enabled | applied ]
   saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
@@ -104,7 +108,7 @@ Remove the pending lock file from a former saptune call
 Call external script '/usr/sbin/saptune_check'
   saptune check
 Print current saptune status:
-  saptune status
+  saptune status [--non-compliance-check]
 Print current saptune version:
   saptune version
 Print this message:

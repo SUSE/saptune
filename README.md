@@ -47,28 +47,29 @@ They give our administrators and our partners a simple way to implement their ow
 
 # Migration:
 
-Guide to help you migrate from saptune running version <b>1</b> to the saptune version 2 or 3\
-Migration? Isn’t a simple package update enough?
+What is a migration?
 
-Not in every case.
+With saptune 2 we changed a lot of things and it was not possible to keep and use the configuration from the previous version 1. Manual steps are necessary.\
+Therefore after an upgrade, saptune 2 run as version 1 and kept the previous configuration, if applied saptune SAP notes or solutions had been discovered.\
+As a result the upgrade does not broke the system tuning and you had time to migrate the configuration afterwards.\
+The man page saptune-migrate(7) contains a detailed guide what to do.
 
-We changed quite a lot and we don’t want to risk causing any incompatibilities or unexpected changes in your system behavior.\
-If the update discovers applied saptune SAP notes or solutions, saptune will continue to run in version 1.\
-The switch to version 2 has to be done deliberately.\
-To help you, we will provide a step-by-step guide. Just plan your switch when you are ready, no rush!
-
-We will support saptune version 1 until end of the lifetime of SLES 12 / SLES 15 SP1, which should give enough time to move. Although please bear in mind that since saptune version 1 will be deprecated, we will only do bug fixing. New features, new SAP notes or new parameters will only be done for future versions of saptune!
-
-With saptune version 3 the support for version 1 is <b>abandoned</b>.
-If the migration from version 1 to version 2 or 3 was not done before the package update, saptune will not work and that's expected.
+With saptune version 3 the support for version 1 is abandoned.\
+If the migration from version 1 to version 2 or 3 was not done before the package update, saptune will not work and that's expected.\
 But all needed files for the migration are still available, so following the procedure described in the man page saptune-migrate(7) will bring you back to a working saptune.
 
-For the update from version 2 to version 3 <b>NO</b> migration is needed.
+*Migration is only needed, if you still have a version 1 configuration! In all other cases you can simply upgrade the package, a migration is not necessary.*
 
-But as we discontinued the use of tuned to get the tuning started during boot and instead use our own systemd service <b>saptune.service</b> we will need to stop the tuning of the system during the package update for a short timeframe to avoid tuned error messages.
 
-If you are used to start saptune using tuned directly in the past, please move to <b>'saptune service start'</b> instead.
-If you use <b>'saptune daemon start'</b>, you will now get a 'deprecated' warning, but the command will still continue to work.
+# Moving away from tuned:
+
+With saptune 3, we discontinued the use of 'tuned' and use a systemd service 'saptune.service' instead.
+
+This switch makes it necessary to stop the tuning of the system during the package update for a short timeframe to avoid tuned error messages.
+
+If you are used to start saptune using 'tuned' directly in the past, please move to 'saptune service start' instead.
+If you use 'saptune daemon start', you will now get a 'deprecated' warning, but the command will still continue to work.
+
 
 # Where to find documentation?
 
@@ -76,6 +77,7 @@ The saptune package will contain detailed man pages. You can find the pdf versio
 Also SAP note “1275776 – Linux: Preparing SLES for SAP environments” will get an update to reflect both versions.\
 When the technical blog series about the details of saptune and how to do a migration from version 1 to version 2 will be available, the link collection will be updated.\
 For now:\
+<https://www.suse.com/c/help-saptune-says-my-system-is-degraded/>\
 <https://www.suse.com/c/a-new-saptune-is-knocking-on-your-door/>\
 <https://www.suse.com/c/a-new-saptune-is-here/>\
 <https://www.suse.com/c/saptune-a-deep-dive/>\

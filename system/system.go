@@ -205,6 +205,22 @@ func InitOut(logSwitch map[string]string) {
 	}
 }
 
+// SwitchOffOut disables stdout and stderr
+func SwitchOffOut() (*os.File, *os.File) {
+	oldStdout := os.Stdout
+	oldSdterr := os.Stderr
+	os.Stdout, _ = os.Open(os.DevNull)
+	os.Stderr, _ = os.Open(os.DevNull)
+	return oldStdout, oldSdterr
+}
+
+// SwitchOnOut restores stdout and stderr to the settings before SwitchOffOut
+// was called
+func SwitchOnOut(stdout *os.File, stderr *os.File) {
+	os.Stdout = stdout
+	os.Stderr = stderr
+}
+
 // WrapTxt implements something like 'fold' command
 // A given text string will be wrapped at word borders into
 // lines of a given width
