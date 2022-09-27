@@ -1,0 +1,264 @@
+# This is the input configuration for 'completely' (https://github.com/DannyBen/completely)
+# to generate the bash completion script.
+#
+# v2.0
+#
+# Changelog:    27.09.2022  v2.0  - first creation for saptune 3.1
+#
+# Syntax:       saptune [--output=FORMAT] help
+#               saptune [--output=FORMAT] version  
+#               saptune [--output=FORMAT] status [--non-compliance-check] 
+#               saptune [--output=FORMAT] daemon [ start | stop | status [--non-compliance-check] ] 
+#               saptune [--output=FORMAT] service [ start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] ]
+#               saptune [--output=FORMAT] note [ list | revertall | enabled | applied ]
+#               saptune [--output=FORMAT] note [ apply | simulate | customise | create | edit | revert | show | delete ] NOTEID
+#               saptune [--output=FORMAT] note verify [--colorscheme <SCHEME>] [--show-non-compliant] [NOTEID]
+#               saptune [--output=FORMAT] note rename NOTEID NOTEID
+
+#               saptune [--output=FORMAT] solution ...
+#
+#                 saptune solution [ list | verify | enabled | applied ]
+#                 saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
+#                 saptune solution rename SolutionName newSolutionName
+
+#               saptune [--output=FORMAT] staging ...
+#
+#                 saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
+#                 saptune staging [ analysis | diff ] [ NOTEID... | SOLUTIONID... | all ]
+#                 saptune staging release [--force|--dry-run] [ NOTEID... | SOLUTIONID... | all ]
+
+  
+
+
+#               saptune [--output=FORMAT] revert all
+#               saptune [--output=FORMAT] lock remove
+#               saptune [--output=FORMAT] check
+#
+#
+# Caveats:      - It seems not possible to have an option ('--output=FORMAT') at the beginning. The support for this 
+#                 must be later added to the generated script-
+#
+#               - The completely resolved command needs to have a dummy entry: '$()' (empty command) to stop further
+#                 processing.
+# 
+# ToDo:         - The Options (--colorscheme <SCHEME>, --show-non-compliant) need to be implemented for  'saptune note verify'.
+#               - Implementation of 'saptune solution ...' and 'saptune staging ...'.
+#               - Try again to implement the json format option (may be without the = it works!?)
+#
+#
+# Questions:    - Should ...
+#                   - '--output=FORMAT' not better be '--output FORMAT' and
+#                   - '--colorscheme=<SCHEME>' not better be '--colorscheme <SCHEME>'?
+#               - Should 'saptune solution verify' not also get the options '--colorscheme <SCHEME>' and '--show-non-compliant'?
+
+
+
+# --- First level ---
+saptune:
+  - help
+  - version  
+  - status
+  - daemon
+  - service
+  - note
+  
+  - staging
+  - revert
+  - lock
+  - check
+
+
+# --- saptune help ---
+saptune help:
+  - $()
+
+
+# --- saptune version ---
+saptune version:
+  - $()
+
+
+# --- saptune status ---
+saptune status:
+  - --non-compliance-check
+  - $()
+
+saptune status*--non-compliance-check:
+  - $()
+
+# --- saptune daemon ---
+saptune daemon:
+  - start
+  - stop
+  - status
+
+saptune daemon start: &stop
+  - $()
+
+saptune daemon stop: *stop
+
+saptune daemon status:
+  - --non-compliance-check
+  - $()
+
+saptune daemon status*--non-compliance-check: *stop
+
+
+# --- saptune service ---
+saptune service:
+  - start
+  - stop
+  - restart 
+  - takeover 
+  - enable 
+  - disable 
+  - enablestart 
+  - disablestop 
+  - status 
+
+saptune service start: &stop
+  - $()
+
+saptune service stop: *stop
+
+saptune service restart: *stop
+
+saptune service takeover: *stop
+
+saptune service enable: *stop
+
+saptune service disable: *stop
+
+saptune service enablestart: *stop
+
+saptune service disablestop: *stop
+
+saptune service status:
+  - --non-compliance-check
+  - $()
+
+saptune service status*--non-compliance-check: *stop
+
+
+# --- saptune note ---
+saptune note:
+  - list
+  - revertall
+  - enabled
+  - applied
+  - apply
+  - simulate
+  - customise
+  - create
+  - edit
+  - revert
+  - show
+  - delete
+  - verify
+  - rename
+
+saptune note list: &stop
+  - $()
+
+saptune note revertall: *stop
+
+saptune note enabled: *stop
+
+saptune note applied: *stop
+
+saptune note apply: &list-all-notes
+  - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
+
+saptune note apply *: *stop
+
+saptune note simulate: *list-all-notes
+
+saptune note simulate *: *stop
+
+saptune note customise: *list-all-notes
+
+saptune note customise *: *stop
+
+saptune note create: *list-all-notes
+
+saptune note create *: *stop
+
+saptune note edit: *list-all-notes
+
+saptune note edit *: *stop
+
+saptune note revert: *list-all-notes
+
+saptune note revert *: *stop
+
+saptune note show: *list-all-notes
+
+saptune note show *: *stop
+
+saptune note delete: *list-all-notes
+
+saptune note delete *: *stop
+
+saptune note verify: 
+  - --colorscheme
+  - --show-non-compliant
+  - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
+  
+saptune note verify *: *stop
+
+saptune note verify*--colorscheme:
+  - full-green-zebra
+  - full-blue-zebra
+  - cmpl-green-zebra
+  - cmpl-blue-zebra
+  - full-red-noncmpl
+  - full-yellow-noncmpl
+  - red-noncmpl
+  - yellow-noncmpl
+  - --show-non-compliant
+
+saptune note verify * *--show-non-compliant:
+  - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
+
+# saptune note verify*--show-non-compliant:
+#   - --colorscheme=
+#   - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
+
+# saptune note verify*--show-non-compliant *--colorscheme=:
+#   - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
+
+
+#saptune note verify*--show-non-compliant *: *stop
+
+
+
+
+saptune note rename: *list-all-notes
+
+saptune note rename *: *stop 
+
+
+# --- saptune solution ---
+# --- saptune staging ---
+
+
+# --- saptune revert ---
+saptune revert:
+  - all 
+
+saptune revert all:
+  - $()
+
+
+# --- saptune lock ---
+saptune lock:
+  - remove
+
+saptune lock remove: 
+  - $()
+
+
+# --- saptune check ---
+saptune check: 
+  - $()
+
