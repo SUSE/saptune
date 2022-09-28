@@ -3,53 +3,53 @@
 #
 # v2.0
 #
-# Changelog:    27.09.2022  v2.0  - first creation for saptune 3.1
+# Changelog:    28.09.2022  v2.0  - first release for saptune 3.1
 #
-# Syntax:       saptune [--output=FORMAT] help
-#               saptune [--output=FORMAT] version  
-#               saptune [--output=FORMAT] status [--non-compliance-check] 
-#               saptune [--output=FORMAT] daemon [ start | stop | status [--non-compliance-check] ] 
-#               saptune [--output=FORMAT] service [ start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] ]
-#               saptune [--output=FORMAT] note [ list | revertall | enabled | applied ]
-#               saptune [--output=FORMAT] note [ apply | simulate | customise | create | edit | revert | show | delete ] NOTEID
-#               saptune [--output=FORMAT] note verify [--colorscheme <SCHEME>] [--show-non-compliant] [NOTEID]
-#               saptune [--output=FORMAT] note rename NOTEID NOTEID
-
-#               saptune [--output=FORMAT] solution ...
-#
-#                 saptune solution [ list | verify | enabled | applied ]
-#                 saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
-#                 saptune solution rename SolutionName newSolutionName
-
-#               saptune [--output=FORMAT] staging ...
-#
-#                 saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
-#                 saptune staging [ analysis | diff ] [ NOTEID... | SOLUTIONID... | all ]
-#                 saptune staging release [--force|--dry-run] [ NOTEID... | SOLUTIONID... | all ]
-
-  
-
-
-#               saptune [--output=FORMAT] revert all
-#               saptune [--output=FORMAT] lock remove
-#               saptune [--output=FORMAT] check
+# Syntax:       saptune [--output FORMAT] help
+#               saptune [--output FORMAT] version  
+#               saptune [--output FORMAT] status [--non-compliance-check] 
+#               saptune [--output FORMAT] daemon ( start | stop | status [--non-compliance-check] )
+#               saptune [--output FORMAT] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
+#               saptune [--output FORMAT] note ( list | revertall | enabled | applied )
+#               saptune [--output FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+#               saptune [--output FORMAT] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
+#               saptune [--output FORMAT] note rename NOTEID NOTEID
+#               saptune [--output FORMAT] solution ( list | verify | enabled | applied )
+#               saptune [--output FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SolutionName
+#               saptune [--output FORMAT] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
+#               saptune [--output FORMAT] solution rename SOLUTIONID SOLUTIONID
+#               saptune [--output FORMAT] staging ( status | enable | disable | is-enabled | list )
+#               saptune [--output FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONID )... | all ]
+#               saptune [--output FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONID )... | all ]
+#               saptune [--output FORMAT] revert all
+#               saptune [--output FORMAT] lock remove
+#               saptune [--output FORMAT] check
 #
 #
-# Caveats:      - It seems not possible to have an option ('--output=FORMAT') at the beginning. The support for this 
-#                 must be later added to the generated script-
+# Caveats:      - It is not possible to use the '=' sign in options. Completion will stop at the '=' sign.
+#
+#               - It is not feasible to support the option ('--output=FORMAT') which has to come immediately after 'saptune'
+#                 Each combination must be listed in this file, which would double the current entries. 
+#                 The support for this must be later added to the generated script-
 #
 #               - The completely resolved command needs to have a dummy entry: '$()' (empty command) to stop further
 #                 processing.
 # 
-# ToDo:         - The Options (--colorscheme <SCHEME>, --show-non-compliant) need to be implemented for  'saptune note verify'.
-#               - Implementation of 'saptune solution ...' and 'saptune staging ...'.
-#               - Try again to implement the json format option (may be without the = it works!?)
+# ToDo:         - Try again to implement the json format option again.
 #
 #
-# Questions:    - Should ...
+# Questions:    - Should (already implemented as such) ...
 #                   - '--output=FORMAT' not better be '--output FORMAT' and
 #                   - '--colorscheme=<SCHEME>' not better be '--colorscheme <SCHEME>'?
-#               - Should 'saptune solution verify' not also get the options '--colorscheme <SCHEME>' and '--show-non-compliant'?
+#               - Should (already implemented as such) 'saptune solution verify' not also
+#                 get the options '--colorscheme <SCHEME>' and '--show-non-compliant'?
+#               - Some command descriptions are incorrect:
+#                 - some square brackets should be replaced with normal ones,
+#                 - staging lists 'analysis' and 'diff' twice.
+#                 - staging 'analysis'/'diff'/'release' should use grouping for the id list
+#               - For autocompletion a better choice would be ...
+#                   - '/var/lib/saptune/working/notes/' instead of '/usr/share/saptune/notes'
+#                   - '/var/lib/saptune/working/sols/' instead of '/usr/share/saptune/sols/'
 
 
 
@@ -61,7 +61,7 @@ saptune:
   - daemon
   - service
   - note
-  
+  - solution
   - staging
   - revert
   - lock
@@ -83,7 +83,7 @@ saptune status:
   - --non-compliance-check
   - $()
 
-saptune status*--non-compliance-check:
+saptune status --non-compliance-check:
   - $()
 
 # --- saptune daemon ---
@@ -101,7 +101,7 @@ saptune daemon status:
   - --non-compliance-check
   - $()
 
-saptune daemon status*--non-compliance-check: *stop
+saptune daemon status --non-compliance-check: *stop
 
 
 # --- saptune service ---
@@ -167,7 +167,7 @@ saptune note enabled: *stop
 saptune note applied: *stop
 
 saptune note apply: &list-all-notes
-  - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
+  - $(ls /var/lib/saptune/working/notes/ ; ls /etc/saptune/extra)
 
 saptune note apply *: *stop
 
@@ -202,11 +202,17 @@ saptune note delete *: *stop
 saptune note verify: 
   - --colorscheme
   - --show-non-compliant
-  - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
-  
-saptune note verify *: *stop
+  - $(ls /var/lib/saptune/working/notes ; ls /etc/saptune/extra)
 
-saptune note verify*--colorscheme:
+saptune note verify *: *stop
+  
+saptune note verify --show-non-compliant:
+  - --colorscheme
+  - $(ls /var/lib/saptune/working/notes ; ls /etc/saptune/extra)
+
+saptune note verify --show-non-compliant *: *stop
+
+saptune note verify --show-non-compliant --colorscheme: &color-schemes
   - full-green-zebra
   - full-blue-zebra
   - cmpl-green-zebra
@@ -215,23 +221,22 @@ saptune note verify*--colorscheme:
   - full-yellow-noncmpl
   - red-noncmpl
   - yellow-noncmpl
+
+saptune note verify --show-non-compliant --colorscheme *: *list-all-notes
+
+saptune note verify --show-non-compliant --colorscheme * *: *stop
+
+saptune note verify --colorscheme: *color-schemes
+
+saptune note verify --colorscheme *:
   - --show-non-compliant
+  - $(ls /var/lib/saptune/working/notes ; ls /etc/saptune/extra)
 
-saptune note verify * *--show-non-compliant:
-  - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
+saptune note verify --colorscheme * *: *stop
 
-# saptune note verify*--show-non-compliant:
-#   - --colorscheme=
-#   - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
+saptune note verify --colorscheme * --show-non-compliant: *list-all-notes
 
-# saptune note verify*--show-non-compliant *--colorscheme=:
-#   - $(ls /usr/share/saptune/notes ; ls /etc/saptune/extra)
-
-
-#saptune note verify*--show-non-compliant *: *stop
-
-
-
+saptune note verify --colorscheme * --show-non-compliant *: *stop
 
 saptune note rename: *list-all-notes
 
@@ -239,7 +244,178 @@ saptune note rename *: *stop
 
 
 # --- saptune solution ---
+saptune solution:
+  - list
+  - enabled
+  - applied
+  - apply
+  - simulate
+  - customise
+  - create
+  - edit
+  - revert
+  - show
+  - delete
+  - verify
+  - rename
+
+saptune solution list: &stop
+  - $()
+
+saptune solution enabled: *stop
+
+saptune solution applied: *stop
+
+saptune solution apply: &list-all-solutions
+  - $(find   /var/lib/saptune/working/notes /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')
+
+saptune solution apply *: *stop
+
+saptune solution simulate: *list-all-solutions
+
+saptune solution simulate *: *stop
+
+saptune solution customise: *list-all-solutions
+
+saptune solution customise *: *stop
+
+saptune solution create: *list-all-solutions
+
+saptune solution create *: *stop
+
+saptune solution edit: *list-all-solutions
+
+saptune solution edit *: *stop
+
+saptune solution revert: *list-all-solutions
+
+saptune solution revert *: *stop
+
+saptune solution show: *list-all-solutions
+
+saptune solution show *: *stop
+
+saptune solution delete: *list-all-solutions
+
+saptune solution delete *: *stop
+
+saptune solution verify: 
+  - --colorscheme
+  - --show-non-compliant
+  - $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')
+
+saptune solution verify *: *stop
+  
+saptune solution verify --show-non-compliant:
+  - --colorscheme
+  - $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')
+
+saptune solution verify --show-non-compliant *: *stop
+
+saptune solution verify --show-non-compliant --colorscheme: &color-schemes
+  - full-green-zebra
+  - full-blue-zebra
+  - cmpl-green-zebra
+  - cmpl-blue-zebra
+  - full-red-noncmpl
+  - full-yellow-noncmpl
+  - red-noncmpl
+  - yellow-noncmpl
+
+saptune solution verify --show-non-compliant --colorscheme *: *list-all-solutions
+
+saptune solution verify --show-non-compliant --colorscheme * *: *stop
+
+saptune solution verify --colorscheme: *color-schemes
+
+saptune solution verify --colorscheme *:
+  - --show-non-compliant
+  - $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')
+
+saptune solution verify --colorscheme * *: *stop
+
+saptune solution verify --colorscheme * --show-non-compliant: *list-all-solutions
+
+saptune solution verify --colorscheme * --show-non-compliant *: *stop
+
+saptune solution rename: *list-all-solutions
+
+saptune solution rename *: *stop 
+
+
+
 # --- saptune staging ---
+saptune staging:
+  - status
+  - enable
+  - disable
+  - is-enabled
+  - list
+  - diff
+  - analysis
+  - release
+
+saptune staging status:
+  - $()
+
+saptune staging enable:
+  - $()
+
+saptune staging disable:
+  - $()
+
+saptune staging is-enabled:
+  - $()
+
+saptune staging list:
+  - $()
+
+
+saptune staging diff:
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - all
+  
+saptune staging diff *:
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+
+saptune staging diff all:
+  - $()
+
+saptune staging analysis:
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - all
+  
+saptune staging analysis *:
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+
+saptune staging analysis all:
+  - $()
+
+saptune staging release:
+  - --force
+  - --dry-run
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - all
+
+saptune staging release --force:
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - all
+
+saptune staging release --force all:
+  - $()
+
+saptune staging release --dry-run:
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - all
+
+saptune staging release --dry-run all:
+  - $()
+
+saptune staging release *:
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+
+saptune staging release all:
+  - $()
 
 
 # --- saptune revert ---
