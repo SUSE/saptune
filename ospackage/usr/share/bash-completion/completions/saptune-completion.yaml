@@ -3,7 +3,7 @@
 #
 # v2.0
 #
-# Changelog:    28.09.2022  v2.0  - first release for saptune 3.1
+# Changelog:    29.09.2022  v2.0  - first release for saptune 3.1
 #
 # Syntax:       saptune [--output FORMAT] help
 #               saptune [--output FORMAT] version  
@@ -27,15 +27,17 @@
 #
 #
 # Caveats:      - It is not possible to use the '=' sign in options. Completion will stop at the '=' sign.
+#                 (Possible workaround: Use a non-special character which does not appear in the resulting 
+#                 completion script (like '§'), use this here in the definition instead of '=' and replace
+#                 '§' with '=' in the generated completion script. The option has now no values anymore, 
+#                 instead each combination is treated as a individual option. )
 #
-#               - It is not feasible to support the option ('--output=FORMAT') which has to come immediately after 'saptune'
+#               - It is not feasible to support the option ('--output FORMAT') which has to come immediately after 'saptune'
 #                 Each combination must be listed in this file, which would double the current entries. 
-#                 The support for this must be later added to the generated script-
+#                 The support for this must be added to the generated script later.
 #
 #               - The completely resolved command needs to have a dummy entry: '$()' (empty command) to stop further
 #                 processing.
-# 
-# ToDo:         - Try again to implement the json format option again.
 #
 #
 # Questions:    - Should (already implemented as such) ...
@@ -55,6 +57,7 @@
 
 # --- First level ---
 saptune:
+  - --format
   - help
   - version  
   - status
@@ -67,6 +70,41 @@ saptune:
   - lock
   - check
 
+# --- start: support for global format option ---
+#
+# THIS BLOCK PREVENTS A WORKABLE SOLUTION WITH THE REST
+# OF THE DEFINITION UNLESS THE FOLLOWING BLOCK GETS ADDED
+# TO THE RESULTING SCRIPT AS FIRST LINES OF THE FUNCTION
+# '_saptune_completions()':
+#
+#  if [[ "${COMP_WORDS[*]}" =~ ^saptune\ --format\ json ]] ; then
+#        unset COMP_WORDS[1]  # remove '--format'
+#        unset COMP_WORDS[2]  # remove '--json'
+#        COMP_WORDS=( ${COMP_WORDS[@]} )
+#        ((COMP_CWORD-=2))
+#  fi
+#
+# THIS IS CURRENTLY THE ONLY WAY TO SUPPORT THE FORMAT
+# OPTION WITHOUT LETTING THE AMOUNT OF DEFINITIONS IN THIS
+# FILE EXPLODE.
+
+saptune --format:
+  - json
+
+saptune --format *:
+  - help
+  - version  
+  - status
+  - daemon
+  - service
+  - note
+  - solution
+  - staging
+  - revert
+  - lock
+  - check
+
+# --- end: support for global format option ---
 
 # --- saptune help ---
 saptune help:
