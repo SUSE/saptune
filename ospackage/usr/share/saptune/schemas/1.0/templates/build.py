@@ -41,7 +41,7 @@ def main():
 
         try:
             template = templateEnv.get_template(file)
-            schema_dict = jsonref.loads(template.render())    # Render the template, load teh JSON
+            schema_dict = jsonref.loads(template.render())    # Render the template, load the JSON
             schema_dict_touched = deepcopy(schema_dict)   # We have to touch the properties to resolve references.
             del schema_dict_touched["$defs"]  # With references resolved, we don't need '$defs' anymore. 
             schema = json.dumps(schema_dict_touched, indent=4)   # Format JSON nicely and write out.

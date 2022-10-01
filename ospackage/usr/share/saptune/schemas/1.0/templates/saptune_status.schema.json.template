@@ -1,6 +1,6 @@
 {% extends "common.schema.json.template" %}
 
-{% block command %}saptune status{% endblock %}
+{% block command %}saptune status|saptune daemon status|saptune service status{% endblock %}
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 

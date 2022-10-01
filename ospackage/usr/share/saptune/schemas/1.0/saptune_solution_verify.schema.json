@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_note_verify.schema.json",
+    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_note_verify|saptune_solution_verify.schema.json",
     "title": "",
-    "description": "Describes the output of 'saptune note verify.",
+    "description": "Describes the output of 'saptune note verify|saptune solution verify.",
     "type": "object",
     "required": [
         "$schema",
@@ -61,7 +61,8 @@
             "description": "The saptune command (classifier), which was executed.",
             "type": "string",
             "enum": [
-                "note verify"
+                "note verify",
+                "solution verify"
             ]
         },
         "result": {

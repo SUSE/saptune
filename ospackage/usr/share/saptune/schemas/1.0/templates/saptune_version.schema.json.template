@@ -4,11 +4,11 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["major saptune version"]{% endblock %}
+{% block result_required %}["configured version"]{% endblock %}
 
 {% block result_properties %}
-                "major saptune version": {
-                    "description": "The major saptune version.",
+                "configured version": {
+                    "description": "The configured saptune version.",
                     "type": "string",
                     "pattern": "^[0-9]$"
                 }

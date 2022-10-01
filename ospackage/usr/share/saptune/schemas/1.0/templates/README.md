@@ -121,6 +121,7 @@ Overview of the properties used in the JSON output
 | `Notes available`       | `result` | yes       | array of objects   | List of the available Notes.                            | `saptune note list`                                |  `[ {"Note ID": "1410736", ...}, ... ]`
 | `Notes enabled`         | `result` | yes       | array of strings   | List of the enabled Notes.                              | `saptune note list`,</br> `saptune note verify`,</br> `saptune solution verify`,</br> `saptune [daemon\|service] status`</br>, `saptune note enabled` | `[ "941735", "1771258" ]`
 | `Notes applied`         | `result` | yes       | array of strings   | List of the applied Notes.                              | `saptune [daemon\|service} status`,</br> `saptune note applied`     | `[ "941735", "1771258"]`
+| `Notes applied by Solution` | `result` | yes       | array of strings   | List of the applied Notes.                              | `saptune [daemon\|service} status`,</br> `saptune note applied`     | `[ "941735", "1771258"]`
 | `Notes enabled additionally` | `result` | yes    | array of strings   | List of additional (to a Solution) applied Notes.                              | `saptune [daemon\|service} status` | `[ "941735", "1771258"]`
 | `Solutions available`   | `result` | yes       | array of objects   | List of the available Solutions.                        | `saptune solution list`                                             | `[ { "Solution name": "BOBJ", ... }, ... ]`
 | `Solution enabled`      | `result` | yes       | array of strings   | The enabled Solution.                                   | `saptune [daemon\|service} status`,</br> `saptune solution enabled` | `[ "MAXDB" ]`
@@ -130,12 +131,13 @@ Overview of the properties used in the JSON output
 | `attentions`            | `result` | yes       | array of objects   | Attentions printed for a Note.                                             | `saptune note verify`,</br> `saptune solution verify` | `[ { "Note ID": "2382421", ...}, ... ]`
 | `system compliance`     | `result` | yes       | boolean            | Overall compliance of all currently applied SAP Notes.                     | `saptune note verify`,</br> `saptune solution verify` | `false`
 | `services`              | `result` | yes       | object             | The states of various systemd services related to saptune.                 | `saptune [daemon\|service} status` | `{ "saptune": [ "disabled", "inactive" ], ... }`
-| `system state`          | `result` | yes       | string             | Possible systemd system states reported by 'systemctl is-system-running'.  | `saptune [daemon\|service} status` | `"running"`
+| `systemd system state`  | `result` | yes       | string             | Possible systemd system states reported by `systemctl is-system-running`.  | `saptune [daemon\|service} status` | `"running"`
+| `tuning state`          | `result` | yes       | string             | Tuning state reported by 'saptune note verify'. One of: "not-present", "not tuned", "not compliant", "compliant", "unknown (checking disabled)" | `saptune [daemon\|service} status`  | "compliant"
 | `virtualization`        | `result` | yes       | string             | The virtualization technology of the system (see `systemd-detect-virt --list`). | `saptune [daemon\|service} status` | `"amazon"`
 | `configured version`    | `result` | yes       | string             | The configured saptune version (SAPTUNE_VERSION of /etc/sysconfig/saptune).     | `saptune [daemon\|service} status` |  `"1"`
 | `package version`       | `result` | yes       | string             | The version string of the installed saptune package.    | `saptune [daemon\|service} status` | `"3.0.1"`
 | `staging`               | `result` | yes       | object             | Details about staging.                                  | `saptune [daemon\|service} status` | `{ "enabled": false, "Notes staged": [], "Solutions staged": [] }`
-| `major saptune version` | `result` | yes       | string             | The major saptune version.                              | `saptune version`                  |  `"3"`
+| `configured version`    | `result` | yes       | string             | The configured saptune version.                              | `saptune version`                  |  `"3"`
 | `Note ID`               | `Notes available`, </br>`verifications`,</br> `attentions` | yes       | string   | ID of the Note. | `saptune note list`,</br> `saptune note verify`,</br> `saptune solution verify` |  `"1656250"` 
 | `Note description`      | `Notes available`    | yes       | string   | Description of the Note. | `saptune note list` |  `"Linux Kernel Settings for NetApp NFS"` 
 | `Note reference`        | `Notes available`    | yes       | array of strings | References (URL) for the Note. | `saptune note list` |  `["https://launchpad.support.sap.com/#/notes/1410736"]` 
@@ -184,14 +186,12 @@ Bugs in JSON output
 
 | saptune command                   |Bug |
 |:----------------------------------|:---|
-| saptune [daemon|service] status	  | (changes are not yet implemented) |
-| saptune service reload            | empty result object instead of `"implemented": false` |
-| saptune service apply    	        | empty result object instead of `"implemented": false` |
-| saptune service revert            | empty result object instead of `"implemented": false` |
-| saptune note verify 	            | (changes are not yet implemented) |
-| saptune solution list  	          | (changes are not yet implemented) |   
-| saptune solution verify	          | (changes are not yet implemented) |   
-| saptune version          	        | (changes are not yet implemented) |
-| saptune help   	                  | empty result object instead of `"implemented": false` |
-  
+| saptune solution list  	        | (changes are not yet implemented) |   
+                                      "Solution enabled": --> "Solution enabled manually" to be consistent with 'saptune note list'
 
+ToDo
+====
+ - Write schemas for 'saptune note|solution simulate'   comments? ISn't that ammendmants What is in there ?
+ - Add 'saptune note|solution simulate' in above large table
+
+ - simulate requires one ID. Is this reflected in the bash completion?

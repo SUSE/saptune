@@ -4,12 +4,31 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["implemented"]{% endblock %}
+{% block result_required %}[ "simulations", "attentions" ]{% endblock %}
 
 {% block result_properties %}
-                "implemented": {
-                    "description": "Indicates that JSON output has not yet been implemented yet.",
-                    "type": "boolean",
-                    "enum": [false]
-                }            
+                "simulations": {
+                    "description": "List of simulations (lines of the table output of `saptune note simulate`.",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [ "parameter" ],
+                        "additionalProperties": true,  
+                        "propertyNames": {
+                            "enum": [ "Note ID", "Note version", "parameter", "expected value", "override value", "actual value", "comment", "amendments" ]
+                        },
+                        "properties": {
+                            "parameter": { "$ref": "#/$defs/saptune parameter id" },
+                            "expected value": { "$ref": "#/$defs/saptune parameter value" },
+                            "override value": { "$ref": "#/$defs/saptune parameter value" },
+                            "actual value": { "$ref": "#/$defs/saptune parameter value" },
+                            "comment": { "type": "string" },
+                            "amendments": { "$ref": "#/$defs/saptune amendments" }
+                        }
+                    }
+                },
+                "attentions": { "$ref": "#/$defs/saptune attentions" }
 {% endblock %}
+
+                            
+                    

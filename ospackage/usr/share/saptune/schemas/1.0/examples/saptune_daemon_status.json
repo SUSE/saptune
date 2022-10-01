@@ -1,0 +1,60 @@
+{
+    "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_daemon_status.schema.json",
+    "publish time": "2022-09-30 10:39:41.336",
+    "argv": "saptune --format=json daemon status",
+    "pid": 1762,
+    "command": "daemon status",
+    "exit code": 0,
+    "result": {
+      "services": {
+        "saptune": [
+          "enabled",
+          "active"
+        ],
+        "sapconf": [
+          "disabled",
+          "inactive"
+        ],
+        "tuned": []
+      },
+      "systemd system state": "running",
+      "tuning state": "compliant",
+      "virtualization": "oracle",
+      "configured version": "3",
+      "package version": "3.1.0",
+      "Solution enabled": [],
+      "Notes enabled by Solution": [],
+      "Solution applied": [],
+      "Notes applied by Solution": [],
+      "Notes enabled additionally": [
+        "sysstat-start"
+      ],
+      "Notes enabled": [
+        "sysstat-start"
+      ],
+      "Notes applied": [
+        "sysstat-start"
+      ],
+      "staging": {
+        "staging enabled": false,
+        "Notes staged": [],
+        "Solutions staged": []
+      },
+      "remember message": "\n\n"
+    },
+    "messages": [
+      {
+        "priority": "WARNING",
+        "message": "section.go:302: You are still using the old style version section syntax in Note definition file '/etc/saptune/extra/sysstat-start.conf' which is deprecated. Please adapt.\n"
+      },
+      {
+        "priority": "NOTICE",
+        "message": "actions.go:85: ATTENTION: You are running a test version (3.1.0 from 2022/09/02) of saptune which is not supported for production use\n"
+      },
+      {
+        "priority": "WARNING",
+        "message": "serviceacts.go:776: the argument 'daemon' is deprecated!. saptune will forward the request to 'saptune service status'.\nFor the future please use 'saptune service status'.\n"
+      }
+    ]
+  }
+  

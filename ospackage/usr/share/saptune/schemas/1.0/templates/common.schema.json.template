@@ -41,7 +41,7 @@
         "command": {
             "description": "The saptune command (classifier), which was executed.",
             "type": "string",
-            "enum": ["{{ self.command()|replace('saptune ','') }}"]
+            "enum": {{ self.command().split('|')|replace('saptune ','')|replace('\'','"') }}
         },
 
         "result": {

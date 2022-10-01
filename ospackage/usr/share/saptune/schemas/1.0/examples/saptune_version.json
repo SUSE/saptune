@@ -1,12 +1,15 @@
 {
     "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_version.schema.json",
-    "publish time": "2022-05-09 11:10:29.427",
-    "argv": "saptune --out=json version",
-    "pid": 2394,
+    "publish time": "2022-09-30 10:09:51.683",
+    "argv": "saptune --format=json version",
+    "pid": 1627,
     "command": "version",
     "exit code": 0,
     "result": {
-        "major saptune version": "3"
+      "configured version": "3"
     },
     "messages": []
 }
+
+
+

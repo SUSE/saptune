@@ -1,9 +1,9 @@
 {
-  "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_note_verify.schema.json",
-  "publish time": "2022-09-30 13:41:03.366",
-  "argv": "saptune --format=json note verify",
-  "pid": 2350,
-  "command": "note verify",
+  "$schema": "file:///usr/share/saptune/schemas/1.0/saptune_solution_verify.schema.json",
+  "publish time": "2022-09-30 14:51:14.625",
+  "argv": "saptune --format=json solution verify",
+  "pid": 2686,
+  "command": "solution verify",
   "exit code": 1,
   "result": {
     "verifications": [
@@ -525,7 +525,7 @@
         "amendments": [
           {
             "index": 11,
-            "amendment": "[11] parameter is additional defined in sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-59.27-default(0x0fffffffffffff00)"
+            "amendment": "[11] parameter is additional defined in sysctl config file /boot/sysctl.conf-5.3.18-59.27-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00)"
           }
         ]
       },
@@ -539,7 +539,7 @@
         "amendments": [
           {
             "index": 11,
-            "amendment": "[11] parameter is additional defined in sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-59.27-default(0x0fffffffffffff00)\n [11] parameter is additional defined in sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0xffffffffffffffff), /boot/sysctl.conf-5.3.18-59.27-default(0xffffffffffffffff)"
+            "amendment": "[11] parameter is additional defined in sysctl config file /boot/sysctl.conf-5.3.18-59.27-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00)\n [11] parameter is additional defined in sysctl config file /boot/sysctl.conf-5.3.18-59.27-default(0xffffffffffffffff), /boot/sysctl.conf-5.3.18-150300.59.90-default(0xffffffffffffffff)"
           }
         ]
       },
@@ -587,11 +587,11 @@
     },
     {
       "priority": "WARNING",
-      "message": "sysctl.go:73: Parameter 'kernel.shmmax' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0xffffffffffffffff), /boot/sysctl.conf-5.3.18-59.27-default(0xffffffffffffffff).\n"
+      "message": "sysctl.go:73: Parameter 'kernel.shmmax' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-59.27-default(0xffffffffffffffff), /boot/sysctl.conf-5.3.18-150300.59.90-default(0xffffffffffffffff).\n"
     },
     {
       "priority": "WARNING",
-      "message": "sysctl.go:73: Parameter 'kernel.shmall' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-59.27-default(0x0fffffffffffff00).\n"
+      "message": "sysctl.go:73: Parameter 'kernel.shmall' additional defined in the following sysctl config file /boot/sysctl.conf-5.3.18-59.27-default(0x0fffffffffffff00), /boot/sysctl.conf-5.3.18-150300.59.90-default(0x0fffffffffffff00).\n"
     },
     {
       "priority": "NOTICE",
