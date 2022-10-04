@@ -127,7 +127,8 @@ Overview of the properties used in the JSON output
 | `Solution enabled`      | `result` | yes       | array of strings   | The enabled Solution.                                   | `saptune [daemon\|service} status`,</br> `saptune solution enabled` | `[ "MAXDB" ]`
 | `Solution applied`      | `result` | yes       | array of strings   | The applied Solution.                                   | `saptune [daemon\|service} status`,</br> `saptune solution applied` | `[ "MAXDB" ]`
 | `remember message`      | `result` | yes       | string             | The remember message.                                   | `saptune [daemon\|service] status`,</br> `saptune note list`,</br> `saptune solution list` |  `"\nRemember: ..."` 
-| `verifications`         | `result` | yes       | list of objects    | List of verifications (lines of the table output of `saptune note verify`. | `saptune note verify`,</br> `saptune solution verify` | `[ { "Note ID": "1771258", ... },`
+| `verifications`         | `result` | yes       | list of objects    | List of verifications (lines of the table output of `saptune note verify`). | `saptune note verify`,</br> `saptune solution verify` | `[ { "Note ID": "1771258", ... }, ...]`
+| `simulations`           | `result` | yes       | list of objects    | List of simulations (lines of the table output of `saptune note\|solution simulate`).  | `saptune note simulate`,</br> `saptune solution simulate` | `[ { "parameter": "kernel.shmall", }, ... ]`
 | `attentions`            | `result` | yes       | array of objects   | Attentions printed for a Note.                                             | `saptune note verify`,</br> `saptune solution verify` | `[ { "Note ID": "2382421", ...}, ... ]`
 | `system compliance`     | `result` | yes       | boolean            | Overall compliance of all currently applied SAP Notes.                     | `saptune note verify`,</br> `saptune solution verify` | `false`
 | `services`              | `result` | yes       | object             | The states of various systemd services related to saptune.                 | `saptune [daemon\|service} status` | `{ "saptune": [ "disabled", "inactive" ], ... }`
@@ -148,14 +149,14 @@ Overview of the properties used in the JSON output
 | `Note reverted manually`    | `Notes available`   | yes    | boolean   | States if the Note was reverted manually. | `saptune note list` | `true`
 | `Note override exists`      | `Notes available`   | yes    | boolean   | States if an override file exists for the Note. | `saptune note list` | `true`
 | `custom Note`               | `Notes available`   | yes    | boolean   | States if the Note is a custom Note. | `saptune note list` | `true`
-| `parameter`               | `verifications`   | yes      | string   | Name of the parameter. | `saptune note verify`,</br> `saptune solution verify` | `"kernel.shmall"`
-| `expected value`          | `verifications`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify` | `"18446744073709551615"`
-| `override value`          | `verifications`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify` | `"-nobarrier"`
-| `actual value`            | `verifications`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify` | `"never"`
+| `parameter`               | `verifications`, `simulations`   | yes      | string   | Name of the parameter. | `saptune note verify`,</br> `saptune solution verify`,</br>`saptune note simulate`,</br>`saptune solution simulate` | `"kernel.shmall"`
+| `expected value`          | `verifications`, `simulations`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify`,</br>`saptune note simulate`,</br>`saptune solution simulate` | `"18446744073709551615"`
+| `override value`          | `verifications`, `simulations`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify`,</br>`saptune note simulate`,</br>`saptune solution simulate` | `"-nobarrier"`
+| `actual value`            | `verifications`, `simulations`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify`,</br>`saptune note simulate`,</br>`saptune solution simulate` | `"never"`
 | `compliant`               | `verifications`   | no       | string   | States if the parameter is compliant or not. | `saptune note verify`,</br> `saptune solution verify` | `true`
-| `amendments`              | `verifications`   | yes      | array of objects  | Optional amendments (footnotes). | `saptune note verify`,</br> `saptune solution verify` | `[ { "index": 11, ...}, ... ]`
+| `amendments`              | `verifications`, `simulations`   | yes      | array of objects  | Optional amendments (footnotes). | `saptune note verify`,</br> `saptune solution verify`,</br>`saptune note simulate`,</br>`saptune solution simulate` | `[ { "index": 11, ...}, ... ]`
 | `index`                   | `amendments`      | yes      | integer  | Index of the amendment (footnote).                 | `saptune note verify`,</br> `saptune solution verify` | `15`
-| `amendments`              | `amendments`      | yes      | string   | Describes the meaning of the amendment (footnote). | `saptune note verify`,</br> `saptune solution verify` | `the parameter is only used to calculate the size of tmpfs (/dev/shm)`
+| `amendment`              | `amendments`      | yes      | string   | Describes the meaning of the amendment (footnote). | `saptune note verify`,</br> `saptune solution verify` | `the parameter is only used to calculate the size of tmpfs (/dev/shm)`
 | `attention`               | `attentions`      | yes      | string   | Attentions printed for a Note.                     | `saptune note verify`,</br> `saptune solution verify` | `Attention for SAP Note 2382421:\nHints or values not yet handled...`
 | `Solution ID`               | `Solutions available`  | yes     | string      | The Solution ID. | `saptune solution list` | `Remember: if you wish to automatically activate the solution's ...`
 | `Note list`                 | `Solutions available`  | yes     | array of strings   | List of Notes belonging to the Solution. | `saptune solution list` | `[ "941735", "1410736" ]`
@@ -186,12 +187,10 @@ Bugs in JSON output
 
 | saptune command                   |Bug |
 |:----------------------------------|:---|
-| saptune solution list  	        | (changes are not yet implemented) |   
-                                      "Solution enabled": --> "Solution enabled manually" to be consistent with 'saptune note list'
+| saptune solution list  	        | "Solution enabled": --> "Solution enabled manually" to be consistent with 'saptune note list' |
+| saptune note|solution simulate    | "Comment", if only used to list amendments, than we can skip it.
 
 ToDo
 ====
- - Write schemas for 'saptune note|solution simulate'   comments? ISn't that ammendmants What is in there ?
- - Add 'saptune note|solution simulate' in above large table
-
- - simulate requires one ID. Is this reflected in the bash completion?
+ 
+ - Add 'comment' of 'saptune note|solution simulate' in above large table, if it should stay.
