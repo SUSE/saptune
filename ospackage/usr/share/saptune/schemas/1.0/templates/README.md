@@ -154,13 +154,14 @@ Overview of the properties used in the JSON output
 | `override value`          | `verifications`, `simulations`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify`,</br>`saptune note simulate`,</br>`saptune solution simulate` | `"-nobarrier"`
 | `actual value`            | `verifications`, `simulations`   | no       | string   | Value of a parameter.  | `saptune note verify`,</br> `saptune solution verify`,</br>`saptune note simulate`,</br>`saptune solution simulate` | `"never"`
 | `compliant`               | `verifications`   | no       | string   | States if the parameter is compliant or not. | `saptune note verify`,</br> `saptune solution verify` | `true`
+| `comment`                 | `simulations`   | yes       | string   | Comments about the pararameter. Mostly the footnote. | `saptune note simulate`,</br> `saptune solution simulate` | `[1]`
 | `amendments`              | `verifications`, `simulations`   | yes      | array of objects  | Optional amendments (footnotes). | `saptune note verify`,</br> `saptune solution verify`,</br>`saptune note simulate`,</br>`saptune solution simulate` | `[ { "index": 11, ...}, ... ]`
 | `index`                   | `amendments`      | yes      | integer  | Index of the amendment (footnote).                 | `saptune note verify`,</br> `saptune solution verify` | `15`
 | `amendment`              | `amendments`      | yes      | string   | Describes the meaning of the amendment (footnote). | `saptune note verify`,</br> `saptune solution verify` | `the parameter is only used to calculate the size of tmpfs (/dev/shm)`
 | `attention`               | `attentions`      | yes      | string   | Attentions printed for a Note.                     | `saptune note verify`,</br> `saptune solution verify` | `Attention for SAP Note 2382421:\nHints or values not yet handled...`
 | `Solution ID`               | `Solutions available`  | yes     | string      | The Solution ID. | `saptune solution list` | `Remember: if you wish to automatically activate the solution's ...`
 | `Note list`                 | `Solutions available`  | yes     | array of strings   | List of Notes belonging to the Solution. | `saptune solution list` | `[ "941735", "1410736" ]`
-| `Solution enabled manually` | `Solutions available`  | yes     | boolean     | States if the Solution is enabled. | `saptune solution list` | `true`
+| `Solution enabled`          | `Solutions available`  | yes     | boolean     | States if the Solution is enabled. | `saptune solution list` | `true`
 | `Solution override exists`  | `Solutions available`  | yes     | boolean     | States if an override file exists for the Solution. | `saptune solution list` | `true`
 | `custom Solution`           | `Solutions available`  | yes     | boolean     | States if the Note is a custom Solution. | `saptune solution list` | `true`
 | `Solution deprecated`       | `Solutions available`  | yes     | boolean     | States if the Solution is deprecated. | `saptune solution list` | `true`
@@ -181,14 +182,6 @@ RULES
 - lists can be empty
 
 
-
-Bugs in JSON output
-===================
-
-| saptune command                   |Bug |
-|:----------------------------------|:---|
-| saptune solution list  	        | "Solution enabled": --> "Solution enabled manually" to be consistent with 'saptune note list' |
-| saptune note|solution simulate    | "Comment", if only used to list amendments, than we can skip it.
 
 ToDo
 ====
