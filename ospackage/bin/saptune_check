@@ -422,7 +422,7 @@ function check_saptune() {
             ;;
         degraded)
             print_warn "systemd reports status \"${system_status['status']}\". Failed units: ${system_status['failed_units']}"  "Check the cause and reset the state with 'systemctl reset-failed'!"
-            print_note "A degraded systemd system status means, that one or more systemd units failed. The system is still operational!"
+            print_note "A degraded systemd system status means, that one or more systemd units failed. The system is still operational! Tuning might not be affected, please run 'saptune verfiy' for detailed information."
             ((warnings++))
             ;;
         *)  print_fail "systemd reports status \"${system_status['status']}\"."  "Check systemd to see what is wrong!"
