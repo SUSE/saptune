@@ -17,7 +17,7 @@
             "2993054",
             "1656250"
           ],
-          "Solution enabled manually": false,
+          "Solution enabled": false,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false
@@ -35,7 +35,7 @@
             "2993054",
             "1656250"
           ],
-          "Solution enabled manually": true,
+          "Solution enabled": true,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false
@@ -47,7 +47,7 @@
             "1771258",
             "2578899"
           ],
-          "Solution enabled manually": false,
+          "Solution enabled": false,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false
@@ -62,7 +62,7 @@
             "1656250",
             "900929"
           ],
-          "Solution enabled manually": false,
+          "Solution enabled": false,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false
@@ -80,7 +80,7 @@
             "2993054",
             "1656250"
           ],
-          "Solution enabled manually": false,
+          "Solution enabled": false,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false
@@ -95,7 +95,7 @@
             "1656250",
             "900929"
           ],
-          "Solution enabled manually": false,
+          "Solution enabled": false,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false
@@ -113,7 +113,7 @@
             "2993054",
             "1656250"
           ],
-          "Solution enabled manually": false,
+          "Solution enabled": false,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false
@@ -128,7 +128,7 @@
             "1656250",
             "900929"
           ],
-          "Solution enabled manually": false,
+          "Solution enabled": false,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false
@@ -146,7 +146,7 @@
             "2993054",
             "1656250"
           ],
-          "Solution enabled manually": false,
+          "Solution enabled": false,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false
@@ -161,7 +161,7 @@
             "2993054",
             "1656250"
           ],
-          "Solution enabled manually": false,
+          "Solution enabled": false,
           "Solution override exists": false,
           "custom Solution": false,
           "Solution deprecated": false

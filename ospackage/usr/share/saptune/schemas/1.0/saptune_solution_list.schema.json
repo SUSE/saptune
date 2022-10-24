@@ -81,7 +81,7 @@
                         "required": [
                             "Solution ID",
                             "Note list",
-                            "Solution enabled manually",
+                            "Solution enabled",
                             "Solution override exists",
                             "custom Solution",
                             "Solution deprecated"
@@ -110,7 +110,7 @@
                                     ]
                                 }
                             },
-                            "Solution enabled manually": {
+                            "Solution enabled": {
                                 "description": "States if the Solution is enabled.",
                                 "type": "boolean"
                             },
