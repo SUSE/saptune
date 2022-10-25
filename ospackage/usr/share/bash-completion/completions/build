@@ -1,0 +1,22 @@
+#!/bin/bash
+
+pass1='saptune.completion.compiled'
+pass2='saptune.completion'
+
+separator='^_saptune_completions()'
+
+docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/completely generate saptune-completion.yaml "${pass1}"
+sed -n "1,/${separator}/p" "${pass1}" > "${pass2}"
+cat <<-EOF >> "${pass2}"
+
+  if [[ "${COMP_WORDS[*]}" =~ ^saptune\ --format\ json ]] ; then
+     unset COMP_WORDS[1]  # remove '--format'
+     unset COMP_WORDS[2]  # remove '--json'
+     COMP_WORDS=( ${COMP_WORDS[@]} )
+     ((COMP_CWORD-=2))
+  fi
+
+EOF
+sed -n "/${separator}/,\$p" "${pass1}" | tail -n +2 >> "${pass2}"
+
+
