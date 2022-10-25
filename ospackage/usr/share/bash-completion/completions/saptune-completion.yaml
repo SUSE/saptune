@@ -13,11 +13,11 @@
 #               saptune [--output FORMAT] note ( list | revertall | enabled | applied )
 #               saptune [--output FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 #               saptune [--output FORMAT] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
-#               saptune [--output FORMAT] note rename NOTEID NOTEID
+#               saptune [--output FORMAT] note rename NOTEID NEWNOTEID
 #               saptune [--output FORMAT] solution ( list | verify | enabled | applied )
 #               saptune [--output FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SolutionName
 #               saptune [--output FORMAT] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
-#               saptune [--output FORMAT] solution rename SOLUTIONID SOLUTIONID
+#               saptune [--output FORMAT] solution rename SOLUTIONID NEWSOLUTIONID
 #               saptune [--output FORMAT] staging ( status | enable | disable | is-enabled | list )
 #               saptune [--output FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONID )... | all ]
 #               saptune [--output FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONID )... | all ]
