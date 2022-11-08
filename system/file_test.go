@@ -29,6 +29,21 @@ func TestReadConfigFile(t *testing.T) {
 	}
 }
 
+func TestFileIsEmpty(t *testing.T) {
+	empty := FileIsEmpty(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/extra/wrongFileNamesyntax.conf"))
+	if !empty {
+		t.Errorf("file should be reported as empty, but returns 'true'")
+	}
+	empty = FileIsEmpty("/file_does_not_exist")
+	if !empty {
+		t.Errorf("file should be reported as empty (not existing), but returns 'true'")
+	}
+	empty = FileIsEmpty(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/product_name"))
+	if empty {
+		t.Errorf("file should be reported as non empty, but returns 'false'")
+	}
+}
+
 func TestCopyFile(t *testing.T) {
 	//src := "/app/testdata/tstfile"
 	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/tstfile")

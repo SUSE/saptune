@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-//define constants and variables for the whole package
+// define constants and variables for the whole package
 const (
 	SaptuneService     = "saptune.service"
 	SapconfService     = "sapconf.service"
@@ -60,9 +60,9 @@ var solutionSelector = system.GetSolutionSelector()
 var saptuneSysconfig = "/etc/sysconfig/saptune"
 
 // set colors for the table and list output
-//var setYellowText = "\033[38;5;220m"
-//var setCyanText = "\033[36m"
-//var setUnderlinedText = "\033[4m"
+// var setYellowText = "\033[38;5;220m"
+// var setCyanText = "\033[36m"
+// var setUnderlinedText = "\033[4m"
 var setGreenText = "\033[32m"
 var setRedText = "\033[31m"
 var setYellowText = "\033[33m"
@@ -243,7 +243,6 @@ func renameDefFile(fileName, newFileName string) {
 }
 
 // deleteDefFile will delete a definition file (Note or Solution)
-//func deleteDefFile(fileName, ovFileName string, overrideDef, extraDef bool) {
 func deleteDefFile(fileName string) {
 	if err := os.Remove(fileName); err != nil {
 		system.ErrorExit("Failed to remove file '%s' - %v", fileName, err)

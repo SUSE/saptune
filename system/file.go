@@ -24,6 +24,17 @@ func ReadConfigFile(fileName string, autoCreate bool) ([]byte, error) {
 	return content, err
 }
 
+// FileIsEmpty returns true, if the given file is empty or does not exist
+// or false, if exist, but not empty
+func FileIsEmpty(fileName string) bool {
+	f, err := os.Stat(fileName)
+	if err == nil && f.Size() != 0 {
+		DebugLog("FileIsEmpty - file '%s' exists and is NOT empty(%+v)", fileName, f.Size())
+		return false
+	}
+	return true
+}
+
 // EditFile copies a source file to another name and opens this copy in an
 // editor defined by environment variable "EDITOR" or in 'vim'
 func EditFile(srcFile, destFile string) error {

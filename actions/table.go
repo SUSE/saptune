@@ -107,9 +107,9 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 }
 
 // collectMRO collects the data for machine readable output
-// parameter: noteLine, compliant, noteID, noteComparisons, comparison,
-//            pExp, override, printComparison, comment, footnote, pAct
-// Attention - order of parameter important!
+// given parameter - Attention - order of parameter is important!
+// noteLine, compliant, noteID, noteComparisons, comparison, pExp, override,
+// printComparison, comment, footnote, pAct
 func collectMRO(stuff ...interface{}) system.JPNotesLine {
 	nLine := stuff[0].(system.JPNotesLine)
 	noteComp := !strings.Contains(stuff[1].(string), "no")

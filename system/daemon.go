@@ -381,7 +381,12 @@ func GetTunedAdmProfile() string {
 func IsSapconfActive(sapconf string) bool {
 	active, _ := SystemctlIsRunning(sapconf)
 	enabled, _ := SystemctlIsEnabled(sapconf)
-	if enabled || active || CmdIsAvailable("/var/lib/sapconf/act_profile") || CmdIsAvailable("/run/sapconf/active") {
+	actFile1 := CmdIsAvailable("/var/lib/sapconf/act_profile")
+	actEmpty1 := FileIsEmpty("/var/lib/sapconf/act_profile")
+	actFile2 := CmdIsAvailable("/run/sapconf_act_profile")
+	actFile3 := CmdIsAvailable("/run/sapconf/active")
+	DebugLog("IsSapconfActive - sapconf is active:%+v, enabled:%+v, /var/lib/sapconf/act_profile is available:%+v, /var/lib/sapconf/act_profile is empty:%+v, /run/sapconf_act_profile is available:%+v, /run/sapconf/active is available:%+v", active, enabled, actFile1, actEmpty1, actFile2, actFile3)
+	if enabled || active || !actEmpty1 || actFile2 || actFile3 {
 		return true
 	}
 	return false
