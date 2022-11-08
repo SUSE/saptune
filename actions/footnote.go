@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-//define footnote texts
+// define footnote texts
 const (
 	footnote1X86 = " [1] setting is not supported by the system"
 	footnote1IBM = " [1] setting is not relevant for the system"

@@ -514,7 +514,8 @@ func writeStagingToConf(staging string) error {
 	return ioutil.WriteFile(saptuneSysconfig, []byte(sconf.ToText()), 0644)
 }
 
-//func collectStageFileInfo() *stageFiles {
+// collectStageFileInfo is collecting all needed info about the file
+// available in the staging area for later processing
 func collectStageFileInfo(tuneApp *app.App) stageFiles {
 	stageConf := stageFiles{
 		AllStageFiles:   make([]string, 0, 64),

@@ -4,7 +4,6 @@ import (
 	"testing"
 )
 
-//GetLimitsVal
 func TestGetLimitsVal(t *testing.T) {
 	val, info, err := GetLimitsVal("@sdba soft nofile")
 	if val != "@sdba soft nofile NA" || info != "" || err != nil {

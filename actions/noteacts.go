@@ -135,7 +135,6 @@ func setupNoteListFormat(noteID string, solutionNoteIDs []string, tuneApp *app.A
 			format = " " + setGreenText + "*" + format + resetTextColor
 			jnoteListEntry.SolEnabled = true
 		}
-	//} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
 	}
 	if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
 		format = " " + setGreenText + "+" + format + resetTextColor

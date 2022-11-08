@@ -15,7 +15,7 @@ import (
 	"strings"
 )
 
-//constant definition
+// constant definition
 const (
 	notSupportedX86 = "System does not support Intel's performance bias setting"
 	notSupportedIBM = "Subcommand not supported on POWER."
