@@ -31,9 +31,10 @@
 #                       tests system status and lists failed services
 # 26.08.2021  v0.2.1    added missing os_release to global arrays
 # 09.11.2021  v0.2.2    degraded system is no longer considered an error
+# 26.09.2022  v0.2.3    degraded systemd state gets explained in more detail (TEAM-6584)
+# 26.09.2022  v0.3      reactivate unused function compile_filelists() as file_check() and add detection of sapconf remains (TEAM-6275)
 
-
-version="0.2.2"
+version="0.3"
 
 # We use these global arrays through out the program:
 #
@@ -108,6 +109,27 @@ function print_note() {
         col_off=""
     fi
     echo -e "[${col_on}NOTE${col_off}] ${1}"
+}
+
+function is_in() {
+    # Params:       NAME LIST
+    # Output:       -
+    # Returncode:   0 (true), 1 (false)
+    #
+    # Checks if NAME is in the space-separated string LIST
+    # and returns 0 (true) or 1 (false).
+    #
+    # Requires:     -
+
+    local name="${1}"
+    local list=( ${2} )
+
+    for elem in "${list[@]}" ; do
+        if [ "${name}" == "${elem}" ] ; then
+            return 1
+        fi
+    done
+    return 1
 }
 
 function get_os_version() {
@@ -268,7 +290,7 @@ function collect_data() {
     configured_saptune_version
 }
 
-function compile_filelists() {
+function file_check() {
     # Params:   VERSIONTAG
     # Output:   warnings, fails and notes with print_warn(), print_fail() and print_note()
     # Exitcode: -
@@ -286,9 +308,9 @@ function compile_filelists() {
     #
     # The function updates the variables "warnings" and "fails" used in saptune_check(). 
     #
-    # Requires: print_warn(),print_fail() and print_note()
+    # Requires: print_warn(), print_fail() and print_note()
 
-    local VERSION_ID tag="${1}" mandatory_files invalid_files rpm_leftovers
+    local VERSION_ID tag="${1}" mandatory_files invalid_files rpm_leftovers sapconf_leftovers critical_sapconf_leftovers
     declare -a mandatory_files invalid_files rpm_leftovers
 
     eval $(grep ^VERSION_ID= /etc/os-release)
@@ -311,17 +333,24 @@ function compile_filelists() {
             ;;
     esac
 
+    # Leftovers from a damaged sapconf update/removal, which do not pervent saptune from starting.    
+    sapconf_leftovers=( '/var/lib/sapconf' '/run/sapconf/active' '/run/sapconf_act_profile' )
+
+    # Critical leftovers from a damaged sapconf update/removal, which prevent saptune from starting.    
+    critical_sapconf_leftovers=( '/var/lib/sapconf/act_profile' '/run/sapconf/active' )
+
+
     # Now check the existence of mandatory and invalid files and print warnings and fails.    
     for ((i=0;i<${#mandatory_files[@]};i++)) ; do
         if [ ! -e "${mandatory_files[i]}" ] ; then 
-            print_fail "${mandatory_files[i]} is missing, but a mandatory file.\t --> Check your installation!"
+            print_fail "${mandatory_files[i]} is missing, but a mandatory file." "Check your installation!"
             ((fails++))
         fi
         rpm_leftovers+=("${mandatory_files[i]}.rpmsave" "${mandatory_files[i]}.rpmnew" )
     done 
     for ((i=0;i<${#invalid_files[@]};i++)) ; do
         if [ -e "${invalid_files[i]}" ] ; then 
-            print_warn "${invalid_files[i]} is not used by this version. Maybe a leftover from an update?\t --> Check the content and remove it."
+            print_warn "${invalid_files[i]} is not used by this version. Maybe a leftover from an update?" "Check the content and remove it."
             ((warnings++))
         fi
         rpm_leftovers+=("${invalid_files[i]}.rpmsave" "${invalid_files[i]}.rpmnew" )
@@ -330,10 +359,31 @@ function compile_filelists() {
     # Print a warning if we have found RPM leftovers!
     for ((i=0;i<${#rpm_leftovers[@]};i++)) ; do
         if [ -e "${rpm_leftovers[i]}" ] ; then 
-            print_warn "${rpm_leftovers[i]} found. This is a leftover from a package update!\t --> Check the content and remove it."
+            print_warn "${rpm_leftovers[i]} found. This is a leftover from a package update!" "Check the content and remove it."
             ((warnings++))
         fi
     done 
+
+    # Print a warning and recommend a deletion, if sapconf is not intalled and we found some files.
+    if [ -z ${package_version['sapconf']} ] ; then
+        for ((i=0;i<${#sapconf_leftovers[@]};i++)) ; do
+            if [ -e "${sapconf_leftovers[i]}" ] ; then 
+                print_warn "${sapconf_leftovers[i]} found. This is a leftover from a sapconf package upgrade or removal!" "Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug,"
+                ((warnings++))
+            fi
+        done 
+    fi
+
+    # Print a fail and recommend a deletion, if sapconf.service is stopped and we find these files.
+    if [ "${unit_state_active['sapconf.service']}" == 'inactive' ] ; then 
+        for ((i=0;i<${#critical_sapconf_leftovers[@]};i++)) ; do
+            if [ -e "${critical_sapconf_leftovers[i]}" ] ; then 
+                print_fail "${critical_sapconf_leftovers[i]} found. This is an unintended leftover from sapconf!" "Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug,"
+                ((fails++))
+            fi
+        done 
+    fi 
+
 }
 
 function check_saptune() {
@@ -358,20 +408,24 @@ function check_saptune() {
     esac
 
     # Let's test.
-    header "Checking saptune"
+    header "Checking saptune" 
     print_note "saptune package has version ${package_version['saptune']}"
 
+
+    # Check if leftover files still in place.
+    file_check saptune-3
 
     # Checking if system is "running" and has no failed units.
     case "${system_status['status']}" in
         running)
-            print_ok "System is in status \"running\""
+            print_ok "systemd reports status \"running\""
             ;;
         degraded)
-            print_warn "System is in status \"${system_status['status']}\". Failed services are: ${system_status['failed_units']}"  "Check the cause and reset the state with 'systemctl reset-failed'!"
+            print_warn "systemd reports status \"${system_status['status']}\". Failed units: ${system_status['failed_units']}"  "Check the cause and reset the state with 'systemctl reset-failed'!"
+            print_note "A degraded systemd system status means, that one or more systemd units failed. The system is still operational! Tuning might not be affected, please run 'saptune verfiy' for detailed information."
             ((warnings++))
-            ;;   
-        *)  print_fail "System is in status \"${system_status['status']}\"."  "Check (systemd) what is wrong!"
+            ;;
+        *)  print_fail "systemd reports status \"${system_status['status']}\"."  "Check systemd to see what is wrong!"
             ((fails++))
             ;;   
     esac  
