@@ -21,58 +21,55 @@ saptune \- Comprehensive system optimisation management for SAP solutions (\fBVe
 ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate to saptune version \fB3\fP, so please refer to man page saptune-migrate(7).
 
 .SH SYNOPSIS
-\fBsaptune daemon\fP
-[ start | stop ] \fBATTENTION: deprecated\fP
+\fBsaptune\fP [--output=FORMAT] \fBdaemon\fP
+( start | stop | status [--non-compliance-check] ) \fBATTENTION: deprecated\fP
 
-\fBsaptune daemon\fP
-status [--non-compliance-check] \fBATTENTION: deprecated\fP
+\fBsaptune\fP [--output=FORMAT] \fBservice\fP
+( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
-\fBsaptune service\fP
-[ start | stop | restart | takeover | enable | disable | enablestart | disablestop ]
+\fBsaptune\fP [--output=FORMAT] \fBnote\fP
+( list | revertall | enabled | applied )
 
-\fBsaptune service\fP
-status [--non-compliance-check]
+\fBsaptune\fP [--output=FORMAT] \fBnote\fP
+( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 
-\fBsaptune note\fP
-[ list | revertall | enabled | applied ]
+\fBsaptune\fP [--output=FORMAT] \fBnote\fP
+verify [--colorscheme=SCHEME] [--show-non-compliant] [NOTEID]
 
-\fBsaptune note\fP
-[ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
+\fBsaptune\fP [--output=FORMAT] \fBnote\fP
+rename NOTEID NEWNOTEID
 
-\fBsaptune note\fP
-verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
+\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+( list | verify | enabled | applied )
 
-\fBsaptune note\fP
-rename NoteID newNoteID
+\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
 
-\fBsaptune solution\fP
-[ list | verify | enabled | applied ]
+\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+verify [--colorscheme=SCHEME] [--show-non-compliant] [SOLUTIONNAME]
 
-\fBsaptune solution\fP
-[ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
+\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+rename SOLUTIONNAME NEWSOLUTIONNAME
 
-\fBsaptune solution\fP
-rename SolutionName newSolutionName
+\fBsaptune\fP [--output=FORMAT] \fBstaging\fP
+( status | enable | disable | is-enabled | list )
 
-\fBsaptune staging\fP
-[ status | enable | disable | is-enabled | list | diff | analysis | release ]
+\fBsaptune\fP [--output=FORMAT] \fBstaging\fP
+( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune staging\fP
-[ analysis | diff ] [ NoteID... | SolutionID... | all ]
+\fBsaptune\fP [--output=FORMAT] \fBstaging\fP
+release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune staging\fP
-release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
-
-\fBsaptune revert\fP
+\fBsaptune\fP [--output=FORMAT] \fBrevert\fP
 all
 
-\fBsaptune check\fP
+\fBsaptune\fP [--output=FORMAT] \fBcheck\fP
 
-\fBsaptune status [--non-compliance-check]\fP
+\fBsaptune\fP [--output=FORMAT] \fBstatus [--non-compliance-check]\fP
 
-\fBsaptune version\fP
+\fBsaptune\fP [--output=FORMAT] \fBversion\fP
 
-\fBsaptune help\fP
+\fBsaptune\fP [--output=FORMAT] \fBhelp\fP
 
 .SH DESCRIPTION
 saptune is designed to automate the configuration recommendations from SAP and SUSE to run an SAP application on SLES for SAP. These configuration recommendations normally referred to as SAP Notes. So some dedicated SAP Notes are the base for the work of saptune. Additional some best practice guides are added as Note definitions to optimise the system for some really special cases.
@@ -85,6 +82,13 @@ Additionally, it can simulate the setting of a single SAP Note definition or a d
 saptune does not only set kernel values (like sysctl does), but also values like cpu governor, energy perf bias, force latency (dma latency) and the disk io scheduler. Additionally it will check/verify, if suitable rpm versions are installed and special kernel command line values are set, according to the relevant SAP Notes. So saptune checks and applies values in various locations during runtime like
 .PP
 /proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.d/, /etc/systemd/logind.conf.d/ and some others.
+
+By default saptune is printing all results to stdout, Errors and Warnings are printed to stderr. By using \fB[--output=FORMAT]\fP this behaviour can be changed.
+.br
+Supported formats are:
+.TP
+.B json
+which prints all results in a machine readable json output format defined by the schemata delivered in \fI/usr/share/saptune/schemas/1.0\fP.
 
 saptune does no longer use tuned(8) to restart after a system reboot. It is using it's own systemd service named "saptune.service".
 
@@ -328,7 +332,7 @@ By using the command line argument '\fB--show-non-compliant\fP' it is possible t
 
 It is possible to use a \fBcolor scheme\fP for the verify output table.
 .br
-The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme=<color scheme>\fP' or as variable '\fBCOLOR_SCHEME=<color scheme>\fP' in the saptune configuration file \fI/etc/sysconfig/saptune\fP.
+The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme=SCHEME\fP' or as variable '\fBCOLOR_SCHEME=SCHEME\fP' in the saptune configuration file \fI/etc/sysconfig/saptune\fP.
 .br
 Possible \fBcolor schemes\fP are:
 .RS 7
@@ -628,7 +632,7 @@ The solution definition is shown as a whole object. It is only possible to relea
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them and that it is possible to view the changes.
 .TP
-.B diff [NoteID|SolutionID]
+.B diff [ ( NOTEID | SOLUTIONNAME )... | all ]
 Shows the differences between the Note (or all Notes) or the Solution definition in the staging area and the working area.
 .br
 For each Note in the staging area the output contains the values of all parameter which differ. This includes new or removed parameters as well as changes in the reminder section.
@@ -637,12 +641,12 @@ For the Solution, all changed solutions are displayed with their differences.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them.
 .TP
-.B analysis NoteID...|SolutionID...|all
+.B analysis [ ( NOTEID | SOLUTIONNAME )... | all ]
 Does an analysis of the requested Notes, the Solution definitions or everything in the staging area to warn the user about possible issues or additional steps to perform.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them as well that he should check out the differences.
 .TP
-.B release NoteID...|SolutionID...|all
+.B release [ ( NOTEID | SOLUTIONNAME )... | all ]
 Releases the requested Notes, the Solution definitions or everything in the stages area.
 .br
 This means the Notes or the Solution definitions get moved from the staging area to the working area. In case of a deleted Note/Solution, it will be removed from the working area.
