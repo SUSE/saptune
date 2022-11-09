@@ -27,6 +27,7 @@ func SolutionAction(writer io.Writer, actionName, solName, newSolName string, tu
 	case "verify":
 		SolutionActionVerify(writer, solName, tuneApp)
 	case "simulate":
+		system.WarningLog("the action 'solution simulate' is deprecated!.\nsaptune will still handle this action in the current version, but it will be removed in future versions of saptune.")
 		SolutionActionSimulate(writer, solName, tuneApp)
 	case "customise", "customize":
 		SolutionActionCustomise(writer, solName, tuneApp)
