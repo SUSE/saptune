@@ -359,7 +359,7 @@ The default, if no \fBcolor scheme\fP is given, is \fBfull-red-noncmpl\fP. If an
 The 'final lines' with the overall result of the verify operation are colored green (compliant) or red (not compliant) independent from the chosen \fBcolor scheme\fP
 .SS
 .TP
-.B simulate
+.B simulate - ATTENTION: deprecated
 Show all changes that will be applied to the system if the specified Note is applied.
 As a result you will see a table containing the following columns
 
@@ -510,7 +510,7 @@ Print the current applied solution.
 .br
 If one or more notes of the solution are \fBreverted\fP, which is indicated by a '-' in the output of 'saptune note list', the string '\fB(partial)\fP is added to the solution name.
 .TP
-.B simulate
+.B simulate - ATTENTION: deprecated
 Show all notes that are associated with the specified solution, and all changes that will be applied once the solution is activated.
 .TP
 .B verify
@@ -769,6 +769,11 @@ With the update to saptune version 3 saptune does no longer use tuned(8) to rest
 So we now \fBdeprecated\fP all "DAEMON ACTIONS" like '\fIsaptune daemon start\fP'. These commands will still work as they are internally linked to the related "SERVICE ACTIONS" like '\fIsaptune service takeover\fP'. Please refer to the related section descriptions at the top of this man page.
 
 .SH FILES
+.PP
+\fI/usr/share/saptune/schemas/1.0\fP
+.RS 4
+schemata defining the json output format available since saptune version 3.1
+.RE
 .PP
 \fI/usr/share/saptune/notes\fP
 .RS 4
