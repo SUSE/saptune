@@ -94,6 +94,7 @@ Tune system according to SAP and SUSE notes:
 Tune system for all notes applicable to your SAP solution:
   saptune [--output=FORMAT] solution ( list | verify | enabled | applied )
   saptune [--output=FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
+  saptune [--output=FORMAT] solution change [--force] SOLUTIONNAME
   saptune [--output=FORMAT] solution verify [--colorscheme=SCHEME] [--show-non-compliant] [SOLUTIONNAME]
   saptune [--output=FORMAT] solution rename SOLUTIONNAME NEWSOLUTIONNAME
 Staging control:

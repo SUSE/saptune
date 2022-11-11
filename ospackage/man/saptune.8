@@ -46,6 +46,9 @@ rename NOTEID NEWNOTEID
 ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
 
 \fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+change [--force] SOLUTIONNAME
+
+\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
 verify [--colorscheme=SCHEME] [--show-non-compliant] [SOLUTIONNAME]
 
 \fBsaptune\fP [--output=FORMAT] \fBsolution\fP
@@ -547,6 +550,10 @@ You need to choose an unique solution name for this operation. Use '\fIsaptune s
 .TP
 .B revert
 Revert optimisation settings recommended by the solution, and these settings will no longer be activated automatically upon system boot.
+.TP
+.B change
+Switch to a new solution even that another solution was already applied.
+.br This is basically a revert of the old solution and an apply of the new solution. A confirmation is needed to finish the revert action of the old solution. The confirmation can be suppressed by '--force'
 .TP
 .B show
 Print content of solution definition file to stdout

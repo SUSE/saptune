@@ -276,8 +276,13 @@ func chkCmdOpts(cmdLinePos map[string]int) bool {
 		// the appropriate result
 		return true
 	}
+	// saptune solution change [--force] SOLUTIONNAME
 	// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
-	if !chkStagingReleaseSyntax(cmdLinePos) {
+	if !chkForceFlag(cmdLinePos) {
+		ret = false
+	}
+	// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
+	if !chkDryrunFlag(cmdLinePos) {
 		ret = false
 	}
 	// saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NOTEID]
@@ -291,17 +296,36 @@ func chkCmdOpts(cmdLinePos map[string]int) bool {
 	return ret
 }
 
-// chkStagingReleaseSyntax checks the syntax of 'saptune staging release'
-// command line regarding command line options
+// chkForceFlag checks the syntax of 'saptune solution change'
+// and 'saptune staging release' command line regarding the use
+// of the 'force' flag
+// saptune solution change [--force] SOLUTIONNAME
 // saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
-func chkStagingReleaseSyntax(cmdLinePos map[string]int) bool {
+func chkForceFlag(cmdLinePos map[string]int) bool {
 	stArgs := os.Args
 	ret := true
-	if IsFlagSet("dryrun") || IsFlagSet("force") {
+	if IsFlagSet("force") {
+		if !(stArgs[cmdLinePos["realm"]] == "solution" && stArgs[cmdLinePos["cmd"]] == "change") && !(stArgs[cmdLinePos["realm"]] == "staging" && stArgs[cmdLinePos["cmd"]] == "release") {
+			ret = false
+		}
+		if stArgs[cmdLinePos["cmdOpt"]] != "--force" {
+			ret = false
+		}
+	}
+	return ret
+}
+
+// chkDryrunFlag checks the syntax of 'saptune staging release'
+// command line regarding command line the use of the 'dry-run' flag
+// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
+func chkDryrunFlag(cmdLinePos map[string]int) bool {
+	stArgs := os.Args
+	ret := true
+	if IsFlagSet("dryrun") {
 		if !(stArgs[cmdLinePos["realm"]] == "staging" && stArgs[cmdLinePos["cmd"]] == "release") {
 			ret = false
 		}
-		if stArgs[cmdLinePos["cmdOpt"]] != "--dry-run" && stArgs[cmdLinePos["cmdOpt"]] != "--force" {
+		if stArgs[cmdLinePos["cmdOpt"]] != "--dry-run" {
 			ret = false
 		}
 	}
