@@ -21,58 +21,58 @@ saptune \- Comprehensive system optimisation management for SAP solutions (\fBVe
 ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate to saptune version \fB3\fP, so please refer to man page saptune-migrate(7).
 
 .SH SYNOPSIS
-\fBsaptune\fP [--output=FORMAT] \fBdaemon\fP
+\fBsaptune\fP [--format=FORMAT] \fBdaemon\fP
 ( start | stop | status [--non-compliance-check] ) \fBATTENTION: deprecated\fP
 
-\fBsaptune\fP [--output=FORMAT] \fBservice\fP
+\fBsaptune\fP [--format=FORMAT] \fBservice\fP
 ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
-\fBsaptune\fP [--output=FORMAT] \fBnote\fP
+\fBsaptune\fP [--format=FORMAT] \fBnote\fP
 ( list | revertall | enabled | applied )
 
-\fBsaptune\fP [--output=FORMAT] \fBnote\fP
+\fBsaptune\fP [--format=FORMAT] \fBnote\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 
-\fBsaptune\fP [--output=FORMAT] \fBnote\fP
+\fBsaptune\fP [--format=FORMAT] \fBnote\fP
 verify [--colorscheme=SCHEME] [--show-non-compliant] [NOTEID]
 
-\fBsaptune\fP [--output=FORMAT] \fBnote\fP
+\fBsaptune\fP [--format=FORMAT] \fBnote\fP
 rename NOTEID NEWNOTEID
 
-\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
 ( list | verify | enabled | applied )
 
-\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
 
-\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
 change [--force] SOLUTIONNAME
 
-\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
 verify [--colorscheme=SCHEME] [--show-non-compliant] [SOLUTIONNAME]
 
-\fBsaptune\fP [--output=FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
 rename SOLUTIONNAME NEWSOLUTIONNAME
 
-\fBsaptune\fP [--output=FORMAT] \fBstaging\fP
+\fBsaptune\fP [--format=FORMAT] \fBstaging\fP
 ( status | enable | disable | is-enabled | list )
 
-\fBsaptune\fP [--output=FORMAT] \fBstaging\fP
+\fBsaptune\fP [--format=FORMAT] \fBstaging\fP
 ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune\fP [--output=FORMAT] \fBstaging\fP
+\fBsaptune\fP [--format=FORMAT] \fBstaging\fP
 release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune\fP [--output=FORMAT] \fBrevert\fP
+\fBsaptune\fP [--format=FORMAT] \fBrevert\fP
 all
 
-\fBsaptune\fP [--output=FORMAT] \fBcheck\fP
+\fBsaptune\fP [--format=FORMAT] \fBcheck\fP
 
-\fBsaptune\fP [--output=FORMAT] \fBstatus [--non-compliance-check]\fP
+\fBsaptune\fP [--format=FORMAT] \fBstatus [--non-compliance-check]\fP
 
-\fBsaptune\fP [--output=FORMAT] \fBversion\fP
+\fBsaptune\fP [--format=FORMAT] \fBversion\fP
 
-\fBsaptune\fP [--output=FORMAT] \fBhelp\fP
+\fBsaptune\fP [--format=FORMAT] \fBhelp\fP
 
 .SH DESCRIPTION
 saptune is designed to automate the configuration recommendations from SAP and SUSE to run an SAP application on SLES for SAP. These configuration recommendations normally referred to as SAP Notes. So some dedicated SAP Notes are the base for the work of saptune. Additional some best practice guides are added as Note definitions to optimise the system for some really special cases.
@@ -86,7 +86,7 @@ saptune does not only set kernel values (like sysctl does), but also values like
 .PP
 /proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.d/, /etc/systemd/logind.conf.d/ and some others.
 
-By default saptune is printing all results to stdout, Errors and Warnings are printed to stderr. By using \fB[--output=FORMAT]\fP this behaviour can be changed.
+By default saptune is printing all results to stdout, Errors and Warnings are printed to stderr. By using \fB[--format=FORMAT]\fP this behaviour can be changed.
 .br
 Supported formats are:
 .TP
