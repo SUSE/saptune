@@ -273,34 +273,34 @@ func PrintHelpAndExit(writer io.Writer, exitStatus int) {
 	}
 	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
-  saptune [--output=FORMAT] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
-  saptune [--output=FORMAT] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
+  saptune [--format=FORMAT] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
+  saptune [--format=FORMAT] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 Tune system according to SAP and SUSE notes:
-  saptune [--output=FORMAT] note ( list | revertall | enabled | applied )
-  saptune [--output=FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
-  saptune [--output=FORMAT] note verify [--colorscheme=SCHEME] [--show-non-compliant] [NOTEID]
-  saptune [--output=FORMAT] note rename NOTEID NEWNOTEID
+  saptune [--format=FORMAT] note ( list | revertall | enabled | applied )
+  saptune [--format=FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+  saptune [--format=FORMAT] note verify [--colorscheme=SCHEME] [--show-non-compliant] [NOTEID]
+  saptune [--format=FORMAT] note rename NOTEID NEWNOTEID
 Tune system for all notes applicable to your SAP solution:
-  saptune [--output=FORMAT] solution ( list | verify | enabled | applied )
-  saptune [--output=FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
-  saptune [--output=FORMAT] solution change [--force] SOLUTIONNAME
-  saptune [--output=FORMAT] solution verify [--colorscheme=SCHEME] [--show-non-compliant] [SOLUTIONNAME]
-  saptune [--output=FORMAT] solution rename SOLUTIONNAME NEWSOLUTIONNAME
+  saptune [--format=FORMAT] solution ( list | verify | enabled | applied )
+  saptune [--format=FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
+  saptune [--format=FORMAT] solution change [--force] SOLUTIONNAME
+  saptune [--format=FORMAT] solution verify [--colorscheme=SCHEME] [--show-non-compliant] [SOLUTIONNAME]
+  saptune [--format=FORMAT] solution rename SOLUTIONNAME NEWSOLUTIONNAME
 Staging control:
-   saptune [--output=FORMAT] staging ( status | enable | disable | is-enabled | list )
-   saptune [--output=FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
-   saptune [--output=FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+   saptune [--format=FORMAT] staging ( status | enable | disable | is-enabled | list )
+   saptune [--format=FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
+   saptune [--format=FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
 Revert all parameters tuned by the SAP notes or solutions:
-  saptune [--output=FORMAT] revert all
+  saptune [--format=FORMAT] revert all
 Remove the pending lock file from a former saptune call
-  saptune [--output=FORMAT] lock remove
+  saptune [--format=FORMAT] lock remove
 Call external script '/usr/sbin/saptune_check'
-  saptune [--output=FORMAT] check
+  saptune [--format=FORMAT] check
 Print current saptune status:
-  saptune [--output=FORMAT] status [--non-compliance-check]
+  saptune [--format=FORMAT] status [--non-compliance-check]
 Print current saptune version:
-  saptune [--output=FORMAT] version
+  saptune [--format=FORMAT] version
 Print this message:
-  saptune [--output=FORMAT] help`)
+  saptune [--format=FORMAT] help`)
 	system.ErrorExit("", exitStatus)
 }
