@@ -68,7 +68,7 @@ Overview about implemented commands and their schema
 | saptune note enabled    	        | yes |  yes  |  
 | saptune note applied	            | yes |  yes  |
 | saptune note apply                | no  |  no   |
-| saptune note simulate   	        | no  |  no   |
+| saptune note simulate   	        | yes |  yes |
 | saptune note customise|customize  | no  |  no   | 
 | saptune note create	              | no  |  no   |
 | saptune note edit 	              | no  |  no   |
@@ -82,7 +82,8 @@ Overview about implemented commands and their schema
 | saptune solution enabled	        | yes |  yes  |
 | saptune solution applied          | yes |  yes  |
 | saptune solution apply	          | no  |  no   |
-| saptune solution simulate	        | no  |  no   |
+| saptune solution change	          | no  |  no   |
+| saptune solution simulate	        | yes |  yes  |
 | saptune solution revert           | no  |  no   | 
 | saptune solution create	          | no  |  no   |
 | saptune solution edit	            | no  |  no   |
@@ -185,5 +186,3 @@ RULES
 
 ToDo
 ====
- 
- - Add 'comment' of 'saptune note|solution simulate' in above large table, if it should stay.
