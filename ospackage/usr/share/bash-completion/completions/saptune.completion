@@ -24,10 +24,10 @@ _saptune_completions_filter() {
 
 _saptune_completions() {
 
-  if [[ "" =~ ^saptune\ --format\ json ]] ; then
+  if [[ "${COMP_WORDS[*]}" =~ ^saptune\ --format\ json ]] ; then
      unset COMP_WORDS[1]  # remove '--format'
      unset COMP_WORDS[2]  # remove '--json'
-     COMP_WORDS=(  )
+     COMP_WORDS=( ${COMP_WORDS[@]} )
      ((COMP_CWORD-=2))
   fi
 
