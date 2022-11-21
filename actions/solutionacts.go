@@ -27,6 +27,7 @@ func SolutionAction(writer io.Writer, actionName, solName, newSolName string, tu
 	case "verify":
 		SolutionActionVerify(writer, solName, tuneApp)
 	case "simulate":
+		system.WarningLog("the action 'solution simulate' is deprecated!.\nsaptune will still handle this action in the current version, but it will be removed in future versions of saptune.")
 		SolutionActionSimulate(writer, solName, tuneApp)
 	case "customise", "customize":
 		SolutionActionCustomise(writer, solName, tuneApp)
@@ -40,6 +41,8 @@ func SolutionAction(writer io.Writer, actionName, solName, newSolName string, tu
 		SolutionActionDelete(os.Stdin, writer, solName, tuneApp)
 	case "rename":
 		SolutionActionRename(os.Stdin, writer, solName, newSolName, tuneApp)
+	case "change":
+		SolutionActionChange(os.Stdin, writer, solName, tuneApp)
 	case "revert":
 		SolutionActionRevert(writer, solName, tuneApp)
 	case "applied":
@@ -62,18 +65,7 @@ func SolutionActionApply(writer io.Writer, solName string, tuneApp *app.App) {
 		// do not apply another solution. Does not make sense
 		system.ErrorExit("There is already one solution applied. Applying another solution is NOT supported.", 1)
 	}
-	removedAdditionalNotes, err := tuneApp.TuneSolution(solName)
-	if err != nil {
-		system.ErrorExit("Failed to tune for solution %s: %v", solName, err)
-	}
-	fmt.Fprintf(writer, "All tuning options for the SAP solution have been applied successfully.\n")
-	if len(removedAdditionalNotes) > 0 {
-		fmt.Fprintf(writer, "\nThe following previously-enabled notes are now tuned by the SAP solution:\n")
-		for _, noteNumber := range removedAdditionalNotes {
-			fmt.Fprintf(writer, "\t%s\t%s\n", noteNumber, tuneApp.AllNotes[noteNumber].Name())
-		}
-	}
-	rememberMessage(writer)
+	applySolution(writer, solName, tuneApp)
 }
 
 // SolutionActionList lists all available solution definitions
@@ -210,6 +202,41 @@ func SolutionActionRevert(writer io.Writer, solName string, tuneApp *app.App) {
 	} else {
 		system.NoticeLog("Solution '%s' is not applied, so nothing to revert.", solName)
 	}
+}
+
+// SolutionActionChange switches to a new solution even that another solution
+// was already applied
+// It's basically a 'revert OLDSOLUTION' && 'apply NEWSOLUTION'.
+// This will change the Note order in case of additional applied Notes, but
+// this is intended and accepted.
+// The confirmation can be suppressed by '--force'
+func SolutionActionChange(reader io.Reader, writer io.Writer, solName string, tuneApp *app.App) {
+	if solName == "" {
+		PrintHelpAndExit(writer, 1)
+	}
+	if len(tuneApp.TuneForSolutions) > 0 {
+		// already one solution applied.
+		oldSol := tuneApp.TuneForSolutions[0]
+		if oldSol == solName {
+			system.NoticeLog("Solution '%s' already applied, nothing to do.", solName)
+			system.ErrorExit("", 0)
+		}
+		system.NoticeLog("Exchange applied solution '%s' with new solution '%s'", oldSol, solName)
+		if !system.IsFlagSet("force") {
+			txtConfirm := fmt.Sprintf("Do you really want to exchange the applied solution (%s) with the new solution '%s'?", oldSol, solName)
+			if !readYesNo(txtConfirm, reader, writer) {
+				system.ErrorExit("Solution action 'change' aborted by user interaction", 0)
+			}
+		}
+		// revert old solution
+		if err := tuneApp.RevertSolution(oldSol); err != nil {
+			system.ErrorExit("Failed to revert tuning for the old solution %s: %v", oldSol, err)
+		}
+		system.InfoLog("Change solution - revert of old solution '%s' done.", oldSol)
+	}
+	// apply new solution
+	system.InfoLog("Change solution - apply new solution '%s'.", solName)
+	applySolution(writer, solName, tuneApp)
 }
 
 // SolutionActionEnabled prints out the enabled solution definition
@@ -559,4 +586,20 @@ func getNoteInSol(tApp *app.App, noteName string) (string, string) {
 		}
 	}
 	return noteInSols, noteInCustomSols
+}
+
+// applySolution will apply the given solution
+func applySolution(writer io.Writer, solName string, tuneApp *app.App) {
+	removedAdditionalNotes, err := tuneApp.TuneSolution(solName)
+	if err != nil {
+		system.ErrorExit("Failed to tune for solution %s: %v", solName, err)
+	}
+	fmt.Fprintf(writer, "All tuning options for the SAP solution have been applied successfully.\n")
+	if len(removedAdditionalNotes) > 0 {
+		fmt.Fprintf(writer, "\nThe following previously-enabled notes are now tuned by the SAP solution:\n")
+		for _, noteNumber := range removedAdditionalNotes {
+			fmt.Fprintf(writer, "\t%s\t%s\n", noteNumber, tuneApp.AllNotes[noteNumber].Name())
+		}
+	}
+	rememberMessage(writer)
 }

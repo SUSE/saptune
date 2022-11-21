@@ -97,6 +97,9 @@ net.core.netdev_max_backlog = 30000
 # value between 20 and 10
 vm.swappiness = 15
 
+[sysctl:csp=azure]
+net.ipv4.tcp_keepalive_time =
+
 [reminder]
 # DBMS data storage settings: use ext4 or xfs file system. 
 # For best performance, disable the journal via tune2fs ^has_journal.

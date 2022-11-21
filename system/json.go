@@ -9,7 +9,7 @@ import (
 )
 
 var schemaDir = "file:///usr/share/saptune/schemas/1.0/"
-var supportedRAC = map[string]bool{"daemon start": false, "daemon status": true, "daemon stop": false, "service apply": false, "service start": false, "service status": true, "service stop": false, "service restart": false, "service revert": false, "service reload": false, "service takeover": false, "service enable": false, "service disable": false, "service enablestart": false, "service disablestop": false, "note list": true, "note revertall": false, "note enabled": true, "note applied": true, "note apply": false, "note simulate": false, "note customise": false, "note create": false, "note edit": false, "note revert": false, "note show": false, "note delete": false, "note verify": true, "note rename": false, "solution list": true, "solution verify": true, "solution enabled": true, "solution applied": true, "solution apply": false, "solution simulate": false, "solution customise": false, "solution create": false, "solution edit": false, "solution revert": false, "solution show": false, "solution delete": false, "solution rename": false, "staging status": false, "staging enable": false, "staging disable": false, "staging is-enabled": false, "staging list": false, "staging diff": false, "staging analysis": false, "staging release": false, "revert all": false, "lock remove": false, "check": false, "status": true, "version": true, "help": false}
+var supportedRAC = map[string]bool{"daemon start": false, "daemon status": true, "daemon stop": false, "service apply": false, "service start": false, "service status": true, "service stop": false, "service restart": false, "service revert": false, "service reload": false, "service takeover": false, "service enable": false, "service disable": false, "service enablestart": false, "service disablestop": false, "note list": true, "note revertall": false, "note enabled": true, "note applied": true, "note apply": false, "note simulate": true, "note customise": false, "note create": false, "note edit": false, "note revert": false, "note show": false, "note delete": false, "note verify": true, "note rename": false, "solution list": true, "solution verify": true, "solution enabled": true, "solution applied": true, "solution apply": false, "solution change": false, "solution simulate": true, "solution customise": false, "solution create": false, "solution edit": false, "solution revert": false, "solution show": false, "solution delete": false, "solution rename": false, "staging status": false, "staging enable": false, "staging disable": false, "staging is-enabled": false, "staging list": false, "staging diff": false, "staging analysis": false, "staging release": false, "revert all": false, "lock remove": false, "check": false, "status": true, "version": true, "help": false}
 
 // jentry is the json entry to display
 var jentry JEntry
@@ -336,6 +336,15 @@ func realmAndCmd() string {
 	if CliArg(2) != "" {
 		rac = rac + " " + CliArg(2)
 	}
+	if rac == "" {
+		// check for alias
+		if IsFlagSet("version") {
+			rac = "version"
+		}
+		if IsFlagSet("help") {
+			rac = "help"
+		}
+	}
 	return rac
 }
 
@@ -347,4 +356,22 @@ func racIsSupported(rac string) bool {
 		return true
 	}
 	return supportedRAC[rac]
+}
+
+// JNoteListEntryInit initialises a JNoteListEntry variable
+// used in NoteActionList
+func JNoteListEntryInit() JNoteListEntry {
+	newListEntry := JNoteListEntry{
+		NoteID:       "",
+		NoteDesc:     "",
+		NoteRef:      make([]string, 0),
+		NoteVers:     "",
+		NoteRdate:    "",
+		ManEnabled:   false,
+		SolEnabled:   false,
+		ManReverted:  false,
+		NoteOverride: false,
+		CustomNote:   false,
+	}
+	return newListEntry
 }

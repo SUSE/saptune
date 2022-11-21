@@ -25,6 +25,7 @@ func NoteAction(writer io.Writer, actionName, noteID, newNoteID string, tuneApp 
 	case "verify":
 		NoteActionVerify(writer, noteID, tuneApp)
 	case "simulate":
+		system.WarningLog("the action 'note simulate' is deprecated!.\nsaptune will still handle this action in the current version, but it will be removed in future versions of saptune.")
 		NoteActionSimulate(writer, noteID, tuneApp)
 	case "customise", "customize":
 		NoteActionCustomise(writer, noteID, tuneApp)
@@ -77,51 +78,15 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 // NoteActionList lists all available Note definitions
 func NoteActionList(writer io.Writer, tuneApp *app.App) {
 	fmt.Fprintf(writer, "\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note):\n")
+	format := ""
 	jnoteList := []system.JNoteListEntry{}
 	jnoteListEntry := system.JNoteListEntry{}
 
 	solutionNoteIDs := tuneApp.GetSortedSolutionEnabledNotes()
 	for _, noteID := range tuneApp.GetSortedAllNotes() {
-		jnoteListEntry = system.JNoteListEntry{
-			NoteID:       "",
-			NoteDesc:     "",
-			NoteRef:      make([]string, 0),
-			NoteVers:     "",
-			NoteRdate:    "",
-			ManEnabled:   false,
-			SolEnabled:   false,
-			ManReverted:  false,
-			NoteOverride: false,
-			CustomNote:   false,
-		}
 		noteObj := tuneApp.AllNotes[noteID]
-		format := "\t%s\t\t%s\n"
-		if len(noteID) >= 8 {
-			format = "\t%s\t%s\n"
-		}
-		if _, err := os.Stat(fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)); err == nil {
-			// override file exists
-			format = " O" + format
-			jnoteListEntry.NoteOverride = true
-		}
-		if _, err := os.Stat(fmt.Sprintf("%s%s.conf", ExtraTuningSheets, noteID)); err == nil {
-			// custom note
-			format = " C" + format
-			jnoteListEntry.CustomNote = true
-		}
-		if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
-			j := tuneApp.PositionInNoteApplyOrder(noteID)
-			if j < 0 { // noteID was reverted manually
-				format = " " + setGreenText + "-" + format + resetTextColor
-				jnoteListEntry.ManReverted = true
-			} else {
-				format = " " + setGreenText + "*" + format + resetTextColor
-				jnoteListEntry.SolEnabled = true
-			}
-		} else if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
-			format = " " + setGreenText + "+" + format + resetTextColor
-			jnoteListEntry.ManEnabled = true
-		}
+		// setup the list format to print
+		format, jnoteListEntry = setupNoteListFormat(noteID, solutionNoteIDs, tuneApp)
 		// handle special highlighting in Note description
 		// like the 'only' in SAP Note 1656250
 		bonly := " " + setBoldText + "only" + resetBoldText + " "
@@ -143,6 +108,40 @@ func NoteActionList(writer io.Writer, tuneApp *app.App) {
 		Msg:        remember.String(),
 	}
 	system.Jcollect(result)
+}
+
+// setupNoteListFormat collects needed info and setup the list format
+func setupNoteListFormat(noteID string, solutionNoteIDs []string, tuneApp *app.App) (string, system.JNoteListEntry) {
+	jnoteListEntry := system.JNoteListEntryInit()
+	format := "\t%s\t\t%s\n"
+	if len(noteID) >= 8 {
+		format = "\t%s\t%s\n"
+	}
+	if _, err := os.Stat(fmt.Sprintf("%s%s", OverrideTuningSheets, noteID)); err == nil {
+		// override file exists
+		format = " O" + format
+		jnoteListEntry.NoteOverride = true
+	}
+	if _, err := os.Stat(fmt.Sprintf("%s%s.conf", ExtraTuningSheets, noteID)); err == nil {
+		// custom note
+		format = " C" + format
+		jnoteListEntry.CustomNote = true
+	}
+	if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
+		j := tuneApp.PositionInNoteApplyOrder(noteID)
+		if j < 0 { // noteID was reverted manually
+			format = " " + setGreenText + "-" + format + resetTextColor
+			jnoteListEntry.ManReverted = true
+		} else {
+			format = " " + setGreenText + "*" + format + resetTextColor
+			jnoteListEntry.SolEnabled = true
+		}
+	}
+	if i := sort.SearchStrings(tuneApp.TuneForNotes, noteID); i < len(tuneApp.TuneForNotes) && tuneApp.TuneForNotes[i] == noteID {
+		format = " " + setGreenText + "+" + format + resetTextColor
+		jnoteListEntry.ManEnabled = true
+	}
+	return format, jnoteListEntry
 }
 
 // NoteActionVerify compares all parameter settings from a Note definition
@@ -445,7 +444,7 @@ func solutionStillEnabled(tuneApp *app.App) {
 			if tuneApp.PositionInNoteApplyOrder(solNote) < 0 {
 				continue
 			} else {
-				solNoteAvail = true // sol weiter gültig
+				solNoteAvail = true // sol still valid
 				break
 			}
 		}

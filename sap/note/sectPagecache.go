@@ -40,7 +40,6 @@ func GetPagecacheVal(key string, cur *LinuxPagingImprovements) string {
 
 // OptPagecacheVal optimises the pagecache structure with the settings
 // from the configuration file or with a calculation
-//func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements, keyvalue map[string]map[string]txtparser.INIEntry) string {
 func OptPagecacheVal(key, cfgval string, cur *LinuxPagingImprovements) string {
 	val := strings.ToLower(cfgval)
 

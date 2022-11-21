@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-//define constants and variables for the whole package
+// define constants and variables for the whole package
 const (
 	SaptuneService     = "saptune.service"
 	SapconfService     = "sapconf.service"
@@ -60,9 +60,9 @@ var solutionSelector = system.GetSolutionSelector()
 var saptuneSysconfig = "/etc/sysconfig/saptune"
 
 // set colors for the table and list output
-//var setYellowText = "\033[38;5;220m"
-//var setCyanText = "\033[36m"
-//var setUnderlinedText = "\033[4m"
+// var setYellowText = "\033[38;5;220m"
+// var setCyanText = "\033[36m"
+// var setUnderlinedText = "\033[4m"
 var setGreenText = "\033[32m"
 var setRedText = "\033[31m"
 var setYellowText = "\033[33m"
@@ -243,7 +243,6 @@ func renameDefFile(fileName, newFileName string) {
 }
 
 // deleteDefFile will delete a definition file (Note or Solution)
-//func deleteDefFile(fileName, ovFileName string, overrideDef, extraDef bool) {
 func deleteDefFile(fileName string) {
 	if err := os.Remove(fileName); err != nil {
 		system.ErrorExit("Failed to remove file '%s' - %v", fileName, err)
@@ -274,34 +273,34 @@ func PrintHelpAndExit(writer io.Writer, exitStatus int) {
 	}
 	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
-  saptune daemon [ start | stop ]                 ATTENTION: deprecated
-  saptune daemon status [--non-compliance-check]  ATTENTION: deprecated
-  saptune service [ start | stop | restart | takeover | enable | disable | enablestart | disablestop ]
-  saptune service status [--non-compliance-check]
+  saptune [--format=FORMAT] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
+  saptune [--format=FORMAT] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 Tune system according to SAP and SUSE notes:
-  saptune note [ list | revertall | enabled | applied ]
-  saptune note [ apply | simulate | customise | create | edit | revert | show | delete ] NoteID
-  saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NoteID]
-  saptune note rename NoteID newNoteID
+  saptune [--format=FORMAT] note ( list | revertall | enabled | applied )
+  saptune [--format=FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+  saptune [--format=FORMAT] note verify [--colorscheme=SCHEME] [--show-non-compliant] [NOTEID]
+  saptune [--format=FORMAT] note rename NOTEID NEWNOTEID
 Tune system for all notes applicable to your SAP solution:
-  saptune solution [ list | verify | enabled | applied ]
-  saptune solution [ apply | simulate | verify | customise | create | edit | revert | show | delete ] SolutionName
-  saptune solution rename SolutionName newSolutionName
+  saptune [--format=FORMAT] solution ( list | verify | enabled | applied )
+  saptune [--format=FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
+  saptune [--format=FORMAT] solution change [--force] SOLUTIONNAME
+  saptune [--format=FORMAT] solution verify [--colorscheme=SCHEME] [--show-non-compliant] [SOLUTIONNAME]
+  saptune [--format=FORMAT] solution rename SOLUTIONNAME NEWSOLUTIONNAME
 Staging control:
-   saptune staging [ status | enable | disable | is-enabled | list | diff | analysis | release ]
-   saptune staging [ analysis | diff ] [ NoteID... | SolutionID... | all ]
-   saptune staging release [--force|--dry-run] [ NoteID... | SolutionID... | all ]
+   saptune [--format=FORMAT] staging ( status | enable | disable | is-enabled | list )
+   saptune [--format=FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
+   saptune [--format=FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
 Revert all parameters tuned by the SAP notes or solutions:
-  saptune revert all
+  saptune [--format=FORMAT] revert all
 Remove the pending lock file from a former saptune call
-  saptune lock remove
+  saptune [--format=FORMAT] lock remove
 Call external script '/usr/sbin/saptune_check'
-  saptune check
+  saptune [--format=FORMAT] check
 Print current saptune status:
-  saptune status [--non-compliance-check]
+  saptune [--format=FORMAT] status [--non-compliance-check]
 Print current saptune version:
-  saptune version
+  saptune [--format=FORMAT] version
 Print this message:
-  saptune help`)
+  saptune [--format=FORMAT] help`)
 	system.ErrorExit("", exitStatus)
 }
