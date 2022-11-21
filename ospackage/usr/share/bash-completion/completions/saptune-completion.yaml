@@ -1,29 +1,31 @@
 # This is the input configuration for 'completely' (https://github.com/DannyBen/completely)
 # to generate the bash completion script.
 #
-# v2.0
+# v2.1
 #
 # Changelog:    29.09.2022  v2.0  - first release for saptune 3.1
+#               21.11.2022  v2.1  - Replace --output with --format in syntax description
+#                                 - Add `saptune solution change [--force]`
 #
-# Syntax:       saptune [--output FORMAT] help
-#               saptune [--output FORMAT] version  
-#               saptune [--output FORMAT] status [--non-compliance-check] 
-#               saptune [--output FORMAT] daemon ( start | stop | status [--non-compliance-check] )
-#               saptune [--output FORMAT] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
-#               saptune [--output FORMAT] note ( list | revertall | enabled | applied )
-#               saptune [--output FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
-#               saptune [--output FORMAT] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
-#               saptune [--output FORMAT] note rename NOTEID NEWNOTEID
-#               saptune [--output FORMAT] solution ( list | verify | enabled | applied )
-#               saptune [--output FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SolutionName
-#               saptune [--output FORMAT] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
-#               saptune [--output FORMAT] solution rename SOLUTIONID NEWSOLUTIONID
-#               saptune [--output FORMAT] staging ( status | enable | disable | is-enabled | list )
-#               saptune [--output FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONID )... | all ]
-#               saptune [--output FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONID )... | all ]
-#               saptune [--output FORMAT] revert all
-#               saptune [--output FORMAT] lock remove
-#               saptune [--output FORMAT] check
+# Syntax:       saptune [--format FORMAT] help
+#               saptune [--format FORMAT] version  
+#               saptune [--format FORMAT] status [--non-compliance-check] 
+#               saptune [--format FORMAT] daemon ( start | stop | status [--non-compliance-check] )
+#               saptune [--format FORMAT] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
+#               saptune [--format FORMAT] note ( list | revertall | enabled | applied )
+#               saptune [--format FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+#               saptune [--format FORMAT] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
+#               saptune [--format FORMAT] note rename NOTEID NEWNOTEID
+#               saptune [--format FORMAT] solution ( list | verify | enabled | applied )
+#               saptune [--format FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete | change [--force] ) SOLUTIONNAME
+#               saptune [--format FORMAT] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
+#               saptune [--format FORMAT] solution rename SOLUTIONNAME NEWSSOLUTIONNAME
+#               saptune [--format FORMAT] staging ( status | enable | disable | is-enabled | list )
+#               saptune [--format FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
+#               saptune [--format FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+#               saptune [--format FORMAT] revert all
+#               saptune [--format FORMAT] lock remove
+#               saptune [--format FORMAT] check
 #
 #
 # Caveats:      - It is not possible to use the '=' sign in options. Completion will stop at the '=' sign.
@@ -32,7 +34,7 @@
 #                 '§' with '=' in the generated completion script. The option has now no values anymore, 
 #                 instead each combination is treated as a individual option. )
 #
-#               - It is not feasible to support the option ('--output FORMAT') which has to come immediately after 'saptune'
+#               - It is not feasible to support the option ('--format FORMAT') which has to come immediately after 'saptune'
 #                 Each combination must be listed in this file, which would double the current entries. 
 #                 The support for this must be added to the generated script later.
 #
@@ -41,7 +43,7 @@
 #
 #
 # Questions:    - Should (already implemented as such) ...
-#                   - '--output=FORMAT' not better be '--output FORMAT' and
+#                   - '--format=FORMAT' not better be '--format FORMAT' and
 #                   - '--colorscheme=<SCHEME>' not better be '--colorscheme <SCHEME>'?
 #               - Should (already implemented as such) 'saptune solution verify' not also
 #                 get the options '--colorscheme <SCHEME>' and '--show-non-compliant'?
@@ -294,6 +296,7 @@ saptune solution:
   - revert
   - show
   - delete
+  - change
   - verify
   - rename
 
@@ -305,7 +308,7 @@ saptune solution enabled: *stop
 saptune solution applied: *stop
 
 saptune solution apply: &list-all-solutions
-  - $(find   /var/lib/saptune/working/notes /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')
+  - $(find   /var/lib/saptune/working/sols /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')
 
 saptune solution apply *: *stop
 
@@ -336,6 +339,16 @@ saptune solution show *: *stop
 saptune solution delete: *list-all-solutions
 
 saptune solution delete *: *stop
+
+saptune solution change: 
+  - --force
+  - $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')
+
+saptune solution change --force: *list-all-solutions
+
+saptune solution change *: *stop
+
+saptune solution change --force *: *stop 
 
 saptune solution verify: 
   - --colorscheme
