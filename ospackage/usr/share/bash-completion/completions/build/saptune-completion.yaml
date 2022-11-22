@@ -28,32 +28,23 @@
 #               saptune [--format FORMAT] check
 #
 #
-# Caveats:      - It is not possible to use the '=' sign in options. Completion will stop at the '=' sign.
-#                 (Possible workaround: Use a non-special character which does not appear in the resulting 
-#                 completion script (like '§'), use this here in the definition instead of '=' and replace
-#                 '§' with '=' in the generated completion script. The option has now no values anymore, 
-#                 instead each combination is treated as a individual option. )
+# Caveats:      - It is not possible to use the '=' sign in options. Completion will stop at the '=' sign. The reason for this
+#                 is that the character is listed in `COMP_WORDBREAKS`. Removing it can break other completions, so this is not an option.
+#                 (Tricks to use a different character as marker and overwriting the space with an injected backspace to add the `=` later
+#                  doesn't work. The completions prints the code instead. Anyways the added `=` would break the completion during corrections.)
+#                 There might a way to implement this (https://www.gnu.org/software/gnuastro/manual/html_node/Bash-TAB-completion-tutorial.html),
+#                 but trying it out and rewriting the code would cost to much time for now.
 #
-#               - It is not feasible to support the option ('--format FORMAT') which has to come immediately after 'saptune'
-#                 Each combination must be listed in this file, which would double the current entries. 
-#                 The support for this must be added to the generated script later.
+#               - It is not feasible to write this YAML file to fully support the option ('--format FORMAT') which comes immediately 
+#                 after 'saptune'. Each combination must be listed in this file, which would double the current entries. 
+#                 Therefore all more complex completion lack these variations, because a snippet gets injected into the compiled completion, 
+#                 which removes `--format json` it from the COMP_WORDS, so it does not needed to take into account.
 #
 #               - The completely resolved command needs to have a dummy entry: '$()' (empty command) to stop further
 #                 processing.
 #
 #
-# Questions:    - Should (already implemented as such) ...
-#                   - '--format=FORMAT' not better be '--format FORMAT' and
-#                   - '--colorscheme=<SCHEME>' not better be '--colorscheme <SCHEME>'?
-#               - Should (already implemented as such) 'saptune solution verify' not also
-#                 get the options '--colorscheme <SCHEME>' and '--show-non-compliant'?
-#               - Some command descriptions are incorrect:
-#                 - some square brackets should be replaced with normal ones,
-#                 - staging lists 'analysis' and 'diff' twice.
-#                 - staging 'analysis'/'diff'/'release' should use grouping for the id list
-#               - For autocompletion a better choice would be ...
-#                   - '/var/lib/saptune/working/notes/' instead of '/usr/share/saptune/notes'
-#                   - '/var/lib/saptune/working/sols/' instead of '/usr/share/saptune/sols/'
+# ToDo :        - Implementing support for the `=` sign.
 
 
 
