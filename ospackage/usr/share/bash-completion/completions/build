@@ -10,16 +10,16 @@ sed -n "1,/${separator}/p" "${pass1}" > "${pass2}"
 cat <<'EOF' >> "${pass2}"
 
   if [[ "${COMP_WORDS[*]}" =~ ^saptune\ --format\ json ]] ; then
-     unset COMP_WORDS[1]  # remove '--format'
-     unset COMP_WORDS[2]  # remove '--json'
-     COMP_WORDS=( ${COMP_WORDS[@]} )
-     ((COMP_CWORD-=2))
+      unset COMP_WORDS[1]  # remove '--format'
+      unset COMP_WORDS[2]  # remove 'json'
+      COMP_WORDS=( ${COMP_WORDS[@]} )
+      ((COMP_CWORD-=2))
   fi
 
 EOF
 sed -n "/${separator}/,\$p" "${pass1}" | tail -n +2 >> "${pass2}"
 
-echo "Compiled ${pass2} (final completion script)"
+echo -e "Compiled final completion script \033[0;35m${pass2}\033[0m"
 
 exit 0
 
