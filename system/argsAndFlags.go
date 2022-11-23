@@ -2,7 +2,6 @@ package system
 
 import (
 	"os"
-	"regexp"
 	"strings"
 )
 
@@ -53,15 +52,24 @@ func GetFlagVal(flag string) string {
 // possible Flags - force, dryrun, help, version, show-non-compliant, format,
 // colorscheme, non-compliance-check
 // on command line - --force, --dry-run or --dryrun, --help, --version, --color-scheme, --format
-// Some Flags (like 'format') can have a value (--format=json or --format=csv)
+// Some Flags (like 'format') can have a value (--format json or --format csv)
 func ParseCliArgs() ([]string, map[string]string) {
-	stArgs := []string{os.Args[0]}
+	stArgs := []string{}
 	// supported flags
 	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "show-non-compliant": "false", "format": "", "colorscheme": "", "non-compliance-check": "false", "notSupported": ""}
-	for _, arg := range os.Args[1:] {
+	skip := false
+	for i, arg := range os.Args {
+		if skip {
+			// skip this command line parameter, because it's the value
+			// belonging to a flag
+			skip = false
+			continue
+		}
 		if strings.HasPrefix(arg, "--") || strings.HasPrefix(arg, "-") {
 			// argument is a flag
-			handleFlags(arg, stFlags)
+			// skip next command line parameter, if it is the value
+			// belonging to a flag
+			skip = handleFlags(arg, i, stFlags)
 			continue
 		}
 		// other args
@@ -71,30 +79,34 @@ func ParseCliArgs() ([]string, map[string]string) {
 }
 
 // handleFlags checks for valid flags in the CLI arg list
-func handleFlags(arg string, flags map[string]string) {
-	var valueFlag = regexp.MustCompile(`(-[\w-]+)=(.*)`)
-	matches := valueFlag.FindStringSubmatch(arg)
-	if len(matches) == 3 {
-		// flag with value
-		handleValueFlags(arg, matches, flags)
-		return
+func handleFlags(arg string, idx int, flags map[string]string) bool {
+	fval := idx + 1
+	farg := "flag_value"
+	if fval < len(os.Args) {
+		farg = os.Args[fval]
 	}
-	handleSimpleFlags(arg, flags)
+
+	skip := handleValueFlags(arg, farg, flags)
+	if !skip {
+		handleSimpleFlags(arg, flags)
+	}
+	return skip
 }
 
 // handleValueFlags checks for valid flags with value in the CLI arg list
-func handleValueFlags(arg string, matches []string, flags map[string]string) {
+func handleValueFlags(arg, farg string, flags map[string]string) bool {
+	skip := false
 	if strings.Contains(arg, "--format") {
-		// --format=json
-		flags["format"] = matches[2]
+		// --format json
+		flags["format"] = farg
+		skip = true
 	}
 	if strings.Contains(arg, "-colorscheme") {
-		// --colorscheme=zebra
-		flags["colorscheme"] = matches[2]
+		// --colorscheme zebra
+		flags["colorscheme"] = farg
+		skip = true
 	}
-	if _, ok := flags[strings.TrimLeft(matches[1], "-")]; !ok {
-		setUnsupportedFlag(matches[1], flags)
-	}
+	return skip
 }
 
 // handleSimpleFlags checks for valid flags in the CLI arg list
@@ -138,15 +150,18 @@ func ChkCliSyntax() bool {
 	// check some universal syntax and the global option
 	// manipulating cmdLinePos values
 	if !chkGlobalSyntax(cmdLinePos) {
+		DebugLog("ChkCliSyntax - chkGlobalSyntax failed")
 		return false
 	}
 	// check for realm options
 	// manipulating cmdLinePos values
 	if !chkRealmOpts(cmdLinePos) {
+		DebugLog("ChkCliSyntax - chkRealmOpts failed")
 		return false
 	}
 	// check for command options
 	if !chkCmdOpts(cmdLinePos) {
+		DebugLog("ChkCliSyntax - chkCmdOpts failed")
 		return false
 	}
 	return ret
@@ -158,23 +173,28 @@ func chkGlobalSyntax(cmdLinePos map[string]int) bool {
 	// check minimum of arguments without flags (saptune + realm)
 	if (IsFlagSet("version") || IsFlagSet("help")) && len(saptArgs) > 1 {
 		// too many arguments
+		DebugLog("chkGlobalSyntax failed - too many arguments")
 		ret = false
 	}
 	if !IsFlagSet("version") && !IsFlagSet("help") && len(saptArgs) < 2 {
 		// too few arguments
+		DebugLog("chkGlobalSyntax failed - too few arguments")
 		ret = false
 	}
 	if IsFlagSet("notSupported") {
 		// unknown flag in command line found
+		DebugLog("chkGlobalSyntax failed - unknown flag '%+v' found in command line", GetFlagVal("notSupported"))
 		ret = false
 	}
 	if IsFlagSet("force") && IsFlagSet("dryrun") {
 		// both together are not supported
 		// even that this case is handled correctly
+		DebugLog("chkGlobalSyntax failed - both 'force' and 'dryrun' set - unsupported")
 		ret = false
 	}
-	if IsFlagSet("colorscheme") && IsFlagSet("show-non-compliant") && len(os.Args) < cmdLinePos["cmdOpt"]+1 {
+	if IsFlagSet("colorscheme") && IsFlagSet("show-non-compliant") && len(os.Args) < cmdLinePos["cmdOpt"]+2 {
 		// too few options for both flags set
+		DebugLog("chkGlobalSyntax failed - both 'colorscheme' and 'show-non-compliant' set, but too few options")
 		ret = false
 	}
 	if ret {
@@ -185,31 +205,45 @@ func chkGlobalSyntax(cmdLinePos map[string]int) bool {
 }
 
 // chkGlobalOpts checks for global options
-// saptune -format=FORMAT [--version|--help]
+// saptune -format FORMAT [--version|--help]
 // saptune --version or saptune --help
 func chkGlobalOpts(cmdLinePos map[string]int) bool {
 	stArgs := os.Args
 	ret := true
 	globOpt := false
 	globPos := 1
+	if len(stArgs) < globPos {
+		// too few arguments
+		DebugLog("chkGlobalOpts failed - too few arguments")
+		return false
+	}
 	if IsFlagSet("version") && IsFlagSet("help") {
 		// both together are not supported
+		DebugLog("chkGlobalOpts failed - both 'version' and 'help' set - unsupported")
 		ret = false
 	}
 	if IsFlagSet("format") {
+		if GetFlagVal("format") != "json" {
+			DebugLog("chkGlobalOpts failed - wrong 'format' value '%+v'", GetFlagVal("format"))
+			ret = false
+		}
 		if !strings.Contains(stArgs[1], "--format") {
+			DebugLog("chkGlobalOpts failed - 'format' flag on wrong position in command line")
 			ret = false
 		} else {
-			globPos++
-			cmdLinePos["realm"] = cmdLinePos["realm"] + 1
-			cmdLinePos["realmOpt"] = cmdLinePos["realmOpt"] + 1
-			cmdLinePos["cmd"] = cmdLinePos["cmd"] + 1
-			cmdLinePos["cmdOpt"] = cmdLinePos["cmdOpt"] + 1
+			globPos = globPos + 2
+			// the flag '--format' has a value (e.g. json), so we
+			// have '2' positions to skip in the command line
+			cmdLinePos["realm"] = cmdLinePos["realm"] + 2
+			cmdLinePos["realmOpt"] = cmdLinePos["realmOpt"] + 2
+			cmdLinePos["cmd"] = cmdLinePos["cmd"] + 2
+			cmdLinePos["cmdOpt"] = cmdLinePos["cmdOpt"] + 2
 		}
 	}
 	if IsFlagSet("version") {
 		// support '--version' and '-version'
 		if !strings.Contains(stArgs[globPos], "-version") {
+			DebugLog("chkGlobalOpts failed - 'version' flag on wrong position in command line")
 			ret = false
 		} else {
 			globOpt = true
@@ -218,6 +252,7 @@ func chkGlobalOpts(cmdLinePos map[string]int) bool {
 	if IsFlagSet("help") {
 		// support '--help' and '-help'
 		if !strings.Contains(stArgs[globPos], "-help") {
+			DebugLog("chkGlobalOpts failed - 'help' flag on wrong position in command line")
 			ret = false
 		} else {
 			globOpt = true
@@ -240,6 +275,7 @@ func chkRealmOpts(cmdLinePos map[string]int) bool {
 	if IsFlagSet("non-compliance-check") {
 		// check for valid realm
 		if !(stArgs[cmdLinePos["realm"]] == "status" || stArgs[cmdLinePos["realm"]] == "service" || stArgs[cmdLinePos["realm"]] == "daemon") {
+			DebugLog("chkRealmOpts failed - 'non-compliance-check' flag used with wrong realm '%+v'", stArgs[cmdLinePos["realm"]])
 			ret = false
 		}
 		if stArgs[cmdLinePos["realm"]] == "status" {
@@ -248,8 +284,10 @@ func chkRealmOpts(cmdLinePos map[string]int) bool {
 			// (saptune + realm + option)
 			if len(stArgs) < cmdLinePos["realmOpt"]+1 {
 				// too few arguments
+				DebugLog("chkRealmOpts failed - too few arguments for realm 'status'")
 				ret = false
 			} else if stArgs[cmdLinePos["realmOpt"]] != "--non-compliance-check" {
+				DebugLog("chkRealmOpts failed - 'non-compliance-check' flag on wrong position in command line")
 				ret = false
 			} else {
 				cmdLinePos["cmd"] = cmdLinePos["cmd"] + 1
@@ -267,6 +305,7 @@ func chkCmdOpts(cmdLinePos map[string]int) bool {
 	// saptune realm cmd
 	if len(saptArgs) < 3 && (IsFlagSet("force") || IsFlagSet("dryrun") || IsFlagSet("colorscheme") || IsFlagSet("show-non-compliant")) {
 		// too few arguments for the active flags
+		DebugLog("chkCmdOpts failed - too few arguments for flags 'force' or 'dryrun' or 'colorscheme' or 'show-non-compliant'")
 		return false
 	}
 	if len(os.Args) < cmdLinePos["cmdOpt"]+1 || (!IsFlagSet("force") && !IsFlagSet("dryrun") && !IsFlagSet("colorscheme") && !IsFlagSet("show-non-compliant") && !IsFlagSet("non-compliance-check")) {
@@ -274,24 +313,29 @@ func chkCmdOpts(cmdLinePos map[string]int) bool {
 		// and/or non of the flags set, which need further checks
 		// so let the 'old' default checks (in main and/or actions) set
 		// the appropriate result
+		DebugLog("chkCmdOpts nok - no command options set or too few options and/or non of the flags set, which need further checks, so let the 'old' default checks set the appropriate result")
 		return true
 	}
 	// saptune solution change [--force] SOLUTIONNAME
 	// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
 	if !chkForceFlag(cmdLinePos) {
+		DebugLog("chkCmdOpts - chkForceFlag failed")
 		ret = false
 	}
 	// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
 	if !chkDryrunFlag(cmdLinePos) {
+		DebugLog("chkCmdOpts - chkDryrunFlag failed")
 		ret = false
 	}
-	// saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NOTEID]
-	// saptune solution verify [--colorscheme=<color scheme>] [--show-non-compliant] [SOLUTIONNAME]
+	// saptune note verify [--colorscheme <color scheme>] [--show-non-compliant] [NOTEID]
+	// saptune solution verify [--colorscheme <color scheme>] [--show-non-compliant] [SOLUTIONNAME]
 	if !chkVerifySyntax(cmdLinePos) {
+		DebugLog("chkCmdOpts - chkVerifySyntax failed")
 		ret = false
 	}
 	// saptune (service) status  [--non-compliance-check]
 	if !chkServiceStatusSyntax(cmdLinePos) {
+		DebugLog("chkCmdOpts - chkServiceStatusSyntax failed")
 		ret = false
 	}
 	return ret
@@ -307,9 +351,11 @@ func chkForceFlag(cmdLinePos map[string]int) bool {
 	ret := true
 	if IsFlagSet("force") {
 		if !(stArgs[cmdLinePos["realm"]] == "solution" && stArgs[cmdLinePos["cmd"]] == "change") && !(stArgs[cmdLinePos["realm"]] == "staging" && stArgs[cmdLinePos["cmd"]] == "release") {
+			DebugLog("chkForceFlag failed - 'force' flag used with wrong realm '%+v' or command '%+v'", stArgs[cmdLinePos["realm"]], stArgs[cmdLinePos["cmd"]])
 			ret = false
 		}
 		if stArgs[cmdLinePos["cmdOpt"]] != "--force" {
+			DebugLog("chkForceFlag failed - 'force' flag on wrong position in command line")
 			ret = false
 		}
 	}
@@ -324,9 +370,11 @@ func chkDryrunFlag(cmdLinePos map[string]int) bool {
 	ret := true
 	if IsFlagSet("dryrun") {
 		if !(stArgs[cmdLinePos["realm"]] == "staging" && stArgs[cmdLinePos["cmd"]] == "release") {
+			DebugLog("chkDryrunFlag failed - 'dryrun' flag used with wrong realm '%+v' or wrong command '%+v'", stArgs[cmdLinePos["realm"]], stArgs[cmdLinePos["cmd"]])
 			ret = false
 		}
 		if stArgs[cmdLinePos["cmdOpt"]] != "--dry-run" {
+			DebugLog("chkDryrunFlag failed - 'dryrun' flag on wrong position in command line")
 			ret = false
 		}
 	}
@@ -335,26 +383,42 @@ func chkDryrunFlag(cmdLinePos map[string]int) bool {
 
 // chkVerifySyntax checks the syntax of 'saptune note|solution verify' command
 // line regarding command line options
-// saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NOTEID]
-// saptune solution verify [--colorscheme=<color scheme>] [--show-non-compliant] [SOLUTIONNAME]
+// saptune note verify [--colorscheme <color scheme>] [--show-non-compliant] [NOTEID]
+// saptune solution verify [--colorscheme <color scheme>] [--show-non-compliant] [SOLUTIONNAME]
 func chkVerifySyntax(cmdLinePos map[string]int) bool {
 	stArgs := os.Args
 	ret := true
 	if IsFlagSet("colorscheme") || IsFlagSet("show-non-compliant") {
 		if !((stArgs[cmdLinePos["realm"]] == "note" || stArgs[cmdLinePos["realm"]] == "solution") && stArgs[cmdLinePos["cmd"]] == "verify") {
+			DebugLog("chkVerifySyntax failed - 'colorscheme' or 'show-non-compliant' flag used with wrong realm '%+v' or wrong command '%+v'", stArgs[cmdLinePos["realm"]], stArgs[cmdLinePos["cmd"]])
 			ret = false
 		}
 	}
+	DebugLog("chkVerifySyntax - colorscheme is '%+v', show-non-compliant is '%+v'", GetFlagVal("colorscheme"), IsFlagSet("show-non-compliant"))
+
 	if IsFlagSet("colorscheme") && IsFlagSet("show-non-compliant") {
 		// both flags set, check order
-		if !(strings.HasPrefix(stArgs[cmdLinePos["cmdOpt"]], "--colorscheme=") && stArgs[cmdLinePos["cmdOpt"]+1] == "--show-non-compliant") {
+		poscor := 2
+		if GetFlagVal("colorscheme") == "flag_value" {
+			poscor = 1
+		}
+		if stArgs[cmdLinePos["cmdOpt"]] != "--colorscheme" && stArgs[cmdLinePos["cmdOpt"]+poscor] != "--show-non-compliant" {
+			DebugLog("chkVerifySyntax failed - wrong order of flags 'colorscheme' and 'show-non-compliant'")
 			ret = false
 		}
-	} else if IsFlagSet("colorscheme") && !strings.HasPrefix(stArgs[cmdLinePos["cmdOpt"]], "--colorscheme=") {
-		// flag at wrong place in arg list
-		ret = false
+	} else if IsFlagSet("colorscheme") {
+		if GetFlagVal("colorscheme") == "--show-non-compliant" {
+			DebugLog("chkVerifySyntax failed - missing colorscheme leads to wrong position of 'show-non-compliant' flag in command line")
+			ret = false
+		}
+ 		if stArgs[cmdLinePos["cmdOpt"]] != "--colorscheme" {
+			// flag at wrong place in arg list
+			DebugLog("chkVerifySyntax failed - 'colorscheme' flag on wrong position in command line")
+			ret = false
+		}
 	} else if IsFlagSet("show-non-compliant") && stArgs[cmdLinePos["cmdOpt"]] != "--show-non-compliant" {
 		// flag at wrong place in arg list
+		DebugLog("chkVerifySyntax failed - 'show-non-compliant' flag on wrong position in command line")
 		ret = false
 	}
 	return ret
@@ -371,9 +435,11 @@ func chkServiceStatusSyntax(cmdLinePos map[string]int) bool {
 		// saptune service status --non-compliance-check
 		// saptune daemon status --non-compliance-check
 		if !(stArgs[cmdLinePos["realm"]] == "service" && stArgs[cmdLinePos["cmd"]] == "status") && !(stArgs[cmdLinePos["realm"]] == "daemon" && stArgs[cmdLinePos["cmd"]] == "status") {
+			DebugLog("chkServiceStatusSyntax failed - 'non-compliance-check' flag used with wrong realm '%+v' or wrong command '%+v'", stArgs[cmdLinePos["realm"]], stArgs[cmdLinePos["cmd"]])
 			ret = false
 		}
 		if stArgs[cmdLinePos["cmdOpt"]] != "--non-compliance-check" {
+			DebugLog("chkServiceStatusSyntax failed - 'non-compliance-check' flag on wrong position in command line")
 			ret = false
 		}
 	}

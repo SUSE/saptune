@@ -56,7 +56,8 @@ func TestSetWidthOfColums(t *testing.T) {
 }
 
 func TestPrintNoteFields(t *testing.T) {
-	os.Args = []string{"saptune", "note", "list", "--colorscheme=black", "--format=json", "--force", "--dryrun", "--help", "--version"}
+	//os.Args = []string{"saptune", "--format", "json", "note", "list", "--colorscheme", "black", "--force", "--dryrun", "--help", "--version"}
+	os.Args = []string{"saptune", "note", "list", "--colorscheme", "black", "--force", "--dryrun", "--help", "--version"}
 	system.RereadArgs()
 
 	footnote1 := " [1] setting is not supported by the system"
@@ -248,7 +249,8 @@ func TestPrintNoteFields(t *testing.T) {
 	})
 
 	t.Run("verify with header and show-non-compliant", func(t *testing.T) {
-		os.Args = []string{"saptune", "note", "list", "--colorscheme=black", "--show-non-compliant", "--format=json", "--force", "--dryrun", "--help", "--version"}
+		//os.Args = []string{"saptune", "--format", "json", "note", "list", "--colorscheme", "black", "--show-non-compliant", "--force", "--dryrun", "--help", "--version"}
+		os.Args = []string{"saptune", "note", "list", "--colorscheme", "black", "--show-non-compliant", "--force", "--dryrun", "--help", "--version"}
 		system.RereadArgs()
 
 		buffer := bytes.Buffer{}
