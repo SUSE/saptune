@@ -113,4 +113,9 @@ Print current saptune version:
   saptune [--format=FORMAT] version
 Print this message:
   saptune [--format=FORMAT] help
+
+Deprecation list:
+  all 'saptune daemon' actions
+  'saptune note simulate'
+  'saptune solution simulate'
 `
