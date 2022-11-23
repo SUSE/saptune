@@ -15,7 +15,6 @@ var noticeLogger *log.Logger  // Notice logger
 var debugLogger *log.Logger   // Debug logger
 var errorLogger *log.Logger   // Error logger
 var warningLogger *log.Logger // Warning logger
-var debugSwitch string        // Switch Debug on or off
 var verboseSwitch string      // Switch verbose mode on or off
 var errorSwitch string        // Switch error mode on or off
 var severNoticeFormat = "NOTICE   "
@@ -23,11 +22,14 @@ var severInfoFormat = "INFO     "
 var severWarnFormat = "WARNING  "
 var severErrorFormat = "ERROR    "
 var logpidFormat = fmt.Sprintf("saptune[%v] ", os.Getpid()) // format to add pid of current saptune process to the log message
+var debugSwitch = os.Getenv("SAPTUNE_DEBUG")                // Switch Debug on or off
 
 // DebugLog sents text to the debugLogger and stderr
 func DebugLog(txt string, stuff ...interface{}) {
-	if debugLogger != nil && debugSwitch == "1" {
-		debugLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+	if debugSwitch == "1" {
+		if debugLogger != nil {
+			debugLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+		}
 		fmt.Fprintf(os.Stderr, "DEBUG: "+txt+"\n", stuff...)
 	}
 }

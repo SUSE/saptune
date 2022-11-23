@@ -21,58 +21,58 @@ saptune \- Comprehensive system optimisation management for SAP solutions (\fBVe
 ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate to saptune version \fB3\fP, so please refer to man page saptune-migrate(7).
 
 .SH SYNOPSIS
-\fBsaptune\fP [--format=FORMAT] \fBdaemon\fP
+\fBsaptune\fP [--format FORMAT] \fBdaemon\fP
 ( start | stop | status [--non-compliance-check] ) \fBATTENTION: deprecated\fP
 
-\fBsaptune\fP [--format=FORMAT] \fBservice\fP
+\fBsaptune\fP [--format FORMAT] \fBservice\fP
 ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
-\fBsaptune\fP [--format=FORMAT] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] \fBnote\fP
 ( list | revertall | enabled | applied )
 
-\fBsaptune\fP [--format=FORMAT] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] \fBnote\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 
-\fBsaptune\fP [--format=FORMAT] \fBnote\fP
-verify [--colorscheme=SCHEME] [--show-non-compliant] [NOTEID]
+\fBsaptune\fP [--format FORMAT] \fBnote\fP
+verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
 
-\fBsaptune\fP [--format=FORMAT] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] \fBnote\fP
 rename NOTEID NEWNOTEID
 
-\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] \fBsolution\fP
 ( list | verify | enabled | applied )
 
-\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] \fBsolution\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
 
-\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] \fBsolution\fP
 change [--force] SOLUTIONNAME
 
-\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
-verify [--colorscheme=SCHEME] [--show-non-compliant] [SOLUTIONNAME]
+\fBsaptune\fP [--format FORMAT] \fBsolution\fP
+verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
 
-\fBsaptune\fP [--format=FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] \fBsolution\fP
 rename SOLUTIONNAME NEWSOLUTIONNAME
 
-\fBsaptune\fP [--format=FORMAT] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] \fBstaging\fP
 ( status | enable | disable | is-enabled | list )
 
-\fBsaptune\fP [--format=FORMAT] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] \fBstaging\fP
 ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune\fP [--format=FORMAT] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] \fBstaging\fP
 release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune\fP [--format=FORMAT] \fBrevert\fP
+\fBsaptune\fP [--format FORMAT] \fBrevert\fP
 all
 
-\fBsaptune\fP [--format=FORMAT] \fBcheck\fP
+\fBsaptune\fP [--format FORMAT] \fBcheck\fP
 
-\fBsaptune\fP [--format=FORMAT] \fBstatus [--non-compliance-check]\fP
+\fBsaptune\fP [--format FORMAT] \fBstatus [--non-compliance-check]\fP
 
-\fBsaptune\fP [--format=FORMAT] \fBversion\fP
+\fBsaptune\fP [--format FORMAT] \fBversion\fP
 
-\fBsaptune\fP [--format=FORMAT] \fBhelp\fP
+\fBsaptune\fP [--format FORMAT] \fBhelp\fP
 
 .SH DESCRIPTION
 saptune is designed to automate the configuration recommendations from SAP and SUSE to run an SAP application on SLES for SAP. These configuration recommendations normally referred to as SAP Notes. So some dedicated SAP Notes are the base for the work of saptune. Additional some best practice guides are added as Note definitions to optimise the system for some really special cases.
@@ -86,7 +86,7 @@ saptune does not only set kernel values (like sysctl does), but also values like
 .PP
 /proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.d/, /etc/systemd/logind.conf.d/ and some others.
 
-By default saptune is printing all results to stdout, Errors and Warnings are printed to stderr. By using \fB[--format=FORMAT]\fP this behaviour can be changed.
+By default saptune is printing all results to stdout, Errors and Warnings are printed to stderr. By using \fB[--format FORMAT]\fP this behaviour can be changed.
 .br
 Supported formats are:
 .TP
@@ -335,7 +335,7 @@ By using the command line argument '\fB--show-non-compliant\fP' it is possible t
 
 It is possible to use a \fBcolor scheme\fP for the verify output table.
 .br
-The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme=SCHEME\fP' or as variable '\fBCOLOR_SCHEME=SCHEME\fP' in the saptune configuration file \fI/etc/sysconfig/saptune\fP.
+The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme SCHEME\fP' or as variable '\fBCOLOR_SCHEME SCHEME\fP' in the saptune configuration file \fI/etc/sysconfig/saptune\fP.
 .br
 Possible \fBcolor schemes\fP are:
 .RS 7
@@ -774,6 +774,9 @@ will show the content of the file
 With the update to saptune version 3 saptune does no longer use tuned(8) to restart after a system reboot. It is using it's own systemd service named "saptune.service".
 .br
 So we now \fBdeprecated\fP all "DAEMON ACTIONS" like '\fIsaptune daemon start\fP'. These commands will still work as they are internally linked to the related "SERVICE ACTIONS" like '\fIsaptune service takeover\fP'. Please refer to the related section descriptions at the top of this man page.
+.TP
+.B version 3.1
+With the update to saptune version 3.1 we \fBdeprecated\fP the actions '\fIsaptune note simulate\fP' and '\fIsaptune solution simulate\fP'.
 
 .SH FILES
 .PP

@@ -70,7 +70,7 @@ func TestCliArg(t *testing.T) {
 }
 
 func TestCliFlags(t *testing.T) {
-	os.Args = []string{"saptune", "note", "list", "--format=json", "--force", "--dryrun", "--help", "--version", "--colorscheme=zebra", "--show-non-compliant", "--wrongflag", "--unknownflag=none"}
+	os.Args = []string{"saptune", "note", "list", "--format", "json", "--force", "--dryrun", "--help", "--version", "--colorscheme", "full-green-zebra", "--show-non-compliant", "--wrongflag", "--unknownflag=none"}
 	// parse command line, to get the test parameters
 	saptArgs, saptFlags = ParseCliArgs()
 
@@ -170,7 +170,7 @@ func TestRereadArgs(t *testing.T) {
 	os.Args = []string{"saptune", "note", "list"}
 	// parse command line, to get the test parameters
 	saptArgs, saptFlags = ParseCliArgs()
-	os.Args = []string{"saptune", "--format=json", "solution", "enabled"}
+	os.Args = []string{"saptune", "--format", "json", "solution", "enabled"}
 	RereadArgs()
 
 	expected := "solution"
@@ -214,8 +214,16 @@ func TestRereadArgs(t *testing.T) {
 }
 
 func TestChkCliSyntax(t *testing.T) {
-	// {"saptune", "note", "list", "--format=json"} -> wrong
-	os.Args = []string{"saptune", "note", "list", "--format=json"}
+	// {"saptune", "note", "list", "--format json"} -> wrong
+	os.Args = []string{"saptune", "note", "list", "--format", "json"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
+	if ChkCliSyntax() {
+		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
+	}
+
+	// {"saptune", "--format hugo", "note", "list"} -> wrong
+	os.Args = []string{"saptune", "--format", "hugo", "note", "list"}
 	// parse command line, to get the test parameters
 	saptArgs, saptFlags = ParseCliArgs()
 	if ChkCliSyntax() {
@@ -247,15 +255,15 @@ func TestChkCliSyntax(t *testing.T) {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
 	}
 
-	// {"saptune", "--out=json", "note", "list"} -> wrong
-	os.Args = []string{"saptune", "--out=json", "note", "list"}
+	// {"saptune", "--out json", "note", "list"} -> wrong
+	os.Args = []string{"saptune", "--out", "json", "note", "list"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if ChkCliSyntax() {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
 	}
 
-	// {"saptune", "--format=json", "note", "list"} -> ok
-	os.Args = []string{"saptune", "--format=json", "note", "list"}
+	// {"saptune", "--format json", "note", "list"} -> ok
+	os.Args = []string{"saptune", "--format", "json", "note", "list"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if !ChkCliSyntax() {
 		t.Errorf("Test failed, expected good syntax, but got 'wrong'")
@@ -347,9 +355,9 @@ func TestChkCliSyntax(t *testing.T) {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
 	}
 
-	// saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NOTEID]
-	// {"saptune", "note", "list", "--colorscheme=zebra"} -> wrong
-	os.Args = []string{"saptune", "note", "list", "--colorscheme=zebra"}
+	// saptune note verify [--colorscheme <color scheme>] [--show-non-compliant] [NOTEID]
+	// {"saptune", "note", "list", "--colorscheme full-green-zebra"} -> wrong
+	os.Args = []string{"saptune", "note", "list", "--colorscheme", "full-green-zebra"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if ChkCliSyntax() {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
@@ -362,15 +370,15 @@ func TestChkCliSyntax(t *testing.T) {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
 	}
 
-	// {"saptune", "note", "list", "--colorscheme=zebra", "--show-non-compliant"} -> wrong
-	os.Args = []string{"saptune", "note", "list", "--colorscheme=zebra", "--show-non-compliant"}
+	// {"saptune", "note", "list", "--colorscheme full-green-zebra", "--show-non-compliant"} -> wrong
+	os.Args = []string{"saptune", "note", "list", "--colorscheme", "full-green-zebra", "--show-non-compliant"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if ChkCliSyntax() {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
 	}
 
-	// {"saptune", "staging", "list", "--colorscheme=zebra"} -> wrong
-	os.Args = []string{"saptune", "staging", "list", "--colorscheme=zebra"}
+	// {"saptune", "staging", "list", "--colorscheme full-green-zebra"} -> wrong
+	os.Args = []string{"saptune", "staging", "list", "--colorscheme", "full-green-zebra"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if ChkCliSyntax() {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
@@ -383,15 +391,15 @@ func TestChkCliSyntax(t *testing.T) {
 		t.Errorf("Test failed, expected good syntax, but got 'wrong'")
 	}
 
-	// {"saptune", "note", "verify", "--colorscheme=zebra"} -> ok
-	os.Args = []string{"saptune", "note", "verify", "--colorscheme=zebra"}
+	// {"saptune", "note", "verify", "--colorscheme full-green-zebra"} -> ok
+	os.Args = []string{"saptune", "note", "verify", "--colorscheme", "full-green-zebra"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if !ChkCliSyntax() {
 		t.Errorf("Test failed, expected good syntax, but got 'wrong'")
 	}
 
-	// {"saptune", "note", "verify", "--colorscheme=zebra", "--show-non-compliant"} -> ok
-	os.Args = []string{"saptune", "note", "verify", "--colorscheme=zebra", "--show-non-compliant"}
+	// {"saptune", "note", "verify", "--colorscheme full-green-zebra", "--show-non-compliant"} -> ok
+	os.Args = []string{"saptune", "note", "verify", "--colorscheme", "full-green-zebra", "--show-non-compliant"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if !ChkCliSyntax() {
 		t.Errorf("Test failed, expected good syntax, but got 'wrong'")
@@ -404,8 +412,15 @@ func TestChkCliSyntax(t *testing.T) {
 		t.Errorf("Test failed, expected good syntax, but got 'wrong'")
 	}
 
-	// {"saptune", "note", "verify", "--show-non-compliant", "--colorscheme=zebra"} -> wrong
-	os.Args = []string{"saptune", "note", "verify", "--show-non-compliant", "--colorscheme=zebra"}
+	// {"saptune", "note", "verify", "--colorscheme zebra", "--show-non-compliant"} -> ok
+	os.Args = []string{"saptune", "note", "verify", "--colorscheme", "zebra", "--show-non-compliant"}
+	saptArgs, saptFlags = ParseCliArgs()
+	if !ChkCliSyntax() {
+		t.Errorf("Test failed, expected good syntax, but got 'wrong'")
+	}
+
+	// {"saptune", "note", "verify", "--show-non-compliant", "--colorscheme full-green-zebra"} -> wrong
+	os.Args = []string{"saptune", "note", "verify", "--show-non-compliant", "--colorscheme", "full-green-zebra"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if ChkCliSyntax() {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
@@ -418,8 +433,8 @@ func TestChkCliSyntax(t *testing.T) {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
 	}
 
-	// {"saptune", "note", "--colorscheme=zebra", "verify"} -> wrong
-	os.Args = []string{"saptune", "note", "--colorscheme=zebra", "verify"}
+	// {"saptune", "note", "--colorscheme full-green-zebra", "verify"} -> wrong
+	os.Args = []string{"saptune", "note", "--colorscheme", "full-green-zebra", "verify"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if ChkCliSyntax() {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
