@@ -286,7 +286,8 @@ func chkCmdOpts(cmdLinePos map[string]int) bool {
 		ret = false
 	}
 	// saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NOTEID]
-	if !chkNoteVerifySyntax(cmdLinePos) {
+	// saptune solution verify [--colorscheme=<color scheme>] [--show-non-compliant] [SOLUTIONNAME]
+	if !chkVerifySyntax(cmdLinePos) {
 		ret = false
 	}
 	// saptune (service) status  [--non-compliance-check]
@@ -332,14 +333,15 @@ func chkDryrunFlag(cmdLinePos map[string]int) bool {
 	return ret
 }
 
-// chkNoteVerifySyntax checks the syntax of 'saptune note verify' command line
-// regarding command line options
+// chkVerifySyntax checks the syntax of 'saptune note|solution verify' command
+// line regarding command line options
 // saptune note verify [--colorscheme=<color scheme>] [--show-non-compliant] [NOTEID]
-func chkNoteVerifySyntax(cmdLinePos map[string]int) bool {
+// saptune solution verify [--colorscheme=<color scheme>] [--show-non-compliant] [SOLUTIONNAME]
+func chkVerifySyntax(cmdLinePos map[string]int) bool {
 	stArgs := os.Args
 	ret := true
 	if IsFlagSet("colorscheme") || IsFlagSet("show-non-compliant") {
-		if !(stArgs[cmdLinePos["realm"]] == "note" && stArgs[cmdLinePos["cmd"]] == "verify") {
+		if !((stArgs[cmdLinePos["realm"]] == "note" || stArgs[cmdLinePos["realm"]] == "solution") && stArgs[cmdLinePos["cmd"]] == "verify") {
 			ret = false
 		}
 	}
