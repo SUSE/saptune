@@ -774,6 +774,9 @@ will show the content of the file
 With the update to saptune version 3 saptune does no longer use tuned(8) to restart after a system reboot. It is using it's own systemd service named "saptune.service".
 .br
 So we now \fBdeprecated\fP all "DAEMON ACTIONS" like '\fIsaptune daemon start\fP'. These commands will still work as they are internally linked to the related "SERVICE ACTIONS" like '\fIsaptune service takeover\fP'. Please refer to the related section descriptions at the top of this man page.
+.TP
+.B version 3.1
+With the update to saptune version 3.1 we \fBdeprecated\fP the actions '\fIsaptune note simulate\fP' and '\fIsaptune solution simulate\fP'.
 
 .SH FILES
 .PP
