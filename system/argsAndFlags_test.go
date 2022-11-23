@@ -255,8 +255,8 @@ func TestChkCliSyntax(t *testing.T) {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
 	}
 
-	// {"saptune", "--out=json", "note", "list"} -> wrong
-	os.Args = []string{"saptune", "--out=json", "note", "list"}
+	// {"saptune", "--out json", "note", "list"} -> wrong
+	os.Args = []string{"saptune", "--out", "json", "note", "list"}
 	saptArgs, saptFlags = ParseCliArgs()
 	if ChkCliSyntax() {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")

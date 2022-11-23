@@ -22,7 +22,7 @@ var severInfoFormat = "INFO     "
 var severWarnFormat = "WARNING  "
 var severErrorFormat = "ERROR    "
 var logpidFormat = fmt.Sprintf("saptune[%v] ", os.Getpid()) // format to add pid of current saptune process to the log message
-var debugSwitch = os.Getenv("SAPTUNE_DEBUG")      // Switch Debug on or off
+var debugSwitch = os.Getenv("SAPTUNE_DEBUG")                // Switch Debug on or off
 
 // DebugLog sents text to the debugLogger and stderr
 func DebugLog(txt string, stuff ...interface{}) {

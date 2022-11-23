@@ -411,7 +411,7 @@ func chkVerifySyntax(cmdLinePos map[string]int) bool {
 			DebugLog("chkVerifySyntax failed - missing colorscheme leads to wrong position of 'show-non-compliant' flag in command line")
 			ret = false
 		}
- 		if stArgs[cmdLinePos["cmdOpt"]] != "--colorscheme" {
+		if stArgs[cmdLinePos["cmdOpt"]] != "--colorscheme" {
 			// flag at wrong place in arg list
 			DebugLog("chkVerifySyntax failed - 'colorscheme' flag on wrong position in command line")
 			ret = false

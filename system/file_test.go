@@ -231,7 +231,7 @@ func TestBackupValue(t *testing.T) {
 }
 
 func TestAddGap(t *testing.T) {
-	os.Args = []string{"saptune", "--format json"}
+	os.Args = []string{"saptune", "--format", "json"}
 	RereadArgs()
 	buffer := bytes.Buffer{}
 	AddGap(&buffer)
