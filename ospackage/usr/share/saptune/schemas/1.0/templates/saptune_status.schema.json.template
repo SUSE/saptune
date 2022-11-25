@@ -1,0 +1,78 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune status|saptune daemon status|saptune service status{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["services", "systemd system state", "tuning state", "virtualization", "configured version", "package version", "Solution enabled", "Notes enabled by Solution", "Solution applied", "Notes applied by Solution", "Notes enabled additionally", "Notes enabled", "Notes applied", "staging", "remember message"]{% endblock %}
+
+{% block result_properties %}
+                 "services": {
+                    "description": "The states of various systemd services related to saptune.",
+                    "type": "object",
+                    "required": [ "saptune", "sapconf", "tuned" ],
+                    "additionalProperties": true,  
+                    "propertyNames": {
+                        "enum": [ "saptune", "sapconf", "tuned", "tuned profile" ]
+                    },
+                    "properties": {
+                        "saptune": { "$ref": "#/$defs/systemd state" },
+                        "sapconf": { "$ref": "#/$defs/systemd state" },
+                        "tuned": { "$ref": "#/$defs/systemd state" },
+                        "tuned profile": {
+                            "description": "The currently set tuned profile, if `tuned.service` is active.",
+                            "type": "string"
+                        }
+                    }
+                }, 
+                "systemd system state": {
+                    "description": "Possible systemd system states reported by 'systemctl is-system-running'.",
+                    "type": "string",
+                    "enum": ["initializing", "starting", "running", "degraded", "maintenance", "stopping", "offline", "unknown"]    
+                },
+                "tuning state": {
+                    "description": "Tuning state reported by 'saptune note verify'.",
+                    "type": "string",
+                    "enum": ["not-present", "not tuned", "not compliant", "compliant", "unknown (checking disabled)"]    
+                },
+                "virtualization": {
+                    "description":  "The virtualization technology of the system (see `systemd-detect-virt --list`).",
+                    "enum": [ "none","kvm","amazon","qemu","bochs","xen","uml","vmware","oracle","microsoft","zvm","parallels","bhyve","qnx","acrn","powervm","vm-other","systemd-nspawn","lxc-libvirt","lxc","openvz","docker","podman","rkt","wsl","proot","container-other" ]
+                },
+                "configured version": {
+                    "description":  "The saptune major version as configured in `SAPTUNE_VERSION` of `/etc/sysconfig/saptune`.",
+                    "enum": ["1", "2", "3"]
+                },
+                "package version": { 
+                    "description": "The version string of the installed saptune package.",
+                    "type": "string",
+                    "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+                    "examples": ["3.0.1", "3.1.0"]
+                }, 
+                "Solution enabled": { "$ref": "#/$defs/saptune enabled Solution" },
+                "Notes enabled by Solution" : {  "$ref": "#/$defs/saptune Solution and their Notes" },            
+                "Solution applied": { "$ref": "#/$defs/saptune applied Solution" },
+                "Notes applied by Solution":  {  "$ref": "#/$defs/saptune Solution and their Notes" },
+                "Notes enabled additionally" : { "$ref": "#/$defs/saptune additional enabled Notes" },
+                "Notes enabled": { "$ref": "#/$defs/saptune enabled Notes" },
+                "Notes applied": { "$ref": "#/$defs/saptune applied Notes" },
+                "staging": {
+                    "description": "Details about staging.",
+                    "type": "object",
+                    "required": [ "staging enabled", "Notes staged", "Solutions staged" ],
+                    "additionalProperties": false,
+                    "properties": {
+                        "staging enabled" : {
+                            "description": "States if staging is enabled or not.",
+                            "type": "boolean"
+                        },
+                        "Notes staged": { "$ref": "#/$defs/saptune staged Notes" },
+                        "Solutions staged": { "$ref": "#/$defs/saptune staged Solutions" }
+                    }
+                },
+                "remember message": { 
+                    "$ref": "#/$defs/saptune remember message"
+                }    
+{% endblock %}
+
+
