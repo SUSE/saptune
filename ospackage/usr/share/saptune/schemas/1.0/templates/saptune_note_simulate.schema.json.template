@@ -1,0 +1,34 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune note simulate{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}[ "simulations", "attentions" ]{% endblock %}
+
+{% block result_properties %}
+                "simulations": {
+                    "description": "List of simulations (lines of the table output of `saptune note simulate`.",
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [ "parameter" ],
+                        "additionalProperties": true,  
+                        "propertyNames": {
+                            "enum": [ "Note ID", "Note version", "parameter", "expected value", "override value", "actual value", "comment", "amendments" ]
+                        },
+                        "properties": {
+                            "parameter": { "$ref": "#/$defs/saptune parameter id" },
+                            "expected value": { "$ref": "#/$defs/saptune parameter value" },
+                            "override value": { "$ref": "#/$defs/saptune parameter value" },
+                            "actual value": { "$ref": "#/$defs/saptune parameter value" },
+                            "comment": { "type": "string" },
+                            "amendments": { "$ref": "#/$defs/saptune amendments" }
+                        }
+                    }
+                },
+                "attentions": { "$ref": "#/$defs/saptune attentions" }
+{% endblock %}
+
+                            
+                    
