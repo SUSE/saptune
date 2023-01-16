@@ -1,11 +1,14 @@
 # This is the input configuration for 'completely' (https://github.com/DannyBen/completely)
 # to generate the bash completion script.
 #
-# v2.1
+# v2.2
 #
 # Changelog:    29.09.2022  v2.0  - first release for saptune 3.1
 #               21.11.2022  v2.1  - Replace --output with --format in syntax description
 #                                 - Add `saptune solution change [--force]`
+#               16.01.2023  v2.2  - Bugfix: custom notes have bee displayed with `.conf` suffix
+#                                 - Bugfix: `saptune note|solution create` don't have a completion anymore
+#                                 - Bugfix: `saptune note|solution delete|rename' now only offers custom notes/solutions
 #
 # Syntax:       saptune [--format FORMAT] help
 #               saptune [--format FORMAT] version  
@@ -198,7 +201,8 @@ saptune note enabled: *stop
 saptune note applied: *stop
 
 saptune note apply: &list-all-notes
-  - $(ls /var/lib/saptune/working/notes/ ; ls /etc/saptune/extra)
+  - $(ls /var/lib/saptune/working/notes/)
+  - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
 
 saptune note apply *: *stop
 
@@ -210,7 +214,7 @@ saptune note customise: *list-all-notes
 
 saptune note customise *: *stop
 
-saptune note create: *list-all-notes
+saptune note create: *stop
 
 saptune note create *: *stop
 
@@ -226,7 +230,8 @@ saptune note show: *list-all-notes
 
 saptune note show *: *stop
 
-saptune note delete: *list-all-notes
+saptune note delete:
+  - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
 
 saptune note delete *: *stop
 
@@ -269,7 +274,8 @@ saptune note verify --colorscheme * --show-non-compliant: *list-all-notes
 
 saptune note verify --colorscheme * --show-non-compliant *: *stop
 
-saptune note rename: *list-all-notes
+saptune note rename:
+  - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
 
 saptune note rename *: *stop 
 
@@ -299,7 +305,8 @@ saptune solution enabled: *stop
 saptune solution applied: *stop
 
 saptune solution apply: &list-all-solutions
-  - $(find   /var/lib/saptune/working/sols /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')
+  - $(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done)
+  - $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)
 
 saptune solution apply *: *stop
 
@@ -311,7 +318,7 @@ saptune solution customise: *list-all-solutions
 
 saptune solution customise *: *stop
 
-saptune solution create: *list-all-solutions
+saptune solution create: *stop
 
 saptune solution create *: *stop
 
@@ -327,7 +334,8 @@ saptune solution show: *list-all-solutions
 
 saptune solution show *: *stop
 
-saptune solution delete: *list-all-solutions
+saptune solution delete:
+  - $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)
 
 saptune solution delete *: *stop
 
@@ -380,10 +388,10 @@ saptune solution verify --colorscheme * --show-non-compliant: *list-all-solution
 
 saptune solution verify --colorscheme * --show-non-compliant *: *stop
 
-saptune solution rename: *list-all-solutions
+saptune solution rename:
+  - $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)
 
 saptune solution rename *: *stop 
-
 
 
 # --- saptune staging ---
