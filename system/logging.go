@@ -26,7 +26,7 @@ var debugSwitch = os.Getenv("SAPTUNE_DEBUG")                // Switch Debug on o
 
 // DebugLog sents text to the debugLogger and stderr
 func DebugLog(txt string, stuff ...interface{}) {
-	if debugSwitch == "1" {
+	if debugSwitch == "on" {
 		if debugLogger != nil {
 			debugLogger.Printf(CalledFrom()+txt+"\n", stuff...)
 		}
@@ -118,7 +118,7 @@ func LogInit(logFile string, logSwitch map[string]string) {
 
 // SwitchOffLogging disables logging
 func SwitchOffLogging() {
-	debugSwitch = "0"
+	debugSwitch = "off"
 	verboseSwitch = "off"
 	errorSwitch = "off"
 	log.SetOutput(ioutil.Discard)

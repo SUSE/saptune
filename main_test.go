@@ -144,8 +144,8 @@ func TestCheckSaptuneConfigFile(t *testing.T) {
 	if saptuneVers != "5" {
 		t.Errorf("wrong value for 'SAPTUNE_VERSION' - '%+v' instead of ''\n", saptuneVers)
 	}
-	if lSwitch["debug"] != "1" {
-		t.Errorf("wrong value for 'DEBUG' - '%+v' instead of '1'\n", lSwitch["debug"])
+	if lSwitch["debug"] != "on" {
+		t.Errorf("wrong value for 'DEBUG' - '%+v' instead of 'on'\n", lSwitch["debug"])
 	}
 	if lSwitch["verbose"] != "on" {
 		t.Errorf("wrong value for 'VERBOSE' - '%+v' instead of 'on'\n", lSwitch["debug"])

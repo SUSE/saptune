@@ -239,11 +239,12 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 
 	// set values read from the config file
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
-	// Switch Debug on ("1") or off ("0" - default)
+	// Switch Debug on ("on") or off ("off" - default)
 	// Switch verbose mode on ("on" - default) or off ("off")
+	// Switch error mode on ("on" - default) or off ("off")
 	// check, if DEBUG, ERROR or VERBOSE is set in /etc/sysconfig/saptune
 	if lswitch["debug"] == "" {
-		lswitch["debug"] = sconf.GetString("DEBUG", "0")
+		lswitch["debug"] = sconf.GetString("DEBUG", "off")
 	}
 	if lswitch["verbose"] == "" {
 		lswitch["verbose"] = sconf.GetString("VERBOSE", "on")
