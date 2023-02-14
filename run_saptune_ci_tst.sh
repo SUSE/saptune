@@ -59,7 +59,7 @@ sleep 10
 ps -ef
 loginctl --no-pager
 
-echo "exchange /etc/os-release"
+echo "prepare exchange of /etc/os-release"
 cp /etc/os-release /etc/os-release_OrG
 
 # for some sysctl tests
