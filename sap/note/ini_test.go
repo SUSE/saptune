@@ -196,7 +196,12 @@ func TestAllSettings(t *testing.T) {
 		t.Error(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["UserTasksMax"] != "setinpostinstall" {
-		t.Error(optimisedINI.SysctlParams)
+		switch system.GetOsVers() {
+		case "15", "15-SP1", "15-SP2", "15-SP3", "15-SP4", "15-SP5":
+			t.Logf("UserTasksMax not set in SLE15 - OK\n")
+		default:
+			t.Error(optimisedINI.SysctlParams)
+		}
 	}
 	if runtime.GOARCH != "ppc64le" {
 		if i, err := strconv.ParseInt(optimisedINI.SysctlParams["vm.nr_hugepages"], 10, 64); err != nil || i != 128 {
@@ -398,7 +403,12 @@ func TestOverrideAllSettings(t *testing.T) {
 		t.Error(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["UserTasksMax"] != "infinity" {
-		t.Error(optimisedINI.SysctlParams)
+		switch system.GetOsVers() {
+		case "15", "15-SP1", "15-SP2", "15-SP3", "15-SP4", "15-SP5":
+			t.Logf("UserTasksMax not set in SLE15 - OK\n")
+		default:
+			t.Error(optimisedINI.SysctlParams)
+		}
 	}
 	if runtime.GOARCH != "ppc64le" {
 		if i, err := strconv.ParseInt(optimisedINI.SysctlParams["vm.nr_hugepages"], 10, 64); err != nil || i != 126 {

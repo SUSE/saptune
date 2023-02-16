@@ -11,16 +11,16 @@ func TestChkOsTags(t *testing.T) {
 	tag := "15-*"
 	secFields := []string{"rpm", "os=15-*", "arch=amd64"}
 
-	_ = system.CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr15"), "/etc/os-release")
 	ret := chkOsTags(tag, secFields)
 	if !ret {
 		t.Error("not matching os version")
 	}
-	_ = system.CopyFile("/etc/os-release_OrG", "/etc/os-release")
+	_ = system.CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr12"), "/etc/os-release")
 	ret = chkOsTags(tag, secFields)
 	if ret {
 		t.Error("matching os version, but shouldn't")
 	}
+	_ = system.CopyFile("/etc/os-release_OrG", "/etc/os-release")
 }
 
 func TestChkHWTags(t *testing.T) {

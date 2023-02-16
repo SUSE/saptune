@@ -140,12 +140,17 @@ func rememberMessage(writer io.Writer) {
 
 // VerifyAllParameters Verify that all system parameters do not deviate from any of the enabled solutions/notes.
 func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
-	result := system.JPNotes{}
+	result := system.JPNotes{
+		Verifications: []system.JPNotesLine{},
+		Attentions:    []system.JPNotesRemind{},
+		NotesOrder:    []string{},
+	}
 	if len(tuneApp.NoteApplyOrder) == 0 {
 		fmt.Fprintf(writer, "No notes or solutions enabled, nothing to verify.\n")
 	} else {
 		unsatisfiedNotes, comparisons, err := tuneApp.VerifyAll()
 		if err != nil {
+			system.Jcollect(result)
 			system.ErrorExit("Failed to inspect the current system: %v", err)
 		}
 		PrintNoteFields(writer, "NONE", comparisons, true, &result)
@@ -153,13 +158,14 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
 		result.NotesOrder = tuneApp.NoteApplyOrder
 		sysComp := len(unsatisfiedNotes) == 0
 		result.SysCompliance = &sysComp
-		system.Jcollect(result)
 		if len(unsatisfiedNotes) == 0 {
 			fmt.Fprintf(writer, "%s%sThe running system is currently well-tuned according to all of the enabled notes.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
 		} else {
+			system.Jcollect(result)
 			system.ErrorExit("The parameters listed above have deviated from SAP/SUSE recommendations.", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
 		}
 	}
+	system.Jcollect(result)
 }
 
 // getFileName returns the corresponding filename of a given definition file

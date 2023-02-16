@@ -3,7 +3,6 @@ package txtparser
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/SUSE/saptune/system"
 	"io/ioutil"
 	"os"
 	"path"
@@ -192,7 +191,6 @@ func TestParseINIFile(t *testing.T) {
 }
 
 func TestParseINI(t *testing.T) {
-	_ = system.CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr15"), "/etc/os-release")
 	actualINI := ParseINI(iniExample)
 	var expectedINI INIFile
 	if err := json.Unmarshal([]byte(iniJSON), &expectedINI); err != nil {
@@ -221,7 +219,6 @@ func TestParseINI(t *testing.T) {
 	if !reflect.DeepEqual(*newINI, wrongINI) {
 		t.Errorf("\n%+v\n%+v\n", *newINI, wrongINI)
 	}
-	_ = system.CopyFile("/etc/os-release_OrG", "/etc/os-release")
 }
 
 func TestGetINIFileDescriptiveName(t *testing.T) {

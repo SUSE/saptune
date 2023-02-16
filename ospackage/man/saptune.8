@@ -554,6 +554,12 @@ Revert optimisation settings recommended by the solution, and these settings wil
 .B change
 Switch to a new solution even that another solution was already applied.
 .br This is basically a revert of the old solution and an apply of the new solution. A confirmation is needed to finish the revert action of the old solution. The confirmation can be suppressed by '--force'
+.br
+ATTENTION:
+.br
+because of the revert of the old solution during the execution of the action 'change' the system will be not sufficient tuned for SAP workloads for a short period of time until the new solution is applied successfully. This may harm a running SAP system. So use this action carefully.
+.br
+And please be in mind: Because of the 'revert' and 'apply' the order of notes and therefore the active tuning may change, especially if additional notes were applied beside the old applied solution.
 .TP
 .B show
 Print content of solution definition file to stdout

@@ -7,7 +7,7 @@ import (
 
 func TestLog(t *testing.T) {
 	logFile := "/tmp/saptune_tst.log"
-	logSwitch := map[string]string{"verbose": "on", "debug": "1", "error": "on"}
+	logSwitch := map[string]string{"verbose": "on", "debug": "on", "error": "on"}
 
 	LogInit(logFile, logSwitch)
 	DebugLog("TestMessage%s_%s", "1", "Debug")

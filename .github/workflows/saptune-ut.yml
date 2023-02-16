@@ -21,7 +21,6 @@ jobs:
 
       - name: Set ENV for codeclimate (pull_request)
         run: |
-          #git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.head_ref }}
           git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.head_ref }}
           echo "GIT_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
           echo "GIT_COMMIT_SHA=$(git rev-parse origin/${{ github.head_ref }})" >> $GITHUB_ENV
@@ -39,26 +38,23 @@ jobs:
           chmod +x ./cc-test-reporter
           ./cc-test-reporter before-build
 
-      - name: Pull the Docker Image
+      - name: Pull the Container Image
         run: docker pull registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base:latest
 
-      - name: Run Docker Image
-        run: docker run --name saptune-ci --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro -td -v "${{ github.workspace }}:/app" registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base:latest
+      - name: Run Container Image
+        run: docker run --name saptune-ci --privileged --tmpfs /run -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host -td -v "${{ github.workspace }}:/app" registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base:latest
+
+      - name: Get Container Logs
+        run: docker logs saptune-ci
 
       - name: Run saptune unit tests
         run: docker exec -t saptune-ci /bin/sh -c "cd /app; ./run_saptune_ci_tst.sh;"
-
-      #- name: Check test result file for debug
-        #run: |
-          #ls -l ${{github.workspace}}
-          #grep action ${{github.workspace}}/c.out
 
       - name: Code Climate report coverage
         run: ./cc-test-reporter after-build --debug --prefix ${{ env.CC_PREFIX }} --exit-code $?
         if: ${{ env.CC_TEST_REPORTER_ID }}
 
-      - name: Stop and remove Docker Image
+      - name: Stop and remove Container Image
         run: |
           docker stop saptune-ci
           docker rm saptune-ci
-
