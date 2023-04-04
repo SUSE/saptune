@@ -33,8 +33,9 @@
 # 09.11.2021  v0.2.2    degraded system is no longer considered an error
 # 26.09.2022  v0.2.3    degraded systemd state gets explained in more detail (TEAM-6584)
 # 26.09.2022  v0.3      reactivate unused function compile_filelists() as file_check() and add detection of sapconf remains (TEAM-6275)
+# 03.04.2023  v0.3.1    Removed error regarding tuned sapconf profile (TEAM-7529)
 
-version="0.3"
+version="0.3.1"
 
 # We use these global arrays through out the program:
 #
@@ -486,10 +487,6 @@ function check_saptune() {
             case "${tool_profile['tuned']}" in
                 saptune)
                     print_fail "tuned.service is ${unit_state_active['tuned.service']}/${unit_state_enabled['tuned.service']} with profile ('${tool_profile['tuned']}')" "This profile should not exist anymore! This needs to be investigated."
-                    ((fails++))
-                    ;;
-                sapconf|sap-*)
-                    print_fail "tuned.service is ${unit_state_active['tuned.service']}/${unit_state_enabled['tuned.service']} with profile '${tool_profile['tuned']}'" "This is a potential risk. Current versions of sapconf do not use 'tuned'! Update the sapconf package."
                     ((fails++))
                     ;;
                 *)
