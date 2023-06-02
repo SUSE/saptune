@@ -1,10 +1,10 @@
 # 2684254 - SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
 # Description:    HANA DB settings
-# Version 20 from 02.07.2021 in English
+# Version 23 from 03.05.2023 in English
 
 [version]
-VERSION=20
-DATE=02.07.2021
+VERSION=23
+DATE=18.04.2023
 DESCRIPTION=SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
 REFERENCES=https://launchpad.support.sap.com/#/notes/2684254
 
@@ -92,6 +92,12 @@ kernel-default 15-SP2 5.3.18-24.24.1
 
 [rpm:os=15:arch=ppc64le]
 kernel-default 4.12.14-150.14.2
+
+[rpm:os=15-SP3:arch=x86_64]
+glibc 2.31-150300.46.1
+
+[rpm:os=15-SP4:arch=x86_64]
+glibc 2.31-150300.46.1
 
 [grub]
 # /etc/default/grub GRUB_CMDLINE_LINUX_DEFAULT
