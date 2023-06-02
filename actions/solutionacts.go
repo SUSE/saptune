@@ -152,18 +152,27 @@ func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 	if solName == "" {
 		VerifyAllParameters(writer, tuneApp)
 	} else {
-		result := system.JPNotes{}
+		result := system.JPNotes{
+			Verifications: []system.JPNotesLine{},
+			Attentions:    []system.JPNotesRemind{},
+			NotesOrder:    []string{},
+		}
 		// Check system parameters against the specified solution, no matter the solution has been tuned for or not.
 		unsatisfiedNotes, comparisons, err := tuneApp.VerifySolution(solName)
 		if err != nil {
+			system.Jcollect(result)
 			system.ErrorExit("Failed to test the current system against the specified SAP solution: %v", err)
 		}
 		PrintNoteFields(writer, "NONE", comparisons, true, &result)
+		sysComp := len(unsatisfiedNotes) == 0
+		result.SysCompliance = &sysComp
 		if len(unsatisfiedNotes) == 0 {
 			fmt.Fprintf(writer, "%s%sThe system fully conforms to the tuning guidelines of the specified SAP solution.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
 		} else {
+			system.Jcollect(result)
 			system.ErrorExit("The parameters listed above have deviated from the specified SAP solution recommendations.\n", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
 		}
+		system.Jcollect(result)
 	}
 }
 
