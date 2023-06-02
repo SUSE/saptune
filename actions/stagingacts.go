@@ -33,6 +33,7 @@ var stagingSolutions = solution.GetOtherSolution(StagingSheets, "", "")
 
 // StagingAction  Staging actions like apply, revert, verify asm.
 func StagingAction(actionName string, stageName []string, tuneApp *app.App) {
+	txtparser.ResetVersionSectCnts("/staging/")
 	stagingSwitch = getStagingFromConf()
 	if len(stgFiles.AllStageFiles) == 0 && len(stgFiles.StageAttributes) == 0 {
 		stgFiles = collectStageFileInfo(tuneApp)
@@ -527,7 +528,7 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 
 		// get Note/Solution Description and setup absolute filenames
 		solStageName, name, workingFile, packageFile := getSolOrNoteEnv(stageName)
-		stagingFile := fmt.Sprintf("%s/%s", StagingSheets, stageName)
+		stagingFile := fmt.Sprintf("%s%s", StagingSheets, stageName)
 		// Description
 		stageMap["desc"] = name
 		// Version
@@ -573,7 +574,7 @@ func collectStageFileInfo(tuneApp *app.App) stageFiles {
 func getSolOrNoteEnv(stgName string) (string, string, string, string) {
 	sName := ""
 	dName := stagingOptions[stgName].Name()
-	wFile := fmt.Sprintf("%s/%s", NoteTuningSheets, stgName)
+	wFile := fmt.Sprintf("%s%s", NoteTuningSheets, stgName)
 	pFile := fmt.Sprintf("%snotes/%s", PackageArea, stgName)
 	if strings.HasSuffix(stgName, ".sol") {
 		// stage file is a solution file
