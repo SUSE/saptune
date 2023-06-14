@@ -1,7 +1,7 @@
 # This is the input configuration for 'completely' (https://github.com/DannyBen/completely)
 # to generate the bash completion script.
 #
-# v2.2
+# v2.3
 #
 # Changelog:    29.09.2022  v2.0  - first release for saptune 3.1
 #               21.11.2022  v2.1  - Replace --output with --format in syntax description
@@ -9,6 +9,10 @@
 #               16.01.2023  v2.2  - Bugfix: custom notes have bee displayed with `.conf` suffix
 #                                 - Bugfix: `saptune note|solution create` don't have a completion anymore
 #                                 - Bugfix: `saptune note|solution delete|rename' now only offers custom notes/solutions
+#               13.06.2023  v2.3  - Bugfix: `saptune staging` commands do not remove the required `.sol` extension anymore
+#                                 - Bugfix: some `saptune note verify` commands did not remove the `.conf` suffix
+#                                 - Bugfix: `saptune note|solution revert` now only completes applied notes/solutions.
+#                                 - Bugfix: `saptune solution edit` now only completes custom solutions
 #
 # Syntax:       saptune [--format FORMAT] help
 #               saptune [--format FORMAT] version  
@@ -24,8 +28,8 @@
 #               saptune [--format FORMAT] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
 #               saptune [--format FORMAT] solution rename SOLUTIONNAME NEWSSOLUTIONNAME
 #               saptune [--format FORMAT] staging ( status | enable | disable | is-enabled | list )
-#               saptune [--format FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
-#               saptune [--format FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+#               saptune [--format FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+#               saptune [--format FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 #               saptune [--format FORMAT] revert all
 #               saptune [--format FORMAT] lock remove
 #               saptune [--format FORMAT] check
@@ -218,11 +222,13 @@ saptune note create: *stop
 
 saptune note create *: *stop
 
-saptune note edit: *list-all-notes
+saptune note edit:
+  - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
 
 saptune note edit *: *stop
 
-saptune note revert: *list-all-notes
+saptune note revert:
+  - $(saptune note applied)
 
 saptune note revert *: *stop
 
@@ -235,16 +241,18 @@ saptune note delete:
 
 saptune note delete *: *stop
 
-saptune note verify: 
+saptune note verify:
   - --colorscheme
   - --show-non-compliant
-  - $(ls /var/lib/saptune/working/notes ; ls /etc/saptune/extra)
+  - $(ls /var/lib/saptune/working/notes/)
+  - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
 
 saptune note verify *: *stop
   
 saptune note verify --show-non-compliant:
   - --colorscheme
-  - $(ls /var/lib/saptune/working/notes ; ls /etc/saptune/extra)
+  - $(ls /var/lib/saptune/working/notes/)
+  - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
 
 saptune note verify --show-non-compliant *: *stop
 
@@ -266,7 +274,8 @@ saptune note verify --colorscheme: *color-schemes
 
 saptune note verify --colorscheme *:
   - --show-non-compliant
-  - $(ls /var/lib/saptune/working/notes ; ls /etc/saptune/extra)
+  - $(ls /var/lib/saptune/working/notes/)
+  - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
 
 saptune note verify --colorscheme * *: *stop
 
@@ -322,11 +331,13 @@ saptune solution create: *stop
 
 saptune solution create *: *stop
 
-saptune solution edit: *list-all-solutions
+saptune solution edit:
+  - $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)
 
 saptune solution edit *: *stop
 
-saptune solution revert: *list-all-solutions
+saptune solution revert: 
+  - $(saptune solution applied | sed 's/(partial)//g')
 
 saptune solution revert *: *stop
 
@@ -422,21 +433,21 @@ saptune staging list:
 
 
 saptune staging diff:
-  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
   - all
   
 saptune staging diff *:
-  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
 
 saptune staging diff all:
   - $()
 
 saptune staging analysis:
-  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
   - all
   
 saptune staging analysis *:
-  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
 
 saptune staging analysis all:
   - $()
@@ -444,25 +455,25 @@ saptune staging analysis all:
 saptune staging release:
   - --force
   - --dry-run
-  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
   - all
 
 saptune staging release --force:
-  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
   - all
 
 saptune staging release --force all:
   - $()
 
 saptune staging release --dry-run:
-  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
   - all
 
 saptune staging release --dry-run all:
   - $()
 
 saptune staging release *:
-  - $(find /var/lib/saptune/staging/latest/ -printf '%P ' | sed 's/\.sol//g')
+  - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
 
 saptune staging release all:
   - $()
