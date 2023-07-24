@@ -68,8 +68,7 @@
             "description": "The result (output) of the command.",
             "type": "object",
             "required": [
-                "Solution enabled",
-                "applied partially"
+                "Solution enabled"
             ],
             "additionalProperties": false,
             "properties": {
