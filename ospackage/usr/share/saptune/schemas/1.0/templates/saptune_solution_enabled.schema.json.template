@@ -4,7 +4,7 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["Solution enabled", "applied partially"]{% endblock %}
+{% block result_required %}["Solution enabled"]{% endblock %}
 
 {% block result_properties %}
                 "Solution enabled": { "$ref": "#/$defs/saptune enabled Solution" }
