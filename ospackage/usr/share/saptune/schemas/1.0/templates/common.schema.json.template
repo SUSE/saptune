@@ -248,7 +248,7 @@
 
         "saptune system compliance": {
             "description": "Overall compliance of all currently applied SAP Notes.",
-            "type": "boolean"
+            "type": ["boolean", "null"]
         },
 
         "saptune enabled Solution": {
