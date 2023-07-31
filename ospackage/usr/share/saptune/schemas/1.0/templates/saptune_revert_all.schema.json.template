@@ -1,6 +1,6 @@
 {% extends "common.schema.json.template" %}
 
-{% block command %}saptune solution simulate{% endblock %}
+{% block command %}saptune revert all{% endblock %}
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 

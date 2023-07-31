@@ -11,8 +11,5 @@
                     "description": "Indicates that JSON output has not yet been implemented yet.",
                     "type": "boolean",
                     "enum": [false]
-                }      
+                }            
 {% endblock %}
-
-                            
-                    

@@ -7,6 +7,7 @@ set -u
 # Usage: FORCE=1 ./generate_unsupported.sh
 
 UNSUPPORTED_COMMANDS=( 
+    "saptune check"
     "saptune daemon start" 
     "saptune daemon stop"
     "saptune service start"
@@ -31,14 +32,16 @@ UNSUPPORTED_COMMANDS=(
     "saptune note delete"
     "saptune note rename"
     "saptune note revertall"
-    "saptune note revert all"
+    "saptune revert all"
     "saptune solution apply"
+    "saptune solution change"
     "saptune solution simulate"
     "saptune solution revert"
     "saptune solution create"
     "saptune solution edit"
     "saptune solution delete"
     "saptune solution rename"
+    "saptune solution show"
     "saptune staging status"
     "saptune staging is-enabled"
     "saptune staging enable"
