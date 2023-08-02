@@ -592,7 +592,7 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 	if appliedSol != "" {
 		appSol := system.JAppliedSol{
 			SolName: appliedSol,
-			Partial: partial,
+			Partial: &partial,
 		}
 		jstat.AppliedSol = append(jstat.AppliedSol, appSol)
 		appSolNotes := system.JSol{

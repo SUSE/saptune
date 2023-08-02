@@ -77,15 +77,11 @@ type configuredSol struct {
 	ConfiguredSol []string `json:"Solution enabled"`
 }
 
-//type configuredSol struct {
-//ConfiguredSol JObj `json:"enabled Solution"`
-//}
-
 // JAppliedSol is for 'Solution applied' in
 // 'saptune status' and 'saptune solution applied'
 type JAppliedSol struct {
-	SolName string `json:"Solution ID"`
-	Partial bool   `json:"applied partially"`
+	SolName string `json:"Solution ID,omitempty"`
+	Partial *bool  `json:"applied partially,omitempty"`
 }
 
 // appliedSol is for 'saptune solution applied'
@@ -158,7 +154,7 @@ type JPNotes struct {
 	Simulations   []JPNotesLine   `json:"simulations,omitempty"`
 	Attentions    []JPNotesRemind `json:"attentions"`
 	NotesOrder    []string        `json:"Notes enabled"`
-	SysCompliance *bool           `json:"system compliance,omitempty"`
+	SysCompliance *bool           `json:"system compliance"`
 }
 
 // JSol - Solution name and related Note list
@@ -315,7 +311,11 @@ func Jcollect(data interface{}) {
 	case JAppliedSol:
 		// "saptune solution applied"
 		var appSol appliedSol
-		appSol.AppliedSol = append(appSol.AppliedSol, res)
+		if res.SolName != "" {
+			appSol.AppliedSol = append(appSol.AppliedSol, res)
+		} else {
+			appSol.AppliedSol = make([]JAppliedSol, 0)
+		}
 		jentry.CmdResult = appSol
 	case JSolList, JNoteList, JStatus, JPNotes:
 		//"solution list", "note list", "status", "daemon status", "service status", "note verify", "solution verify", "note simulate", "solution simulate":

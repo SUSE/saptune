@@ -150,11 +150,17 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
 		VerifyAllParameters(writer, tuneApp)
 	} else {
-		result := system.JPNotes{}
+		result := system.JPNotes{
+			Verifications: []system.JPNotesLine{},
+			Attentions:    []system.JPNotesRemind{},
+			NotesOrder:    []string{},
+			SysCompliance: nil,
+		}
 
 		// Check system parameters against the specified note, no matter the note has been tuned for or not.
 		conforming, comparisons, _, err := tuneApp.VerifyNote(noteID)
 		if err != nil {
+			system.Jcollect(result)
 			system.ErrorExit("Failed to test the current system against the specified note: %v", err)
 		}
 		noteComp := make(map[string]map[string]note.FieldComparison)
