@@ -374,10 +374,10 @@ func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID stri
 		system.ErrorExit("%v", err)
 	}
 	if _, err := tuneApp.GetNoteByID(newNoteID); err == nil {
-		system.ErrorExit("The new name '%s' for Note %s already exists, can't rename.", noteID, newNoteID)
+		system.ErrorExit("The new name '%s' for Note '%s' already exists, can't rename.", newNoteID, noteID)
 	}
 
-	txtConfirm := fmt.Sprintf("Do you really want to rename Note %s to %s?", noteID, newNoteID)
+	txtConfirm := fmt.Sprintf("Do you really want to rename Note '%s' to '%s'?", noteID, newNoteID)
 	fileName, extraNote := getFileName(noteID, NoteTuningSheets, ExtraTuningSheets)
 	newFileName := fmt.Sprintf("%s%s.conf", ExtraTuningSheets, newNoteID)
 	if !extraNote {
