@@ -164,6 +164,9 @@ func checkSolutionNotes(param txtparser.INIEntry, fileName, noteFiles, extraFile
 	// that the working area does not include the needed note for
 	// the solution, but the package store (and/or staging area) does.
 	for _, noteID := range strings.Split(param.Value, "\t") {
+		if param.Section == "reminder" || param.Section == "version" {
+			continue
+		}
 		// first check in the working area
 		if _, err := os.Stat(fmt.Sprintf("%s%s", noteFiles, noteID)); err != nil {
 			// noteID NOT found in working area
