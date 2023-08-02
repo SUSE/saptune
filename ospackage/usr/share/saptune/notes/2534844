@@ -1,9 +1,9 @@
 # 2534844 - Indexserver Crash During Startup due to Insufficient Shared Memory Segment
-# Version 13 from 09.04.2020 in English
+# Version 15 from 26.05.2023 in English
 
 [version]
-VERSION=13
-DATE=09.04.2020
+VERSION=15
+DATE=26.05.2023
 DESCRIPTION=Indexserver Crash During Startup due to Insufficient Shared Memory Segment
 REFERENCES=https://launchpad.support.sap.com/#/notes/2534844
 
