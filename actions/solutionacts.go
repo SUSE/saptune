@@ -428,8 +428,9 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 	}
 	// check if solution really exists
 	if !solution.IsAvailableSolution(solName, solutionSelector) {
-		system.NoticeLog("Solution '%s' does not exist. Nothing to do.", solName)
-		system.ErrorExit("", 0)
+		system.ErrorExit(`the Solution "%s" is not recognised by saptune.
+Run "saptune solution list" for a complete list of supported solutions.
+and then please double check your input`, solName)
 	}
 	solFName := fmt.Sprintf("%s.sol", solName)
 	txtConfirm := fmt.Sprintf("Do you really want to delete Solution '%s'?", solName)
