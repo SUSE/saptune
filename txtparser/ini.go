@@ -33,6 +33,7 @@ var loginCnt = 0
 var blckCnt = 0
 
 var blockDev = make([]string, 0, 10)
+var excludeDirs = make([]string, 0)
 
 // counter to control the [sysctl] section
 var sysctlCnt = 0
@@ -195,7 +196,7 @@ func ParseINI(input string) *INIFile {
 			// collect system wide sysctl settings
 			if sectionFields[0] == "sysctl" && sysctlCnt == 0 {
 				sysctlCnt = sysctlCnt + 1
-				system.CollectGlobalSysctls()
+				system.CollectGlobalSysctls(excludeDirs)
 			}
 			// moved block device collection so that the info can be
 			// used inside the 'tag' checks
@@ -456,4 +457,10 @@ func writeReminderSectionData(rem string) ([]INIEntry, map[string]INIEntry, stri
 	curEntriesArray = append(curEntriesArray, entry)
 	curEntriesMap[entry.Key] = entry
 	return curEntriesArray, curEntriesMap, curSection
+}
+
+// GetSysctlExcludes gets the content of the /etc/sysconfig/saptune
+// variable 'SKIP_SYSCTL_FILES' and provides it as slice
+func GetSysctlExcludes(skipFiles string) {
+	excludeDirs = strings.Split(skipFiles, ",")
 }

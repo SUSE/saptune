@@ -121,7 +121,8 @@ func TestGlobalSysctls(t *testing.T) {
 	//var sysctlParms = sysctlDefined{}
 	expTxt := "sysctl config file /etc/sysctl.d/saptune_test.conf(1), /etc/sysctl.d/saptune_test2.conf(1)"
 	expTxt2 := "sysctl config file /etc/sysctl.d/saptune_test2.conf(1), /etc/sysctl.d/saptune_test.conf(1)"
-	CollectGlobalSysctls()
+	excludeDirs := []string{}
+	CollectGlobalSysctls(excludeDirs)
 	info := ChkForSysctlDoubles("vm.nr_hugepages")
 	if info != "" {
 		t.Errorf("got '%s' instead of expected empty string\n", info)

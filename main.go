@@ -222,6 +222,7 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 		fmt.Fprintf(writer, "Error: Unable to read file '%s': %v\n", saptuneConf, err)
 		system.ErrorExit("", 128)
 	}
+	txtparser.GetSysctlExcludes(sconf.GetString("SKIP_SYSCTL_FILES", ""))
 	// check, if all needed variables are available in the saptune
 	// config file
 	for _, key := range keyList {
