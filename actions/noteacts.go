@@ -150,11 +150,17 @@ func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
 	if noteID == "" {
 		VerifyAllParameters(writer, tuneApp)
 	} else {
-		result := system.JPNotes{}
+		result := system.JPNotes{
+			Verifications: []system.JPNotesLine{},
+			Attentions:    []system.JPNotesRemind{},
+			NotesOrder:    []string{},
+			SysCompliance: nil,
+		}
 
 		// Check system parameters against the specified note, no matter the note has been tuned for or not.
 		conforming, comparisons, _, err := tuneApp.VerifyNote(noteID)
 		if err != nil {
+			system.Jcollect(result)
 			system.ErrorExit("Failed to test the current system against the specified note: %v", err)
 		}
 		noteComp := make(map[string]map[string]note.FieldComparison)
@@ -368,10 +374,10 @@ func NoteActionRename(reader io.Reader, writer io.Writer, noteID, newNoteID stri
 		system.ErrorExit("%v", err)
 	}
 	if _, err := tuneApp.GetNoteByID(newNoteID); err == nil {
-		system.ErrorExit("The new name '%s' for Note %s already exists, can't rename.", noteID, newNoteID)
+		system.ErrorExit("The new name '%s' for Note '%s' already exists, can't rename.", newNoteID, noteID)
 	}
 
-	txtConfirm := fmt.Sprintf("Do you really want to rename Note %s to %s?", noteID, newNoteID)
+	txtConfirm := fmt.Sprintf("Do you really want to rename Note '%s' to '%s'?", noteID, newNoteID)
 	fileName, extraNote := getFileName(noteID, NoteTuningSheets, ExtraTuningSheets)
 	newFileName := fmt.Sprintf("%s%s.conf", ExtraTuningSheets, newNoteID)
 	if !extraNote {

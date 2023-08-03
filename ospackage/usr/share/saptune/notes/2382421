@@ -1,15 +1,15 @@
 # 2382421 - Optimizing the Network Configuration on HANA- and OS-Level
-# Version 40 from 01.03.2021 in English
+# Version 44 from 15.06.2023 in English
 
 [version]
-VERSION=40
-DATE=01.03.2021
+VERSION=44
+DATE=15.06.2023
 DESCRIPTION=Optimizing the Network Configuration on HANA- and OS-Level
 REFERENCES=https://launchpad.support.sap.com/#/notes/2382421
 
 [sysctl]
 # This parameter limits the size of the accept backlog of a listening socket.
-# The Linux default of 128 is not sufficient so you need to set the parameter
+# The Linux default of 128 is not sufficient. You need to set the parameter
 # to 4096 in order that the HANA system can use higher values.
 # There is an interdependency between this parameter and HANA configuration
 # parameter tcp_backlog. If net.core.somaxconn is set to a lower value than
@@ -37,7 +37,7 @@ net.ipv4.tcp_max_syn_backlog = 8192
 # If configured correctly, the SAP Host Agent takes care of adjusting this
 # parameter and setting it manually is neither recommended nor required.
 #
-# The SAP Host Agent typically increases the port range typically to 9000-65499.
+# The SAP Host Agent typically increases the port range to 9000-65499.
 # If your port range is significantly different, for example when your lower
 # port range starts with port 40000, please check the SAP Host Agent section
 net.ipv4.ip_local_port_range =
@@ -124,8 +124,8 @@ net.ipv4.tcp_window_scaling = 1
 # of this OS parameter might not be supported. Please refer to the documentation
 # provided by Microsoft for details. In this case please adjust the OS
 # parameters as recommended by Microsoft. Moreover, please keep in mind that
-# also the two parameters net.ipv4.tcp_tw_reuse and net.ipv4.tcp_tw_recycle
-# must not be enabled in such a case.
+# parameters net.ipv4.tcp_tw_reuse and net.ipv4.tcp_tw_recycle must also not be
+# enabled in such a case.
 net.ipv4.tcp_timestamps = 1
 
 # net.ipv4.tcp_tw_reuse
@@ -133,11 +133,12 @@ net.ipv4.tcp_timestamps = 1
 # connection has been closed, even though the connection is still in TIME_WAIT
 # state. A precondition for it to take effect is that TCP timestamps are
 # enabled, i.e. net.ipv4.tcp_timestamps = 1, which is the default on most
-# modern systems. Please note that this setting must not be applied if the HANA
-# node needs to communicate with hosts behind a NAT firewall. Moreover, it must
-# not be applied if not all hosts that use a TCP connection to communicate with
-# the HANA node have TCP timestamps enabled. Otherwise you might encounter TCP
-# connection issues after applying this configuration parameter.
+# modern systems. This setting must not be applied if the HANA node needs to
+# communicate with hosts using Network Address Translation (NAT).
+# Moreover, it must  not be applied if not all hosts that use a TCP connection
+# to communicate with the HANA node have TCP timestamps enabled. Otherwise you
+# might encounter TCP connection issues after applying this configuration
+# parameter.
 # As of SLES 15 SP2 the new option "2" is available which is also the default
 # one. In single node systems this new default value is sufficient. If you are
 # therefore running on a high enough OS version you should only consider setting
@@ -159,44 +160,42 @@ net.ipv4.tcp_syn_retries = 8
 
 [sysctl:os=12-SP3]
 # net.ipv4.tcp_tw_recycle
-# This setting reduces the time a connection spends in the TIME_WAIT state.
-# One precondition for it to take effect is that TCP timestamps are enabled,
-# i.e. net.ipv4.tcp_timestamps = 1, which is the default on most modern systems.
-# Please note that this setting must not be applied if the HANA node has to
-# communicate with hosts behind a NAT firewall. Moreover, it must not be
-# applied if not all hosts that use a TCP connection to communicate with the
-# HANA node have TCP timestamps enabled. Otherwise you might encounter TCP
-# connection issues after applying this configuration parameter.
+# This parameter reduces the time a connection spends in the TIME_WAIT state.
+# It is not necessary to set it to 1.
 #
-# In case you are running ABAP Application Server instances on Windows, please
-# refer to SAP Note 2789262 for further details on possible connection issues.
+# It has been removed without substitution as of Linux kernel version 4.12.
+# You can therefore not set it anymore when using kernel versions >= 4.12,
+# which applies as of SUSE Linux Enterprise Server (SLES) 12 SP4,
+# SLES 15 GA and RHEL 8.0.
 #
-# As of Linux kernel version 4.12, this configuration parameter is removed
-# without substitution. You can therefore not set it anymore for OS versions
-# running on kernel versions >= 4.12.
-# This applies as of SUSE Linux Enterprise Server (SLES) 12 SP4 and SLES 15 GA.
-#net.ipv4.tcp_tw_recycle = 1
+# If you need to enable it for individual reasons, you need to ensure that all
+# preconditions are fulfilled, otherwise you might face TCP connection issues:
+#  * HANA node must not communicate with hosts using Network Address Translation (NAT)
+#  * TCP timestamps must be enabled on the HANA node and all nodes communicating
+#    with HANA
+#      * for Linux: parameter net.ipv4.tcp_timestamps = 1
+#      * for Windows: see SAP Note 2789262
+#net.ipv4.tcp_tw_recycle
 net.ipv4.tcp_tw_recycle =
 
 [sysctl:os=12-SP2]
 # net.ipv4.tcp_tw_recycle
-# This setting reduces the time a connection spends in the TIME_WAIT state.
-# One precondition for it to take effect is that TCP timestamps are enabled,
-# i.e. net.ipv4.tcp_timestamps = 1, which is the default on most modern systems.
-# Please note that this setting must not be applied if the HANA node has to
-# communicate with hosts behind a NAT firewall. Moreover, it must not be
-# applied if not all hosts that use a TCP connection to communicate with the
-# HANA node have TCP timestamps enabled. Otherwise you might encounter TCP
-# connection issues after applying this configuration parameter.
+# This parameter reduces the time a connection spends in the TIME_WAIT state.
+# It is not necessary to set it to 1.
 #
-# In case you are running ABAP Application Server instances on Windows, please
-# refer to SAP Note 2789262 for further details on possible connection issues.
+# It has been removed without substitution as of Linux kernel version 4.12.
+# You can therefore not set it anymore when using kernel versions >= 4.12,
+# which applies as of SUSE Linux Enterprise Server (SLES) 12 SP4,
+# SLES 15 GA and RHEL 8.0.
 #
-# As of Linux kernel version 4.12, this configuration parameter is removed
-# without substitution. You can therefore not set it anymore for OS versions
-# running on kernel versions >= 4.12.
-# This applies as of SUSE Linux Enterprise Server (SLES) 12 SP4 and SLES 15 GA.
-#net.ipv4.tcp_tw_recycle = 1
+# If you need to enable it for individual reasons, you need to ensure that all
+# preconditions are fulfilled, otherwise you might face TCP connection issues:
+#  * HANA node must not communicate with hosts using Network Address Translation (NAT)
+#  * TCP timestamps must be enabled on the HANA node and all nodes communicating
+#    with HANA
+#      * for Linux: parameter net.ipv4.tcp_timestamps = 1
+#      * for Windows: see SAP Note 2789262
+#net.ipv4.tcp_tw_recycle
 net.ipv4.tcp_tw_recycle =
 
 [reminder]

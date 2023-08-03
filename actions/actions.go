@@ -144,6 +144,7 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
 		Verifications: []system.JPNotesLine{},
 		Attentions:    []system.JPNotesRemind{},
 		NotesOrder:    []string{},
+		SysCompliance: nil,
 	}
 	if len(tuneApp.NoteApplyOrder) == 0 {
 		fmt.Fprintf(writer, "No notes or solutions enabled, nothing to verify.\n")

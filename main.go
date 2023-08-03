@@ -66,6 +66,7 @@ func main() {
 
 	if arg1 == "lock" {
 		if arg2 := system.CliArg(2); arg2 == "remove" {
+			system.JnotSupportedYet()
 			system.ReleaseSaptuneLock()
 			system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
 			system.ErrorExit("", 0)
@@ -157,6 +158,7 @@ func checkForTuned() {
 // running as root
 func callSaptuneCheckScript(arg string) {
 	if arg == "check" {
+		system.JnotSupportedYet()
 		// call external scrip saptune_check
 		cmd := exec.Command(saptcheck)
 		cmd.Stdin = os.Stdin

@@ -259,6 +259,7 @@ func SolutionActionEnabled(writer io.Writer, tuneApp *app.App) {
 
 // SolutionActionApplied prints out the applied solution
 func SolutionActionApplied(writer io.Writer, tuneApp *app.App) {
+	var appSol system.JAppliedSol
 	partial := false
 	solApplied, state := tuneApp.AppliedSolution()
 	if state == "partial" {
@@ -267,9 +268,11 @@ func SolutionActionApplied(writer io.Writer, tuneApp *app.App) {
 	} else {
 		fmt.Fprintf(writer, "%s", solApplied)
 	}
-	appSol := system.JAppliedSol{
-		SolName: solApplied,
-		Partial: partial,
+	if solApplied != "" {
+		appSol = system.JAppliedSol{
+			SolName: solApplied,
+			Partial: &partial,
+		}
 	}
 	system.Jcollect(appSol)
 }
@@ -333,9 +336,6 @@ func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
 	} else {
 		customSol = strings.TrimSuffix(customSol, ".sol")
 	}
-	if !solution.IsAvailableSolution(customSol, solutionSelector) {
-		system.ErrorExit("Solution '%s' does not exist.", customSol)
-	}
 
 	fileName, extraSol := getFileName(solFName, SolutionSheets, ExtraTuningSheets)
 	ovFileName, overrideSol := getovFile(solFName, OverrideTuningSheets)
@@ -361,6 +361,10 @@ func SolutionActionEdit(writer io.Writer, customSol string, tuneApp *app.App) {
 		}
 	} else {
 		system.NoticeLog("Nothing changed during the editor session, so no update of the solution definition file '%s'", fileName)
+	}
+	solution.Refresh()
+	if !solution.IsAvailableSolution(customSol, solutionSelector) {
+		system.ErrorExit("Solution '%s' contains errors. Please check carefully.", customSol)
 	}
 }
 
@@ -424,8 +428,9 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 	}
 	// check if solution really exists
 	if !solution.IsAvailableSolution(solName, solutionSelector) {
-		system.NoticeLog("Solution '%s' does not exist. Nothing to do.", solName)
-		system.ErrorExit("", 0)
+		system.ErrorExit(`the Solution "%s" is not recognised by saptune.
+Run "saptune solution list" for a complete list of supported solutions.
+and then please double check your input`, solName)
 	}
 	solFName := fmt.Sprintf("%s.sol", solName)
 	txtConfirm := fmt.Sprintf("Do you really want to delete Solution '%s'?", solName)
@@ -472,8 +477,9 @@ func SolutionActionRename(reader io.Reader, writer io.Writer, solName, newSolNam
 	}
 	// check if old solution name really exists
 	if !solution.IsAvailableSolution(solName, solutionSelector) {
-		system.NoticeLog("Solution '%s' does not exist. Nothing to do.", solName)
-		system.ErrorExit("", 0)
+		system.ErrorExit(`the Solution "%s" is not recognised by saptune.
+Run "saptune solution list" for a complete list of supported solutions.
+and then please double check your input`, solName)
 	}
 	// check if new solution name already exists
 	if solution.IsAvailableSolution(newSolName, solutionSelector) {

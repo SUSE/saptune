@@ -358,17 +358,17 @@ func oldStyleVersionSectionEntry(entryName string) string {
 	return re
 }
 
-// reset the counters to control
+// ResetVersionSectCnts resets the counters to control
 // the error message of missing or wrong version section
 // the warning message for the use of old style version section
 // needed for staging to get the Warnings and Errors displayed
 func ResetVersionSectCnts(tag string) {
-	for key, _ := range oldStyleCnt {
+	for key := range oldStyleCnt {
 		if strings.Contains(filepath.Dir(key), tag) {
 			oldStyleCnt[key] = 0
 		}
 	}
-	for key, _ := range missVersionCnt {
+	for key := range missVersionCnt {
 		if strings.Contains(filepath.Dir(key), tag) {
 			missVersionCnt[key] = 0
 		}

@@ -1,0 +1,12 @@
+# 1868829 - Startup Issues Because Number of Active I/O Requests to Queue Exceeds aio-max-nr Limit
+# Version 5 from 29.03.2018 in English
+
+[version]
+VERSION=5
+DATE=29.03.2018
+DESCRIPTION=Startup Issues Because Number of Active I/O Requests to Queue Exceeds aio-max-nr Limit
+REFERENCES=https://launchpad.support.sap.com/#/notes/1868829
+
+[sysctl]
+# maximum number of asynchronous I/Os.
+fs.aio-max-nr = 18446744073709551615

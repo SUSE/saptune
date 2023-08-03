@@ -565,7 +565,13 @@ copy_packednotes2staging() {
             # create a solution file in staging area, which only contains the
             # version information of the 'old' solution
             # as a flag for a later removal from the working area
-            grep '# .*VERSION=.*DATE=.*NAME=".*"' "${wsol}" > ${STAGINGAREA}/latest/"${sol}"
+            awk '/\[version\]/ {
+                print $0
+                while (getline > 0) {
+                    if ($1 ~ /\[/) { exit }
+                    print $0
+                }
+            }' "${wsol}" > ${STAGINGAREA}/latest/"${sol}"
         fi
     done
 }
