@@ -49,3 +49,11 @@ STAGING="false"
 # 'yellow-noncmpl'
 # Refer to the man page for a desciprion of the color schemes.
 COLOR_SCHEME=""
+
+## Type:    string
+## Default: "/boot"
+#
+# exclude list for the sysctl config warnings
+# comma separated list of sysctl.conf files or directories containing sysctl
+# files, which should be excluded from the 'additional defined' WARNING
+SKIP_SYSCTL_FILES="/boot"

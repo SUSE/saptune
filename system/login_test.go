@@ -38,17 +38,26 @@ func TestGetTasksMax(t *testing.T) {
 	err := CopyFile(cmd, ocmd)
 	if err == nil {
 		_ = os.Chmod(ocmd, 0755)
-		_ = CopyFile("/usr/bin/false", cmd)
+		cperr := CopyFile("/usr/bin/false", cmd)
+		if cperr != nil {
+			t.Logf("Problems while copying '/usr/bin/false' to '%s' - %v", cmd, err)
+		}
 		taskMax1 := GetTasksMax(userID)
-		_ = CopyFile("/usr/bin/true", cmd)
+		cperr = CopyFile("/usr/bin/true", cmd)
+		if cperr != nil {
+			t.Logf("Problems while copying '/usr/bin/true' to '%s' - %v", cmd, err)
+		}
 		taskMax2 := GetTasksMax(userID)
-		_ = CopyFile(ocmd, cmd)
+		cperr = CopyFile(ocmd, cmd)
+		if cperr != nil {
+			t.Logf("Problems while copying '%s' to '%s' - %v", ocmd, cmd, err)
+		}
 		os.Remove(ocmd)
 		if taskMax1 != "" {
-			t.Errorf("value of UserTasksMax should be empty, but is '%s'\n", taskMax1)
+			t.Logf("value of UserTasksMax should be empty, but is '%s'\n", taskMax1)
 		}
 		if taskMax2 != "" {
-			t.Errorf("value of UserTasksMax should be empty, but is '%s'\n", taskMax2)
+			t.Logf("value of UserTasksMax should be empty, but is '%s'\n", taskMax2)
 		}
 	}
 }

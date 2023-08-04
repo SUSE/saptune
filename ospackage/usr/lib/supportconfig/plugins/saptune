@@ -47,6 +47,16 @@ function display_dir_stat() {
     fi
 }
 
+function display_file_ls() {
+    echo -e "\n#==[ File List ]===========================#"
+    echo -e "# ls -lh ${1}\n"
+    if [ -e "${1}" ] ; then
+        ls -lh "${1}"
+    else
+        echo "${1} does not exist!"
+    fi
+}
+
 function display_ls() {
     echo -e "\n#==[ Dir List ]============================#"
     echo -e "# ls -Rlh ${1}\n"
@@ -126,6 +136,29 @@ display_ls /run/saptune/
 for file in  /run/saptune/parameter/* /run/saptune/saved_state/* ; do
     [ -e "${file}" ] && { display_file_stat "${file}" ; display_file "${file}" ; echo ; }
 done 
+
+# virtualisation
+display_cmd /usr/bin/systemd-detect-virt -v
+display_cmd /usr/bin/systemd-detect-virt -c
+display_cmd /usr/bin/systemd-detect-virt -r
+# secure boot?
+display_cmd mokutil --sb-state
+display_file_stat /sys/firmware/efi/efivars/SecureBoot-*
+# intel_idle or intel_pstate?
+display_file /proc/cmdline
+display_ls /sys/devices/system/cpu/intel_pstate
+display_file /sys/devices/system/cpu/intel_pstate/status
+display_file /sys/devices/system/cpu/cpuidle/current_driver
+for file in /sys/devices/system/cpu/cpu*; do
+    display_file_ls "${file}"
+    [ -e "${file}/cpufreq/scaling_available_governors" ] && display_file ${file}/cpufreq/scaling_available_governors
+    [ -e "${file}/cpufreq/scaling_governor" ] && display_file ${file}/cpufreq/scaling_governor
+    [ -e "${file}/cpufreq/scaling_driver" ] && display_file {file}/cpufreq/scaling_driver
+done
+display_cmd /usr/bin/cpupower -c all info
+display_cmd /usr/bin/cpupower -c all frequency-info
+display_cmd /usr/bin/cpupower -c all info -b
+display_cmd /usr/bin/cpupower -c all idle-info
 
 # Bye.
 exit 0
