@@ -169,21 +169,21 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
 	system.Jcollect(result)
 }
 
-// getFileName returns the corresponding filename of a given definition file
+// chkFileName returns the corresponding filename of a given definition file
 // (note or solution)
 // additional it returns a boolean value which is pointing out that
 // the definition is a custom definition (extraDef = true) or an internal one
-func getFileName(defName, workingDir, extraDir string) (string, bool) {
+func chkFileName(defName, workingDir, extraDir string) (string, bool, error) {
 	extraDef := false
 	defType := "Note"
 	if workingDir == SolutionSheets {
 		defType = "Solution"
 	}
 	fileName := fmt.Sprintf("%s%s", workingDir, defName)
-	if _, err := os.Stat(fileName); os.IsNotExist(err) {
+	_, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
 		// Note/solution is NOT an internal Note/solution,
 		// but may be a custom Note/solution
-		extraDef = true
 		chkName := defName
 		if defType == "Note" {
 			chkName = defName + ".conf"
@@ -194,11 +194,25 @@ func getFileName(defName, workingDir, extraDir string) (string, bool) {
 				fileName = fmt.Sprintf("%s%s", extraDir, f)
 			}
 		}
-		if _, err := os.Stat(fileName); os.IsNotExist(err) {
-			system.ErrorExit("%s %s not found in %s or %s.", defType, defName, workingDir, extraDir)
-		} else if err != nil {
-			system.ErrorExit("Failed to read file '%s' - %v", fileName, err)
+		if _, err = os.Stat(fileName); err == nil {
+			extraDef = true
 		}
+	}
+	return fileName, extraDef, err
+}
+
+// getFileName returns the corresponding filename of a given definition file
+// (note or solution)
+// additional it returns a boolean value which is pointing out that
+// the definition is a custom definition (extraDef = true) or an internal one
+func getFileName(defName, workingDir, extraDir string) (string, bool) {
+	defType := "Note"
+	if workingDir == SolutionSheets {
+		defType = "Solution"
+	}
+	fileName, extraDef, err := chkFileName(defName, workingDir, extraDir)
+	if os.IsNotExist(err) {
+		system.ErrorExit("%s %s not found in %s or %s.", defType, defName, workingDir, extraDir)
 	} else if err != nil {
 		system.ErrorExit("Failed to read file '%s' - %v", fileName, err)
 	}
