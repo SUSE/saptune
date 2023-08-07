@@ -223,6 +223,13 @@ func SolutionActionChange(reader io.Reader, writer io.Writer, solName string, tu
 	if solName == "" {
 		PrintHelpAndExit(writer, 1)
 	}
+	// check if the new solution really exists
+	if !solution.IsAvailableSolution(solName, solutionSelector) {
+		system.ErrorExit(`the new Solution "%s" does not exist.
+Run "saptune solution list" for a complete list of supported solutions.
+and then please double check your input`, solName)
+	}
+
 	if len(tuneApp.TuneForSolutions) > 0 {
 		// already one solution applied.
 		oldSol := tuneApp.TuneForSolutions[0]
