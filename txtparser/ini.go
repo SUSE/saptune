@@ -172,6 +172,19 @@ func ParseINI(input string) *INIFile {
 			// skip all lines from a non-valid section
 			continue
 		}
+		if strings.HasPrefix(line, "#") {
+			// Skip comments. Need to be done before
+			// 'break apart the line into key, operator, value'
+			// to support comments like # something (default = 60)
+			// without side effects
+			if currentSection == "reminder" {
+				reminder = reminder + line + "\n"
+			}
+			continue
+		}
+		// remove trailing comments from line
+		line = system.StripComment(line, `\s#[^#]|"\s#[^#]`)
+
 		if line[0] == '[' {
 			// Save previous section, if valid
 			if currentSection != "" && !skipSection {
@@ -222,19 +235,7 @@ func ParseINI(input string) *INIFile {
 			}
 			continue
 		}
-		if strings.HasPrefix(line, "#") {
-			// Skip comments. Need to be done before
-			// 'break apart the line into key, operator, value'
-			// to support comments like # something (default = 60)
-			// without side effects
-			if currentSection == "reminder" {
-				reminder = reminder + line + "\n"
-			}
-			continue
-		}
 
-		// remove trailing comments from line
-		line = system.StripComment(line, `\s#[^#]|"\s#[^#]`)
 		// Break apart a line into key, operator, value.
 		kov := splitLineIntoKOV(currentSection, line)
 		if kov == nil {
