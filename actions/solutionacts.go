@@ -223,6 +223,13 @@ func SolutionActionChange(reader io.Reader, writer io.Writer, solName string, tu
 	if solName == "" {
 		PrintHelpAndExit(writer, 1)
 	}
+	// check if the new solution really exists
+	if !solution.IsAvailableSolution(solName, solutionSelector) {
+		system.ErrorExit(`the new Solution "%s" does not exist.
+Run "saptune solution list" for a complete list of supported solutions.
+and then please double check your input`, solName)
+	}
+
 	if len(tuneApp.TuneForSolutions) > 0 {
 		// already one solution applied.
 		oldSol := tuneApp.TuneForSolutions[0]
@@ -426,15 +433,15 @@ func SolutionActionDelete(reader io.Reader, writer io.Writer, solName string, tu
 	if solName == "" {
 		PrintHelpAndExit(writer, 1)
 	}
-	// check if solution really exists
-	if !solution.IsAvailableSolution(solName, solutionSelector) {
+	solFName := fmt.Sprintf("%s.sol", solName)
+	fileName, extraSol, err := chkFileName(solFName, SolutionSheets, ExtraTuningSheets)
+	// check if solution file exists - allow deletion of 'wrong' solutions
+	if os.IsNotExist(err) {
 		system.ErrorExit(`the Solution "%s" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions.
 and then please double check your input`, solName)
 	}
-	solFName := fmt.Sprintf("%s.sol", solName)
 	txtConfirm := fmt.Sprintf("Do you really want to delete Solution '%s'?", solName)
-	fileName, extraSol := getFileName(solFName, SolutionSheets, ExtraTuningSheets)
 	ovFileName, overrideSol := getovFile(solFName, OverrideTuningSheets)
 
 	// check, if solution is active - enabled

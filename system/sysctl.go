@@ -138,7 +138,7 @@ func getAllSysctlFiles(dirs []string) []string {
 		}
 		if info.IsDir() {
 			if !strings.HasSuffix(file, "/") {
-				file = file+"/"
+				file = file + "/"
 			}
 			for f := range GetFiles(file) {
 				if (file == "/boot/" && !strings.HasPrefix(f, "sysctl.conf-")) && !strings.HasSuffix(f, ".conf") {

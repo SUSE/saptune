@@ -159,6 +159,9 @@ display_cmd /usr/bin/cpupower -c all info
 display_cmd /usr/bin/cpupower -c all frequency-info
 display_cmd /usr/bin/cpupower -c all info -b
 display_cmd /usr/bin/cpupower -c all idle-info
+# zypper history
+display_file_ls /var/log/zypp
+display_log /var/log/zypp/history
 
 # Bye.
 exit 0
