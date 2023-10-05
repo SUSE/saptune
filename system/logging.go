@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-var saptuneLogDir = "/varlog/saptune"
+var saptuneLogDir = "/var/log/saptune"
 var infoLogger *log.Logger    // Info logger
 var noticeLogger *log.Logger  // Notice logger
 var debugLogger *log.Logger   // Debug logger
