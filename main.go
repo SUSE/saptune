@@ -216,13 +216,12 @@ func checkWorkingArea() {
 // returns the saptune version and changes some log switches
 func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) string {
 	missingKey := []string{}
-	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME"}
+	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD"}
 	sconf, err := txtparser.ParseSysconfigFile(saptuneConf, false)
 	if err != nil {
 		fmt.Fprintf(writer, "Error: Unable to read file '%s': %v\n", saptuneConf, err)
 		system.ErrorExit("", 128)
 	}
-	txtparser.GetSysctlExcludes(sconf.GetString("SKIP_SYSCTL_FILES", ""))
 	// check, if all needed variables are available in the saptune
 	// config file
 	for _, key := range keyList {
@@ -234,6 +233,7 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 		fmt.Fprintf(writer, "Error: File '%s' is broken. Missing variables '%s'\n", saptuneConf, strings.Join(missingKey, ", "))
 		system.ErrorExit("", 128)
 	}
+	txtparser.GetSysctlExcludes(sconf.GetString("SKIP_SYSCTL_FILES", ""))
 	stageVal := sconf.GetString("STAGING", "")
 	if stageVal != "true" && stageVal != "false" {
 		fmt.Fprintf(writer, "Error: Variable 'STAGING' from file '%s' contains a wrong value '%s'. Needs to be 'true' or 'false'\n", saptuneConf, stageVal)

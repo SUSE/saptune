@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/SUSE/saptune/app"
 	"github.com/SUSE/saptune/system"
+	"github.com/SUSE/saptune/txtparser"
 	"io"
 	"os"
 	"strings"
@@ -16,6 +17,7 @@ var ignoreFlag = "/run/.saptune.ignore"
 // ServiceAction handles service actions like start, stop, status, enable, disable
 // it controls the systemd saptune.service
 func ServiceAction(writer io.Writer, actionName, saptuneVersion string, tApp *app.App) {
+	preventReload()
 	switch actionName {
 	case "apply":
 		// This action name is only used by saptune service, hence it is not advertised to end user.
@@ -37,7 +39,11 @@ func ServiceAction(writer io.Writer, actionName, saptuneVersion string, tApp *ap
 		ServiceActionRevert(tApp)
 	case "reload":
 		// This action name is only used by saptune service, hence it is not advertised to end user.
-		system.NoticeLog("saptune is now restartig the service...")
+		system.NoticeLog("saptune is now restarting the service...")
+		if ignoreServiceReload() {
+			system.NoticeLog("'IGNORE_RELOAD' is set in saptune configuration file, so no permission to reload")
+			system.ErrorExit("", 0)
+		}
 		ServiceActionRevert(tApp)
 		ServiceActionApply(tApp)
 	case "start":
@@ -279,6 +285,10 @@ func ServiceActionStop(disableService bool) {
 func ServiceActionRestart(tuneApp *app.App) {
 	var err error
 	system.NoticeLog("Restarting 'saptune.service', this may take some time...")
+	if ignoreServiceReload() {
+		system.NoticeLog("'IGNORE_RELOAD' is set in saptune configuration file, so no permission to restart")
+		system.ErrorExit("", 0)
+	}
 	// release Lock, to prevent deadlock with systemd service 'saptune.service'
 	system.ReleaseSaptuneLock()
 	// restart 'saptune.service'
@@ -784,5 +794,36 @@ func DaemonAction(writer io.Writer, actionName, saptuneVersion string, tuneApp *
 		ServiceActionStop(true)
 	default:
 		PrintHelpAndExit(writer, 1)
+	}
+}
+
+// ignoreServiceReload returns true, if 'IGNORE_RELOAD' is set to 'yes' in
+// the saptune configuration file. Otherwise it returns false
+func ignoreServiceReload() bool {
+	ret := false
+	sconf, err := txtparser.ParseSysconfigFile(saptuneSysconfig, true)
+	if err != nil {
+		system.ErrorExit("Unable to read file '/etc/sysconfig/saptune': '%v'\n", err, 2)
+	}
+	if sconf.GetString("IGNORE_RELOAD", "no") == "yes" {
+		ret = true
+	}
+	return ret
+}
+
+// preventReload implements a workaround to prevent service reload/restart
+// during preun/postun from a previous saptune package, which gets triggered
+// during package update of saptune
+// if triggered by other package updates (like uuidd because of the dependencies
+// in the systemd service file) can not be identified at the moment.
+// see related sapconf bug bsc#1207899
+func preventReload() {
+	_, err := os.Stat("/run/saptune_during_pkg_inst")
+	if err == nil {
+		system.NoticeLog("we are called during a package update of saptune")
+		if ignoreServiceReload() {
+			system.NoticeLog("And 'IGNORE_RELOAD' is set in saptune configuration file, so nothing to do")
+			system.ErrorExit("", 0)
+		}
 	}
 }

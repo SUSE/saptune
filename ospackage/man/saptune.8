@@ -201,6 +201,9 @@ It redirects to '\fIsystemctl restart saptune.service\fP'
 Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
 
 If the action was successfully the exit code is 0, otherwise 1.
+
+If '\fIIGNORE_RELOAD\fP' is set to '\fByes\fP' in the saptune configuration file the action '\fIrestart\fP' will do \fBnothing\fP. The reason will be logged.
+See the 'NOTE' section at the end of the man page for more information.
 .TP
 .B enable
 Enables the saptune service. To activate the tuning, the saptune service needs to be started. But as the service is now enabled, the tuning will automatically activated upon system boot.
@@ -894,6 +897,18 @@ Please do not change or remove files in this directory. The knowledge about the 
 Using saptune within a pipe, the color information will be removed from the output.
 .SH NOTE
 When the values from the saptune Note definitions are applied to the system, no further monitoring of the system parameters are done. So changes of saptune relevant parameters by using the 'sysctl' command or by editing configuration files will not be observed. If the values set by saptune should be reverted, these unrecognized changed settings will be overwritten by the previous saved system settings from saptune.
+.SH NOTE
+To prevent unintended reload/restart of saptune during package installation/update of saptune or normal work, which will result in a short time period, where the system is not tuned for SAP workloads, it's possible to set the parameter \fBIGNORE_RELOAD\fP in the central saptune configuration file \fI/etc/sysconfig/saptune\fP.
+.br
+\fBIGNORE_RELOAD\fP is used to control the '\fBsystemctl reload saptune.service\fP' behavior.
+.br
+Default is \fBIGNORE_RELOAD="no"\fP, which means that the 'reload' is working as expected.
+.br
+If set to '\fByes\fP' a '\fBsystemctl reload saptune.service\fP' and a '\fBsaptune service restart\fP' will do \fBnothing\fP. The reason will be logged.
+.br
+Additional this parameter setting will prevent '\fBsystemctl restart saptune.service\fP' (which is a 'ExecStop' followed by 'ExecStart') called from macros used during the package installation/update of the saptune package from restarting the tuning.
+.br
+ATTENTION: Outside the saptune package installation '\fBsystemctl restart saptune.service\fP' can \fBnot\fP be blocked.
 
 .SH ATTENTION
 Higher or lower system values set by the system, the SAP installer or by the administrator using sysctl command or sysctl configuration files will be now \fBoverwritten\fP by saptune, if they are part of the applied Note definitions.

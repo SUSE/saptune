@@ -57,3 +57,13 @@ COLOR_SCHEME=""
 # comma separated list of sysctl.conf files or directories containing sysctl
 # files, which should be excluded from the 'additional defined' WARNING
 SKIP_SYSCTL_FILES="/boot"
+
+## Type:    string
+## Default: "no"
+#
+# IGNORE_RELOAD is used to control the 'systemctl reload saptune.service'
+# and the 'systemctl try-restart saptune.service' during package installation
+# behavior.
+# Default is 'no'. If set to 'yes' a 'systemctl reload' will do nothing.
+# same reason as for sapconf bsc#1209408
+IGNORE_RELOAD="no"
