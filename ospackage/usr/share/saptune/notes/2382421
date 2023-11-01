@@ -198,6 +198,17 @@ net.ipv4.tcp_tw_recycle =
 #net.ipv4.tcp_tw_recycle
 net.ipv4.tcp_tw_recycle =
 
+# net.ipv4.tcp_timestamps for Azure
+# This setting adds the timestamp field to the TCP header.
+# It should already be active on most systems and is a prerequisite for
+# net.ipv4.tcp_tw_reuse and net.ipv4.tcp_tw_recycle.
+# If you are running on Microsoft Azure depending on your scenario the setting
+# of this OS parameter might not be supported. Please refer to the documentation
+# provided by Microsoft for details. In this case please adjust the OS
+# parameters as recommended by Microsoft.
+[sysctl:csp=azure]
+net.ipv4.tcp_timestamps =
+
 [reminder]
 # SAP HANA Parameters - all '.ini' file changes - not handled by saptune
 # WARNING - on systems with iSCSI devices the setting of 'net.ipv4.tcp_syn_retries = 8'
