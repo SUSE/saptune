@@ -1,0 +1,12 @@
+name: ManpagePublish
+
+on:
+    workflow_dispatch:
+
+jobs:
+    manpage:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Print hello
+              run: echo "It works"
