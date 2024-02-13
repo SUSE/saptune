@@ -1,10 +1,9 @@
 # 3024346 - Linux Kernel Settings for NetApp NFS
-# Version 6 from 29.04.2022 in English
 # See TR-4290 (FAS) or TR-4435 (AFF).
 
 [version]
-VERSION=6
-DATE=29.04.2022
+VERSION=10
+DATE=09.02.2024
 DESCRIPTION=Linux Kernel Settings for NetApp NFS
 REFERENCES=https://launchpad.support.sap.com/#/notes/3024346 https://docs.netapp.com/us-en/netapp-solutions-sap/bp/saphana-fas-nfs_introduction.html https://docs.netapp.com/us-en/netapp-solutions-sap/bp/saphana_aff_nfs_introduction.html
 

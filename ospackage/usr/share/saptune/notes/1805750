@@ -1,6 +1,5 @@
 # 1805750 - SYB: Usage of HugePages on Linux Systems with Sybase ASE
 # Configuration of HugePages on Linux with SAP Sybase ASE
-# Version 9 from 10.03.2020 in English
 #
 
 [version]

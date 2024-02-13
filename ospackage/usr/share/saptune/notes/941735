@@ -1,6 +1,5 @@
 # 941735 - SAP memory management system for 64-bit Linux systems
 # Description:    Recommendation for parameterization of 64-bit Linux systems.
-# Version 11 from 04.05.2018 in English
 
 [version]
 VERSION=11

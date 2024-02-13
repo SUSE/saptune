@@ -1,10 +1,9 @@
 # 2684254 - SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
 # Description:    HANA DB settings
-# Version 23 from 03.05.2023 in English
 
 [version]
 VERSION=23
-DATE=18.04.2023
+DATE=03.05.2023
 DESCRIPTION=SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
 REFERENCES=https://launchpad.support.sap.com/#/notes/2684254
 

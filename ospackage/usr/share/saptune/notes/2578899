@@ -1,10 +1,9 @@
 # 2578899 - SUSE Linux Enterprise Server 15: Installation Note
 # Description:    You want to use SAP software on SUSE Linux Enterprise Server 15 (SLES 15) or SUSE Linux Enterprise Server 15 for SAP Applications  (SLES for SAP 15).
-# Version 46 from 25.04.2023 in English
 
 [version]
-VERSION=46
-DATE=25.04.2023
+VERSION=47
+DATE=04.09.2023
 DESCRIPTION=SUSE Linux Enterprise Server 15: Installation Note
 REFERENCES=https://launchpad.support.sap.com/#/notes/2578899
 
@@ -54,6 +53,10 @@ glibc 2.31-150300.46.1
 
 [rpm:os=15-SP4:arch=x86_64]
 glibc 2.31-150300.46.1
+
+[rpm:os=15-SP4:arch=ppc64le]
+kernel-default 5.14.21-150400.24.11.1
+
 
 [sysctl]
 # vm.dirty_bytes (indirect vm.dirty_ratio)

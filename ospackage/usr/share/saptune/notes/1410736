@@ -1,10 +1,9 @@
 # 1410736 - TCP/IP: setting keepalive interval
 # Description:    Set keepalive interval
-# Version 6 from Jan 13, 2020 in English
 
 [version]
 VERSION=6
-DATE=13.01.2020
+DATE=15.06.2020
 DESCRIPTION=TCP/IP: setting keepalive interval
 REFERENCES=https://launchpad.support.sap.com/#/notes/1410736
 
