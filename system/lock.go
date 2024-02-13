@@ -11,6 +11,9 @@ import (
 // saptune lock file
 var stLockFile = "/run/.saptune.lock"
 
+// map of 'realm command' combinations to set the lock or not
+var lockCommands = map[string]bool{"daemon start": true, "daemon status": false, "daemon stop": true, "service apply": true, "service start": true, "service status": false, "service stop": true, "service restart": true, "service revert": true, "service reload": true, "service takeover": true, "service enable": false, "service disable": false, "service enablestart": true, "service disablestop": true, "note list": false, "note revertall": true, "note enabled": false, "note applied": false, "note apply": true, "note simulate": false, "note customise": true, "note create": true, "note edit": true, "note revert": true, "note show": false, "note delete": true, "note verify": false, "note rename": true, "solution list": false, "solution verify": false, "solution enabled": false, "solution applied": false, "solution apply": true, "solution change": true, "solution simulate": false, "solution customise": true, "solution create": true, "solution edit": true, "solution revert": true, "solution show": false, "solution delete": true, "solution rename": true, "staging status": true, "staging enable": true, "staging disable": true, "staging is-enabled": true, "staging list": true, "staging diff": true, "staging analysis": true, "staging release": true, "revert all": true, "lock remove": false, "check": false, "status": false, "version": false, "help": false}
+
 // isOwnLock return true, if lock file is from the current running process
 // pid inside the lock file is the pid of current running saptune instance
 func isOwnLock() bool {
@@ -36,13 +39,26 @@ func SaptuneLock() {
 	if saptuneIsLocked() {
 		ErrorExit("saptune currently in use, try later ...", 11)
 	}
-	stLock, err := os.OpenFile(stLockFile, os.O_CREATE|os.O_RDWR|os.O_EXCL, 0600)
-	if err != nil {
-		ErrorExit("problems setting lock", 12)
+	lcmd := realmAndCmd()
+	setLock := false
+	if _, ok := lockCommands[lcmd]; !ok {
+		// not a valid combination of 'realm command'
+		ErrLog("not a valid combination of 'realm command' discovered - %s\n", lcmd)
+		setLock = true
 	} else {
-		fmt.Fprintf(stLock, "%d", os.Getpid())
+		setLock = lockCommands[lcmd]
 	}
-	stLock.Close()
+	if setLock {
+		stLock, err := os.OpenFile(stLockFile, os.O_CREATE|os.O_RDWR|os.O_EXCL, 0600)
+		if err != nil {
+			ErrorExit("problems setting lock", 12)
+		} else {
+			fmt.Fprintf(stLock, "%d", os.Getpid())
+		}
+		stLock.Close()
+	} else {
+		InfoLog("no lock set for '%s'\n", lcmd)
+	}
 }
 
 // saptuneIsLocked checks, if the lock file for saptune exists
