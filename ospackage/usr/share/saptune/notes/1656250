@@ -1,9 +1,8 @@
 # 1656250 - SAP on AWS: Support prerequisites - only Linux Operating System IO Recommendations
-# Version 46 from 11.05.2022 in English
 
 [version]
-VERSION=46
-DATE=11.05.2022
+VERSION=63
+DATE=05.02.2024
 DESCRIPTION=SAP on AWS: Support prerequisites - only Linux Operating System IO Recommendations
 REFERENCES=https://launchpad.support.sap.com/#/notes/1656250
 

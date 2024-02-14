@@ -1,5 +1,4 @@
 # 1868829 - Startup Issues Because Number of Active I/O Requests to Queue Exceeds aio-max-nr Limit
-# Version 5 from 29.03.2018 in English
 
 [version]
 VERSION=5

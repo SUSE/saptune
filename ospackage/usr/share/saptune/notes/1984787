@@ -1,10 +1,9 @@
 # 1984787 - SUSE LINUX Enterprise Server 12: Installation notes
 # Description:    You want to use SAP software on SUSE Linux Enterprise Server 12 (SLES 12) or SUSE Linux Enterprise Server for SAP Applications 12 (SLES for SAP 12).
-# Version 40 from 25.11.2021 in English
 
 [version]
-VERSION=40
-DATE=25.11.2021
+VERSION=42
+DATE=07.10.2022
 DESCRIPTION=SUSE LINUX Enterprise Server 12: Installation notes
 REFERENCES=https://launchpad.support.sap.com/#/notes/1984787
 
@@ -56,6 +55,7 @@ util-linux 12-SP1 2.25-22.1
 uuidd 12-SP1 2.25-22
 util-linux-systemd 12-SP1 2.25-22.1
 psmisc 12-SP5 22.21-6.19.1
+kernel-default 12-SP5 4.12.14-122.130
 
 [sysctl]
 # vm.dirty_bytes (indirect vm.dirty_ratio)

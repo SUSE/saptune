@@ -17,6 +17,11 @@ func TestLock(t *testing.T) {
 			t.Errorf("saptune lock exists, but shouldn't\n")
 		}
 	}
+
+	os.Args = []string{"saptune", "note", "apply"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
+
 	SaptuneLock()
 	if !saptuneIsLocked() {
 		_, err := os.Stat(stLockFile)
@@ -43,6 +48,16 @@ func TestLock(t *testing.T) {
 			t.Errorf("saptune lock exists, but shouldn't\n")
 			os.Remove(stLockFile)
 		}
+	}
+
+	os.Args = []string{"saptune", "note", "list"}
+	// parse command line, to get the test parameters
+	saptArgs, saptFlags = ParseCliArgs()
+	SaptuneLock()
+	_, err := os.Stat(stLockFile)
+	if err == nil {
+		t.Errorf("saptune lock exists, but shouldn't\n")
+		os.Remove(stLockFile)
 	}
 
 	sl, _ := os.OpenFile(stLockFile, os.O_CREATE|os.O_RDWR|os.O_EXCL, 0600)

@@ -1,9 +1,8 @@
 # 2382421 - Optimizing the Network Configuration on HANA- and OS-Level
-# Version 45 from 02.08.2023 in English
 
 [version]
-VERSION=44
-DATE=15.06.2023
+VERSION=45
+DATE=02.08.2023
 DESCRIPTION=Optimizing the Network Configuration on HANA- and OS-Level
 REFERENCES=https://launchpad.support.sap.com/#/notes/2382421
 

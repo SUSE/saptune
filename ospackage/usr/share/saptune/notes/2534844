@@ -1,5 +1,4 @@
 # 2534844 - Indexserver Crash During Startup due to Insufficient Shared Memory Segment
-# Version 15 from 26.05.2023 in English
 
 [version]
 VERSION=15

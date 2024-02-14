@@ -1,6 +1,5 @@
 # 1557506 - Linux paging improvements
 # Description:    Tune page cache limit to prevent eviction of SAP applications memory into swap
-# Version 16 from 06.02.2020 in English
 
 [version]
 VERSION=16

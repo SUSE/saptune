@@ -1,5 +1,4 @@
 # 1980196 - Setting Linux Kernel Parameter /proc/sys/vm/max_map_count on SAP HANA Systems
-# Version 7 from 18.10.2017 in English
 
 [version]
 VERSION=7
