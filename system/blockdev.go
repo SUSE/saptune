@@ -47,7 +47,7 @@ func BlockDeviceIsDisk(dev string) bool {
 	fname := fmt.Sprintf("/sys/block/%s/device/type", dev)
 	dtype, err := ioutil.ReadFile(fname)
 	if err != nil || strings.TrimSpace(string(dtype)) != "0" {
-		if strings.Join(isVD.FindStringSubmatch(dev), "") == "" && strings.Join(isNvme.FindStringSubmatch(dev), "") == "" {
+		if isVD.FindStringSubmatch(dev) == nil && isNvme.FindStringSubmatch(dev) == nil {
 			// unsupported device
 			return false
 		}
