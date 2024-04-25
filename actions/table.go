@@ -338,6 +338,9 @@ func getInformSettings(nID string, nComparisons map[string]map[string]note.Field
 func setWidthOfColums(compare note.FieldComparison, c1, c2, c3, c4 int) (int, int, int, int) {
 	if len(compare.ReflectMapKey) != 0 {
 		if compare.ReflectFieldName == "OverrideParams" && len(compare.ActualValueJS) > c1 {
+			// in case of override content of ActualValueJS and
+			// ExpectedValueJS is the same, so one length check
+			// is sufficient
 			c1 = len(compare.ActualValueJS)
 			c1, c3, c4 = chkMaxWidthOfColums([]int{c1, c3, c4})
 			return c1, c2, c3, c4
