@@ -544,7 +544,7 @@ func printWrappedRow(writer io.Writer, wrappedElem map[string][]string, rowEleme
 }
 
 // printRow prints now the row of the table
-func printRow (writer io.Writer, twist bool, cols []string, rowElements map[string]string) {
+func printRow(writer io.Writer, twist bool, cols []string, rowElements map[string]string) {
 	if twist {
 		if rowElements["type"] == "verify" {
 			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[1], cols[2], cols[0], rowElements["compliant"])

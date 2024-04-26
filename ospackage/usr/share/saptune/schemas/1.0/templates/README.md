@@ -15,7 +15,7 @@ FORCE=1 ./generate_unsupported.sh
 With FORCE=1 the script will not override existing templates. To do so use FORCE=2.
 
 !!! Update `UNSUPPORTED_COMMANDS` first, if the list of supported commands has changed. !!!
-!!! See aslo table below.                                                               !!!
+!!! See also table below.                                                               !!!
 
 After creating the templates, the schemas can be generated with build.py (see next section).
 

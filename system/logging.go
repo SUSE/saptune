@@ -25,16 +25,16 @@ var severErrorFormat = "ERROR    "
 var logpidFormat = fmt.Sprintf("saptune[%v] ", os.Getpid()) // format to add pid of current saptune process to the log message
 var debugSwitch = os.Getenv("SAPTUNE_DEBUG")                // Switch Debug on or off
 
-//define log format
+// define log format
 func logTimeFormat() string {
 	return time.Now().Format("2006-01-02 15:04:05.000 ")
 }
-	
+
 // DebugLog sends text to the debugLogger and stderr
 func DebugLog(txt string, stuff ...interface{}) {
 	if debugSwitch == "on" {
 		if debugLogger != nil {
-			debugLogger.SetPrefix(logTimeFormat()+severDebugFormat+logpidFormat)
+			debugLogger.SetPrefix(logTimeFormat() + severDebugFormat + logpidFormat)
 			debugLogger.Printf(CalledFrom()+txt+"\n", stuff...)
 		}
 		fmt.Fprintf(os.Stderr, "DEBUG: "+txt+"\n", stuff...)
@@ -44,7 +44,7 @@ func DebugLog(txt string, stuff ...interface{}) {
 // NoticeLog sends text to the noticeLogger and stdout
 func NoticeLog(txt string, stuff ...interface{}) {
 	if noticeLogger != nil {
-		noticeLogger.SetPrefix(logTimeFormat()+severNoticeFormat+logpidFormat)
+		noticeLogger.SetPrefix(logTimeFormat() + severNoticeFormat + logpidFormat)
 		noticeLogger.Printf(CalledFrom()+txt+"\n", stuff...)
 		jWriteMsg("NOTICE", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
 		if verboseSwitch == "on" {
@@ -56,7 +56,7 @@ func NoticeLog(txt string, stuff ...interface{}) {
 // InfoLog sends text only to the infoLogger
 func InfoLog(txt string, stuff ...interface{}) {
 	if infoLogger != nil {
-		infoLogger.SetPrefix(logTimeFormat()+severInfoFormat+logpidFormat)
+		infoLogger.SetPrefix(logTimeFormat() + severInfoFormat + logpidFormat)
 		infoLogger.Printf(CalledFrom()+txt+"\n", stuff...)
 	}
 }
@@ -64,7 +64,7 @@ func InfoLog(txt string, stuff ...interface{}) {
 // WarningLog sends text to the warningLogger and stderr
 func WarningLog(txt string, stuff ...interface{}) {
 	if warningLogger != nil {
-		warningLogger.SetPrefix(logTimeFormat()+severWarnFormat+logpidFormat)
+		warningLogger.SetPrefix(logTimeFormat() + severWarnFormat + logpidFormat)
 		warningLogger.Printf(CalledFrom()+txt+"\n", stuff...)
 		jWriteMsg("WARNING", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
 		if verboseSwitch == "on" {
@@ -76,7 +76,7 @@ func WarningLog(txt string, stuff ...interface{}) {
 // ErrLog sends text only to the errorLogger
 func ErrLog(txt string, stuff ...interface{}) {
 	if errorLogger != nil {
-		errorLogger.SetPrefix(logTimeFormat()+severErrorFormat+logpidFormat)
+		errorLogger.SetPrefix(logTimeFormat() + severErrorFormat + logpidFormat)
 		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
 		jWriteMsg("ERROR", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
 	}
@@ -85,7 +85,7 @@ func ErrLog(txt string, stuff ...interface{}) {
 // ErrorLog sends text to the errorLogger and stderr
 func ErrorLog(txt string, stuff ...interface{}) error {
 	if errorLogger != nil {
-		errorLogger.SetPrefix(logTimeFormat()+severErrorFormat+logpidFormat)
+		errorLogger.SetPrefix(logTimeFormat() + severErrorFormat + logpidFormat)
 		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
 		jWriteMsg("ERROR", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
 		if errorSwitch == "on" {
