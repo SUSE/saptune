@@ -11,6 +11,9 @@ import (
 	"strings"
 )
 
+// define max column width
+var fmtmax = 30
+
 // PrintNoteFields Print mismatching fields in the note comparison result.
 func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool, result *system.JPNotes) {
 	// initialise
@@ -29,7 +32,6 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	noteList := []system.JPNotesLine{}
 
 	colorScheme := getColorScheme()
-
 	// sort output
 	sortkeys := sortNoteComparisonsOutput(noteComparisons)
 
@@ -73,6 +75,7 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 		}
 		noteLine.ActValue = &pAct
 		pExp = strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1)
+		tableColumns := make(map[string]string)
 		if printComparison {
 			// verify
 			if system.IsFlagSet("show-non-compliant") && (strings.Contains(compliant, "yes") || strings.Contains(compliant, "-")) {
@@ -80,11 +83,12 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 				continue
 			}
 			colFormat, colCompliant = colorPrint(format, compliant, colorScheme)
-			fmt.Fprintf(writer, colFormat, noteField, comparison.ReflectMapKey, pExp, override, pAct, colCompliant)
+			tableColumns = map[string]string{"type": "verify", "colFormat": colFormat, "note": noteField, "parameter": comparison.ReflectMapKey, "expected": pExp, "override": override, "actual": pAct, "compliant": colCompliant}
 		} else {
 			// simulate
-			fmt.Fprintf(writer, format, comparison.ReflectMapKey, pAct, pExp, override, comment)
+			tableColumns = map[string]string{"type": "simulate", "colFormat": format, "parameter": comparison.ReflectMapKey, "actual": pAct, "expected": pExp, "override": override, "comment": comment}
 		}
+		printTableRow(writer, tableColumns)
 		noteLine = collectMRO(noteLine, compliant, noteID, noteComparisons, comparison, pExp, override, printComparison, comment, footnote, pAct)
 		noteList = append(noteList, noteLine)
 	}
@@ -334,7 +338,11 @@ func getInformSettings(nID string, nComparisons map[string]map[string]note.Field
 func setWidthOfColums(compare note.FieldComparison, c1, c2, c3, c4 int) (int, int, int, int) {
 	if len(compare.ReflectMapKey) != 0 {
 		if compare.ReflectFieldName == "OverrideParams" && len(compare.ActualValueJS) > c1 {
+			// in case of override content of ActualValueJS and
+			// ExpectedValueJS is the same, so one length check
+			// is sufficient
 			c1 = len(compare.ActualValueJS)
+			c1, c3, c4 = chkMaxWidthOfColums([]int{c1, c3, c4})
 			return c1, c2, c3, c4
 		}
 		if len(compare.ReflectMapKey) > c2 {
@@ -347,7 +355,19 @@ func setWidthOfColums(compare note.FieldComparison, c1, c2, c3, c4 int) (int, in
 			c4 = len(compare.ActualValueJS)
 		}
 	}
+	c1, c3, c4 = chkMaxWidthOfColums([]int{c1, c3, c4})
 	return c1, c2, c3, c4
+}
+
+// chkMaxWidthOfColums limits the width of the columns for verify and simulate
+// to a defined value. Content of columns need to be wrapped
+func chkMaxWidthOfColums(fmts []int) (int, int, int) {
+	for w, width := range fmts {
+		if width > fmtmax {
+			fmts[w] = fmtmax
+		}
+	}
+	return fmts[0], fmts[1], fmts[2]
 }
 
 // getColorScheme reads the color scheme from CLI flag or from saptune
@@ -449,4 +469,93 @@ func colorFormating(colCmpl, colNonCmpl, txt, compliant string) string {
 		}
 	}
 	return colFormat
+}
+
+// printTableRow prints one row of the table
+// If needed the lines of the override column, the expected column and the
+// actual column will be wrapped after 'fmtmax' characters
+// if override exists, expected == override, so compare of width of expected and
+// actual column is sufficient
+func printTableRow(writer io.Writer, rowElements map[string]string) {
+	wrappedActual := system.WrapTxt(rowElements["actual"], fmtmax)
+	wrappedExpected := system.WrapTxt(rowElements["expected"], fmtmax)
+	wrappedOverride := system.WrapTxt(rowElements["override"], fmtmax)
+	linesAct := len(wrappedActual)
+	linesExp := len(wrappedExpected)
+	linesOver := len(wrappedOverride)
+	if linesAct == 1 && linesExp == 1 && linesOver == 1 {
+		if rowElements["type"] == "verify" {
+			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], rowElements["expected"], rowElements["override"], rowElements["actual"], rowElements["compliant"])
+		} else {
+			// simulate
+			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], rowElements["actual"], rowElements["expected"], rowElements["override"], rowElements["comment"])
+		}
+		return
+	}
+	wrappedElements := map[string][]string{"wrappedActual": wrappedActual, "wrappedExpected": wrappedExpected, "wrappedOverride": wrappedOverride}
+	printWrappedRow(writer, wrappedElements, rowElements)
+}
+
+// printWrappedRow prints the wrapped columns of one verify output row
+// twist - true - compare order ACT, EXP
+// twist - false - compare order EXP, ACT
+// if override exists, expected == override
+func printWrappedRow(writer io.Writer, wrappedElem map[string][]string, rowElements map[string]string) {
+	var wrappedA, wrappedB, wrappedC []string
+	firstLine := true
+	twist := false
+
+	if len(wrappedElem["wrappedActual"]) >= len(wrappedElem["wrappedExpected"]) {
+		twist = true
+	}
+	if twist {
+		wrappedA = wrappedElem["wrappedActual"]
+		wrappedB = wrappedElem["wrappedExpected"]
+	} else {
+		wrappedA = wrappedElem["wrappedExpected"]
+		wrappedB = wrappedElem["wrappedActual"]
+	}
+	wrappedC = wrappedElem["wrappedOverride"]
+	noLinesB := len(wrappedB)
+	noLinesC := len(wrappedC)
+	colB := ""
+	colC := ""
+
+	for c, colA := range wrappedA {
+		// ANGI todo <=
+		if c < noLinesB {
+			colB = wrappedB[c]
+		} else {
+			colB = ""
+		}
+		if c < noLinesC {
+			colC = wrappedC[c]
+		} else {
+			colC = ""
+		}
+		printRow(writer, twist, []string{colA, colB, colC}, rowElements)
+		if firstLine {
+			firstLine = false
+			rowElements["note"] = ""
+			rowElements["parameter"] = ""
+			rowElements["compliant"] = ""
+		}
+	}
+}
+
+// printRow prints now the row of the table
+func printRow (writer io.Writer, twist bool, cols []string, rowElements map[string]string) {
+	if twist {
+		if rowElements["type"] == "verify" {
+			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[1], cols[2], cols[0], rowElements["compliant"])
+		} else {
+			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[0], cols[1], cols[2], rowElements["comment"])
+		}
+	} else {
+		if rowElements["type"] == "verify" {
+			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[0], cols[2], cols[1], rowElements["compliant"])
+		} else {
+			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[1], cols[0], cols[2], rowElements["comment"])
+		}
+	}
 }
