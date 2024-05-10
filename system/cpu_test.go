@@ -16,11 +16,11 @@ func TestCheckCPUState(t *testing.T) {
 
 	differ := checkCPUState(tstEqualMap)
 	if differ {
-		t.Fatal(differ)
+		t.Error(differ)
 	}
 	differ = checkCPUState(tstDiffMap)
 	if !differ {
-		t.Fatal(differ)
+		t.Error(differ)
 	}
 }
 
@@ -37,7 +37,7 @@ func TestSupportsPerfBias(t *testing.T) {
 
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil || (err == nil && (strings.Contains(string(cmdOut), notSupportedX86) || strings.Contains(string(cmdOut), notSupportedIBM))) {
-		t.Fatal(string(cmdOut))
+		t.Error(string(cmdOut))
 	}
 }
 
@@ -48,11 +48,11 @@ func TestGetPerfBias(t *testing.T) {
 	value := GetPerfBias()
 	if !supportsPerfBias() {
 		if value != "all:none" {
-			t.Fatal(value)
+			t.Error(value)
 		}
 	} else {
 		if len(value) < 3 {
-			t.Fatal(value)
+			t.Error(value)
 		}
 	}
 }
@@ -64,17 +64,17 @@ func TestSetPerfBias(t *testing.T) {
 	oldPerf := GetPerfBias()
 	err := SetPerfBias("all:15")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	val := GetPerfBias()
 	if val != "all:15" && val != "all:none" {
-		t.Fatal(val)
+		t.Error(val)
 	}
 	if oldPerf != "" && oldPerf != "all:none" {
 		// set test value back
 		err := SetPerfBias(oldPerf)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	}
 }
@@ -86,13 +86,13 @@ func TestIsValidGovernor(t *testing.T) {
 	}
 	gov, _ := GetSysString("devices/system/cpu/cpu0/cpufreq/scaling_governor")
 	if !isValidGovernor("cpu0", gov) {
-		t.Fatal(gov)
+		t.Error(gov)
 	}
 	if isValidGovernor("not_avail", gov) {
-		t.Fatal(gov)
+		t.Error(gov)
 	}
 	if isValidGovernor("cpu0", "not_avail") {
-		t.Fatalf("governor 'not_avail' reported as supported, but shouldn't")
+		t.Errorf("governor 'not_avail' reported as supported, but shouldn't")
 	}
 }
 
@@ -104,10 +104,10 @@ func TestGetGovernor(t *testing.T) {
 	gov, _ := GetSysString("devices/system/cpu/cpu0/cpufreq/scaling_governor")
 	for k, v := range GetGovernor() {
 		if k == "cpu0" && v != gov {
-			t.Fatalf("cpu0: expected '%s', actual '%s'\n", gov, v)
+			t.Errorf("cpu0: expected '%s', actual '%s'\n", gov, v)
 		}
 		if k == "all" && v != gov {
-			t.Fatalf("all: expected '%s', actual '%s'\n", gov, v)
+			t.Errorf("all: expected '%s', actual '%s'\n", gov, v)
 		}
 	}
 }
@@ -115,23 +115,22 @@ func TestGetGovernor(t *testing.T) {
 func TestSetGovernor(t *testing.T) {
 	oldGov := GetGovernor()
 	gov := "performance"
-	info := ""
-	err := SetGovernor("all:performance", info)
+	err := SetGovernor("all:performance")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	for k, v := range GetGovernor() {
 		if k == "all" && (v != gov && v != "none") {
-			t.Fatalf("all: expected '%s', actual '%s'\n", gov, v)
+			t.Errorf("all: expected '%s', actual '%s'\n", gov, v)
 		}
 	}
-	err = SetGovernor("cpu0:performance", info)
+	err = SetGovernor("cpu0:performance")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	for k, v := range GetGovernor() {
 		if k == "cpu0" && (v != gov && v != "none") {
-			t.Fatalf("cpu0: expected '%s', actual '%s'\n", gov, v)
+			t.Errorf("cpu0: expected '%s', actual '%s'\n", gov, v)
 		}
 	}
 	// set test value back
@@ -139,14 +138,13 @@ func TestSetGovernor(t *testing.T) {
 	for k, v := range oldGov {
 		val = val + fmt.Sprintf("%s:%s ", k, v)
 	}
-	err = SetGovernor(val, info)
+	err = SetGovernor(val)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	info = "notSupported"
-	err = SetGovernor("cpu0:performance", info)
+	err = SetGovernor("cpu0:performance")
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 }
 
@@ -173,24 +171,24 @@ func TestSetForceLatency(t *testing.T) {
 		t.Skip("the test requires root access")
 	}
 	oldLat, _, _ := GetFLInfo()
-	err := SetForceLatency("all:none", "cpu1:state0:0 cpu1:state1:0", "", false)
+	err := SetForceLatency("all:none", "cpu1:state0:0 cpu1:state1:0", false)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	err = SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "notSupported", false)
+	err = SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", false)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
-	err = SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "", false)
+	err = SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", false)
 	t.Log(err)
-	err = SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "", true)
+	err = SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", true)
 	t.Log(err)
 
 	if oldLat != "" {
 		// set test value back
-		err := SetForceLatency(oldLat, "", "", false)
+		err := SetForceLatency(oldLat, "", false)
 		if err != nil {
-			t.Fatal(err)
+			t.Error(err)
 		}
 	}
 }
@@ -200,23 +198,23 @@ func TestMissingCmd(t *testing.T) {
 	cmdName := "/usr/bin/cpupower"
 	savName := "/usr/bin/cpupower_SAVE"
 	if err := os.Rename(cmdName, savName); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	value := GetPerfBias()
 	if value != "all:none" {
-		t.Fatal(value)
+		t.Error(value)
 	}
 	if err := SetPerfBias("all:15"); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 	if supportsPerfBias() {
-		t.Fatalf("reports supported, but shouldn't")
+		t.Errorf("reports supported, but shouldn't")
 	}
-	if err := SetGovernor("all:performance", ""); err != nil {
-		t.Fatal(err)
+	if err := SetGovernor("all:performance"); err != nil {
+		t.Error(err)
 	}
 	if err := os.Rename(savName, cmdName); err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 }
 
@@ -232,11 +230,11 @@ func TestCPUErrorCases(t *testing.T) {
 		t.Errorf("should return 'nil' and not '%v'\n", err)
 	}
 	if isValidGovernor("cpu0", "performance") {
-		if err := SetGovernor("all:performance", ""); err == nil {
+		if err := SetGovernor("all:performance"); err == nil {
 			t.Error("should return an error and not 'nil'")
 		}
 	} else {
-		if err := SetGovernor("all:performance", ""); err != nil {
+		if err := SetGovernor("all:performance"); err != nil {
 			t.Errorf("should return 'nil' and not '%v'\n", err)
 		}
 	}
@@ -249,11 +247,16 @@ func TestCPUErrorCases(t *testing.T) {
 	defer func() { cpuDir = oldCPUDir }()
 	cpuDir = "/unknownDir"
 	gval := GetGovernor()
-	if len(gval) != 0 {
-		t.Errorf("should return an empty value, but returns: %+v", gval)
+	if len(gval) != 1 {
+		t.Errorf("should return only one entry, but returns: %+v", gval)
 	}
-	if canSetForceLatency("70", "") {
-		if err := SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", "", false); err == nil {
+	for k, v := range gval {
+		if k != "all" && v != "none" {
+			t.Errorf("expected 'all:none', actual '%s:%s'\n", k, v)
+		}
+	}
+	if supportsForceLatencySettings("70") {
+		if err := SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", false); err == nil {
 			t.Error("should return an error and not 'nil'")
 		}
 	}

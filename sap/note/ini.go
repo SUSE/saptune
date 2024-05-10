@@ -325,7 +325,7 @@ func (vend INISettings) Apply() error {
 		case INISectionMEM:
 			errs = append(errs, SetMemVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionCPU:
-			errs = append(errs, SetCPUVal(param.Key, vend.SysctlParams[param.Key], vend.ID, flstates, vend.OverrideParams[param.Key], vend.Inform[param.Key], revertValues))
+			errs = append(errs, SetCPUVal(param.Key, vend.SysctlParams[param.Key], vend.ID, flstates, vend.OverrideParams[param.Key], revertValues))
 		case INISectionPagecache:
 			if revertValues {
 				switch param.Key {
