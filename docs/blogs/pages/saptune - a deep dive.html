@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>saptune - a deep dive</title>
+        <style>
+            body { 
+    font-family: poppins,Verdana,sans-serif; 
+    background-color: white; 
+    width: 60%;
+    margin-left: 10%;
+}
+ul { padding-left: 1em; }
+h1 { 
+    padding-bottom: 0; 
+    margin-bottom: 0; 
+}
+a {font-weight: bold;}
+#author { 
+    font-style: italic; 
+    padding-top: 0; 
+    margin-top: 0; 
+    padding-bottom: 2em;
+    margin-bottom: 2em; 
+    border-bottom: thin solid gray; 
+}
+pre {
+    word-break: break-all;
+    color: #333333;
+    background-color: #f5f5f5;
+    border: 1px solid #cccccc;
+}
+code {
+    padding: 2px 4px;
+    font-size: 90%;
+    color: #c7254e;
+    background-color: #f9f2f4;
+    border-radius: 4px;
+  }
+  blockquote {
+    border-left: #cccccc solid 0.2em;
+    padding-left: 2em;
+    margin-left: 0;
+    font-size: 85%;
+  }
+  table {
+    font-size: 90%;
+    margin: 1em 0;
+    width: 100%;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  table tbody tr:nth-child(2n) {
+    background-color: #efefef;
+  }
+  table td {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+  table th {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+
+        </style>
+    </head>
+    <body>
+        <h1>saptune - a deep dive</h1>
+        <p id="author">July 22, 2019 | By: Sören Schmidtt</p>
+        Saptune version 2 has been released a few days ago and as promised, I start my technical blog post series. Over the next few weeks I will add the links to the articles here.
+        <br/><br/>
+        Let me answer the most important questions you might have first:
+        <br/><br/>
+        <strong>What shall I do? Update now or wait?</strong>
+        <br/><br/>
+        To answer this, we need to know how saptune version 1 is configured.
+        <br/><br/>
+        <pre># saptune note list
+        All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):
+        1275776 Linux: Preparing SLES for SAP environments
+        1557506 Linux paging improvements
+        1984787 SUSE LINUX Enterprise Server 12: Installation notes
+        ...</pre>
+        <br/><br/>
+        If no notes are applied, saptune will switch to version 2 after the package update.
+        <br/><br/>
+        In case you have reverted the notes only temporarily and you want to continue to use version 1 for now, please enable at least one note during the package update to prevent the switch.
+        <br/><br/>
+        <pre># saptune note list
+        All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions):
+        *       1275776 Linux: Preparing SLES for SAP environments
+        *       1557506 Linux paging improvements
+        *       1984787 SUSE LINUX Enterprise Server 12: Installation notes
+        ...</pre>
+        <br/><br/>
+        If notes are enabled, saptune will keep running as version 1 after the package update, so the update will not change the behaviour of your system. This was a very important requirement!
+        <br/><br/>
+        But this also means, that you have to migrate to version 2 manually. This is described in detail in the man page saptune-migrate(5) and will also be a topic in the blog series.
+        <br/><br/>
+        As an alternative, you can revert all notes or solutions before the update of the package to get version 2 and re-apply them afterwards.
+        <br/><br/>
+        <strong>If you choose this, please make yourself familiar with the changes of saptune version 2 first! The solutions and SAP notes have changed. The tuning - even with the same notes or solution - will be different most certainly! Also do not forget manually changes, you might have done!</strong>
+        <br/><br/>
+        I hope this helps you to decide, when to update the saptune package.
+        <br/><br/>
+        More about saptune in the next article.
+        <br/><br/>
+        Further documentation:
+        <ul>
+         	<li><a href="https://documentation.suse.com/sles-sap/12-SP5/html/SLES4SAP-guide/cha-tune.html">https://documentation.suse.com/sles-sap/12-SP5/html/SLES4SAP-guide/cha-tune.html</a></li>
+         	<li><a href="https://documentation.suse.com/sles-sap/15-SP1/html/SLES4SAP-guide/cha-s4s-tune.html#sec-saptune">https://documentation.suse.com/sles-sap/15-SP1/html/SLES4SAP-guide/cha-s4s-tune.html#sec-saptune</a></li>
+         	<li>SAP Note 1275776</li>
+         	<li>man pages of the saptune package</li>
+        </ul>
+<body>
+</html>

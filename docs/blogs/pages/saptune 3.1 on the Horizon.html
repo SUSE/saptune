@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>saptune 3.1 on the Horizon</title>
+        <style>
+            body { 
+    font-family: poppins,Verdana,sans-serif; 
+    background-color: white; 
+    width: 60%;
+    margin-left: 10%;
+}
+ul { padding-left: 1em; }
+h1 { 
+    padding-bottom: 0; 
+    margin-bottom: 0; 
+}
+a {font-weight: bold;}
+#author { 
+    font-style: italic; 
+    padding-top: 0; 
+    margin-top: 0; 
+    padding-bottom: 2em;
+    margin-bottom: 2em; 
+    border-bottom: thin solid gray; 
+}
+pre {
+    word-break: break-all;
+    color: #333333;
+    background-color: #f5f5f5;
+    border: 1px solid #cccccc;
+}
+code {
+    padding: 2px 4px;
+    font-size: 90%;
+    color: #c7254e;
+    background-color: #f9f2f4;
+    border-radius: 4px;
+  }
+  blockquote {
+    border-left: #cccccc solid 0.2em;
+    padding-left: 2em;
+    margin-left: 0;
+    font-size: 85%;
+  }
+  table {
+    font-size: 90%;
+    margin: 1em 0;
+    width: 100%;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  table tbody tr:nth-child(2n) {
+    background-color: #efefef;
+  }
+  table td {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+  table th {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+
+        </style>
+    </head>
+    <body>
+        <h1>saptune 3.1 on the Horizon</h1>
+        <p id="author">September 1, 2023 | By: Sören Schmidt</p>
+        In a few weeks saptune 3.1 will reach the public repositories of SLES for SAP Applications. Time to talk about the changes and new features.
+        <br/><br/>
+        As always saptune 3.1 will be released for all Service Packs still in support, namely:
+        <ul>
+         	<li>SUSE Linux Enterprise Server for SAP Applications 12 SP5</li>
+         	<li>SUSE Linux Enterprise Server for SAP Applications 15 SP1</li>
+         	<li>SUSE Linux Enterprise Server for SAP Applications 15 SP2</li>
+         	<li>SUSE Linux Enterprise Server for SAP Applications 15 SP3</li>
+         	<li>SUSE Linux Enterprise Server for SAP Applications 15 SP4</li>
+         	<li>SUSE Linux Enterprise Server for SAP Applications 15 SP5</li>
+        </ul>
+        <h2>Machine-readable Output</h2>
+        This might be the biggest new feature: optional JSON output
+        <br/><br/>
+        With <code>--format json</code> the first set of commands
+        <ul>
+         	<li><code>saptune [daemon|service] status</code></li>
+         	<li><code>saptune note list|verify|enabled|applied</code></li>
+         	<li><code>saptune solution list|verify|enabled|applied</code></li>
+         	<li><code>saptune status</code></li>
+         	<li><code>saptune version</code></li>
+        </ul>
+        will print the output as a JSON string. Further commands will follow.
+        <br/><br/>
+        This does not only paves the way for the upcoming Trento integration, but also simplifies the usage in scripts or configuration management solutions.
+        <pre>
+        # saptune --format json note applied | jq
+        {
+        	"$schema": "file:///usr/share/saptune/schemas/1.0/saptune_note_applied.schema.json",
+        	"publish time": "2023-08-29 17:05:45.627",
+        	"argv": "saptune --format json note applied",
+        	"pid": 1538,
+        	"command": "note applied",
+        	"exit code": 0,
+        	"result": {
+        		"Notes applied": [
+        		"941735",
+        		"1771258",
+        		"1980196",
+        		"2578899",
+        		"2684254",
+        		"2382421",
+        		"2534844",
+        		"2993054",
+        		"1656250"
+        		]
+        	},
+        	"messages": []
+        }
+        </pre>
+
+        Do not use <code>--format json</code> blindly! A command that does not support JSON output yet, will fail if called with the option, even if it would work otherwise!
+        <br/><br/>
+        <h2>New Commands, Deprecated Commands</h2>
+        As requested by a customer, we added a new command: <code>saptune solution change</code>
+        <br/><br/>
+        With only one solution allowed at a time, switching to another was a two step process. First reverting the current solution and afterwards applying the new one. Now this is possible with a single command.
+        <br/><br/>
+        This is not only more convenient, but also minimizes the time when the system is not tuned, since revert and apply are done internally much faster.
+        <br/><br/>
+        With the change being simply a revert followed by an apply, the order is not preserved in case you have additional Notes applied to a Solution.
+        <pre>
+        # saptune solution change MAXDB
+        	
+        NOTICE: Exchange applied solution 'HANA' with new solution 'MAXDB'
+        Do you really want to exchange the applied solution (HANA) with the new solution 'MAXDB'? [y/n]: y
+        NOTICE: block device related section settings detected: Traversing all block devices can take a considerable amount of time.
+        All tuning options for the SAP solution have been applied successfully.
+        </pre>
+
+        <h2>Refurbished Status Command</h2>
+        The command <code>saptune status</code> got a face-lift and some new additions.
+        <br/><br/>
+        The Solution shows now the list of contained Notes. In all cases Note lists are ordered in the way they are applied.
+        <br/><br/>
+        Newly added are the type of virtualization and, I believe the most welcomed addition, the state of the tuning!
+        You don't have to run an additional `saptune verify` anymore, to check if the tuning is in order. This is displayed by the status command already.
+        For those who don't want that, the old behavior can be restored by using <code>--non-compliance-check</code>.
+        <pre>
+        # saptune status 
+
+        NOTICE: ATTENTION: You are running a test version (3.1.0 from 2023/08/09) of saptune which is not supported for production use
+
+        saptune.service:          enabled/active
+        saptune package:          '3.1.0' (2023/08/09)
+        configured version:       '3'
+        enabled Solution:         HANA (941735, 1771258, 1980196, 2578899, 2684254, 2382421, 2534844, 2993054, 1656250)
+        applied Solution:         HANA (941735, 1771258, 1980196, 2578899, 2684254, 2382421, 2534844, 2993054, 1656250)
+        additional enabled Notes: 
+        enabled Notes:            941735 1771258 1980196 2578899 2684254 2382421 2534844 2993054 1656250
+        applied Notes:            941735 1771258 1980196 2578899 2684254 2382421 2534844 2993054 1656250
+        staging:                  disabled
+        staged Notes:             
+        staged Solutions:         
+
+        sapconf.service:          disabled/inactive
+        tuned.service:            disabled/inactive
+        systemd system state:     running
+        virtualization:           none
+        tuning:                   compliant
+        </pre>
+
+        <h2>New Solutions and SAP Notes</h2>
+        The MAXDB solution has not been just de-deprecated, we also introduced a new Solution `NETWEAVER+MAXDB` for running both SAP application servers and MAXDB on the same host.
+        <br/><br/>
+        SAP Note<em> "1868829 - Startup Issues Because Number of Active I/O Requests to Queue Exceeds aio-max-nr Limit"</em> is now available and part of the solutions:
+        <ul>
+         	<li style="list-style-type: none">
+        <ul>
+         	<li><code>HANA</code></li>
+         	<li><code>NETWEAVER+HANA</code></li>
+         	<li><code>S4HANA-APP+DB</code></li>
+         	<li><code>S4HANA-DBSERVER</code></li>
+        </ul>
+        </li>
+        </ul>
+        <h2>Zebras are here!</h2>
+        The tables of <code>saptune verify</code> can become very long. The one for the SAP HANA Solution contain over 50 parameters, depending on the environment. Spotting non-compliant entries can be cumbersome.
+        <br/><br/>
+        With 3.1 you now can either limit the table to non-compliant parameters only:
+        <pre>
+        # saptune note verify --show-non-compliant
+
+        NOTICE: block device related section settings detected: Traversing all block devices can take a considerable amount of time.
+
+        	SAPNote, Version | Parameter                   | Expected   | Override  | Actual | Compliant
+        --------------------+-----------------------------+------------+-----------+--------+-----------
+        	1980196, 7       | vm.max_map_count            | 2147483647 |           | 128000 | no 
+        	2684254, 23      | grub:intel_idle.max_cstate  | 1          |           | NA     | no  [2] [3] [6]
+        	2684254, 23      | grub:numa_balancing         | disable    |           | NA     | no  [2] [3] [6]
+        	2684254, 23      | grub:processor.max_cstate   | 1          |           | NA     | no  [2] [3] [6]
+        	2684254, 23      | grub:transparent_hugepage   | never      |           | NA     | no  [2] [3] [6]
+
+        	[2] setting is not available on the system
+        	[3] value is only checked, but NOT set
+        	[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+        </pre>
+        or colorize the output:
+        <pre>
+        # saptune note verify --colorscheme full-red-noncmpl
+
+        NOTICE: block device related section settings detected: Traversing all block devices can take a considerable amount of time.
+
+        	SAPNote, Version | Parameter                  | Expected                  | Override | Actual                    | Compliant
+        --------------------+----------------------------+---------------------------+----------+---------------------------+-----------
+        ...
+        	1771258, 6       | LIMIT_@sdba_soft_nofile    | @sdba soft nofile 1048576 |          | @sdba soft nofile 1048576 | yes
+        	1980196, 7       | vm.max_map_count           | 2147483647                |          | 128000                    | no 
+        	2382421, 44      | net.core.rmem_max          |                           |          | 212992                    | yes [7]
+        	2382421, 44      | net.core.somaxconn         | 4096                      |          | 4096                      | yes
+        ...
+        	2684254, 23      | governor                   | all:performance           |          | all:none                  |  -  [1]<span style="color: red;">
+        	2684254, 23      | grub:intel_idle.max_cstate | 1                         |          | NA                        | no  [2] [3] [6]
+        	2684254, 23      | grub:numa_balancing        | disable                   |          | NA                        | no  [2] [3] [6]
+        	2684254, 23      | grub:processor.max_cstate  | 1                         |          | NA                        | no  [2] [3] [6]
+        	2684254, 23      | grub:transparent_hugepage  | never                     |          | NA                        | no  [2] [3] [6]</span>
+        	2684254, 23      | kernel.numa_balancing      | 0                         |          | 0                         | yes
+        ...
+
+        	[1] setting is not supported by the system
+        	[2] setting is not available on the system
+        	[3] value is only checked, but NOT set
+        	[6] grub settings are mostly covered by other settings. See man page saptune-note(5) for details
+        	[7] parameter value is untouched by default
+
+        	...
+
+        current order of enabled notes is: 941735 1771258 1980196 2578899 2684254 2382421 2534844 2993054 1656250
+
+        <span style="color: red;">ERROR: The parameters listed above have deviated from SAP/SUSE recommendations.</span>
+        </pre>>
+        That's where the zebras come into the play. You can choose between different color styles:
+        <ul>
+         	<li><code>cmpl-blue-zebra</code></li>
+         	<li><code>full-blue-zebra</code></li>
+         	<li><code>full-red-noncmpl</code></li>
+         	<li><code>red-noncmpl</code></li>
+         	<li><code>cmpl-green-zebra</code></li>
+         	<li><code>full-green-zebra</code></li>
+         	<li><code>full-yellow-noncmpl</code></li>
+         	<li><code>yellow-noncmpl</code></li>
+        </ul>
+        Play around and choose which zebra you like best!
+        <h2>About sysctl</h2>
+        Since 3.0 saptune reports possible conflicts with <code>sysctl</code> files. One file almost always caused a debate: <code>/boot/sysctl.conf-*</code>. Amongst others it sets the defaults of <code>kernel.shmmax</code> and <code>kernel.shmall</code> for SLES and therefore always got reported by saptune as possible conflict.
+        <br/><br/>
+        The feedback told us, that part of the users liked it, but a slight majority didn't.
+        <br/><br/>
+        With 3.1 saptune will no longer report both files per default. But those of you who still want it, can simply change the variable <code>SKIP_SYSCTL_FILE</code> in <code>/etc/sysconfig/saptune</code>.
+        <h2>Anything Else?</h2>
+        Without being complete, we also have reworked the version definition in the configuration files, which will be interesting for those who use custom Notes and Solutions. We went from the
+         (still supported, but deprecated) comment format to a more clear section format:
+        <pre>
+        [version]
+        VERSION=28
+        DATE=29.07.2021
+        DESCRIPTION=VMware vSphere configuration guidelines
+        REFERENCES=https://launchpad.support.sap.com/#/notes/2161991
+        </pre>
+
+        Also it is now possible to use inline comments throughout the Note and Solution files and finally we deprecated the custom Note format from saptune v1, which should not be around anymore.
+        <br/><br/>
+        I think, that covers most of the changes.
+        <br/><br/>
+        Enjoy!
+<body>
+</html>

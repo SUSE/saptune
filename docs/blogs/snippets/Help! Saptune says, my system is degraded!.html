@@ -1,0 +1,96 @@
+{% extends "base.html.template" %}
+
+{% block content %}
+<p id="author">August 12, 2022 | By: Sören Schmidt</p
+Recently we got again questions about the system state in the output of <code>saptune status</code>, so it's time to talk about it.
+
+If everything is fine, you should get an output like this:
+<pre>
+# saptune status
+...
+system state: running
+...</pre>
+But, if not, then you will get:
+<pre>
+# saptune status
+...
+system state: degraded
+...
+
+</pre>
+A degraded system sounds awful!
+<br /><br />
+The state comes directly from the command <code>systemctl is-system-running</code>. If we check the man page of <code>systemctl</code>, we find:
+<pre>
+...
+is-system-running
+    Checks whether the system is operational. This returns success (exit code 0) when the system is
+    fully up and running, specifically not in startup, shutdown or maintenance mode, and with no
+    failed services.
+    ...
+    degraded The system is operational but one or more units failed.
+    ...
+...
+
+</pre>
+So, the reason for a degraded system is also mostly a failed unit.
+To figure out which unit failed, you can run either <code>saptune_check</code> or <code>systemctl list-units --state=failed</code>:
+
+<pre>
+# saptune_check
+...
+[WARN] System is in status "degraded". Failed services are: saptune.service -&gt; Check the cause and reset the state with systemctl reset-failed!
+...
+
+# systemctl list-units --state=failed
+UNIT LOAD ACTIVE SUB DESCRIPTION
+● saptune.service loaded failed failed Optimise system for running SAP workloads
+
+LOAD = Reflects whether the unit definition was properly loaded.
+ACTIVE = The high-level unit activation state, i.e. generalization of SUB.
+SUB = The low-level unit activation state, values depend on unit type.
+
+1 loaded units listed.
+
+</pre>
+In this case <code>saptune.service</code> failed for some reason and caused the degraded state.
+If we investigate further, we can see why:
+
+<pre>
+# systemctl status saptune.service
+● saptune.service - Optimise system for running SAP workloads
+Loaded: loaded (/usr/lib/systemd/system/saptune.service; disabled; vendor preset: disabled)
+Active: failed (Result: exit-code) since Thu 2022-08-11 14:52:20 CEST; 12min ago
+Process: 2048 ExecStart=/usr/sbin/saptune service apply (code=exited, status=1/FAILURE)
+Main PID: 2048 (code=exited, status=1/FAILURE)
+
+Aug 11 14:52:20 sles4sap15sp3 systemd[1]: Starting Optimise system for running SAP workloads...
+Aug 11 14:52:20 sles4sap15sp3 saptune[2048]: ERROR: found an active sapconf, so refuse any action
+Aug 11 14:52:20 sles4sap15sp3 systemd[1]: saptune.service: Main process exited, code=exited, status=1/FAILURE
+Aug 11 14:52:20 sles4sap15sp3 systemd[1]: saptune.service: Failed with result 'exit-code'.
+Aug 11 14:52:20 sles4sap15sp3 systemd[1]: Failed to start Optimise system for running SAP workloads.
+
+</pre>
+Ah, <code>saptune</code> refused to start, because <code>sapconf</code> has already tuned the system!
+<br /><br />
+And this is the very reason, why saptune is printing the system state in the first place.
+In the past we had often seen customer setups where both tools have been mixed up with strange results.
+To spot such an easy solvable problem, both <code>saptune status</code> and <code>saptune_check</code> report issues with systemd's system state.
+<br /><br />
+But not always <code>sapconf.service</code> or <code>saptune.service</code> are the once listed as failed, but other units.
+In such cases <code>saptune status</code> found issues, which have most likely nothing to do with <code>saptune</code> itself and most times not even will prevent <code>saptune</code> from doing its job.
+<br /><br />
+So, if <code>saptune</code> will work, why reporting it and raise concerns?
+<br /><br />
+Well, not reporting it would mean, hiding potential problems deliberately.
+We think, you should know if something might be wrong and there could be a problem lurking in the shadows, which you haven't spotted yet and waits to strike at the most inconvenient time!
+<br /><br />
+The feedback we got so far, confirms this decision. Lately this even helped to discover and fix a bug in a service that had nothing to do with saptune and might not have been found for some time. Mission accomplished.
+<br /><br />
+So, if you see a degraded system state and neither <code>sapconf.service</code> or <code>saptune.service</code> are involved, most certainly your tuning for SAP workload is fine. Best check it out with <code>saptune note verify</code> to be on the safe side.
+Nevertheless you should investigate the reasons for the failed units to be sure that they don't indicate a bigger problem.
+<br /><br />
+By the way, in the upcoming version 3.1 we will rename it to <code>systemd system status</code> and add a few explanatory lines to the output, so that it s more obvious what is going on and what to do next.
+<br /><br />
+So long!
+{% endblock content %}

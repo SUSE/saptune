@@ -1,0 +1,26 @@
+{% extends "base.html.template" %}
+
+{% block content %}
+<p id="author">December 14, 2023 | By: Sören Schmidt</p>
+<div>This week an update of <code>saptune</code> has reached the repositories and the immanent question is: Do I have to update to 3.1.1?
+</br>
+As you know, the general answer for that kind of question is always "yes", but lets have a closer look. An increment at the third part of the version number indicates a bug fix, so which bugs do we fix?</div>
+</br>
+<h2><code>/varlog/saptune</code></h2>
+<div>On every start <code>saptune</code> v3.1.0 creates the directory <code>/varlog/saptune</code> due to a typo.</div>
+<div>This bug is purely cosmetic and has no impact on <code>saptune</code>, but nevertheless can be annoying if you use tab completion. In 3.1.1 this is fixed and an existing directory <code>/varlog</code> gets removed on package installation.</div>
+</br>
+<h2>SAP Note 2382421 and Azure</h2>
+<div>SAP Note 2382421 recommends to set the parameter <code>net.ipv4.tcp_timestamps</code> to 1, which should not be done on Azure environments. With 3.1.1 it won't.</div>
+</br>
+<h2>Restart on package update and <code>IGNORE_RELOAD</code></h2>
+<div>If you update the <code>saptune</code> package the tuning gets interrupted shortly when <code>saptune</code> reverts the tuning and reapplies it. This is an undiscovered bug in v3 and never was intended. A package update can contain altered SAP Notes and Solutions and retuning should always be a conscious decision of an admin. 3.1.1 reintroduces the former behavior!</div>
+<div></div>
+<div>For the majority this should not be a problem. Only very few customers upgrade OS packages with a running SAP application and can suffer from that bug.</div>
+<div></div>
+<div>As a temporary solution you can add <code>IGNORE_RELOAD="yes"</code> to <code>/etc/sysconfig/saptune</code> before you update to 3.1.1. This prevents the restart during package update.</div>
+<div>After the update best set the variable to <code>"no"</code>. Why, you ask? By intention a "yes" blocks <code>systemctl reload saptune.service</code> and <code>saptune service restart</code>, but not <code>systemctl restart saptune.service</code>. This behavior can confuse administrators, then restarts belong to normal operation.</div>
+</div>
+</br>
+<div>Sorry for the inconvenience.</div> 
+{% endblock content %}

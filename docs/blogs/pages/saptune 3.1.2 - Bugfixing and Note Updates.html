@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>saptune 3.1.2 - Bugfixing and Note Updates</title>
+        <style>
+            body { 
+    font-family: poppins,Verdana,sans-serif; 
+    background-color: white; 
+    width: 60%;
+    margin-left: 10%;
+}
+ul { padding-left: 1em; }
+h1 { 
+    padding-bottom: 0; 
+    margin-bottom: 0; 
+}
+a {font-weight: bold;}
+#author { 
+    font-style: italic; 
+    padding-top: 0; 
+    margin-top: 0; 
+    padding-bottom: 2em;
+    margin-bottom: 2em; 
+    border-bottom: thin solid gray; 
+}
+pre {
+    word-break: break-all;
+    color: #333333;
+    background-color: #f5f5f5;
+    border: 1px solid #cccccc;
+}
+code {
+    padding: 2px 4px;
+    font-size: 90%;
+    color: #c7254e;
+    background-color: #f9f2f4;
+    border-radius: 4px;
+  }
+  blockquote {
+    border-left: #cccccc solid 0.2em;
+    padding-left: 2em;
+    margin-left: 0;
+    font-size: 85%;
+  }
+  table {
+    font-size: 90%;
+    margin: 1em 0;
+    width: 100%;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  table tbody tr:nth-child(2n) {
+    background-color: #efefef;
+  }
+  table td {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+  table th {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+
+        </style>
+    </head>
+    <body>
+        <h1>saptune 3.1.2 - Bugfixing and Note Updates</h1>
+        <p id="author">March 22, 2024 | By: Sören Schmidt</p>
+        This month we released a maintenance update for <code>saptune</code>: 3.1.2
+        I was asked by to write s a short blog post about the changes. Here it is!
+        </br>
+        <h2>Reducing the lock scope</h2>
+        To avoid several <code>saptune</code> processes to run simultaneously and creating a mess, <code>saptune</code> always set a lock on start. Only one <code>saptune</code> command should run at the same time.
+        Back then, it was the easiest way to go. But like most times, going down the easiest road bites you later. ;-)
+
+        With the recent Trento integration, it turned out that this approach does not work anymore.
+        A <code>saptune</code> command could fail, if it was called unfortunately at the same time when Trento collects the <code>saptune</code> status.
+
+        With 3.1.2 the lock only is set for commands that potentially change the system settings.
+        Nevertheless a set lock can cause Trento to report a wrong <code>saptune</code> status or causes <code>saptune</code> checks to fail. The following commands still set it:
+        <ul>
+         	<li><code>service start|stop|reload|enablestart|disabestop|apply|revert|takeover</code></li>
+         	<li><code>note|solution apply|customise|customize|create|edit|revert|delete|rename</code></li>
+         	<li><code>note revertall</code></li>
+         	<li><code>revert all</code></li>
+         	<li><code>solution change</code></li>
+         	<li><code>staging</code></li>
+        </ul>
+        </br>
+        <h2>Fixed log timestamps</h2>
+        We noticed a bug in the <code>saptune</code> logs, that incorrectly used the same timestamp for all log messages of the same <code>saptune</code> process. This has been fixed.
+        </br>
+        <h2>SAP Note Updates</h2>
+        We updated these SAP Note to the latest version:
+        <ul>
+         	<li>1656250 to v63</li>
+         	<li>1771258 to v8</li>
+         	<li>2382421 to v45</li>
+         	<li>3024346 to v10</li>
+         	<li>2578899 to v47</li>
+         	<li>1984787 to v42</li>
+        </ul>
+        Only 2578899 received a tuning change (<code>kernel-default 5.14.21-150400.24.11.1</code> as minimum package version for 15 SP4 on ppc64le). For the others it was just a version number and release date update.
+
+        For these Notes we simply forgot to update the release information in an internally used comment string:
+        <ul>
+         	<li>1410736</li>
+         	<li>1805750</li>
+         	<li>1868829</li>
+         	<li>1980196</li>
+         	<li>1557506</li>
+         	<li>2205917</li>
+         	<li>2161991</li>
+         	<li>2534844</li>
+         	<li>900929</li>
+         	<li>941735</li>
+        </ul>
+        And for these we had to correct the date:
+        <ul>
+         	<li>2684254</li>
+         	<li>2993054</li>
+        </ul>
+        This was simply housekeeping and did not affect the tuning.
+<body>
+</html>
