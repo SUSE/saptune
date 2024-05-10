@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{{ self._TemplateReference__context.name | replace('.html','') }}</title>
+        <style>
+            {% include "css" %}
+        </style>
+    </head>
+    <body>
+        <h1>{{ self._TemplateReference__context.name | replace('.html','') }}</h1>
+        
+        {%- filter indent(width=8) -%}
+        {%- block content -%}
+        {%- endblock content -%}
+        {%- endfilter -%}
+    <body>
+</html>

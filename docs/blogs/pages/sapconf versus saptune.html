@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>sapconf versus saptune</title>
+        <style>
+            body { 
+    font-family: poppins,Verdana,sans-serif; 
+    background-color: white; 
+    width: 60%;
+    margin-left: 10%;
+}
+ul { padding-left: 1em; }
+h1 { 
+    padding-bottom: 0; 
+    margin-bottom: 0; 
+}
+a {font-weight: bold;}
+#author { 
+    font-style: italic; 
+    padding-top: 0; 
+    margin-top: 0; 
+    padding-bottom: 2em;
+    margin-bottom: 2em; 
+    border-bottom: thin solid gray; 
+}
+pre {
+    word-break: break-all;
+    color: #333333;
+    background-color: #f5f5f5;
+    border: 1px solid #cccccc;
+}
+code {
+    padding: 2px 4px;
+    font-size: 90%;
+    color: #c7254e;
+    background-color: #f9f2f4;
+    border-radius: 4px;
+  }
+  blockquote {
+    border-left: #cccccc solid 0.2em;
+    padding-left: 2em;
+    margin-left: 0;
+    font-size: 85%;
+  }
+  table {
+    font-size: 90%;
+    margin: 1em 0;
+    width: 100%;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  table tbody tr:nth-child(2n) {
+    background-color: #efefef;
+  }
+  table td {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+  table th {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+
+        </style>
+    </head>
+    <body>
+        <h1>sapconf versus saptune</h1>
+        <p id="author">August 1, 2018 | By: Sören Schmidt</p>
+        With the release of the sapconf blog series (<a href="A new sapconf is available.html" target="_blank" rel="noopener">A new sapconf is available</a> a lot of people approached me with questions about how both tools relate to each other. So I thought it would be a good idea to publish a small post about it.
+        <h2>What is the purpose of both tools?</h2>
+        Sapconf is a simple tool to make only the most important changes on a SLES installation to run SAP applications. It neither distinguishes between SAP applications nor implements entire SAP notes.
+        It removes the big rocks. No more, no less.
+
+        Saptune is a more elaborate tool. It can apply entire SAP notes (as far as it possible) and offers prepared combinations (solutions) of notes.
+        It is shipped with a commandline tool to easily apply SAP notes or solutions as well as simulate and verify chanages made to the system.
+        <h2>Can I use both tools?</h2>
+        No. <br>
+        Sapconf is part of SLES, so only sapconf can be used. 
+        By contrast "SLES for SAP Applications" provides a choice between sapconf and saptune. However, although both tools could be installed together, only one can be used at a time since both use tuned.
+        <h2>Is sapconf deprecated?</h2>
+        No.<br>
+        The warning shown in the logs even by recent versions is a bug and will be fixed in one of next versions.
+        <h2>What are the future plans?</h2>
+        After reworking sapconf, we now do the same with saptune. We expect to have the new version ready later this year, but I cannot promise anything.
+<body>
+</html>

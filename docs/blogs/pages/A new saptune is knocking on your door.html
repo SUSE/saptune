@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>A new saptune is knocking on your door</title>
+        <style>
+            body { 
+    font-family: poppins,Verdana,sans-serif; 
+    background-color: white; 
+    width: 60%;
+    margin-left: 10%;
+}
+ul { padding-left: 1em; }
+h1 { 
+    padding-bottom: 0; 
+    margin-bottom: 0; 
+}
+a {font-weight: bold;}
+#author { 
+    font-style: italic; 
+    padding-top: 0; 
+    margin-top: 0; 
+    padding-bottom: 2em;
+    margin-bottom: 2em; 
+    border-bottom: thin solid gray; 
+}
+pre {
+    word-break: break-all;
+    color: #333333;
+    background-color: #f5f5f5;
+    border: 1px solid #cccccc;
+}
+code {
+    padding: 2px 4px;
+    font-size: 90%;
+    color: #c7254e;
+    background-color: #f9f2f4;
+    border-radius: 4px;
+  }
+  blockquote {
+    border-left: #cccccc solid 0.2em;
+    padding-left: 2em;
+    margin-left: 0;
+    font-size: 85%;
+  }
+  table {
+    font-size: 90%;
+    margin: 1em 0;
+    width: 100%;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  table tbody tr:nth-child(2n) {
+    background-color: #efefef;
+  }
+  table td {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+  table th {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+
+        </style>
+    </head>
+    <body>
+        <h1>A new saptune is knocking on your door</h1>
+        <p id="author">May 3, 2019 | By: Sören Schmidt</p
+        <h2>Do you remember summer last year?</h2>
+        It was June when I published this blog post https://www.suse.com/c/a-new-sapconf-is-available/["A new sapconf is available"].
+        Now, barely a year later, we can announce the rework of saptune as well.
+        You will not yet find it in your SUSE repositories, but very soon. Consider this a crystal ball of what is to come ;-)
+
+        For those who what reminding of the difference between sapconf and saptune, please check <a href="https://www.suse.com/c/sapconf-versus-saptune/" target="_blank" rel="noopener">sapconf versus saptune</a>.
+        <h2>What is saptune?</h2>
+        If you have never heard about saptune, now is good time to explore it.
+
+        Saptune - part of with SLES for SAP Applications - is a configuration tool to prepare a system to run SAP workloads by implementing the recommendations of various SAP notes. Just select the notes you need or choose one of the predefined groups - called solutions.
+        <h2>Why did we do the rework?</h2>
+        Customers and partners are approaching us with ideas and suggestions all the time.
+        This version implements many of them, but the journey will continue and you can expect further enhancements in the future.
+        You are of course welcome to give further feedback at the end of this blog, via email, carrier pigeon etc. and tell us your needs via this blog, email etc. In any event, the implemented improvements justify a jump from version 1 to version 2.
+
+        Our goals with saptune are:
+        <ul>
+         	<li>Provide a central framework for configuring the SLES for running various SAP workloads based on SAP recommendations</li>
+         	<li>Enable partners and customers to extend saptune with their own configurations and tests</li>
+        </ul>
+        &nbsp;
+        <h2>But what is to come?</h2>
+        <h3>Enhanced human-readable output</h3>
+        <h3><img src="media/saptune_solution_list.png" alt="" width="718" height="168" /></h3>
+        In previous releases of saptune it was sometimes not clear which SAP note was implemented when choosing a solution. This has changed.
+        Also sometimes saptune was a little sparse on details. The output for verify and simulate have been made more detailed and should now tell everything you need to know.
+        <h3>More complete implementation of notes</h3>
+        The new version of saptune implements SAP note recommendations as fully as possible. Only where it is not safe to do so, saptune will just notify you without automatically implementing them. An example would be modifications of the boot loader.
+        But saptune will at least verify them and tell you so. No secrets.
+        <h3><img src="media/saptune_note_verify-2.png" alt="" width="949" height="350" /></h3>
+        <h3></h3>
+        <h3>New SAP notes</h3>
+        We added the following SAP notes:
+        <ul>
+         	<li>1410736 – TCP/IP: setting keepalive interval</li>
+         	<li>1680803 – Sybase - SAP Adaptive Server Enterprise</li>
+         	<li>1771258 – Linux: User and system resource limits</li>
+         	<li>1980196 – Setting Linux Kernel Parameter /proc/sys/vm/max_map_count on SAP HANA Systems</li>
+         	<li>2382421 – Optimizing the Network Configuration on HANA- and OS-Level</li>
+         	<li>2534844 – Indexserver Crash During Startup due to Insufficient Shared Memory Segment</li>
+         	<li>941735  – SAP memory management system for 64-bit Linux systems</li>
+        </ul>
+        &nbsp;
+        <h3>Every parameter is now configurable</h3>
+        Some SAP note parameters have been hard-coded in the past. Not anymore. Every parameter now is listed in the configuration file and can be overwritten or marked to be left alone by saptune.
+        <h3>More features available in extra configurations</h3>
+        In previous releases extra configuration files were limited to sysctl parameters. Now almost every configuration type saptune has to offer can be used.
+        But what are these extra files for?
+        They give our administrators a simple way to implement their own additional configurations. For example, this allows administrators to implement SAP Notes not yet shipped with saptune, or to centralize system configurations with saptune. No more need to spread configurations over multiple tools like sysctl.conf, limits.conf etc. If you run saptune, let it do this job! In short, you can have your "own SAP Note" to be applied by saptune.
+        <h3>Improved logging</h3>
+        Log messages were somewhat limited in the past. We haven't a fully defined logging yet,
+        but with the new release saptune will record a lot more details.
+        <h3>Converter to aid the move from sapconf to saptune</h3>
+        If you have been using sapconf and are now interested in saptune for its additional features, how do you keep those same sapconf settings? No problem, we ship a converter to translate he sapconf configuration into an extra "own SAP Note" file for saptune.
+
+        <img src="media/sapconf2saptune-1.png" alt="" width="800" height="326" />
+        <h3>Guide to help you migrate to the new saptune</h3>
+        Migration? Isn't a simple package update enough?
+
+        Not in every case.
+
+        We changed quite a lot and we don’t want to risk causing any incompatibilities or unexpected changes in your system behavior.
+        If the update discovers applied saptune SAP notes or solutions, saptune will continue to run in version 1.
+        The switch to version 2 has to be done deliberately.
+        To help you, we will provide a step-by-step guide. Just plan your switch when you are ready, no rush!
+
+        We will support saptune version 1 until end of the lifetime of SLES 12 / SLES 15 SP1, which should give enough time to move. Although please bear in mind that since saptune version 1 will be deprecated, we will only do bug fixing. New features, new SAP notes or new parameters will only be done for version 2!
+        <h3>Do I get documentation?</h3>
+        The saptune package will contain detailed man pages. Also SAP note "1275776 - Linux: Preparing SLES for SAP environments" will get an update to reflect both versions.
+        Anyway you can expect a technical blog series about the details of saptune and how to do a migration from version 1 to version 2.
+
+        &nbsp;
+
+        I'm sure you will enjoy the new saptune!
+
+        &nbsp;
+<body>
+</html>

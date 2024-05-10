@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>sapconf versus saptune - again</title>
+        <style>
+            body { 
+    font-family: poppins,Verdana,sans-serif; 
+    background-color: white; 
+    width: 60%;
+    margin-left: 10%;
+}
+ul { padding-left: 1em; }
+h1 { 
+    padding-bottom: 0; 
+    margin-bottom: 0; 
+}
+a {font-weight: bold;}
+#author { 
+    font-style: italic; 
+    padding-top: 0; 
+    margin-top: 0; 
+    padding-bottom: 2em;
+    margin-bottom: 2em; 
+    border-bottom: thin solid gray; 
+}
+pre {
+    word-break: break-all;
+    color: #333333;
+    background-color: #f5f5f5;
+    border: 1px solid #cccccc;
+}
+code {
+    padding: 2px 4px;
+    font-size: 90%;
+    color: #c7254e;
+    background-color: #f9f2f4;
+    border-radius: 4px;
+  }
+  blockquote {
+    border-left: #cccccc solid 0.2em;
+    padding-left: 2em;
+    margin-left: 0;
+    font-size: 85%;
+  }
+  table {
+    font-size: 90%;
+    margin: 1em 0;
+    width: 100%;
+    background-color: transparent;
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
+  table tbody tr:nth-child(2n) {
+    background-color: #efefef;
+  }
+  table td {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+  table th {
+    border: 1px solid #d5d5d5;
+    padding: .2em;
+  }
+
+        </style>
+    </head>
+    <body>
+        <h1>sapconf versus saptune - again</h1>
+        <p id="author">August 3, 2020 | By: Sören Schmidt</p>
+        After the blog post about <a href="sapconf 5 - What has changed%3f.html">sapconf 5</a> a few hours ago, I was asked by various people:
+
+        <strong>Shall we use 'sapconf 5' instead of 'saptune 2'?</strong>
+
+        Before rumors or confusion spread, let me clarify.
+
+        In short:
+        <ul>
+         	<li>If you have 'SUSE Linux Enterprise Server' only 'sapconf' is available.</li>
+         	<li>If you have 'SUSE Linux Enterprise Server for SAP Applications' you can choose between 'sapconf' and 'saptune', but...</li>
+         	<li>...'saptune' is the more advanced tool and should be preferred!</li>
+         	<li>If you are using 'sapconf 4', update to 'sapconf 5' soon.</li>
+         	<li>If you are using 'saptune', stay with 'saptune'!</li>
+        </ul>
+        &nbsp;
+
+        And here a bit more details:
+        <table border="1">
+        <tbody>
+        <tr>
+        <th></th>
+        <th> sapconf 5</th>
+        <th> saptune 2</th>
+        </tr>
+        <tr>
+        <td>Available on SLES?</td>
+        <td>yes</td>
+        <td>no</td>
+        </tr>
+        <tr>
+        <td>Available on SLES for SAP Applications?</td>
+        <td>yes</td>
+        <td>yes</td>
+        </tr>
+        <tr>
+        <td>Does it implements entire SAP notes?</td>
+        <td>no</td>
+        <td>yes</td>
+        </tr>
+        <tr>
+        <td>Can I configure everything?</td>
+        <td>yes</td>
+        <td>yes</td>
+        </tr>
+        <tr>
+        <td>Do I have a verify option?</td>
+        <td>no</td>
+        <td>yes</td>
+        </tr>
+        <tr>
+        <td>Does it rely on tuned?</td>
+        <td>no</td>
+        <td>yes<sup>1</sup></td>
+        </tr>
+        </tbody>
+        </table>
+        <p style="font-size: 80%"><em><sup>1</sup> Only for starting the 'saptune' binary ('tuned' does no tuning itself). Like with 'sapconf 5' 'tuned' gets removed in one of the next versions.</em></p>
+        No further major changes to 'sapconf' are planned so far. Removing 'tuned' was on our list for quiet some time.
+        Of course it will maintained further, but it stays a simple tool, which just does needful things.
+        <br /><br />
+        'Saptune' will go on and at the moment we are in development of the next version. Removing 'tuned' is - among other things - on the list.
+        If you have ideas to better 'saptune', now is a good time to step forward!
+        <br /><br />
+        I hope the world of 'sapconf' and 'saptune' looks a bit clearer now!
+<body>
+</html>

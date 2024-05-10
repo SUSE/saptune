@@ -1,0 +1,174 @@
+{% extends "base.html.template" %}
+
+{% block content %}
+<p id="author">September 28, 2021 | By: Sören Schmidt</p>
+For quite some time we haven't released a new version of saptune. That didn't mean that development has stopped. Far from it! The last months have been busy to finalize the upcoming version 3, which brings new features customers and partners requested.
+It is currently in our QA and will be available in a few weeks.
+<h2>For which releases saptune 3 will be available?</h2>
+As always each release of "SLES for SAP Applications" still under support will get the new saptune:
+<ul>
+ 	<li>SUSE Linux Enterprise Server for SAP Applications 12 SP3</li>
+ 	<li>SUSE Linux Enterprise Server for SAP Applications 12 SP4</li>
+        <li>SUSE Linux Enterprise Server for SAP Applications 12 SP5</li>
+ 	<li>SUSE Linux Enterprise Server for SAP Applications 15</li>
+ 	<li>SUSE Linux Enterprise Server for SAP Applications 15 SP1</li>
+ 	<li>SUSE Linux Enterprise Server for SAP Applications 15 SP2</li>
+ 	<li>SUSE Linux Enterprise Server for SAP Applications 15 SP3</li>
+</ul>
+(<a href="https://www.suse.com/lifecycle/">https://www.suse.com/lifecycle/</a>)
+<h2>What is new?</h2>
+<h3>Additional SAP Notes</h3>
+<ul>
+ 	<li>1656250 - SAP on AWS: Support prerequisites - only Linux Operating System IO Recommendations</li>
+ 	<li>2993054 - Recommended settings for SAP systems on Linux running in Azure virtual machines</li>
+ 	<li>3024346 - Linux Kernel Settings for NetApp NFS</li>
+ 	<li>900929 - Linux: STORAGE_PARAMETERS_WRONG_SET and 'mmap() failed'</li>
+</ul>
+<h3>Updated Solutions</h3>
+The new Cloud SAP Notes 1656250 and 2993054 are part of all Solutions (except BOBJ).
+Due to the new tagging feature (see below), they only get applied on a system that is a cloud instance of the appropriate vendor.
+This allows you always to use the same Solutions, no matter if you run on hardware or in the cloud. Simply choose the one designed for your SAP product!
+<br/><br/>
+The new SAP Note 900929 is part of NETWEAVER and S4HANA-APPSERVER Solutions.
+<h3>Detection of sysctl conflicts</h3>
+Most support cases are about conflicting saptune settings with entries in e.g. <code>/etc/sysctl.conf</code>.
+Saptune 3 will now check, if sysctl parameters set by an applied SAP Note are also present in sysctl files. This should help to detect possible dormant misconfiguration issues.
+<br/><br/>
+Here an example:
+<pre>SAPNote, Version    | Parameter                     | Expected  | Override  | Actual  | Compliant
+--------------------+-------------------------------+-----------+-----------+---------+-----------
+1410736, 6          | net.ipv4.tcp_keepalive_intvl  | 75        |           | 75      | yes [11]
+1410736, 6          | net.ipv4.tcp_keepalive_probes | 9         |           | 9       | yes [11]
+1410736, 6          | net.ipv4.tcp_keepalive_time   | 300       |           | 300     | yes [11]
+
+(no change)
+
+[11] parameter is additional defined in sysctl config file /usr/lib/sysctl.d/99-sysctl.conf(100)
+[11] parameter is additional defined in sysctl config file /usr/lib/sysctl.d/99-sysctl.conf(10)
+[11] parameter is additional defined in sysctl config file /usr/lib/sysctl.d/99-sysctl.conf(300)
+</pre>
+<h3>Check script to verify setup</h3>
+The second most cause for support cases has been an incorrect setup of saptune: forgetting to enable services, mixups with sapconf, wrong tuned profiles, something like that.
+Now saptune comes with a check script to verify the correct setup:
+<pre># saptune_check
+
+This is saptune_check v0.2.1.
+It verifies if saptune is set up correctly.
+Please keep in mind:
+ - This tool does not check, if the tuning itself works correctly.
+ - Follow the hints from top to down to minimize side effects.
+
+Checking saptune
+================
+[NOTE] saptune package has version 3.0.0
+[ OK ] System is in status "running"
+[ OK ] configured saptune version is 3
+[ OK ] sapconf.service is inactive
+[ OK ] sapconf.service is disabled
+[ OK ] saptune.service is active
+[ OK ] saptune.service is enabled
+[NOTE] tuned profile is 'virtual-guest'
+[ OK ] tuned.service is inactive
+[ OK ] tuned.service is disabled
+
+Saptune is set up correctly.
+</pre>
+Best run it always after you have changed your saptune setup.
+<h3>Custom Solutions</h3>
+Do you want your own version of a e.g. HANA Solution tailored to your needs? Do you want your own custom Notes be part of such a Solution?
+No problem. With saptune 3 allows you create your own Solutions.
+<pre># saptune solution list
+
+All solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):
+...
+     S4HANA-DBSERVER - 941735 1771258 1980196 2578899 2684254 2382421 2534844 2993054 1656250
+     SAP-ASE         - 941735 1410736 1680803 1771258 2578899 2993054 1656250
+* C  myHANA          - 941735 1771258 1980196 2578899 2684254 2382421 2534844 DC1
+
+</pre>
+<h3>Tagging of configuration sections (architecture, storage vendors, etc.)</h3>
+Saptune 3 supports so-called tags to apply configuration sections only if certain conditions are met.
+The newly added SAP Notes for AWS and Azure are making use of it. The settings get only applied if the system is a cloud instance:
+<pre>
+# saptune note show 2993054
+...
+[sysctl:csp=azure]
+net.ipv4.tcp_keepalive_time = 300
+...
+</pre>
+We support:
+<ul>
+ 	<li>OS version</li>
+ 	<li>Architecture</li>
+ 	<li>System vendor and model (everything in <code>/sys/class/dmi/id/</code>)</li>
+ 	<li>Cloud vendor</li>
+ 	<li>Block device details</li>
+</ul>
+Of cause tags can also be used in custom Notes as well as in overrides.
+<h3>Staging</h3>
+Saptune packages can come with binary changes (bug fixes, new features) as well as with configuration changes (new or changed SAP Notes and Solutions). This can cause challenges for customers.
+On one hand they want to install a needed fix, but on the other hand they don't want or can introduce configuration changes due to internal change management processes.
+<br/><br/>
+To address this, saptune 3 introduces staging.
+<br/><br/>
+Staging decouples binary changes from SAP Note and Solution changes.
+If staging has been enabled, SAP Note or Solution changes are placed into a staging area during a package upgrade. Later you can review the changes and apply them partially or full when ever you want. This has the advantage that you can install bug fixes, but must not worry about changes in your system configuration.
+<h2>What has changed?</h2>
+<h3>No tuned!</h3>
+Saptune 3 doesn't use <code>tuned</code> anymore! It now comes with it's own systemd service.
+<br/><br/>
+This has implications for setting up saptune!
+<br/><br/>
+With saptune 2 it was necessary to enable and start <code>tuned.service</code> and set the saptune profile.
+The recommended way was to use <code>saptune daemon start</code>, which took not only care of that, but also disabled sapconf, if it was in use.
+With saptune 3 this command still does it's job. It now enables and starts <code>saptune.service</code> and disables sapconf and also <code>tuned</code>. So, if you use this command already in your scripts or deployments everything will keep working.
+If you configure <code>tuned</code> directly, than you have to adapt your method!
+<h3>saptune v1 has been removed</h3>
+I really hope nobody is using v1 anymore. The configuration is hopelessly outdated and does not reflect current SAP recommendations. Saptune 2 kept it to allow customers to take their time to switch to version 2, but it was marked as deprecated.
+<br/><br/>
+If <code>saptune version</code> returns <code>current active saptune version is '1'</code>, you have to act now! Details about how to migrate can be found in the man page saptune-migrate(7).
+<h3>Updated SAP Notes</h3>
+The following SAP Notes have received updates:
+<ul>
+ 	<li>1680803 - Sybase - SAP Adaptive Server Enterprise</li>
+ 	<li>1771258 - Linux: User and system resource limits</li>
+ 	<li>2382421 - Optimizing the Network Configuration on HANA- and OS-Level</li>
+ 	<li>2578899 - SUSE LINUX Enterprise Server 15: Installation notes</li>
+ 	<li>1984787 - SUSE LINUX Enterprise Server 12: Installation notes</li>
+ 	<li>2684254 - SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15</li>
+ 	<li>2205917 - SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12</li>
+ 	<li>2382421 - Optimizing the Network Configuration on HANA- and OS-Level</li>
+</ul>
+<h3>New saptune commands</h3>
+We have further enhanced saptune's commands. Saptune 3 brings among others:
+<ul>
+ 	<li>New commands to handle the saptune systemd service:
+<code>saptune service start|status|stop|restart|takeover|enable|disable|enablestart|disablestop</code></li>
+ 	<li>You can now edit custom Notes easily.
+<code>saptune note edit NoteID</code></li>
+ 	<li>The new feature of custom Solutions brings a list of new commands:
+<code>saptune solution customise|create|edit|revert|show|delete SolutionName</code>
+<code>saptune solution rename SolutionName newSolutionName</code></li>
+ 	<li>The new staging feature also introduces a whole bunch of new commands.
+<code>saptune staging status|enable|disable|is-enabled|list|diff|analysis|release</code>
+<code>saptune staging analysis|diff NoteID...|SolutionID...|all</code>
+<code>saptune staging release [--force|--dry-run] NoteID...|SolutionID...|all</code></li>
+ 	<li>You can now get a much more detailed overview about saptune's status.
+<code>saptune status</code></li>
+</ul>
+<h2>Can I just upgrade or do I have to make preparations ?</h2>
+You can just upgrade the package.
+<br/><br/>
+Keep in mind, that we ship updated and new SAP Notes and Solutions, so you should run a <code>saptune note verify</code> after upgrading to check if all recommendations are still met!
+<h2>I use deployment and configuration scripts. Do I have to take care of something?</h2>
+This depends, how you have implemented the saptune setup.
+<br/><br/>
+If you use <code>saptune daemon start</code> everything is fine.
+<br/><br/>
+If you configure <code>tuned</code> directly, then this will not work anymore!
+See `No tuned!` above!
+<h2>More information...</h2>
+With the release the SLES for SAP Guides (https://documentation.suse.com/) will be updated as well as SAP Note '<a href="https://launchpad.support.sap.com/#/notes/1275776">1275776 - Linux: Preparing SLES for SAP environments</a>'.
+<br/><br/>
+Additionally I'll start a video series on our SUSE Products channel on YouTube soon to explain some aspects of saptune in detail.
+{% endblock content %}

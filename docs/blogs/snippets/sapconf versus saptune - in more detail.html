@@ -1,0 +1,94 @@
+
+{% extends "base.html.template" %}
+
+{% block content %}
+<p id="author">June 25, 2019 | By: Sören Schmidt</p>
+Last year I published a small post to compare sapconf and saptune:  <a href="sapconf versus saptune.html" target="_blank" rel="noopener">sapconf versus saptune</a>
+<br /><br />
+It would seem that there is still some confusion about it, so let me go a little bit deeper into the rabbit hole today.
+<h2>What is the difference between both?</h2>
+If you are running "SUSE Linux Enterprise Server" you will only have sapconf in your arsenal.
+It is meant only to do the most important changes and neither distinguishes between SAP applications nor implements entire SAP notes. This is often not known.
+<br /><br />
+If you are running "SUSE Linux Enterprise Server for SAP Applications" <strong>also</strong> saptune is available to you.
+It can apply entire SAP notes, offers prepared combinations (solutions) of notes and - to make your live easier - also allows you to simulate and verify changes made to the system. It is much more elaborated and one of the benefits of "SUSE Linux Enterprise Server for SAP Applications"
+<br /><br />
+So, only with "SUSE Linux Enterprise Server for SAP Applications" you can choose between both tools.
+<br /><br />
+Both tools use tuned to do their work, which means, that they cannot be used at the same time! You have do decide which one is your favorite.
+<br /><br />
+Here a little table to summarize the important facts:
+<br /><br />
+<sup>1</sup> The reworked version is only available from SLES 12 SP2 onwards.
+<sup>2</sup> Saptune was introduced with SLES 12 for SAP Applications SP2.
+<sup>3</sup> This applies only to saptune version 2.How to check what is running?If you are not sure, which tool is doing the work for you or if everything is set up as it should be, here some commands to check:
+<ul>
+ 	<li>Verify the status of the sapconf service (saptune does not have one).
+<pre>systemctl status sapconf.service</pre>
+If the service is inactive/disabled you do not run sapconf. But if it is active/enabled you do.
+But to be really sure about, let's check further!</li>
+ 	<li>Check the status of the 'tuned' service as well.
+<pre>systemctl status tuned.service</pre>
+It should be active in any case or you do not have tuning at the moment. For sapconf it should be disabled for saptune it must be enabled!</li>
+ 	<li>Check the active tuned profile.
+<pre>tuned-adm active</pre>
+</li>
+</ul>
+<table style="width: 50%" border="1">
+<tbody>
+<tr>
+<th></th>
+<th style="text-align: center"> sapconf</th>
+<th style="text-align: center"> saptune</th>
+</tr>
+<tr>
+<td>Available on SLES?</td>
+<td style="text-align: center">yes<sup>1</sup></td>
+<td style="text-align: center">no</td>
+</tr>
+<tr>
+<td>Available on SLES for SAP Applications?</td>
+<td style="text-align: center">yes</td>
+<td style="text-align: center">yes<sup>2</sup></td>
+</tr>
+<tr>
+<td>Does it implements entire SAP notes?</td>
+<td style="text-align: center">no</td>
+<td style="text-align: center">yes</td>
+</tr>
+<tr>
+<td>Can I configure everything?</td>
+<td style="text-align: center">yes</td>
+<td style="text-align: center">yes<sup>3</sup></td>
+</tr>
+<tr>
+<td>Do I have a verify option?</td>
+<td style="text-align: center">no</td>
+<td style="text-align: center">yes</td>
+</tr>
+</tbody>
+</table>
+All other profiles you might see are from the tuned package itself and are not optimized for SAP workload!
+<table>
+<tbody>
+<tr>
+<td><code>saptune</code></td>
+<td> →</td>
+<td>Your system is running saptune</td>
+</tr>
+<tr>
+<td><code> (SLES 12), <code>sapconf</code> (SLES 15)</td>
+<td> →</td>
+<td>Your system is running sapconf</td>
+</tr>
+</tbody>
+</table>
+For saptune you should check the selected solutions or notes with <code>saptune solution list</code> and <code>saptune note list</code> too.Again, here a table to summarize it:  sapconf  saptune systemd service file<span style="font-family: monospace">sapconf.service</span>noneRecommended status of tuned serviceactive/disabledactive/enabledUsed tuned profile<span style="font-family: monospace">sapconf/sap-*</span><span style="font-family: monospace">saptune</span> I have written a small shell script which will do the tests above and give some hints how to solve a misconfiguration.
+You can download it here: <a href="https://github.com/scmschmidt/sapconf_saptune_check" target="_blank" rel="noopener">https://github.com/scmschmidt/sapconf_saptune_check</a>
+<br /><br />
+If you want to go even deeper, here are the links to technical blog posts:
+<br /><br />
+<strong>sapconf:</strong> <a href="A new sapconf is available.html" target="_blank" rel="noopener">A new sapconf is available</a>
+<br />
+<strong>saptune:</strong> <a href="A new saptune is here!.html">A new saptune is here!</a>
+{% endblock content %}

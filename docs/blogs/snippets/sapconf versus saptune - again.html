@@ -1,0 +1,69 @@
+{% extends "base.html.template" %}
+
+{% block content %}
+<p id="author">August 3, 2020 | By: Sören Schmidt</p>
+After the blog post about <a href="sapconf 5 - What has changed%3f.html">sapconf 5</a> a few hours ago, I was asked by various people:
+
+<strong>Shall we use 'sapconf 5' instead of 'saptune 2'?</strong>
+
+Before rumors or confusion spread, let me clarify.
+
+In short:
+<ul>
+ 	<li>If you have 'SUSE Linux Enterprise Server' only 'sapconf' is available.</li>
+ 	<li>If you have 'SUSE Linux Enterprise Server for SAP Applications' you can choose between 'sapconf' and 'saptune', but...</li>
+ 	<li>...'saptune' is the more advanced tool and should be preferred!</li>
+ 	<li>If you are using 'sapconf 4', update to 'sapconf 5' soon.</li>
+ 	<li>If you are using 'saptune', stay with 'saptune'!</li>
+</ul>
+&nbsp;
+
+And here a bit more details:
+<table border="1">
+<tbody>
+<tr>
+<th></th>
+<th> sapconf 5</th>
+<th> saptune 2</th>
+</tr>
+<tr>
+<td>Available on SLES?</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr>
+<td>Available on SLES for SAP Applications?</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Does it implements entire SAP notes?</td>
+<td>no</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Can I configure everything?</td>
+<td>yes</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Do I have a verify option?</td>
+<td>no</td>
+<td>yes</td>
+</tr>
+<tr>
+<td>Does it rely on tuned?</td>
+<td>no</td>
+<td>yes<sup>1</sup></td>
+</tr>
+</tbody>
+</table>
+<p style="font-size: 80%"><em><sup>1</sup> Only for starting the 'saptune' binary ('tuned' does no tuning itself). Like with 'sapconf 5' 'tuned' gets removed in one of the next versions.</em></p>
+No further major changes to 'sapconf' are planned so far. Removing 'tuned' was on our list for quiet some time.
+Of course it will maintained further, but it stays a simple tool, which just does needful things.
+<br /><br />
+'Saptune' will go on and at the moment we are in development of the next version. Removing 'tuned' is - among other things - on the list.
+If you have ideas to better 'saptune', now is a good time to step forward!
+<br /><br />
+I hope the world of 'sapconf' and 'saptune' looks a bit clearer now!
+{% endblock content %}
