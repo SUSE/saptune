@@ -185,7 +185,7 @@ func GetGovernor() map[string]string {
 
 	dirCont, err := ioutil.ReadDir(cpuDir)
 	if err != nil {
-		WarningLog("governor settings not supported by the system")
+		WarningLog("Governor settings not supported by the system")
 		gGov["all"] = "none"
 		return gGov
 	}
@@ -269,7 +269,7 @@ func supportsGovernorSettings(value string) bool {
 		setGov = false
 	} else if _, err := os.Stat(path.Join(cpuDir, "cpu0/cpufreq/scaling_governor")); os.IsNotExist(err) {
 		// check only first cpu - cpu0, not all
-		WarningLog("governor settings not supported by the system")
+		WarningLog("Governor settings not supported by the system")
 		setGov = false
 	}
 	return setGov
@@ -305,7 +305,7 @@ func GetFLInfo() (string, string, bool) {
 	// read /sys/devices/system/cpu
 	dirCont, err := ioutil.ReadDir(cpuDir)
 	if err != nil {
-		WarningLog("latency settings not supported by the system")
+		WarningLog("Latency settings not supported by the system")
 		return "all:none", "all:none", cpuStateDiffer
 	}
 	for _, entry := range dirCont {
@@ -430,17 +430,17 @@ func supportsForceLatencySettings(value string) bool {
 		setLatency = false
 	} else if runtime.GOARCH == "ppc64le" {
 		// latency settings are only relevant for Intel-based systems
-		WarningLog("latency settings not relevant for '%s' systems", runtime.GOARCH)
+		WarningLog("Latency settings not relevant for '%s' systems", runtime.GOARCH)
 		setLatency = false
 	} else if value == "all:none" {
 		WarningLog("latency settings not supported by the system")
 		setLatency = false
 	} else if _, err := os.Stat(path.Join(cpuDir, "cpu0")); os.IsNotExist(err) {
 		// check only first cpu - cpu0, not all
-		WarningLog("latency settings not supported by the system")
+		WarningLog("Latency settings not supported by the system")
 		setLatency = false
 	} else if currentCPUDriver() == "none" {
-		WarningLog("latency settings not supported by the system, no active cpuidle driver")
+		WarningLog("Latency settings not supported by the system, no active cpuidle driver")
 		setLatency = false
 	}
 	return setLatency
