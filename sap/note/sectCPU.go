@@ -82,12 +82,12 @@ func OptCPUVal(key, actval, cfgval string) string {
 }
 
 // SetCPUVal applies the settings to the system
-func SetCPUVal(key, value, noteID, savedStates, oval, info string, revert bool) error {
+func SetCPUVal(key, value, noteID, savedStates, oval string, revert bool) error {
 	var err error
 	switch key {
 	case "force_latency":
 		if oval != "untouched" {
-			err = system.SetForceLatency(value, savedStates, info, revert)
+			err = system.SetForceLatency(value, savedStates, revert)
 			if !revert {
 				// the cpu state values of the note need to be stored
 				// after they are set. Special for 'force_latency'
@@ -101,7 +101,7 @@ func SetCPUVal(key, value, noteID, savedStates, oval, info string, revert bool) 
 	case "energy_perf_bias":
 		err = system.SetPerfBias(value)
 	case "governor":
-		err = system.SetGovernor(value, info)
+		err = system.SetGovernor(value)
 	}
 
 	return err

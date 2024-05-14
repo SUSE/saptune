@@ -38,10 +38,10 @@ func GetPerfBias() string {
 	cmdName := cpupowerCmd
 	cmdArgs := []string{"-c", "all", "info", "-b"}
 
-	if !CmdIsAvailable(cmdName) {
-		WarningLog("command '%s' not found", cmdName)
+	if !supportsPerfBiosSettings() {
 		return "all:none"
 	}
+
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil {
 		WarningLog("There was an error running external command 'cpupower -c all info -b': %v, output: %s", err, cmdOut)
@@ -51,6 +51,7 @@ func GetPerfBias() string {
 	for k, line := range strings.Split(strings.TrimSpace(string(cmdOut)), "\n") {
 		switch {
 		case line == notSupportedX86 || line == notSupportedIBM:
+			// safety net - check already done in supportsPerfBiosSettings()
 			return "all:none"
 		case isPBCpu.MatchString(line):
 			str = str + fmt.Sprintf("cpu%d", k/2)
@@ -77,7 +78,7 @@ func GetPerfBias() string {
 // SetPerfBias set CPU performance configuration to the system using 'cpupower' command
 func SetPerfBias(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "set", "-b", value)
-	if !canSetPerfBias() {
+	if !supportsPerfBiosSettings() {
 		return nil
 	}
 
@@ -101,11 +102,11 @@ func SetPerfBias(value string) error {
 	return nil
 }
 
-// canSetPerfBias checks, if Perf Bias can be set
-func canSetPerfBias() bool {
+// supportsPerfBiosSettings checks, if Perf Bias is supported for the system
+func supportsPerfBiosSettings() bool {
 	setPerf := true
 	if GetCSP() == "azure" {
-		WarningLog("Setting Perf Bias is not supported on '%s'\n", CSPAzureLong)
+		WarningLog("Perf Bias settings not supported on '%s'\n", CSPAzureLong)
 		setPerf = false
 	} else if SecureBootEnabled() {
 		WarningLog("Cannot set Perf Bias when SecureBoot is enabled, skipping")
@@ -177,20 +178,28 @@ func GetGovernor() map[string]string {
 	gov := ""
 	gGov := make(map[string]string)
 
+	if !supportsGovernorSettings("") {
+		gGov["all"] = "none"
+		return gGov
+	}
+
 	dirCont, err := ioutil.ReadDir(cpuDir)
 	if err != nil {
+		WarningLog("Governor settings not supported by the system")
+		gGov["all"] = "none"
 		return gGov
 	}
 	for _, entry := range dirCont {
-		if isCPU.MatchString(entry.Name()) {
-			if _, err = os.Stat(path.Join(cpuDir, entry.Name(), "cpufreq", "scaling_governor")); os.IsNotExist(err) {
+		cpuName := entry.Name()
+		if isCPU.MatchString(cpuName) {
+			if _, err = os.Stat(path.Join(cpuDir, cpuName, "cpufreq", "scaling_governor")); os.IsNotExist(err) {
 				// os.Stat needs cpuDir as path - including /sys
-				tmpfile := path.Join(cpuDir, entry.Name(), "cpufreq", "scaling_governor")
-				InfoLog("Unable to identify the current scaling governor for CPU '%s', missing file '%s'. Check your intel_pstate.", entry.Name(), tmpfile)
+				tmpfile := path.Join(cpuDir, cpuName, "cpufreq", "scaling_governor")
+				InfoLog("Unable to identify the current scaling governor for CPU '%s', missing file '%s'. Check your intel_pstate.", cpuName, tmpfile)
 				gov = ""
 			} else {
 				// GetSysString needs cpuDirSys as path - without /sys
-				gov, _ = GetSysString(path.Join(cpuDirSys, entry.Name(), "cpufreq", "scaling_governor"))
+				gov, _ = GetSysString(path.Join(cpuDirSys, cpuName, "cpufreq", "scaling_governor"))
 			}
 			if gov == "" || gov == "NA" || gov == "PNA" {
 				gov = "none"
@@ -202,7 +211,7 @@ func GetGovernor() map[string]string {
 			if oldgov != gov {
 				setAll = false
 			}
-			gGov[entry.Name()] = gov
+			gGov[cpuName] = gov
 		}
 	}
 	if setAll {
@@ -214,9 +223,9 @@ func GetGovernor() map[string]string {
 
 // SetGovernor set performance configuration regarding to cpu frequency
 // to the system using 'cpupower' command
-func SetGovernor(value, info string) error {
+func SetGovernor(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "frequency-set", "-g", value)
-	if !canSetGov(value, info) {
+	if !supportsGovernorSettings(value) {
 		return nil
 	}
 
@@ -235,7 +244,7 @@ func SetGovernor(value, info string) error {
 			tst = "cpu0"
 		}
 		if !isValidGovernor(tst, fields[1]) {
-			WarningLog("'%s' is not a valid governor, skipping.", fields[1])
+			WarningLog("'%s' is not a valid governor for cpu '%s', skipping.", fields[1], tst)
 			continue
 		}
 		out, err := exec.Command(cpupowerCmd, "-c", cpu, "frequency-set", "-g", fields[1]).CombinedOutput()
@@ -247,17 +256,21 @@ func SetGovernor(value, info string) error {
 	return nil
 }
 
-// canSetGov checks, if the governor can be set
-func canSetGov(value, info string) bool {
+// supportsGovernorSettings checks, if governor settings supported by the system
+func supportsGovernorSettings(value string) bool {
 	setGov := true
 	if GetCSP() == "azure" {
-		WarningLog("Setting governor is not supported on '%s'\n", CSPAzureLong)
+		WarningLog("Governor settings not supported on '%s'\n", CSPAzureLong)
 		setGov = false
-	} else if value == "all:none" || info == "notSupportedX86" || info == "notSupportedIBM" {
-		WarningLog("governor settings not supported by the system")
+	} else if value == "all:none" {
+		WarningLog("Governor settings not supported by the system")
 		setGov = false
 	} else if !CmdIsAvailable(cpupowerCmd) {
 		WarningLog("command '%s' not found", cpupowerCmd)
+		setGov = false
+	} else if _, err := os.Stat(path.Join(cpuDir, "cpu0/cpufreq/scaling_governor")); os.IsNotExist(err) {
+		// check only first cpu - cpu0, not all
+		WarningLog("Governor settings not supported by the system")
 		setGov = false
 	}
 	return setGov
@@ -274,7 +287,7 @@ func isValidGovernor(cpu, gov string) bool {
 
 // GetFLInfo retrieve CPU latency configuration from the system and returns
 // the current latency,
-// the latency states of all CPUs to save latency states for 'revert',
+// the latency states of all CPUs to save Latency states for 'revert',
 // if cpu states differ
 // return lat, savedStates, cpuStateDiffer
 func GetFLInfo() (string, string, bool) {
@@ -286,39 +299,46 @@ func GetFLInfo() (string, string, bool) {
 	cpuStateDiffer := false
 	cpuStateMap := make(map[string]string)
 
+	if !supportsForceLatencySettings("") {
+		return "all:none", "all:none", cpuStateDiffer
+	}
+
 	// read /sys/devices/system/cpu
 	dirCont, err := ioutil.ReadDir(cpuDir)
-	if runtime.GOARCH != "ppc64le" && err == nil {
-		// latency settings are only relevant for Intel-based systems
-		for _, entry := range dirCont {
-			// cpu0 ... cpuXY
-			if isCPU.MatchString(entry.Name()) {
-				// read /sys/devices/system/cpu/cpu*/cpuidle
-				cpudirCont, err := ioutil.ReadDir(path.Join(cpuDir, entry.Name(), "cpuidle"))
-				if err != nil {
-					// idle settings not supported for entry.Name()
-					continue
-				}
-				supported = true
-				for _, centry := range cpudirCont {
-					// state0 ... stateXY
-					if isState.MatchString(centry.Name()) {
-						// read /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
-						state, _ := GetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"))
-						// save latency states for 'revert'
-						// savedStates = "cpu1:state0:0 cpu1:state1:0"
-						savedStates = savedStates + " " + entry.Name() + ":" + centry.Name() + ":" + state
-						cpuStateMap[entry.Name()] = cpuStateMap[entry.Name()] + " " + state
-						// read /sys/devices/system/cpu/cpu*/cpuidle/state*/latency
-						lattmp, _ := GetSysInt(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "latency"))
-						if lattmp > maxlat {
-							maxlat = lattmp
-						}
-						if state == "1" {
-							stateDisabled = true
-						} else {
-							lat = lattmp
-						}
+	if err != nil {
+		WarningLog("Latency settings not supported by the system")
+		return "all:none", "all:none", cpuStateDiffer
+	}
+	for _, entry := range dirCont {
+		// cpu0 ... cpuXY
+		cpuName := entry.Name()
+		if isCPU.MatchString(cpuName) {
+			// read /sys/devices/system/cpu/cpu*/cpuidle
+			cpudirCont, err := ioutil.ReadDir(path.Join(cpuDir, cpuName, "cpuidle"))
+			if err != nil {
+				// idle settings not supported for cpuName
+				continue
+			}
+			supported = true
+			for _, centry := range cpudirCont {
+				stateName := centry.Name()
+				// state0 ... stateXY
+				if isState.MatchString(stateName) {
+					// read /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
+					state, _ := GetSysString(path.Join(cpuDirSys, cpuName, "cpuidle", stateName, "disable"))
+					// save latency states for 'revert'
+					// savedStates = "cpu1:state0:0 cpu1:state1:0"
+					savedStates = savedStates + " " + cpuName + ":" + stateName + ":" + state
+					cpuStateMap[cpuName] = cpuStateMap[cpuName] + " " + state
+					// read /sys/devices/system/cpu/cpu*/cpuidle/state*/latency
+					lattmp, _ := GetSysInt(path.Join(cpuDirSys, cpuName, "cpuidle", stateName, "latency"))
+					if lattmp > maxlat {
+						maxlat = lattmp
+					}
+					if state == "1" {
+						stateDisabled = true
+					} else {
+						lat = lattmp
 					}
 				}
 			}
@@ -341,10 +361,10 @@ func GetFLInfo() (string, string, bool) {
 }
 
 // SetForceLatency set CPU latency configuration to the system
-func SetForceLatency(value, savedStates, info string, revert bool) error {
+func SetForceLatency(value, savedStates string, revert bool) error {
 	oldState := ""
 
-	if !canSetForceLatency(value, info) {
+	if !supportsForceLatencySettings(value) {
 		return nil
 	}
 
@@ -352,49 +372,51 @@ func SetForceLatency(value, savedStates, info string, revert bool) error {
 
 	dirCont, err := ioutil.ReadDir(cpuDir)
 	if err != nil {
-		WarningLog("latency settings not supported by the system")
+		WarningLog("Latency settings not supported by the system")
 		return err
 	}
 	for _, entry := range dirCont {
 		// cpu0 ... cpuXY
-		if isCPU.MatchString(entry.Name()) {
-			cpudirCont, errns := ioutil.ReadDir(path.Join(cpuDir, entry.Name(), "cpuidle"))
+		cpuName := entry.Name()
+		if isCPU.MatchString(cpuName) {
+			cpudirCont, errns := ioutil.ReadDir(path.Join(cpuDir, cpuName, "cpuidle"))
 			if errns != nil {
-				WarningLog("idle settings not supported for '%s'", entry.Name())
+				WarningLog("idle settings not supported for '%s'", cpuName)
 				continue
 			}
 			for _, centry := range cpudirCont {
+				stateName := centry.Name()
 				// state0 ... stateXY
-				if isState.MatchString(centry.Name()) {
+				if isState.MatchString(stateName) {
 					// read /sys/devices/system/cpu/cpu*/cpuidle/state*/latency
-					lat, _ := GetSysInt(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "latency"))
+					lat, _ := GetSysInt(path.Join(cpuDirSys, cpuName, "cpuidle", stateName, "latency"))
 					// write /sys/devices/system/cpu/cpu*/cpuidle/state*/disable
 					if revert {
 						// revert
 						for _, ole := range strings.Fields(savedStates) {
 							FLFields := strings.Split(ole, ":")
 							if len(FLFields) > 2 {
-								if FLFields[0] == entry.Name() && FLFields[1] == centry.Name() {
+								if FLFields[0] == cpuName && FLFields[1] == stateName {
 									oldState = FLFields[2]
 								}
 							}
 						}
 						if oldState != "" {
-							err = SetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"), oldState)
+							err = SetSysString(path.Join(cpuDirSys, cpuName, "cpuidle", stateName, "disable"), oldState)
 							// clear latency value for next cpu/state cycle
 							oldState = ""
 						}
 					} else {
 						// apply
-						oldState, _ = GetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"))
+						oldState, _ = GetSysString(path.Join(cpuDirSys, cpuName, "cpuidle", stateName, "disable"))
 						// save old latency states for 'revert'
 						if lat > flval {
 							// set new latency states
-							err = SetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"), "1")
+							err = SetSysString(path.Join(cpuDirSys, cpuName, "cpuidle", stateName, "disable"), "1")
 						}
 						if lat <= flval && oldState == "1" {
 							// reset previous set latency state
-							err = SetSysString(path.Join(cpuDirSys, entry.Name(), "cpuidle", centry.Name(), "disable"), "0")
+							err = SetSysString(path.Join(cpuDirSys, cpuName, "cpuidle", stateName, "disable"), "0")
 						}
 					}
 				}
@@ -405,18 +427,45 @@ func SetForceLatency(value, savedStates, info string, revert bool) error {
 	return err
 }
 
-// canSetForceLatency checks, if Force Latency can be set
-func canSetForceLatency(value, info string) bool {
+// supportsForceLatencySettings checks, if Force Latency can be set
+func supportsForceLatencySettings(value string) bool {
 	setLatency := true
 	if GetCSP() == "azure" {
-		WarningLog("latency settings are not supported on '%s'\n", CSPAzureLong)
+		WarningLog("Latency settings are not supported on '%s'\n", CSPAzureLong)
 		setLatency = false
-	}
-	if value == "all:none" || info == "notSupportedX86" || info == "notSupportedIBM" {
-		WarningLog("latency settings not supported by the system")
+	} else if runtime.GOARCH == "ppc64le" {
+		// latency settings are only relevant for Intel-based systems
+		WarningLog("Latency settings not relevant for '%s' systems", runtime.GOARCH)
+		setLatency = false
+	} else if value == "all:none" {
+		WarningLog("Latency settings not supported by the system")
+		setLatency = false
+	} else if _, err := os.Stat(path.Join(cpuDir, "cpu0")); os.IsNotExist(err) {
+		// check only first cpu - cpu0, not all
+		WarningLog("Latency settings not supported by the system")
+		setLatency = false
+	} else if currentCPUDriver() == "none" {
+		WarningLog("Latency settings not supported by the system, no active cpuidle driver")
 		setLatency = false
 	}
 	return setLatency
+}
+
+// currentCPUDriver returns the current active cpuidle driver from
+// /sys/devices/system/cpu/cpuidle/current_driver
+func currentCPUDriver() string {
+	cpuDriver := "none"
+	cpuDriverFile := path.Join(cpuDir, "/cpuidle/current_driver")
+	if _, err := os.Stat(cpuDriverFile); os.IsNotExist(err) {
+		InfoLog("File '%s' not found - %v", cpuDriverFile, err)
+		return cpuDriver
+	}
+	if val, err := ioutil.ReadFile(cpuDriverFile); err != nil {
+		InfoLog("Problems reading file '%s' - %+v\n", cpuDriverFile, err)
+	} else {
+		cpuDriver = string(val)
+	}
+	return cpuDriver
 }
 
 // checkCPUState checks, if all cpus have the same state settings

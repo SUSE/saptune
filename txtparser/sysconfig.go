@@ -51,6 +51,8 @@ func ParseSysconfig(input string) (*Sysconfig, error) {
 			leadingComments = append(leadingComments, line)
 		} else if eqChar := strings.IndexRune(line, '='); eqChar != -1 {
 			// Line is a key-value pair
+			// remove trailing comments from line
+			line = system.StripComment(line, `\s#[^#]|"\s#[^#]`)
 			key := strings.TrimSpace(line[0:eqChar])
 			value := strings.Trim(strings.TrimSpace(line[eqChar+1:]), `"`)
 			kv := &SysconfigEntry{
