@@ -30,65 +30,40 @@ var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debu
 var SaptuneVersion = ""
 
 func main() {
-	system.InitOut(logSwitch)
-	if !system.ChkCliSyntax() {
-		actions.PrintHelpAndExit(os.Stdout, 1)
+	preliminaryChecks()
+
+	systemSetup()
+
+	versionCheck()
+
+	tuningInitialization()
+
+	// Execute the selected action
+	actions.CheckOrphanedOverrides()
+	actions.SelectAction(os.Stdout, tuneApp, SaptuneVersion)
+	system.ErrorExit("", 0)
+}
+
+func tuningInitialization() {
+	// Initialise application configuration and tuning procedures
+	solutionSelector := system.GetSolutionSelector()
+	archSolutions, exist := solution.AllSolutions[solutionSelector]
+	system.AddGap(os.Stdout)
+	if !exist {
+		system.ErrorExit("The system architecture (%s) is not supported.", solutionSelector)
 	}
 
-	// get saptune version and log switches from saptune sysconfig file
-	SaptuneVersion = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
+	tuningOptions = note.GetTuningOptions(actions.NoteTuningSheets, actions.ExtraTuningSheets)
+	tuneApp = app.InitialiseApp("", "", tuningOptions, archSolutions)
 
-	arg1 := system.CliArg(1)
-	if arg1 == "version" || system.IsFlagSet("version") {
-		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
-		system.Jcollect(SaptuneVersion)
-		system.ErrorExit("", 0)
+	checkUpdateLeftOvers()
+	if err := tuneApp.NoteSanityCheck(); err != nil {
+		system.ErrorExit("Error during NoteSanityCheck - '%v'\n", err)
 	}
-	if arg1 == "help" || system.IsFlagSet("help") {
-		system.JnotSupportedYet()
-		actions.PrintHelpAndExit(os.Stdout, 0)
-	}
-	if arg1 == "" {
-		actions.PrintHelpAndExit(os.Stdout, 1)
-	}
+	checkForTuned()
+}
 
-	// All other actions require super user privilege
-	if os.Geteuid() != 0 {
-		fmt.Fprintf(os.Stderr, "Please run saptune with root privilege.\n")
-		system.ErrorExit("", 1)
-	}
-
-	// activate logging
-	system.LogInit(logFile, logSwitch)
-	// now system.ErrorExit can write to log and os.Stderr. No longer extra
-	// care is needed.
-	system.InfoLog("saptune (%s) started with '%s'", actions.RPMVersion, strings.Join(os.Args, " "))
-
-	if arg1 == "lock" {
-		if arg2 := system.CliArg(2); arg2 == "remove" {
-			system.JnotSupportedYet()
-			system.ReleaseSaptuneLock()
-			system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
-			system.ErrorExit("", 0)
-		} else {
-			actions.PrintHelpAndExit(os.Stdout, 1)
-		}
-	}
-	callSaptuneCheckScript(arg1)
-
-	// only one instance of saptune should run
-	// check and set saptune lock file
-	system.SaptuneLock()
-	defer system.ReleaseSaptuneLock()
-
-	// cleanup runtime files
-	system.CleanUpRun()
-	// additional clear ignore flag for the sapconf/saptune service deadlock
-	os.Remove("/run/.saptune.ignore")
-
-	//check, running config exists
-	checkWorkingArea()
-
+func versionCheck() {
 	switch SaptuneVersion {
 	case "1":
 		cmd := exec.Command(saptuneV1, os.Args[1:]...)
@@ -106,26 +81,71 @@ func main() {
 	default:
 		system.ErrorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", SaptuneVersion, 128)
 	}
+}
 
-	solutionSelector := system.GetSolutionSelector()
-	archSolutions, exist := solution.AllSolutions[solutionSelector]
-	system.AddGap(os.Stdout)
-	if !exist {
-		system.ErrorExit("The system architecture (%s) is not supported.", solutionSelector)
-		return
-	}
-	// Initialise application configuration and tuning procedures
-	tuningOptions = note.GetTuningOptions(actions.NoteTuningSheets, actions.ExtraTuningSheets)
-	tuneApp = app.InitialiseApp("", "", tuningOptions, archSolutions)
+func systemSetup() {
+	// only one instance of saptune should run check and set saptune lock file
+	system.SaptuneLock()
+	defer system.ReleaseSaptuneLock()
 
-	checkUpdateLeftOvers()
-	if err := tuneApp.NoteSanityCheck(); err != nil {
-		system.ErrorExit("Error during NoteSanityCheck - '%v'\n", err)
+	// cleanup runtime files
+	system.CleanUpRun()
+
+	// additional clear ignore flag for the sapconf/saptune service deadlock
+	os.Remove("/run/.saptune.ignore")
+
+	//check, running config exists
+	checkWorkingArea()
+}
+
+func preliminaryChecks() {
+	// get saptune version and log switches from saptune sysconfig file
+	// All other actions require super user privilege
+	system.InitOut(logSwitch)
+	if !system.ChkCliSyntax() {
+		actions.PrintHelpAndExit(os.Stdout, 1)
 	}
-	checkForTuned()
-	actions.CheckOrphanedOverrides()
-	actions.SelectAction(os.Stdout, tuneApp, SaptuneVersion)
-	system.ErrorExit("", 0)
+
+	SaptuneVersion = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
+	arg1 := system.CliArg(1)
+
+	if arg1 == "version" || system.IsFlagSet("version") {
+		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
+		system.Jcollect(SaptuneVersion)
+		system.ErrorExit("", 0)
+	} else if arg1 == "help" || system.IsFlagSet("help") {
+		system.JnotSupportedYet()
+		actions.PrintHelpAndExit(os.Stdout, 0)
+	} else if arg1 == "" {
+		actions.PrintHelpAndExit(os.Stdout, 1)
+	} else if os.Geteuid() != 0 {
+		fmt.Fprintf(os.Stderr, "Please run saptune with root privilege.\n")
+		system.ErrorExit("", 1)
+	} else { // All the action below are root privileged
+		// Activate logging
+		system.LogInit(logFile, logSwitch)
+		// now system.ErrorExit can write to log and os.Stderr.
+		// No longer extra care is needed.
+		system.InfoLog("saptune (%s) started with '%s'", actions.RPMVersion, strings.Join(os.Args, " "))
+
+		if arg1 == "lock" {
+			if system.CliArg(2) == "remove" {
+				system.JnotSupportedYet()
+				system.ReleaseSaptuneLock()
+				system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
+				system.ErrorExit("", 0)
+			} else {
+				actions.PrintHelpAndExit(os.Stdout, 1)
+			}
+		} else if arg1 == "check" {
+			err := callSaptuneCheckScript()
+			if err != nil {
+				system.ErrorExit("command '%+s' failed with error '%v'\n", saptcheck, err)
+			} else {
+				system.ErrorExit("", 0)
+			}
+		}
+	}
 }
 
 // checkUpdateLeftOvers checks for left over files from the migration of
@@ -157,21 +177,15 @@ func checkForTuned() {
 // callSaptuneCheckScript will simply call the saptune_check script
 // it's done before the saptune lock is set, but after the check for
 // running as root
-func callSaptuneCheckScript(arg string) {
-	if arg == "check" {
-		system.JnotSupportedYet()
-		// call external scrip saptune_check
-		cmd := exec.Command(saptcheck)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		if err != nil {
-			system.ErrorExit("command '%+s' failed with error '%v'\n", saptcheck, err)
-		} else {
-			system.ErrorExit("", 0)
-		}
-	}
+func callSaptuneCheckScript() error {
+	system.JnotSupportedYet()
+	// call external scrip saptune_check
+	cmd := exec.Command(saptcheck)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	return err
 }
 
 // checkWorkingArea checks, if solution and note configs exist in the working
