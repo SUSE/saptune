@@ -84,7 +84,8 @@ func versionCheck() {
 }
 
 func systemSetup() {
-	// only one instance of saptune should run check and set saptune lock file
+	// Only one instance of saptune should run
+	// Check and set saptune lock file
 	system.SaptuneLock()
 	defer system.ReleaseSaptuneLock()
 
