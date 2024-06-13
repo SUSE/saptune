@@ -2,8 +2,8 @@
 # Description:    You want to use SAP software on SUSE Linux Enterprise Server 15 (SLES 15) or SUSE Linux Enterprise Server 15 for SAP Applications  (SLES for SAP 15).
 
 [version]
-VERSION=47
-DATE=04.09.2023
+VERSION=48
+DATE=21.06.2024
 DESCRIPTION=SUSE Linux Enterprise Server 15: Installation Note
 REFERENCES=https://launchpad.support.sap.com/#/notes/2578899
 
@@ -85,6 +85,12 @@ vm.dirty_bytes=629145600
 # vm.dirty_background_bytes should be set to 314572800 (see TID_7010287)
 #
 vm.dirty_background_bytes=314572800
+
+# PID allocation wrap value.
+# When the kernel's next PID value reaches this value, it wraps back to a
+# minimum PID value.
+# PIDs of value pid_max or larger are not allocated.
+kernel.pid_max=4194304
 
 [filesystem:os=15-SP2]
 xfs_options= -nobarrier, -barrier
