@@ -3,7 +3,7 @@
 
 [version]
 VERSION=48
-DATE=21.06.2024
+DATE=28.06.2024
 DESCRIPTION=SUSE Linux Enterprise Server 15: Installation Note
 REFERENCES=https://launchpad.support.sap.com/#/notes/2578899
 
@@ -11,6 +11,7 @@ REFERENCES=https://launchpad.support.sap.com/#/notes/2578899
 # start the related services
 uuidd.socket=start
 sysstat.service=start
+sysctl-logger.service=start
 
 [block]
 # The default I/O scheduler for single-queued block layer devices offers

@@ -1,8 +1,6 @@
 [Unit]
 Description=Optimise system for running SAP workloads
 After=syslog.target systemd-sysctl.service network.target tuned.service multipathd.service
-# SAP Note 2578899
-Wants=uuidd.socket sysctl-logger.service
 
 [Service]
 Type=oneshot
