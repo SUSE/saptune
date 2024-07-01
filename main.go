@@ -125,26 +125,32 @@ func preliminaryChecks() {
 	} else { // All the action below are root privileged
 		// Activate logging
 		system.LogInit(logFile, logSwitch)
+
 		// now system.ErrorExit can write to log and os.Stderr.
 		// No longer extra care is needed.
+
 		system.InfoLog("saptune (%s) started with '%s'", actions.RPMVersion, strings.Join(os.Args, " "))
 
-		if arg1 == "lock" {
-			if system.CliArg(2) == "remove" {
-				system.JnotSupportedYet()
-				system.ReleaseSaptuneLock()
-				system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
-				system.ErrorExit("", 0)
-			} else {
-				actions.PrintHelpAndExit(os.Stdout, 1)
-			}
-		} else if arg1 == "check" {
-			err := callSaptuneCheckScript()
-			if err != nil {
-				system.ErrorExit("command '%+s' failed with error '%v'\n", saptcheck, err)
-			} else {
-				system.ErrorExit("", 0)
-			}
+		preliminaryRootPrivilegedChecks(arg1)
+	}
+}
+
+func preliminaryRootPrivilegedChecks(arg1 string) {
+	if arg1 == "lock" {
+		if system.CliArg(2) == "remove" {
+			system.JnotSupportedYet()
+			system.ReleaseSaptuneLock()
+			system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
+			system.ErrorExit("", 0)
+		} else {
+			actions.PrintHelpAndExit(os.Stdout, 1)
+		}
+	} else if arg1 == "check" {
+		err := callSaptuneCheckScript()
+		if err != nil {
+			system.ErrorExit("command '%+s' failed with error '%v'\n", saptcheck, err)
+		} else {
+			system.ErrorExit("", 0)
 		}
 	}
 }
