@@ -316,78 +316,87 @@ func chkCmdOpts(cmdLinePos map[string]int) bool {
 		DebugLog("chkCmdOpts nok - no command options set or too few options and/or non of the flags set, which need further checks, so let the 'old' default checks set the appropriate result")
 		return true
 	}
-	// saptune solution change [--force] SOLUTIONNAME
-	// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
-	if !chkForceFlag(cmdLinePos) {
-		DebugLog("chkCmdOpts - chkForceFlag failed")
-		ret = false
+
+	flagToCheck := []string{
+		// saptune solution change [--force] SOLUTIONNAME
+		// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
+		"chkForceFlag",
+		// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
+		"chkDryrunFlag",
+		// saptune note verify [--colorscheme <color scheme>] [--show-non-compliant] [NOTEID]
+		// saptune solution verify [--colorscheme <color scheme>] [--show-non-compliant] [SOLUTIONNAME]
+		"chkVerifySyntax",
+		// saptune (service) status  [--non-compliance-check]
+		"chkServiceStatusSyntax",
 	}
-	// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
-	if !chkDryrunFlag(cmdLinePos) {
-		DebugLog("chkCmdOpts - chkDryrunFlag failed")
-		ret = false
+
+	for _, flag := range flagToCheck {
+		if !checkFlag(cmdLinePos, flag) {
+			debugString := "chkCmdOpts - " + flag + " failed"
+			DebugLog(debugString)
+			ret = false
+		}
 	}
-	// saptune note verify [--colorscheme <color scheme>] [--show-non-compliant] [NOTEID]
-	// saptune solution verify [--colorscheme <color scheme>] [--show-non-compliant] [SOLUTIONNAME]
-	if !chkVerifySyntax(cmdLinePos) {
-		DebugLog("chkCmdOpts - chkVerifySyntax failed")
-		ret = false
-	}
-	// saptune (service) status  [--non-compliance-check]
-	if !chkServiceStatusSyntax(cmdLinePos) {
-		DebugLog("chkCmdOpts - chkServiceStatusSyntax failed")
-		ret = false
-	}
+
 	return ret
 }
 
-// chkForceFlag checks the syntax of 'saptune solution change'
-// and 'saptune staging release' command line regarding the use
-// of the 'force' flag
-// saptune solution change [--force] SOLUTIONNAME
-// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
-func chkForceFlag(cmdLinePos map[string]int) bool {
+func checkFlag(cmdLinePos map[string]int, flagValue string) bool {
 	stArgs := os.Args
-	ret := true
-	if IsFlagSet("force") {
-		if !(stArgs[cmdLinePos["realm"]] == "solution" && stArgs[cmdLinePos["cmd"]] == "change") && !(stArgs[cmdLinePos["realm"]] == "staging" && stArgs[cmdLinePos["cmd"]] == "release") {
-			DebugLog("chkForceFlag failed - 'force' flag used with wrong realm '%+v' or command '%+v'", stArgs[cmdLinePos["realm"]], stArgs[cmdLinePos["cmd"]])
-			ret = false
+	result := true
+
+	runChecks := func(flagCase string, flagValue string, cliArg string, notInRealm bool, isWrongPosition bool) bool {
+		result := true
+		if IsFlagSet(cliArg) {
+			if notInRealm {
+				DebugLog("%v failed - '%v' flag used with wrong realm '%+v' or wrong command '%+v'", flagCase, flagValue, stArgs[cmdLinePos["realm"]], stArgs[cmdLinePos["cmd"]])
+				result = false
+			}
+			if isWrongPosition {
+				DebugLog("%v failed - '%v' flag on wrong position in command line", flagCase, flagCase)
+				result = false
+			}
 		}
-		if stArgs[cmdLinePos["cmdOpt"]] != "--force" {
-			DebugLog("chkForceFlag failed - 'force' flag on wrong position in command line")
-			ret = false
-		}
+		return result
 	}
-	return ret
+	syntaxCheckNotRealm := func(realmCommand [][]string) bool {
+		var result bool = true
+		for _, k := range realmCommand {
+			result = result && !(stArgs[cmdLinePos["realm"]] == k[0] && stArgs[cmdLinePos["cmd"]] == k[1])
+		}
+		return result
+	}
+
+	// os.Args = []string{"saptune", "staging", "release", "--force"}
+	switch flagValue {
+	case "chkForceFlag":
+		// Checks the syntax of 'saptune solution change' and 'saptune staging release' regarding the 'force' flag
+		notInRealm := syntaxCheckNotRealm([][]string{{"solution", "change"}, {"staging", "release"}})
+		isWrongPosition := stArgs[cmdLinePos["cmdOpt"]] != "--force"
+		result = runChecks("chkForceFlag", "force", "force", notInRealm, isWrongPosition)
+
+	case "chkServiceStatusSyntax":
+		// Checks the syntax of 'saptune service status' or 'saptune daemon status'
+		notInRealm := syntaxCheckNotRealm([][]string{{"service", "status"}, {"daemon", "status"}})
+
+		isWrongPosition := stArgs[cmdLinePos["cmdOpt"]] != "--non-compliance-check"
+		result = runChecks("chkServiceStatusSyntax", "non-compliance-check", "non-compliance-check", notInRealm, isWrongPosition)
+
+	case "chkDryrunFlag":
+		// Checks the syntax of 'saptune staging release' regarding the use of the 'dry-run' flag
+		notInRealm := syntaxCheckNotRealm([][]string{{"staging", "release"}})
+		isWrongPosition := stArgs[cmdLinePos["cmdOpt"]] != "--dry-run"
+		result = runChecks("chkDryrunFlag", "dry-run", "dryrun", notInRealm, isWrongPosition)
+
+	case "chkVerifySyntax":
+		result = chkVerifySyntax(stArgs, cmdLinePos, result)
+	}
+
+	return result
 }
 
-// chkDryrunFlag checks the syntax of 'saptune staging release'
-// command line regarding command line the use of the 'dry-run' flag
-// saptune staging release [--force|--dry-run] [NOTE...|SOLUTION...|all]
-func chkDryrunFlag(cmdLinePos map[string]int) bool {
-	stArgs := os.Args
-	ret := true
-	if IsFlagSet("dryrun") {
-		if !(stArgs[cmdLinePos["realm"]] == "staging" && stArgs[cmdLinePos["cmd"]] == "release") {
-			DebugLog("chkDryrunFlag failed - 'dryrun' flag used with wrong realm '%+v' or wrong command '%+v'", stArgs[cmdLinePos["realm"]], stArgs[cmdLinePos["cmd"]])
-			ret = false
-		}
-		if stArgs[cmdLinePos["cmdOpt"]] != "--dry-run" {
-			DebugLog("chkDryrunFlag failed - 'dryrun' flag on wrong position in command line")
-			ret = false
-		}
-	}
-	return ret
-}
-
-// chkVerifySyntax checks the syntax of 'saptune note|solution verify' command
-// line regarding command line options
-// saptune note verify [--colorscheme <color scheme>] [--show-non-compliant] [NOTEID]
-// saptune solution verify [--colorscheme <color scheme>] [--show-non-compliant] [SOLUTIONNAME]
-func chkVerifySyntax(cmdLinePos map[string]int) bool {
-	stArgs := os.Args
-	ret := true
+// Checks the syntax of 'saptune note|solution verify' regarding options both flags set, check order flag at wrong place in arg list
+func chkVerifySyntax(stArgs []string, cmdLinePos map[string]int, ret bool) bool {
 	if IsFlagSet("colorscheme") || IsFlagSet("show-non-compliant") {
 		if !((stArgs[cmdLinePos["realm"]] == "note" || stArgs[cmdLinePos["realm"]] == "solution") && stArgs[cmdLinePos["cmd"]] == "verify") {
 			DebugLog("chkVerifySyntax failed - 'colorscheme' or 'show-non-compliant' flag used with wrong realm '%+v' or wrong command '%+v'", stArgs[cmdLinePos["realm"]], stArgs[cmdLinePos["cmd"]])
@@ -397,7 +406,7 @@ func chkVerifySyntax(cmdLinePos map[string]int) bool {
 	DebugLog("chkVerifySyntax - colorscheme is '%+v', show-non-compliant is '%+v'", GetFlagVal("colorscheme"), IsFlagSet("show-non-compliant"))
 
 	if IsFlagSet("colorscheme") && IsFlagSet("show-non-compliant") {
-		// both flags set, check order
+
 		poscor := 2
 		if GetFlagVal("colorscheme") == "flag_value" {
 			poscor = 1
@@ -412,36 +421,14 @@ func chkVerifySyntax(cmdLinePos map[string]int) bool {
 			ret = false
 		}
 		if stArgs[cmdLinePos["cmdOpt"]] != "--colorscheme" {
-			// flag at wrong place in arg list
+
 			DebugLog("chkVerifySyntax failed - 'colorscheme' flag on wrong position in command line")
 			ret = false
 		}
 	} else if IsFlagSet("show-non-compliant") && stArgs[cmdLinePos["cmdOpt"]] != "--show-non-compliant" {
-		// flag at wrong place in arg list
+
 		DebugLog("chkVerifySyntax failed - 'show-non-compliant' flag on wrong position in command line")
 		ret = false
-	}
-	return ret
-}
-
-// chkServiceStatusSyntax checks the syntax of 'saptune service status' or
-// 'saptune daemon status' command line regarding command line options
-// saptune service status [--non-compliance-check]
-// saptune status [--non-compliance-check] is checked earlier (as 'realm')
-func chkServiceStatusSyntax(cmdLinePos map[string]int) bool {
-	stArgs := os.Args
-	ret := true
-	if IsFlagSet("non-compliance-check") {
-		// saptune service status --non-compliance-check
-		// saptune daemon status --non-compliance-check
-		if !(stArgs[cmdLinePos["realm"]] == "service" && stArgs[cmdLinePos["cmd"]] == "status") && !(stArgs[cmdLinePos["realm"]] == "daemon" && stArgs[cmdLinePos["cmd"]] == "status") {
-			DebugLog("chkServiceStatusSyntax failed - 'non-compliance-check' flag used with wrong realm '%+v' or wrong command '%+v'", stArgs[cmdLinePos["realm"]], stArgs[cmdLinePos["cmd"]])
-			ret = false
-		}
-		if stArgs[cmdLinePos["cmdOpt"]] != "--non-compliance-check" {
-			DebugLog("chkServiceStatusSyntax failed - 'non-compliance-check' flag on wrong position in command line")
-			ret = false
-		}
 	}
 	return ret
 }
