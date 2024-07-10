@@ -145,7 +145,7 @@ func errExitOut(writer io.Writer, template string, stuff ...interface{}) {
 	if len(stuff) >= 4 {
 		stuff = stuff[2 : len(stuff)-2]
 	}
-	ErrLog(template+"\n", stuff...)
+	ErrorLog(template+"\n", stuff...)
 }
 
 // ErrorExit prints the message to stderr and exit 1.
