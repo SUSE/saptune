@@ -43,14 +43,7 @@ func DebugLog(txt string, stuff ...interface{}) {
 
 // NoticeLog sends text to the noticeLogger and stdout
 func NoticeLog(txt string, stuff ...interface{}) {
-	if noticeLogger != nil {
-		noticeLogger.SetPrefix(logTimeFormat() + severNoticeFormat + logpidFormat)
-		noticeLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg("NOTICE", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-		if verboseSwitch == "on" {
-			fmt.Fprintf(os.Stdout, "NOTICE: "+txt+"\n", stuff...)
-		}
-	}
+	messageLogger("NOTICE", txt, stuff)
 }
 
 // InfoLog sends text only to the infoLogger
@@ -63,26 +56,12 @@ func InfoLog(txt string, stuff ...interface{}) {
 
 // WarningLog sends text to the warningLogger and stderr
 func WarningLog(txt string, stuff ...interface{}) {
-	if warningLogger != nil {
-		warningLogger.SetPrefix(logTimeFormat() + severWarnFormat + logpidFormat)
-		warningLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg("WARNING", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-		if verboseSwitch == "on" {
-			fmt.Fprintf(os.Stderr, "WARNING: "+txt+"\n", stuff...)
-		}
-	}
+	messageLogger("WARNING", txt, stuff)
 }
 
 // ErrorLog sends text to the errorLogger and stderr
 func ErrorLog(txt string, stuff ...interface{}) error {
-	if errorLogger != nil {
-		errorLogger.SetPrefix(logTimeFormat() + severErrorFormat + logpidFormat)
-		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg("ERROR", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-		if errorSwitch == "on" {
-			fmt.Fprintf(os.Stderr, "ERROR: "+txt+"\n", stuff...)
-		}
-	}
+	messageLogger("ERROR", txt, stuff)
 	return fmt.Errorf(txt+"\n", stuff...)
 }
 
@@ -118,4 +97,15 @@ func SwitchOffLogging() {
 	verboseSwitch = "off"
 	errorSwitch = "off"
 	log.SetOutput(ioutil.Discard)
+}
+
+func messageLogger(typeLog string, txt string, stuff []interface{}) {
+	if noticeLogger != nil {
+		noticeLogger.SetPrefix(logTimeFormat() + severNoticeFormat + logpidFormat)
+		noticeLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+		jWriteMsg(typeLog, fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
+		if verboseSwitch == "on" {
+			fmt.Fprintf(os.Stdout, typeLog+": "+txt+"\n", stuff...)
+		}
+	}
 }
