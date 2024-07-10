@@ -28,28 +28,6 @@ const (
 
 var dmiDir = "/sys/class/dmi"
 
-// dmidecode key files
-// /usr/sbin/dmidecode -s chassis-asset-tag
-var dmiChassisAssetTag = "/sys/class/dmi/id/chassis_asset_tag"
-
-// /usr/sbin/dmidecode -s board-vendor
-var dmiBoardVendor = "/sys/class/dmi/id/board_vendor"
-
-// /usr/sbin/dmidecode -s bios-vendor
-var dmiBiosVendor = "/sys/class/dmi/id/bios_vendor"
-
-// /usr/sbin/dmidecode -s bios-version
-var dmiBiosVersion = "/sys/class/dmi/id/bios_version"
-
-// /usr/sbin/dmidecode -s system-version
-var dmiSystemVersion = "/sys/class/dmi/id/system_version"
-
-// /usr/sbin/dmidecode -s sys-vendor
-var dmiSysVendor = "/sys/class/dmi/id/sys_vendor"
-
-// /usr/sbin/dmidecode -s system-manufacturer
-var dmiSystemManufacturer = "/sys/class/dmi/id/system-manufacturer"
-
 // CSP identifier
 var isAzureCat = regexp.MustCompile(`.*(7783-7084-3265-9085-8269-3286-77|MSFT AZURE VM).*`)
 var isAzure = regexp.MustCompile(`.*[mM]icrosoft [cC]orporation.*`)
@@ -64,13 +42,21 @@ type manufacturerProviders struct {
 }
 
 var allManufacturerProviders = [...]manufacturerProviders{
-	{dmiChassisAssetTag, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
-	{dmiSystemManufacturer, map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
-	{dmiBoardVendor, map[*regexp.Regexp]string{isAWS: CSPAWS}},
-	{dmiBiosVersion, map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
-	{dmiBiosVendor, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
-	{dmiSystemVersion, map[*regexp.Regexp]string{isAWS: CSPAWS}},
-	{dmiSysVendor, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+	// dmidecode key files
+	// /usr/sbin/dmidecode -s chassis-asset-tag
+	{"/sys/class/dmi/id/chassis_asset_tag", map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+	// /usr/sbin/dmidecode -s system-manufacturer
+	{"/sys/class/dmi/id/system-manufacturer", map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
+	// /usr/sbin/dmidecode -s board-vendor
+	{"/sys/class/dmi/id/board_vendor", map[*regexp.Regexp]string{isAWS: CSPAWS}},
+	// /usr/sbin/dmidecode -s bios-version
+	{"/sys/class/dmi/id/bios_version", map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
+	// /usr/sbin/dmidecode -s bios-vendor
+	{"/sys/class/dmi/id/bios_vendor", map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
+	// /usr/sbin/dmidecode -s system-version
+	{"/sys/class/dmi/id/system_version", map[*regexp.Regexp]string{isAWS: CSPAWS}},
+	// /usr/sbin/dmidecode -s sys-vendor
+	{"/sys/class/dmi/id/sys_vendor", map[*regexp.Regexp]string{isAWS: CSPAWS}},
 }
 
 // GetDMIDecode
@@ -100,11 +86,9 @@ func GetCSP() string {
 		return cloudServiceProvider
 	}
 
-	for {
+	for _, mp := range allManufacturerProviders {
 		if cloudServiceProvider == "" {
-			for _, mp := range allManufacturerProviders {
-				cloudServiceProvider = getCloudServiceProvider(mp.Manufacturer, mp.Providers)
-			}
+			cloudServiceProvider = getCloudServiceProvider(mp.Manufacturer, mp.Providers)
 		} else {
 			break
 		}
