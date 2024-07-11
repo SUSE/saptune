@@ -59,6 +59,15 @@ func WarningLog(txt string, stuff ...interface{}) {
 	messageLogger("WARNING", txt, stuff)
 }
 
+// ErrLog sends text only to the errorLogger
+func ErrLog(txt string, stuff ...interface{}) {
+	if errorLogger != nil {
+		errorLogger.SetPrefix(logTimeFormat() + severErrorFormat + logpidFormat)
+		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
+		jWriteMsg("ERROR", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
+	}
+}
+
 // ErrorLog sends text to the errorLogger and stderr
 func ErrorLog(txt string, stuff ...interface{}) error {
 	messageLogger("ERROR", txt, stuff)

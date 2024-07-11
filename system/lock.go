@@ -43,7 +43,7 @@ func SaptuneLock() {
 	setLock := false
 	if _, ok := lockCommands[lcmd]; !ok {
 		// not a valid combination of 'realm command'
-		ErrorLog("not a valid combination of 'realm command' discovered - %s\n", lcmd)
+		ErrLog("not a valid combination of 'realm command' discovered - %s\n", lcmd)
 		setLock = true
 	} else {
 		setLock = lockCommands[lcmd]
