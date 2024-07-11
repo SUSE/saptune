@@ -26,6 +26,13 @@ type stageComparison struct {
 	MatchExpectation bool
 }
 
+type writerDescriptor struct {
+	writer         io.Writer
+	textApplied    string
+	textEnabled    string
+	textNotEnabled string
+}
+
 var stagingSwitch = false
 var stagingOptions = note.GetTuningOptions(StagingSheets, "")
 var stgFiles stageFiles
@@ -331,19 +338,8 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool
 	if stgFiles.StageAttributes[stageName]["override"] == "true" {
 		fmt.Fprint(writer, txtOverrideExists)
 	}
-	if flag != "new" {
-		if stgFiles.StageAttributes[stageName]["applied"] == "true" {
-			fmt.Fprint(writer, txtSolApplied)
-			retVal = system.MaxI(retVal, 1)
-		} else if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
-			fmt.Fprint(writer, txtSolEnabled)
-			if flag == "deleted" {
-				retVal = system.MaxI(retVal, 1)
-			}
-		} else {
-			fmt.Fprint(writer, txtSolNotEnabled)
-		}
-	}
+
+	retVal = writeIfNew(flag, stageName, writerDescriptor{writer, txtSolApplied, txtSolEnabled, txtSolNotEnabled}, retVal)
 
 	for _, note := range strings.Split(stgFiles.StageAttributes[stageName]["notes"], " ") {
 		if note == "" {
@@ -382,6 +378,29 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool
 	return releaseable, retVal
 }
 
+func writeIfNew(flag string, stageName string, toWrite writerDescriptor, retVal int) int {
+	writer := toWrite.writer
+	textApplied := toWrite.textApplied
+	textEnabled := toWrite.textEnabled
+	textNotEnabled := toWrite.textNotEnabled
+
+	if flag != "new" {
+		if stgFiles.StageAttributes[stageName]["applied"] == "true" {
+			fmt.Fprint(writer, textApplied)
+			retVal = system.MaxI(retVal, 1)
+		} else if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
+			fmt.Fprint(writer, textEnabled)
+			if flag == "deleted" {
+				retVal = system.MaxI(retVal, 1)
+			}
+		} else {
+			fmt.Fprint(writer, textNotEnabled)
+		}
+	}
+
+	return retVal
+}
+
 // printNoteAnalysis handles the solution related analysis
 func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool, int) {
 	releaseable := true
@@ -411,19 +430,9 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (boo
 	if stgFiles.StageAttributes[stageName]["override"] == "true" {
 		fmt.Fprint(writer, txtOverrideExists)
 	}
-	if flag != "new" {
-		if stgFiles.StageAttributes[stageName]["applied"] == "true" {
-			fmt.Fprint(writer, txtNoteApplied)
-			retVal = system.MaxI(retVal, 1)
-		} else if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
-			fmt.Fprint(writer, txtNoteEnabled)
-			if flag == "deleted" {
-				retVal = system.MaxI(retVal, 1)
-			}
-		} else {
-			fmt.Fprint(writer, txtNoteNotEnabled)
-		}
-	}
+
+	retVal = writeIfNew(flag, stageName, writerDescriptor{writer, txtNoteApplied, txtNoteEnabled, txtNoteNotEnabled}, retVal)
+
 	if stgFiles.StageAttributes[stageName]["inSolution"] != "" {
 		for _, sol := range strings.Split(stgFiles.StageAttributes[stageName]["inSolution"], ",") {
 			txtSEnabled := txtSolEnabled
