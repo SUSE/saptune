@@ -30,7 +30,7 @@ func TestLog(t *testing.T) {
 	if !CheckForPattern(logFile, "TestMessage5_Notice") {
 		t.Error("Error message not found in log file")
 	}
-	ErrLog("TestMessage%s_%s", "6", "Error")
+	ErrorLogNoStdErr("TestMessage%s_%s", "6", "Error")
 	if !CheckForPattern(logFile, "TestMessage6_Error") {
 		t.Error("Error message not found in log file")
 	}

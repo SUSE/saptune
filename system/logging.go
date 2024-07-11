@@ -30,6 +30,27 @@ func logTimeFormat() string {
 	return time.Now().Format("2006-01-02 15:04:05.000 ")
 }
 
+type InfoLogger struct {
+	logger  *log.Logger
+	where   *os.File
+	typeLog string
+}
+
+// Standard log handler
+func messageLogger(infoLogger InfoLogger, txt string, stuff []interface{}) {
+	logger := infoLogger.logger
+	typeLog := infoLogger.typeLog
+	where := infoLogger.where
+	if logger != nil {
+		logger.SetPrefix(logTimeFormat() + severNoticeFormat + logpidFormat)
+		logger.Printf(CalledFrom()+txt+"\n", stuff...)
+		jWriteMsg(typeLog, fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
+		if verboseSwitch == "on" && where != nil {
+			fmt.Fprintf(where, typeLog+": "+txt+"\n", stuff...)
+		}
+	}
+}
+
 // DebugLog sends text to the debugLogger and stderr
 func DebugLog(txt string, stuff ...interface{}) {
 	if debugSwitch == "on" {
@@ -43,7 +64,7 @@ func DebugLog(txt string, stuff ...interface{}) {
 
 // NoticeLog sends text to the noticeLogger and stdout
 func NoticeLog(txt string, stuff ...interface{}) {
-	messageLogger("NOTICE", txt, stuff)
+	messageLogger(InfoLogger{noticeLogger, os.Stdout, "NOTICE"}, txt, stuff)
 }
 
 // InfoLog sends text only to the infoLogger
@@ -56,21 +77,17 @@ func InfoLog(txt string, stuff ...interface{}) {
 
 // WarningLog sends text to the warningLogger and stderr
 func WarningLog(txt string, stuff ...interface{}) {
-	messageLogger("WARNING", txt, stuff)
+	messageLogger(InfoLogger{warningLogger, os.Stderr, "WARNING"}, txt, stuff)
 }
 
-// ErrLog sends text only to the errorLogger
-func ErrLog(txt string, stuff ...interface{}) {
-	if errorLogger != nil {
-		errorLogger.SetPrefix(logTimeFormat() + severErrorFormat + logpidFormat)
-		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg("ERROR", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-	}
+// ErrorLogNoStdErr sends text only to the errorLogger
+func ErrorLogNoStdErr(txt string, stuff ...interface{}) {
+	messageLogger(InfoLogger{errorLogger, nil, "ERROR"}, txt, stuff)
 }
 
 // ErrorLog sends text to the errorLogger and stderr
 func ErrorLog(txt string, stuff ...interface{}) error {
-	messageLogger("ERROR", txt, stuff)
+	messageLogger(InfoLogger{errorLogger, os.Stderr, "ERROR"}, txt, stuff)
 	return fmt.Errorf(txt+"\n", stuff...)
 }
 
@@ -106,15 +123,4 @@ func SwitchOffLogging() {
 	verboseSwitch = "off"
 	errorSwitch = "off"
 	log.SetOutput(ioutil.Discard)
-}
-
-func messageLogger(typeLog string, txt string, stuff []interface{}) {
-	if noticeLogger != nil {
-		noticeLogger.SetPrefix(logTimeFormat() + severNoticeFormat + logpidFormat)
-		noticeLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg(typeLog, fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-		if verboseSwitch == "on" {
-			fmt.Fprintf(os.Stdout, typeLog+": "+txt+"\n", stuff...)
-		}
-	}
 }
