@@ -317,14 +317,8 @@ func IsValidScheduler(blockdev, scheduler string) bool {
 // value to the device, so only used during apply, but this can be performed
 // in a better way.
 func IsValidforNrRequests(blockdev, nrreq string) bool {
-	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
-	if elev != "" && elev != "NA" && elev != "PNA" {
-		file := path.Join("block", blockdev, "queue", "nr_requests")
-		if tstErr := system.TestSysString(file, nrreq); tstErr == nil {
-			return true
-		}
-	}
-	return false
+	file := path.Join("block", blockdev, "queue", "nr_requests")
+	return checkIfBlockIsValid(blockdev, nrreq, file)
 }
 
 // IsValidforReadAheadKB checks, if the read_ahead_kb value is supported by the system
@@ -332,10 +326,14 @@ func IsValidforNrRequests(blockdev, nrreq string) bool {
 // value to the device, so only used during apply, but this can be performed
 // in a better way.
 func IsValidforReadAheadKB(blockdev, readahead string) bool {
+	file := path.Join("block", blockdev, "queue", "read_ahead_kb")
+	return checkIfBlockIsValid(blockdev, readahead, file)
+}
+
+func checkIfBlockIsValid(blockdev string, testString string, file string) bool {
 	elev, _ := system.GetSysChoice(path.Join("block", blockdev, "queue", "scheduler"))
 	if elev != "" && elev != "NA" && elev != "PNA" {
-		file := path.Join("block", blockdev, "queue", "read_ahead_kb")
-		if tstErr := system.TestSysString(file, readahead); tstErr == nil {
+		if tstErr := system.TestSysString(file, testString); tstErr == nil {
 			return true
 		}
 	}
