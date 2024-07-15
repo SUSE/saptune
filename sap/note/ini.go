@@ -38,7 +38,8 @@ const (
 var ini *txtparser.INIFile
 var pc = LinuxPagingImprovements{}
 
-var blck = param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, BlockDeviceReadAheadKB: param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}, BlockDeviceMaxSectorsKB: param.BlockDeviceMaxSectorsKB{MaxSectorsKB: make(map[string]int)}}
+var blck = resetToFactoryBlockDevices()
+
 var isLimitSoft = regexp.MustCompile(`LIMIT_.*_soft_memlock`)
 var isLimitHard = regexp.MustCompile(`LIMIT_.*_hard_memlock`)
 var flstates = ""
@@ -54,6 +55,16 @@ type INISettings struct {
 	ValuesToApply   map[string]string // values to apply
 	OverrideParams  map[string]string // parameter values from the override file
 	Inform          map[string]string // special information for parameter values
+}
+
+// Initialise a BlockDeviceQueue
+func resetToFactoryBlockDevices() param.BlockDeviceQueue {
+	return param.BlockDeviceQueue{
+		BlockDeviceSchedulers:   param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)},
+		BlockDeviceNrRequests:   param.BlockDeviceNrRequests{NrRequests: make(map[string]int)},
+		BlockDeviceReadAheadKB:  param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)},
+		BlockDeviceMaxSectorsKB: param.BlockDeviceMaxSectorsKB{MaxSectorsKB: make(map[string]int)},
+	}
 }
 
 // Name returns the name of the related SAP Note or en empty string
@@ -89,8 +100,7 @@ func (vend INISettings) Initialise() (Note, error) {
 	vend.OverrideParams = make(map[string]string)
 	vend.Inform = make(map[string]string)
 	pc = LinuxPagingImprovements{}
-	blck = param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}, BlockDeviceReadAheadKB: param.BlockDeviceReadAheadKB{ReadAheadKB: make(map[string]int)}, BlockDeviceMaxSectorsKB: param.BlockDeviceMaxSectorsKB{MaxSectorsKB: make(map[string]int)}}
-
+	blck = resetToFactoryBlockDevices()
 	for _, param := range ini.AllValues {
 		if override && len(ow.KeyValue[param.Section]) != 0 {
 			param.Key, param.Value, param.Operator = vend.handleInitOverride(param.Key, param.Value, param.Section, param.Operator, ow)
