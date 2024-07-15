@@ -62,6 +62,14 @@ func prepFN(comparison note.FieldComparison, compliant, inform string) bool {
 	return prep
 }
 
+type SetterFootnoteDescriptor struct {
+	ActualValue   string
+	ExpectedValue string
+	MapKey        string
+	Info          string
+	Function      func(SetterFootnoteDescriptor, string, string, []string) (string, string, []string)
+}
+
 // prepareFootnote prepares the content of the last column and the
 // corresponding footnotes
 func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform string, footnote []string) (string, string, []string) {
@@ -78,38 +86,123 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 	if system.GetCSP() == "aws" {
 		footnote1 = footnote1AWS
 	}
-	// set footnote for unsupported or not available parameter [1],[2]
-	compliant, comment, footnote = setUsNa(comparison.ActualValue.(string), compliant, comment, footnote)
-	// set footnote for rpm or grub parameter [3],[6]
-	compliant, comment, footnote = setRpmGrub(comparison.ReflectMapKey, compliant, comment, footnote)
-	// set footnote for diffs in force_latency parameter [4]
-	compliant, comment, footnote = setFLdiffs(comparison.ReflectMapKey, compliant, comment, inform, footnote)
-	// set footnote for unsupported scheduler [5]
-	compliant, comment, footnote = setUnSched(comparison.ReflectMapKey, compliant, comment, inform, footnote)
-	// set footnote for untouched parameter [7]
-	compliant, comment, footnote = setUntouched(comparison.ExpectedValue.(string), compliant, comment, footnote)
-	// set footnote for secure boot [8]
-	compliant, comment, footnote = setSecBoot(comparison.ReflectMapKey, compliant, comment, footnote)
-	// set footnote for limited parameter value [9]
-	compliant, comment, footnote = setLimited(comparison.ReflectMapKey, compliant, comment, inform, footnote)
-	// set footnote for double defined parameters [10]
-	compliant, comment, footnote = setDouble(comparison.ReflectMapKey, compliant, comment, inform, footnote)
-	// set footnote for system wide (global) defines sysctl parameter [11]
-	compliant, comment, footnote = setSysctlGlobal(compliant, comment, inform, footnote)
-	// set footnote for filesystem options [12]
-	compliant, comment, footnote = setFSOptions(comparison, compliant, comment, inform, footnote)
-	// set footnote for unsupported nr_request value [13]
-	compliant, comment, footnote = setUnNRR(comparison.ReflectMapKey, compliant, comment, inform, footnote)
-	// set footnote for unsupported nofile limit value [14]
-	compliant, comment, footnote = setNofile(comparison.ReflectMapKey, compliant, comment, inform, footnote)
-	// set footnote for VSZ_TMPFS_PERCENT parameter from mem section
-	compliant, comment, footnote = setMem(comparison.ReflectMapKey, compliant, comment, footnote)
+	setterFootnoteDescriptor := []SetterFootnoteDescriptor{
+		// set footnote for unsupported or not available parameter [1],[2]
+		{
+			comparison.ActualValue.(string),
+			"",
+			"",
+			"",
+			setUsNa,
+		},
+		// set footnote for rpm or grub parameter [3],[6]
+		{
+			"",
+			"",
+			comparison.ReflectMapKey,
+			"",
+			setRpmGrub,
+		},
+		// set footnote for diffs in force_latency parameter [4]
+		{
+			"",
+			"",
+			comparison.ReflectMapKey,
+			inform,
+			setFLdiffs,
+		},
+		// set footnote for unsupported scheduler [5]
+		{
+			"",
+			"",
+			comparison.ReflectMapKey,
+			inform,
+			setUnSched,
+		},
+		// set footnote for untouched parameter [7]
+		{
+			"",
+			comparison.ExpectedValue.(string),
+			"",
+			"",
+			setUntouched,
+		},
+		// set footnote for secure boot [8]
+		{
+			"",
+			"",
+			comparison.ReflectMapKey,
+			"",
+			setSecBoot,
+		},
+		// set footnote for limited parameter value [9]
+		{
+			"",
+			"",
+			comparison.ReflectMapKey,
+			inform,
+			setLimited,
+		},
+		// set footnote for double defined parameters [10]
+		{
+			"",
+			"",
+			comparison.ReflectMapKey,
+			inform,
+			setDouble,
+		},
+		// set footnote for system wide (global) defines sysctl parameter [11]
+		{
+			"",
+			"",
+			"",
+			inform,
+			setSysctlGlobal,
+		},
+		// set footnote for filesystem options [12]
+		{
+			comparison.ActualValue.(string),
+			"",
+			comparison.ReflectMapKey,
+			inform,
+			setFSOptions,
+		},
+		// set footnote for unsupported nr_request value [13]
+		{
+			"",
+			"",
+			comparison.ReflectMapKey,
+			inform,
+			setUnNRR,
+		},
+		// set footnote for unsupported nofile limit value [14]
+		{
+			"",
+			"",
+			comparison.ReflectMapKey,
+			inform,
+			setNofile,
+		},
+		// set footnote for VSZ_TMPFS_PERCENT parameter from mem section
+		{
+			"",
+			"",
+			comparison.ReflectMapKey,
+			"",
+			setMem,
+		},
+	}
+
+	for _, setter := range setterFootnoteDescriptor {
+		compliant, comment, footnote = setter.Function(setter, compliant, comment, footnote)
+	}
+
 	return compliant, comment, footnote
 }
 
 // setUsNa sets footnote for unsupported or not available parameter
-func setUsNa(actVal, compliant, comment string, footnote []string) (string, string, []string) {
-	switch actVal {
+func setUsNa(comparison SetterFootnoteDescriptor, compliant, comment string, footnote []string) (string, string, []string) {
+	switch comparison.ActualValue {
 	case "all:none":
 		compliant = compliant + " [1]"
 		comment = comment + " [1]"
@@ -130,7 +223,8 @@ func setUsNa(actVal, compliant, comment string, footnote []string) (string, stri
 }
 
 // setRpmGrub sets footnote for rpm or grub parameter
-func setRpmGrub(mapKey, compliant, comment string, footnote []string) (string, string, []string) {
+func setRpmGrub(comparison SetterFootnoteDescriptor, compliant, comment string, footnote []string) (string, string, []string) {
+	mapKey := comparison.MapKey
 	if strings.Contains(mapKey, "rpm") || strings.Contains(mapKey, "grub") {
 		compliant = compliant + " [3]"
 		comment = comment + " [3]"
@@ -145,8 +239,8 @@ func setRpmGrub(mapKey, compliant, comment string, footnote []string) (string, s
 }
 
 // setUntouched sets footnote for untouched parameter
-func setUntouched(expVal, compliant, comment string, footnote []string) (string, string, []string) {
-	if expVal == "" {
+func setUntouched(comparison SetterFootnoteDescriptor, compliant, comment string, footnote []string) (string, string, []string) {
+	if comparison.ExpectedValue == "" {
 		compliant = compliant + " [7]"
 		comment = comment + " [7]"
 		footnote[6] = footnote7
@@ -155,8 +249,8 @@ func setUntouched(expVal, compliant, comment string, footnote []string) (string,
 }
 
 // setSecBoot sets footnote for secure boot affected parameter
-func setSecBoot(mapKey, compliant, comment string, footnote []string) (string, string, []string) {
-	if mapKey == "energy_perf_bias" && system.SecureBootEnabled() {
+func setSecBoot(comparison SetterFootnoteDescriptor, compliant, comment string, footnote []string) (string, string, []string) {
+	if comparison.MapKey == "energy_perf_bias" && system.SecureBootEnabled() {
 		compliant = compliant + " [8]"
 		comment = comment + " [8]"
 		footnote[7] = footnote8
@@ -165,8 +259,8 @@ func setSecBoot(mapKey, compliant, comment string, footnote []string) (string, s
 }
 
 // setFLdiffs sets footnote for diffs in force_latency parameter
-func setFLdiffs(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
-	if mapKey == "force_latency" && info == "hasDiffs" {
+func setFLdiffs(comparison SetterFootnoteDescriptor, compliant string, comment string, footnote []string) (string, string, []string) {
+	if comparison.MapKey == "force_latency" && comparison.Info == "hasDiffs" {
 		compliant = compliant + " [4]"
 		compliant = strings.Replace(compliant, " - ", "no ", 1)
 		comment = comment + " [4]"
@@ -176,8 +270,8 @@ func setFLdiffs(mapKey, compliant, comment, info string, footnote []string) (str
 }
 
 // setUnSched sets footnote for unsupported scheduler
-func setUnSched(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
-	if system.IsSched.MatchString(mapKey) && strings.Contains(info, "NA") {
+func setUnSched(comparison SetterFootnoteDescriptor, compliant string, comment string, footnote []string) (string, string, []string) {
+	if system.IsSched.MatchString(comparison.MapKey) && strings.Contains(comparison.Info, "NA") {
 		compliant = compliant + " [5]"
 		comment = comment + " [5]"
 		footnote[4] = footnote5
@@ -186,8 +280,9 @@ func setUnSched(mapKey, compliant, comment, info string, footnote []string) (str
 }
 
 // setUnNRR sets footnote for unsupported nr_request values
-func setUnNRR(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
-	if system.IsNrreq.MatchString(mapKey) && strings.Contains(info, "wrongVal") {
+func setUnNRR(comparison SetterFootnoteDescriptor, compliant string, comment string, footnote []string) (string, string, []string) {
+	mapKey := comparison.MapKey
+	if system.IsNrreq.MatchString(mapKey) && strings.Contains(comparison.Info, "wrongVal") {
 		compliant = compliant + " [13]"
 		comment = comment + " [13]"
 		maxVal, _, _ := system.GetNrTags(mapKey)
@@ -197,8 +292,8 @@ func setUnNRR(mapKey, compliant, comment, info string, footnote []string) (strin
 }
 
 // setLimit sets footnote for limited parameter value
-func setLimited(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
-	if system.IsMsect.MatchString(mapKey) && strings.Contains(info, "limited") {
+func setLimited(comparison SetterFootnoteDescriptor, compliant string, comment string, footnote []string) (string, string, []string) {
+	if system.IsMsect.MatchString(comparison.MapKey) && strings.Contains(comparison.Info, "limited") {
 		compliant = compliant + " [9]"
 		comment = comment + " [9]"
 		footnote[8] = footnote9
@@ -207,7 +302,9 @@ func setLimited(mapKey, compliant, comment, info string, footnote []string) (str
 }
 
 // setDouble sets footnote for double defined sys parameters
-func setDouble(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
+func setDouble(comparison SetterFootnoteDescriptor, compliant string, comment string, footnote []string) (string, string, []string) {
+	mapKey := comparison.MapKey
+	info := comparison.Info
 	if (system.IsSched.MatchString(mapKey) || system.IsNrreq.MatchString(mapKey) || system.IsRahead.MatchString(mapKey) || system.IsMsect.MatchString(mapKey)) && info != "" {
 		// check for double defined parameters
 		sect := regexp.MustCompile(`.*\[\w+\].*`)
@@ -239,9 +336,10 @@ func setDouble(mapKey, compliant, comment, info string, footnote []string) (stri
 }
 
 // setSysctlGlobal sets footnote for global defined sysctl parameters
-func setSysctlGlobal(compliant, comment, info string, footnote []string) (string, string, []string) {
+func setSysctlGlobal(comparison SetterFootnoteDescriptor, compliant string, comment string, footnote []string) (string, string, []string) {
 	// check if the sysctl parameter is additional set in a sysctl system
 	// configuration file
+	info := comparison.Info
 	if strings.HasPrefix(info, "sysctl config file ") {
 		// sysctl info
 		compliant = compliant + " [11]"
@@ -252,16 +350,17 @@ func setSysctlGlobal(compliant, comment, info string, footnote []string) (string
 }
 
 // setFSOptions sets footnote for not matching filesystem options
-func setFSOptions(comparison note.FieldComparison, compliant, comment, info string, footnote []string) (string, string, []string) {
+func setFSOptions(comparison SetterFootnoteDescriptor, compliant string, comment string, footnote []string) (string, string, []string) {
+	info := comparison.Info
 	// check if there are mount points with wrong FS option settings
-	if strings.Contains(comparison.ReflectMapKey, "xfsopt_") {
+	if strings.Contains(comparison.MapKey, "xfsopt_") {
 		if !system.IsFlagSet("show-non-compliant") && info != "" {
 			// fs option info
 			compliant = compliant + " [12]"
 			comment = comment + " [12]"
 			footnote[11] = writeFN(footnote[11], footnote12, info, "FSOPT")
 		}
-		if comparison.ActualValue.(string) == "NA" {
+		if comparison.ActualValue == "NA" {
 			compliant = strings.Replace(compliant, "no ", " - ", 1)
 		}
 	}
@@ -269,8 +368,8 @@ func setFSOptions(comparison note.FieldComparison, compliant, comment, info stri
 }
 
 // setNofile sets footnote for unsupported nofile limit value
-func setNofile(mapKey, compliant, comment, info string, footnote []string) (string, string, []string) {
-	if strings.Contains(mapKey, "LIMIT_") && info == "limit_exceeded" {
+func setNofile(comparison SetterFootnoteDescriptor, compliant string, comment string, footnote []string) (string, string, []string) {
+	if strings.Contains(comparison.MapKey, "LIMIT_") && comparison.Info == "limit_exceeded" {
 		compliant = compliant + " [14]"
 		comment = comment + " [14]"
 		footnote[13] = footnote14
@@ -279,8 +378,8 @@ func setNofile(mapKey, compliant, comment, info string, footnote []string) (stri
 }
 
 // setMem sets footnote for VSZ_TMPFS_PERCENT parameter from mem section
-func setMem(mapKey, compliant, comment string, footnote []string) (string, string, []string) {
-	if mapKey == "VSZ_TMPFS_PERCENT" {
+func setMem(comparison SetterFootnoteDescriptor, compliant, comment string, footnote []string) (string, string, []string) {
+	if comparison.MapKey == "VSZ_TMPFS_PERCENT" {
 		if system.IsFlagSet("show-non-compliant") {
 			compliant = " - "
 		} else {
