@@ -70,6 +70,38 @@ type SetterFootnoteDescriptor struct {
 	Function      func(SetterFootnoteDescriptor, string, string, []string) (string, string, []string)
 }
 
+// initialization of all the setters for the footnote
+func getAllFootnoteDescriptorSetters(comparison note.FieldComparison, inform string) []SetterFootnoteDescriptor {
+	return []SetterFootnoteDescriptor{
+		// set footnote for unsupported or not available parameter [1],[2]
+		{comparison.ActualValue.(string), "", "", "", setUsNa},
+		// set footnote for rpm or grub parameter [3],[6]
+		{"", "", comparison.ReflectMapKey, "", setRpmGrub},
+		// set footnote for diffs in force_latency parameter [4]
+		{"", "", comparison.ReflectMapKey, inform, setFLdiffs},
+		// set footnote for unsupported scheduler [5]
+		{"", "", comparison.ReflectMapKey, inform, setUnSched},
+		// set footnote for untouched parameter [7]
+		{"", comparison.ExpectedValue.(string), "", "", setUntouched},
+		// set footnote for secure boot [8]
+		{"", "", comparison.ReflectMapKey, "", setSecBoot},
+		// set footnote for limited parameter value [9]
+		{"", "", comparison.ReflectMapKey, inform, setLimited},
+		// set footnote for double defined parameters [10]
+		{"", "", comparison.ReflectMapKey, inform, setDouble},
+		// set footnote for system wide (global) defines sysctl parameter [11]
+		{"", "", "", inform, setSysctlGlobal},
+		// set footnote for filesystem options [12]
+		{comparison.ActualValue.(string), "", comparison.ReflectMapKey, inform, setFSOptions},
+		// set footnote for unsupported nr_request value [13]
+		{"", "", comparison.ReflectMapKey, inform, setUnNRR},
+		// set footnote for unsupported nofile limit value [14]
+		{"", "", comparison.ReflectMapKey, inform, setNofile},
+		// set footnote for VSZ_TMPFS_PERCENT parameter from mem section
+		{"", "", comparison.ReflectMapKey, "", setMem},
+	}
+}
+
 // prepareFootnote prepares the content of the last column and the
 // corresponding footnotes
 func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform string, footnote []string) (string, string, []string) {
@@ -86,114 +118,8 @@ func prepareFootnote(comparison note.FieldComparison, compliant, comment, inform
 	if system.GetCSP() == "aws" {
 		footnote1 = footnote1AWS
 	}
-	setterFootnoteDescriptor := []SetterFootnoteDescriptor{
-		// set footnote for unsupported or not available parameter [1],[2]
-		{
-			comparison.ActualValue.(string),
-			"",
-			"",
-			"",
-			setUsNa,
-		},
-		// set footnote for rpm or grub parameter [3],[6]
-		{
-			"",
-			"",
-			comparison.ReflectMapKey,
-			"",
-			setRpmGrub,
-		},
-		// set footnote for diffs in force_latency parameter [4]
-		{
-			"",
-			"",
-			comparison.ReflectMapKey,
-			inform,
-			setFLdiffs,
-		},
-		// set footnote for unsupported scheduler [5]
-		{
-			"",
-			"",
-			comparison.ReflectMapKey,
-			inform,
-			setUnSched,
-		},
-		// set footnote for untouched parameter [7]
-		{
-			"",
-			comparison.ExpectedValue.(string),
-			"",
-			"",
-			setUntouched,
-		},
-		// set footnote for secure boot [8]
-		{
-			"",
-			"",
-			comparison.ReflectMapKey,
-			"",
-			setSecBoot,
-		},
-		// set footnote for limited parameter value [9]
-		{
-			"",
-			"",
-			comparison.ReflectMapKey,
-			inform,
-			setLimited,
-		},
-		// set footnote for double defined parameters [10]
-		{
-			"",
-			"",
-			comparison.ReflectMapKey,
-			inform,
-			setDouble,
-		},
-		// set footnote for system wide (global) defines sysctl parameter [11]
-		{
-			"",
-			"",
-			"",
-			inform,
-			setSysctlGlobal,
-		},
-		// set footnote for filesystem options [12]
-		{
-			comparison.ActualValue.(string),
-			"",
-			comparison.ReflectMapKey,
-			inform,
-			setFSOptions,
-		},
-		// set footnote for unsupported nr_request value [13]
-		{
-			"",
-			"",
-			comparison.ReflectMapKey,
-			inform,
-			setUnNRR,
-		},
-		// set footnote for unsupported nofile limit value [14]
-		{
-			"",
-			"",
-			comparison.ReflectMapKey,
-			inform,
-			setNofile,
-		},
-		// set footnote for VSZ_TMPFS_PERCENT parameter from mem section
-		{
-			"",
-			"",
-			comparison.ReflectMapKey,
-			"",
-			setMem,
-		},
-	}
 
-	for _, setter := range setterFootnoteDescriptor {
+	for _, setter := range getAllFootnoteDescriptorSetters(comparison, inform) {
 		compliant, comment, footnote = setter.Function(setter, compliant, comment, footnote)
 	}
 
