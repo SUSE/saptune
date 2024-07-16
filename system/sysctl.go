@@ -182,12 +182,7 @@ func parseSysctlConfFile(file string) (map[string]sysctlEntry, error) {
 
 // GetSysctlString read a sysctl key and return the string value.
 func GetSysctlString(parameter string) (string, error) {
-	val, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)))
-	if err != nil {
-		WarningLog("Failed to read sysctl key '%s': %v", parameter, err)
-		return "PNA", err
-	}
-	return strings.TrimSpace(string(val)), nil
+	return getKeyStringFromPath("/proc/sys", parameter, "sysctl")
 }
 
 // GetSysctlInt read an integer sysctl key.
