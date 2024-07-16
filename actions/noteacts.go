@@ -7,7 +7,6 @@ import (
 	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/system"
 	"io"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strings"
@@ -306,7 +305,7 @@ func NoteActionShow(writer io.Writer, noteID string, tuneApp *app.App) {
 		system.ErrorExit("%v", err)
 	}
 	fileName, _ := getFileName(noteID, NoteTuningSheets, ExtraTuningSheets)
-	cont, err := ioutil.ReadFile(fileName)
+	cont, err := os.ReadFile(fileName)
 	if err != nil {
 		system.ErrorExit("Failed to read file '%s' - %v", fileName, err)
 	}

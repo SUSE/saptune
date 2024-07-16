@@ -3,7 +3,6 @@ package system
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -124,5 +123,5 @@ func SwitchOffLogging() {
 	debugSwitch = "off"
 	verboseSwitch = "off"
 	errorSwitch = "off"
-	log.SetOutput(ioutil.Discard)
+	log.SetOutput(io.Discard)
 }

@@ -4,7 +4,6 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -20,7 +19,7 @@ const (
 // Panic on error.
 func ParseMeminfo() (infoMap map[string]uint64) {
 	infoMap = make(map[string]uint64)
-	memInfo, err := ioutil.ReadFile("/proc/meminfo")
+	memInfo, err := os.ReadFile("/proc/meminfo")
 	if err != nil {
 		panic(fmt.Errorf("failed to read /proc/meminfo: %v", err))
 	}

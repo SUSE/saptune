@@ -7,7 +7,6 @@ import (
 	"github.com/SUSE/saptune/sap/param"
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
-	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
@@ -30,7 +29,7 @@ func (pa SampleParam) Name() string {
 	return "Sample parameter"
 }
 func (pa SampleParam) Inspect() (param.Parameter, error) {
-	content, _ := ioutil.ReadFile(SampleParamFile)
+	content, _ := os.ReadFile(SampleParamFile)
 	pa.Data = string(content)
 	return pa, nil
 }
@@ -39,7 +38,7 @@ func (pa SampleParam) Optimise(way interface{}) (param.Parameter, error) {
 	return pa, nil
 }
 func (pa SampleParam) Apply(way interface{}) error {
-	return ioutil.WriteFile(SampleParamFile, []byte(pa.Data), 0644)
+	return os.WriteFile(SampleParamFile, []byte(pa.Data), 0644)
 }
 
 type SampleNote1 struct {
@@ -109,14 +108,14 @@ func VerifyConfig(t *testing.T, app *App, hasNotes []string, hasSolutions []stri
 }
 
 func WriteFileOrPanic(filePath, content string) {
-	if err := ioutil.WriteFile(filePath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(content), 0644); err != nil {
 		panic(err)
 	}
 }
 
 // Verify that the file content is exactly as specified.
 func VerifyFileContent(t *testing.T, filePath, content, no string) {
-	if fileContent, err := ioutil.ReadFile(filePath); err != nil {
+	if fileContent, err := os.ReadFile(filePath); err != nil {
 		t.Fatal(err)
 	} else if string(fileContent) != content {
 		t.Errorf("%s - file content mismatch\nexpected:%s\nactual:%s", no, content, string(fileContent))

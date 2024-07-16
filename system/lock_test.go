@@ -2,7 +2,6 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
@@ -33,7 +32,7 @@ func TestLock(t *testing.T) {
 	}
 	if !isOwnLock() {
 		pid := -1
-		p, err := ioutil.ReadFile(stLockFile)
+		p, err := os.ReadFile(stLockFile)
 		if err == nil {
 			pid, _ = strconv.Atoi(string(p))
 		}

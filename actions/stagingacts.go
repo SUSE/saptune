@@ -8,7 +8,6 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io"
-	"io/ioutil"
 	"os"
 	"sort"
 	"strconv"
@@ -521,7 +520,7 @@ func writeStagingToConf(staging string) error {
 		return err
 	}
 	sconf.Set("STAGING", staging)
-	return ioutil.WriteFile(saptuneSysconfig, []byte(sconf.ToText()), 0644)
+	return os.WriteFile(saptuneSysconfig, []byte(sconf.ToText()), 0644)
 }
 
 // collectStageFileInfo is collecting all needed info about the file

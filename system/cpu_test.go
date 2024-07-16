@@ -2,7 +2,6 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -80,7 +79,7 @@ func TestSetPerfBias(t *testing.T) {
 }
 
 func TestIsValidGovernor(t *testing.T) {
-	_, err := ioutil.ReadDir("/sys/devices/system/cpu/cpu0/cpufreq")
+	_, err := os.ReadDir("/sys/devices/system/cpu/cpu0/cpufreq")
 	if err != nil {
 		t.Skip("directory '/sys/devices/system/cpu/cpu0/cpufreq' does not exist. System does not support scaling governor, skipping test")
 	}
@@ -97,7 +96,7 @@ func TestIsValidGovernor(t *testing.T) {
 }
 
 func TestGetGovernor(t *testing.T) {
-	_, err := ioutil.ReadDir("/sys/devices/system/cpu/cpu0/cpufreq")
+	_, err := os.ReadDir("/sys/devices/system/cpu/cpu0/cpufreq")
 	if err != nil {
 		t.Skip("directory '/sys/devices/system/cpu/cpu0/cpufreq' does not exist. System does not support scaling governor, skipping test")
 	}

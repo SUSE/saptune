@@ -4,7 +4,6 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -225,7 +224,7 @@ func SetSysctlString(parameter, value string) error {
 		WarningLog("value is '%s', so sysctl key '%s' is/was not supported by os, skipping.", value, parameter)
 		return nil
 	}
-	err := ioutil.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
+	err := os.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
 	if os.IsNotExist(err) {
 		WarningLog("sysctl key '%s' is not supported by os, skipping.", parameter)
 	} else if err != nil {
@@ -265,6 +264,6 @@ func SetSysctlUint64Field(param string, field int, value uint64) error {
 
 // IsPagecacheAvailable check, if system supports pagecache limit
 func IsPagecacheAvailable() bool {
-	_, err := ioutil.ReadFile(path.Join("/proc/sys", strings.Replace(SysctlPagecacheLimitMB, ".", "/", -1)))
+	_, err := os.ReadFile(path.Join("/proc/sys", strings.Replace(SysctlPagecacheLimitMB, ".", "/", -1)))
 	return err == nil
 }
