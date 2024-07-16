@@ -546,17 +546,25 @@ func printWrappedRow(writer io.Writer, wrappedElem map[string][]string, rowEleme
 
 // printRow prints now the row of the table
 func printRow(writer io.Writer, twist bool, cols []string, rowElements map[string]string) {
-	if twist {
-		if rowElements["type"] == "verify" {
-			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[1], cols[2], cols[0], rowElements["compliant"])
-		} else {
-			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[0], cols[1], cols[2], rowElements["comment"])
-		}
+	if rowElements["type"] == "verify" {
+		PrintVerifiedRow(twist, writer, rowElements, cols)
 	} else {
-		if rowElements["type"] == "verify" {
-			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[0], cols[2], cols[1], rowElements["compliant"])
-		} else {
-			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[1], cols[0], cols[2], rowElements["comment"])
-		}
+		printNotVerifiedRow(twist, writer, rowElements, cols)
+	}
+}
+
+func printNotVerifiedRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
+	if twist {
+		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[0], cols[1], cols[2], rowElements["comment"])
+	} else {
+		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[1], cols[0], cols[2], rowElements["comment"])
+	}
+}
+
+func PrintVerifiedRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
+	if twist {
+		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[1], cols[2], cols[0], rowElements["compliant"])
+	} else {
+		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[0], cols[2], cols[1], rowElements["compliant"])
 	}
 }
