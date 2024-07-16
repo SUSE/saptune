@@ -19,17 +19,18 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	// initialise
 	colFormat := ""
 	colCompliant := ""
-	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 16)
 	reminder := make(map[string]string)
 	override := ""
-	comment := ""
 	hasDiff := false
 	pExp := ""
 	noteLine := system.JPNotesLine{}
 	noteList := []system.JPNotesLine{}
+
+	var compliant string
+	var comment string
+	var footnote []string = make([]string, 16)
 
 	colorScheme := getColorScheme()
 	// sort output
