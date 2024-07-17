@@ -339,7 +339,7 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool
 		fmt.Fprint(writer, txtOverrideExists)
 	}
 
-	retVal = writeIfNew(flag, stageName, writerDescriptor{writer, txtSolApplied, txtSolEnabled, txtSolNotEnabled}, retVal)
+	retVal = writeIfNotNew(flag, stageName, writerDescriptor{writer, txtSolApplied, txtSolEnabled, txtSolNotEnabled}, retVal)
 
 	for _, note := range strings.Split(stgFiles.StageAttributes[stageName]["notes"], " ") {
 		if note == "" {
@@ -378,7 +378,7 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool
 	return releaseable, retVal
 }
 
-func writeIfNew(flag string, stageName string, toWrite writerDescriptor, retVal int) int {
+func writeIfNotNew(flag string, stageName string, toWrite writerDescriptor, retVal int) int {
 	writer := toWrite.writer
 	textApplied := toWrite.textApplied
 	textEnabled := toWrite.textEnabled
@@ -431,7 +431,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (boo
 		fmt.Fprint(writer, txtOverrideExists)
 	}
 
-	retVal = writeIfNew(flag, stageName, writerDescriptor{writer, txtNoteApplied, txtNoteEnabled, txtNoteNotEnabled}, retVal)
+	retVal = writeIfNotNew(flag, stageName, writerDescriptor{writer, txtNoteApplied, txtNoteEnabled, txtNoteNotEnabled}, retVal)
 
 	if stgFiles.StageAttributes[stageName]["inSolution"] != "" {
 		for _, sol := range strings.Split(stgFiles.StageAttributes[stageName]["inSolution"], ",") {
