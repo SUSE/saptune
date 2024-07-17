@@ -28,28 +28,6 @@ const (
 
 var dmiDir = "/sys/class/dmi"
 
-// dmidecode key files
-// /usr/sbin/dmidecode -s chassis-asset-tag
-var dmiChassisAssetTag = "/sys/class/dmi/id/chassis_asset_tag"
-
-// /usr/sbin/dmidecode -s board-vendor
-var dmiBoardVendor = "/sys/class/dmi/id/board_vendor"
-
-// /usr/sbin/dmidecode -s bios-vendor
-var dmiBiosVendor = "/sys/class/dmi/id/bios_vendor"
-
-// /usr/sbin/dmidecode -s bios-version
-var dmiBiosVersion = "/sys/class/dmi/id/bios_version"
-
-// /usr/sbin/dmidecode -s system-version
-var dmiSystemVersion = "/sys/class/dmi/id/system_version"
-
-// /usr/sbin/dmidecode -s sys-vendor
-var dmiSysVendor = "/sys/class/dmi/id/sys_vendor"
-
-// /usr/sbin/dmidecode -s system-manufacturer
-var dmiSystemManufacturer = "/sys/class/dmi/id/system-manufacturer"
-
 // CSP identifier
 var isAzureCat = regexp.MustCompile(`.*(7783-7084-3265-9085-8269-3286-77|MSFT AZURE VM).*`)
 var isAzure = regexp.MustCompile(`.*[mM]icrosoft [cC]orporation.*`)
@@ -57,6 +35,29 @@ var isAWS = regexp.MustCompile(`.*[aA]mazon.*`)
 var isGoogle = regexp.MustCompile(`.*[gG]oogle.*`)
 var isOVM = regexp.MustCompile(`.*OVM.*`)
 var isAlibaba = regexp.MustCompile(`.*[aA]libaba.*`)
+
+type manufacturerProviders struct {
+	Manufacturer string
+	Providers    map[*regexp.Regexp]string
+}
+
+var allManufacturerProviders = [...]manufacturerProviders{
+	// dmidecode key files
+	// /usr/sbin/dmidecode -s chassis-asset-tag
+	{"/sys/class/dmi/id/chassis_asset_tag", map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+	// /usr/sbin/dmidecode -s system-manufacturer
+	{"/sys/class/dmi/id/system-manufacturer", map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
+	// /usr/sbin/dmidecode -s board-vendor
+	{"/sys/class/dmi/id/board_vendor", map[*regexp.Regexp]string{isAWS: CSPAWS}},
+	// /usr/sbin/dmidecode -s bios-version
+	{"/sys/class/dmi/id/bios_version", map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
+	// /usr/sbin/dmidecode -s bios-vendor
+	{"/sys/class/dmi/id/bios_vendor", map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
+	// /usr/sbin/dmidecode -s system-version
+	{"/sys/class/dmi/id/system_version", map[*regexp.Regexp]string{isAWS: CSPAWS}},
+	// /usr/sbin/dmidecode -s sys-vendor
+	{"/sys/class/dmi/id/sys_vendor", map[*regexp.Regexp]string{isAWS: CSPAWS}},
+}
 
 // GetDMIDecode
 //func GetDMIDecode(key string) string {
@@ -67,103 +68,30 @@ var isAlibaba = regexp.MustCompile(`.*[aA]libaba.*`)
 // running system or an empty string, if the system does not belong to a CSP
 // use files in /sys/class/dmi/id/ instead of dmidecode command
 func GetCSP() string {
-	csp := ""
+	cloudServiceProvider := ""
+	getCloudServiceProvider := func(manufacturer string, providers map[*regexp.Regexp]string) string {
+		if content, err := ioutil.ReadFile(manufacturer); err == nil {
+			for providerRegex, provider := range providers {
+				matches := providerRegex.FindStringSubmatch(string(content))
+				if len(matches) != 0 {
+					return provider
+				}
+			}
+		}
+		return ""
+	}
 
 	if _, err := os.Stat(dmiDir); os.IsNotExist(err) {
 		InfoLog("directory '%s' does not exist", dmiDir)
-		return csp
+		return cloudServiceProvider
 	}
-	// check for Azure
-	if content, err := ioutil.ReadFile(dmiChassisAssetTag); err == nil {
-		matches := isAzureCat.FindStringSubmatch(string(content))
-		if len(matches) != 0 {
-			csp = CSPAzure
+
+	for _, mp := range allManufacturerProviders {
+		if cloudServiceProvider == "" {
+			cloudServiceProvider = getCloudServiceProvider(mp.Manufacturer, mp.Providers)
+		} else {
+			break
 		}
 	}
-	if csp == "" {
-		// SystemManufacturer
-		if content, err := ioutil.ReadFile(dmiSystemManufacturer); err == nil {
-			// check for Azure
-			matches := isAzure.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPAzure
-			}
-			// check for Google
-			matches = isGoogle.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPGoogle
-			}
-			// check for Alibaba
-			matches = isAlibaba.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPAlibaba
-			}
-		}
-	}
-	if csp == "" {
-		// BoardVendor
-		if content, err := ioutil.ReadFile(dmiBoardVendor); err == nil {
-			// check for AWS
-			matches := isAWS.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPAWS
-			}
-		}
-	}
-	if csp == "" {
-		// BiosVersion
-		if content, err := ioutil.ReadFile(dmiBiosVersion); err == nil {
-			// check for AWS
-			matches := isAWS.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPAWS
-			}
-			// check for Google
-			matches = isGoogle.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPGoogle
-			}
-			// check for Oracle Cloud
-			matches = isOVM.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPOVM
-			}
-		}
-	}
-	if csp == "" {
-		// BiosVendor
-		if content, err := ioutil.ReadFile(dmiBiosVendor); err == nil {
-			// check for Google
-			matches := isGoogle.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPGoogle
-			}
-			// check for AWS
-			matches = isAWS.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPAWS
-			}
-		}
-	}
-	if csp == "" {
-		// SystemVersion
-		if content, err := ioutil.ReadFile(dmiSystemVersion); err == nil {
-			// check for AWS
-			matches := isAWS.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPAWS
-			}
-		}
-	}
-	if csp == "" {
-		// SysVendor
-		if content, err := ioutil.ReadFile(dmiSysVendor); err == nil {
-			// check for AWS
-			matches := isAWS.FindStringSubmatch(string(content))
-			if len(matches) != 0 {
-				csp = CSPAWS
-			}
-		}
-	}
-	return csp
+	return cloudServiceProvider
 }

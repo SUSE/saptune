@@ -13,9 +13,14 @@ import (
 
 // GetSysString read a /sys/ key and return the string value.
 func GetSysString(parameter string) (string, error) {
-	val, err := ioutil.ReadFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)))
+	return getKeyStringFromPath("/sys", parameter, "sys")
+}
+
+// getKeyStringFromPath generalizes the extraction of a string from path
+func getKeyStringFromPath(basePath string, parameter string, logFrom string) (string, error) {
+	val, err := ioutil.ReadFile(path.Join(basePath, strings.Replace(parameter, ".", "/", -1)))
 	if err != nil {
-		WarningLog("failed to read sys string key '%s': %v", parameter, err)
+		WarningLog("failed to read %v string key '%s': %v", logFrom, parameter, err)
 		return "PNA", err
 	}
 	return strings.TrimSpace(string(val)), nil

@@ -19,17 +19,18 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 	// initialise
 	colFormat := ""
 	colCompliant := ""
-	compliant := "yes"
 	printHead := ""
 	noteField := ""
-	footnote := make([]string, 16)
 	reminder := make(map[string]string)
 	override := ""
-	comment := ""
 	hasDiff := false
 	pExp := ""
 	noteLine := system.JPNotesLine{}
 	noteList := []system.JPNotesLine{}
+
+	var compliant string
+	var comment string
+	var footnote []string = make([]string, 16)
 
 	colorScheme := getColorScheme()
 	// sort output
@@ -545,17 +546,25 @@ func printWrappedRow(writer io.Writer, wrappedElem map[string][]string, rowEleme
 
 // printRow prints now the row of the table
 func printRow(writer io.Writer, twist bool, cols []string, rowElements map[string]string) {
-	if twist {
-		if rowElements["type"] == "verify" {
-			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[1], cols[2], cols[0], rowElements["compliant"])
-		} else {
-			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[0], cols[1], cols[2], rowElements["comment"])
-		}
+	if rowElements["type"] == "verify" {
+		printVerifiedRow(twist, writer, rowElements, cols)
 	} else {
-		if rowElements["type"] == "verify" {
-			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[0], cols[2], cols[1], rowElements["compliant"])
-		} else {
-			fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[1], cols[0], cols[2], rowElements["comment"])
-		}
+		printSimulateRow(twist, writer, rowElements, cols)
+	}
+}
+
+func printSimulateRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
+	if twist {
+		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[0], cols[1], cols[2], rowElements["comment"])
+	} else {
+		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[1], cols[0], cols[2], rowElements["comment"])
+	}
+}
+
+func printVerifiedRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
+	if twist {
+		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[1], cols[2], cols[0], rowElements["compliant"])
+	} else {
+		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[0], cols[2], cols[1], rowElements["compliant"])
 	}
 }

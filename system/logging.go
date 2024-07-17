@@ -30,6 +30,29 @@ func logTimeFormat() string {
 	return time.Now().Format("2006-01-02 15:04:05.000 ")
 }
 
+type InfoLogger struct {
+	logger  *log.Logger
+	where   *os.File
+	typeLog string
+	format  string
+}
+
+// Standard log handler
+func messageLogger(infoLogger InfoLogger, txt string, logSwitch string, stuff []interface{}) {
+	logger := infoLogger.logger
+	typeLog := infoLogger.typeLog
+	where := infoLogger.where
+	logFormat := infoLogger.format
+	if logger != nil {
+		logger.SetPrefix(logTimeFormat() + logFormat + logpidFormat)
+		logger.Printf(CalledFrom()+txt+"\n", stuff...)
+		jWriteMsg(typeLog, fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
+		if logSwitch == "on" && where != nil {
+			fmt.Fprintf(where, typeLog+": "+txt+"\n", stuff...)
+		}
+	}
+}
+
 // DebugLog sends text to the debugLogger and stderr
 func DebugLog(txt string, stuff ...interface{}) {
 	if debugSwitch == "on" {
@@ -43,14 +66,7 @@ func DebugLog(txt string, stuff ...interface{}) {
 
 // NoticeLog sends text to the noticeLogger and stdout
 func NoticeLog(txt string, stuff ...interface{}) {
-	if noticeLogger != nil {
-		noticeLogger.SetPrefix(logTimeFormat() + severNoticeFormat + logpidFormat)
-		noticeLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg("NOTICE", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-		if verboseSwitch == "on" {
-			fmt.Fprintf(os.Stdout, "NOTICE: "+txt+"\n", stuff...)
-		}
-	}
+	messageLogger(InfoLogger{noticeLogger, os.Stdout, "NOTICE", severNoticeFormat}, txt, verboseSwitch, stuff)
 }
 
 // InfoLog sends text only to the infoLogger
@@ -63,35 +79,17 @@ func InfoLog(txt string, stuff ...interface{}) {
 
 // WarningLog sends text to the warningLogger and stderr
 func WarningLog(txt string, stuff ...interface{}) {
-	if warningLogger != nil {
-		warningLogger.SetPrefix(logTimeFormat() + severWarnFormat + logpidFormat)
-		warningLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg("WARNING", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-		if verboseSwitch == "on" {
-			fmt.Fprintf(os.Stderr, "WARNING: "+txt+"\n", stuff...)
-		}
-	}
+	messageLogger(InfoLogger{warningLogger, os.Stderr, "WARNING", severWarnFormat}, txt, verboseSwitch, stuff)
 }
 
-// ErrLog sends text only to the errorLogger
-func ErrLog(txt string, stuff ...interface{}) {
-	if errorLogger != nil {
-		errorLogger.SetPrefix(logTimeFormat() + severErrorFormat + logpidFormat)
-		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg("ERROR", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-	}
+// ErrorLogNoStdErr sends text only to the errorLogger
+func ErrorLogNoStdErr(txt string, stuff ...interface{}) {
+	messageLogger(InfoLogger{errorLogger, nil, "ERROR", severErrorFormat}, txt, "off", stuff)
 }
 
 // ErrorLog sends text to the errorLogger and stderr
 func ErrorLog(txt string, stuff ...interface{}) error {
-	if errorLogger != nil {
-		errorLogger.SetPrefix(logTimeFormat() + severErrorFormat + logpidFormat)
-		errorLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg("ERROR", fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-		if errorSwitch == "on" {
-			fmt.Fprintf(os.Stderr, "ERROR: "+txt+"\n", stuff...)
-		}
-	}
+	messageLogger(InfoLogger{errorLogger, os.Stderr, "ERROR", severErrorFormat}, txt, errorSwitch, stuff)
 	return fmt.Errorf(txt+"\n", stuff...)
 }
 
