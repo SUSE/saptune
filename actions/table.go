@@ -549,11 +549,11 @@ func printRow(writer io.Writer, twist bool, cols []string, rowElements map[strin
 	if rowElements["type"] == "verify" {
 		PrintVerifiedRow(twist, writer, rowElements, cols)
 	} else {
-		printNotVerifiedRow(twist, writer, rowElements, cols)
+		printSimulateRow(twist, writer, rowElements, cols)
 	}
 }
 
-func printNotVerifiedRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
+func printSimulateRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
 	if twist {
 		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[0], cols[1], cols[2], rowElements["comment"])
 	} else {
