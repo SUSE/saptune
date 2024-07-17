@@ -34,6 +34,7 @@ type InfoLogger struct {
 	logger  *log.Logger
 	where   *os.File
 	typeLog string
+	format  string
 }
 
 // Standard log handler
@@ -41,8 +42,9 @@ func messageLogger(infoLogger InfoLogger, txt string, stuff []interface{}) {
 	logger := infoLogger.logger
 	typeLog := infoLogger.typeLog
 	where := infoLogger.where
+	logFormat := infoLogger.format
 	if logger != nil {
-		logger.SetPrefix(logTimeFormat() + severNoticeFormat + logpidFormat)
+		logger.SetPrefix(logTimeFormat() + logFormat + logpidFormat)
 		logger.Printf(CalledFrom()+txt+"\n", stuff...)
 		jWriteMsg(typeLog, fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
 		if verboseSwitch == "on" && where != nil {
@@ -64,7 +66,7 @@ func DebugLog(txt string, stuff ...interface{}) {
 
 // NoticeLog sends text to the noticeLogger and stdout
 func NoticeLog(txt string, stuff ...interface{}) {
-	messageLogger(InfoLogger{noticeLogger, os.Stdout, "NOTICE"}, txt, stuff)
+	messageLogger(InfoLogger{noticeLogger, os.Stdout, "NOTICE", severNoticeFormat}, txt, stuff)
 }
 
 // InfoLog sends text only to the infoLogger
@@ -77,17 +79,17 @@ func InfoLog(txt string, stuff ...interface{}) {
 
 // WarningLog sends text to the warningLogger and stderr
 func WarningLog(txt string, stuff ...interface{}) {
-	messageLogger(InfoLogger{warningLogger, os.Stderr, "WARNING"}, txt, stuff)
+	messageLogger(InfoLogger{warningLogger, os.Stderr, "WARNING", severWarnFormat}, txt, stuff)
 }
 
 // ErrorLogNoStdErr sends text only to the errorLogger
 func ErrorLogNoStdErr(txt string, stuff ...interface{}) {
-	messageLogger(InfoLogger{errorLogger, nil, "ERROR"}, txt, stuff)
+	messageLogger(InfoLogger{errorLogger, nil, "ERROR", severErrorFormat}, txt, stuff)
 }
 
 // ErrorLog sends text to the errorLogger and stderr
 func ErrorLog(txt string, stuff ...interface{}) error {
-	messageLogger(InfoLogger{errorLogger, os.Stderr, "ERROR"}, txt, stuff)
+	messageLogger(InfoLogger{errorLogger, os.Stderr, "ERROR", severErrorFormat}, txt, stuff)
 	return fmt.Errorf(txt+"\n", stuff...)
 }
 
