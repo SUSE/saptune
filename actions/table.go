@@ -547,7 +547,7 @@ func printWrappedRow(writer io.Writer, wrappedElem map[string][]string, rowEleme
 // printRow prints now the row of the table
 func printRow(writer io.Writer, twist bool, cols []string, rowElements map[string]string) {
 	if rowElements["type"] == "verify" {
-		PrintVerifiedRow(twist, writer, rowElements, cols)
+		printVerifiedRow(twist, writer, rowElements, cols)
 	} else {
 		printSimulateRow(twist, writer, rowElements, cols)
 	}
@@ -561,7 +561,7 @@ func printSimulateRow(twist bool, writer io.Writer, rowElements map[string]strin
 	}
 }
 
-func PrintVerifiedRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
+func printVerifiedRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
 	if twist {
 		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[1], cols[2], cols[0], rowElements["compliant"])
 	} else {
