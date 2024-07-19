@@ -9,7 +9,7 @@ import (
 )
 
 var schemaDir = "file:///usr/share/saptune/schemas/1.0/"
-var supportedRAC map[string]bool = SupportedRACMap()
+var supportedRAC map[string]bool = supportedRACMap()
 
 // jentry is the json entry to display
 var jentry JEntry
