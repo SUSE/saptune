@@ -25,7 +25,7 @@ THP=never
 #
 KSM=0
 
-[cpu]
+[cpu:arch=x86_64]
 # Energy Performance Bias EPB (applies to Intel-based systems only)
 # energy_perf_bias: performance - 0, normal - 6, powersave - 15
 # cpupower set -b 0, if system supports Intel's performance bias setting
@@ -98,7 +98,7 @@ glibc 2.31-150300.46.1
 [rpm:os=15-SP4:arch=x86_64]
 glibc 2.31-150300.46.1
 
-[grub]
+[grub:arch=x86_64]
 # /etc/default/grub GRUB_CMDLINE_LINUX_DEFAULT
 # saptune only checks the values. Changing the grub configuration is not
 # supported by saptune
