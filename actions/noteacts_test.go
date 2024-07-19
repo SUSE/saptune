@@ -200,8 +200,6 @@ simpleNote - Configuration drop in for simple tests
 --------------------+------------------------------+-------------+-----------+-------------+-----------
    simpleNote, 1    | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
 
-   (no change)
-
 
 [31mAttention for SAP Note simpleNote:
 Hints or values not yet handled by saptune. So please read carefully, check and set manually, if needed:
