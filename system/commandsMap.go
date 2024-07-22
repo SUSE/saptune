@@ -1,5 +1,6 @@
 package system
 
+// defaultCommand contains all available 'command - action' combinations
 var defaultCommand = map[string]bool{
 	"daemon start":        false,
 	"daemon status":       false,
@@ -60,7 +61,8 @@ var defaultCommand = map[string]bool{
 	"help":                false,
 }
 
-func NewDefaultCommandsMap() map[string]bool {
+// newDefaultCommandsMap creates a new 'command - action' map
+func newDefaultCommandsMap() map[string]bool {
 	var newCommandMap = make(map[string]bool, len(defaultCommand))
 	for key, value := range defaultCommand {
 		newCommandMap[key] = value
@@ -68,8 +70,10 @@ func NewDefaultCommandsMap() map[string]bool {
 	return newCommandMap
 }
 
-func SupportedRACMap() map[string]bool {
-	var supportedRAC = NewDefaultCommandsMap()
+// supportedRACMap contains the supported 'command - action' combinations
+// for the json output
+func supportedRACMap() map[string]bool {
+	var supportedRAC = newDefaultCommandsMap()
 
 	supportedRAC["daemon status"] = true
 	supportedRAC["service status"] = true
@@ -87,8 +91,10 @@ func SupportedRACMap() map[string]bool {
 	return supportedRAC
 }
 
-func LockCommandsMap() map[string]bool {
-	var lockCommand = NewDefaultCommandsMap()
+// lockCommandsMap contains the supported 'command - action' combinations
+// for the saptune locking mechanism
+func lockCommandsMap() map[string]bool {
+	var lockCommand = newDefaultCommandsMap()
 
 	lockCommand["daemon start"] = true
 	lockCommand["daemon stop"] = true

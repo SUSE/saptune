@@ -12,7 +12,7 @@ import (
 var stLockFile = "/run/.saptune.lock"
 
 // map of 'realm command' combinations to set the lock or not
-var lockCommands map[string]bool = LockCommandsMap()
+var lockCommands map[string]bool = lockCommandsMap()
 
 // isOwnLock return true, if lock file is from the current running process
 // pid inside the lock file is the pid of current running saptune instance

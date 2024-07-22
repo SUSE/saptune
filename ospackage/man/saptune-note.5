@@ -1,5 +1,5 @@
 .\"/* 
-.\" * Copyright (c) 2018-2021 SUSE LLC.
+.\" * Copyright (c) 2018-2024 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Angela Briel
 .\" *
@@ -15,9 +15,9 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "Januar 2023" "" "saptune note file format description"
+.TH "saptune-note" "19" "July 2024" "" "saptune note file format description"
 .SH NAME
-saptune\-note - Note definition files for saptune version \fB3\fP
+saptune\-note \- Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
 This man page documents the format of the Note definition files for saptune version \fB3\fP. If you still use version \fB1\fP of saptune please refer to the configuration files \fI/etc/sysconfig/saptune-note-*\fP
 
@@ -38,6 +38,10 @@ A section starts with a '[section_name]' keyword in the first line, followed by 
 It is possible to limit the scope of a section (e.g. to a special \fIhardware architecture\fP and/or a special \fIos version\fP, a special \fIblock device hardware\fP or a \fIcloud service provider\fP) by adding \fBtags\fP to the section definition.
 .br
 Tags are separated by ':' and can appear in any order. Unsupported tags are considered an error and the whole section is ignored.
+.br
+It is possible to use more than one tag per section. The tags are concatenated by \fBAND\fP and not OR. That means using the same tag multiple times with different values inside a section will not work. The whole section will be ignored.
+.br
+In such a case split your section into 2 (or more) consecutive sections.
 .br
 For some tags the value of the tag is treated as a string and used as a regular expression to match the content of the respective source. This is mentioned in the description of the possible tags below. As a reference https://golang.org/pkg/regexp/#MatchString can be used to see, what additional expressions may be possible inside the tag value. But attention, only some basic ones are really supprted (like 'sd[ab]' for block devices).
 
