@@ -1,0 +1,35 @@
+name: Saptune Github Release
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on pull request events but only for the master and sle-12 branch
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  Create_artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '1.18'
+          cache: true
+
+      - name: Get current date
+        id: bdate
+        run: echo "::set-output name=bdate::$(date +'%Y-%m-%d')"
+
+      - uses: goreleaser/goreleaser-action@v4
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean --debug -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion={{ github.ref_name }}' -X 'github.com/SUSE/saptune/actions.RPMDate={{ steps.bdate.outputs.bdate }}'"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
