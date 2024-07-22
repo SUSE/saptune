@@ -13,6 +13,8 @@ import (
 
 // define max column width
 var fmtmax = 30
+// number of lines printed for 'verify'
+var lineCnt = 0
 
 // PrintNoteFields Print mismatching fields in the note comparison result.
 func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string]map[string]note.FieldComparison, printComparison bool, result *system.JPNotes) {
@@ -271,7 +273,7 @@ func printTableHeader(writer io.Writer, format string, col0, col1, col2, col3, c
 // footnotes and reminder section
 func printTableFooter(writer io.Writer, header string, footnote []string, reminder map[string]string, noteReminder *[]system.JPNotesRemind) {
 	for _, fn := range footnote {
-		if fn != "" {
+		if fn != "" && lineCnt > 0 {
 			fmt.Fprintf(writer, "\n %s", fn)
 		}
 	}
@@ -473,6 +475,7 @@ func colorFormating(colCmpl, colNonCmpl, txt, compliant string) string {
 // if override exists, expected == override, so compare of width of expected and
 // actual column is sufficient
 func printTableRow(writer io.Writer, rowElements map[string]string) {
+	lineCnt = lineCnt + 1
 	wrappedActual := system.WrapTxt(rowElements["actual"], fmtmax)
 	wrappedExpected := system.WrapTxt(rowElements["expected"], fmtmax)
 	wrappedOverride := system.WrapTxt(rowElements["override"], fmtmax)

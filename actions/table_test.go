@@ -99,7 +99,7 @@ func TestPrintNoteFields(t *testing.T) {
    941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
    941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
    941735, 1        | force_latency              | 70                   |           | all:none             | no  [1] [4]
-   941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
+   941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   |  -  [2] [3] [6]
    941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
    941735, 1        | kernel.shmmni              |                      |           | NA                   |  -  [16] [7]
 
@@ -124,7 +124,6 @@ func TestPrintNoteFields(t *testing.T) {
    941735, 1        | IO_SCHEDULER_sdd           |                      |           | bfq                  | no  [7] [10]
    941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
    941735, 1        | force_latency              | 70                   |           | all:none             | no  [1] [4]
-   941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
 
  ` + footnote1 + `
   [2] setting is not available on the system
@@ -171,7 +170,7 @@ func TestPrintNoteFields(t *testing.T) {
    941735, 1        | IO_SCHEDULER_vda           | noop                 |           | all:none             |  -  [1] [5]
    941735, 1        | ShmFileSystemSizeMB        | 1714                 |           | 488                  | no 
    941735, 1        | force_latency              | 70                   |           | all:none             | no  [1] [4]
-   941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   | no  [2] [3] [6]
+   941735, 1        | grub:intel_idle.max_cstate | 1                    |           | NA                   |  -  [2] [3] [6]
    941735, 1        | kernel.shmmax              | 18446744073709551615 |           | 18446744073709551615 | yes
    941735, 1        | kernel.shmmni              |                      |           | NA                   |  -  [16] [7]
 
