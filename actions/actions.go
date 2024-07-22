@@ -188,12 +188,7 @@ func chkFileName(defName, workingDir, extraDir string) (string, bool, error) {
 		if defType == "Note" {
 			chkName = defName + ".conf"
 		}
-		_, files := system.ListDir(extraDir, "")
-		for _, f := range files {
-			if f == chkName {
-				fileName = fmt.Sprintf("%s%s", extraDir, f)
-			}
-		}
+		fileName = fmt.Sprintf("%s%s", extraDir, chkName)
 		if _, err = os.Stat(fileName); err == nil {
 			extraDef = true
 		}

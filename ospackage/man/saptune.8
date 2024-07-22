@@ -1,5 +1,5 @@
 .\"/*
-.\" * Copyright (c) 2017-2022 SUSE LLC.
+.\" * Copyright (c) 2017-2024 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Soeren Schmidt, Angela Briel
 .\" *
@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "August 2022" "" "System optimization For SAP"
+.TH saptune "8" "July 2024" "" "System optimization For SAP"
 .SH NAME
 saptune \- Comprehensive system optimization management for SAP solutions (\fBVersion 3\fP)
 
@@ -154,6 +154,10 @@ all currently applied Notes in applied order
 The list of 'applied Notes' includes the \fBmanually\fP applied Notes. Additional it includes all the Notes related to the 'configured Solution' too. These Notes get applied when using '\fIsaptune solution apply\fP'. The solutions and their related notes can be listed by '\fIsaptune solution list\fP'.
 
 And additional 'applied Notes' shows if the system is '\fBactively\fP' tuned at the moment. If the list is empty, the system is \fBnot\fP tuned. If the list is \fBnot\fP empty, the system \fBis\fP tuned.
+.IP \[bu]
+A list of orphaned Overrides
+.br
+These are override files existing in \fI/etc/saptune/override\fP, but with no related Note definition file found in the working area \fI/var/lib/saptune/working/\fP or in the custom/vendor directory \fI/etc/saptune/extra\fP.
 .IP \[bu]
 state of staging
 .IP \[bu]

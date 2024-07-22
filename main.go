@@ -123,6 +123,7 @@ func main() {
 		system.ErrorExit("Error during NoteSanityCheck - '%v'\n", err)
 	}
 	checkForTuned()
+	actions.CheckOrphanedOverrides()
 	actions.SelectAction(os.Stdout, tuneApp, SaptuneVersion)
 	system.ErrorExit("", 0)
 }
