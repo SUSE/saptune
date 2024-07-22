@@ -468,6 +468,17 @@ func currentCPUDriver() string {
 	return cpuDriver
 }
 
+// CPUPlatform returns the CPU platform
+// read /sys/devices/cpu/caps/pmu_name
+func CPUPlatform() string {
+	cpuPlatformFile := "/sys/devices/cpu/caps/pmu_name"
+	cpuPlatform, err := os.ReadFile(cpuPlatformFile)
+	if err != nil {
+		InfoLog("Problems reading file '%s' - %+v\n", cpuPlatformFile, err)
+	}
+	return strings.TrimSpace(string(cpuPlatform))
+}
+
 // checkCPUState checks, if all cpus have the same state settings
 // returns true, if the cpu states differ
 func checkCPUState(csMap map[string]string) bool {
