@@ -53,6 +53,9 @@ func TestCliArg(t *testing.T) {
 	if IsFlagSet("format") {
 		t.Errorf("Test failed, expected 'format' flag as 'false', but got 'true'")
 	}
+	if IsFlagSet("force-color") {
+		t.Errorf("Test failed, expected 'force-color' flag as 'false', but got 'true'")
+	}
 	expected = ""
 	actual = GetFlagVal("format")
 	if actual != expected {
@@ -70,7 +73,7 @@ func TestCliArg(t *testing.T) {
 }
 
 func TestCliFlags(t *testing.T) {
-	os.Args = []string{"saptune", "note", "list", "--format", "json", "--force", "--dryrun", "--help", "--version", "--colorscheme", "full-green-zebra", "--show-non-compliant", "--wrongflag", "--unknownflag=none"}
+	os.Args = []string{"saptune", "note", "list", "--format", "json", "--force", "--dryrun", "--help", "--version", "--colorscheme", "full-green-zebra", "--show-non-compliant", "--wrongflag", "--unknownflag=none", "--force-color"}
 	// parse command line, to get the test parameters
 	saptArgs, saptFlags = ParseCliArgs()
 
@@ -97,6 +100,9 @@ func TestCliFlags(t *testing.T) {
 	}
 	if !IsFlagSet("notSupported") {
 		t.Errorf("Test failed, expected 'notSupported' flag as 'true', but got 'false'")
+	}
+	if !IsFlagSet("force-color") {
+		t.Errorf("Test failed, expected 'force-color' flag as 'true', but got 'false'")
 	}
 
 	expected := "json"
