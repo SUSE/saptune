@@ -274,7 +274,7 @@ func chkGlobalFlag(flag string, cliArg string, result bool, globOpt bool) (bool,
 	}
 	return result, globOpt
 }
-		
+
 // chkRealmOpts checks for realm options
 // at the moment only 'saptune status' has an option (--non-compliance-check)
 func chkRealmOpts(cmdLinePos map[string]int) bool {

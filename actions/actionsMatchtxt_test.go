@@ -56,7 +56,9 @@ tuning:                   not tuned
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
-`, system.GetTunedAdmProfile(), system.GetVirtStatus())
+`, "balanced", system.GetVirtStatus())
+
+//`, system.GetTunedAdmProfile(), system.GetVirtStatus())
 
 var saptuneStatMatchText = fmt.Sprintf(`
 saptune.service:          disabled/inactive

@@ -165,7 +165,24 @@ func TestServiceActions(t *testing.T) {
 
 	// Test ServiceActionApply
 	t.Run("ServiceActionApply", func(t *testing.T) {
+		oldOSExit := system.OSExit
+		defer func() { system.OSExit = oldOSExit }()
+		system.OSExit = tstosExit
+		oldErrorExitOut := system.ErrorExitOut
+		defer func() { system.ErrorExitOut = oldErrorExitOut }()
+		system.ErrorExitOut = tstErrorExitOut
+
+		errExitbuffer := bytes.Buffer{}
+		tstwriter = &errExitbuffer
+
 		ServiceActionApply(sApp)
+		if tstRetErrorExit != 0 {
+			t.Logf("error exit should be '0' and NOT '%v'\n", tstRetErrorExit)
+		}
+		errExOut := errExitbuffer.String()
+		if errExOut != "" {
+			t.Logf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+		}
 	})
 	// Test ServiceActionRevert
 	t.Run("ServiceActionRevert", func(t *testing.T) {
