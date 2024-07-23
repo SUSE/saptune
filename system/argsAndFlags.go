@@ -31,8 +31,8 @@ func CliArgs(i int) []string {
 	return []string{}
 }
 
-// IsFlagSet returns true, if the flag is available on the command line
-// or false, if not
+// IsFlagSet returns true if the flag is available on the command line
+// or false if not
 func IsFlagSet(flag string) bool {
 	if saptFlags[flag] == "false" || saptFlags[flag] == "" {
 		return false
@@ -67,7 +67,7 @@ func ParseCliArgs() ([]string, map[string]string) {
 		}
 		if strings.HasPrefix(arg, "--") || strings.HasPrefix(arg, "-") {
 			// argument is a flag
-			// skip next command line parameter, if it is the value
+			// skip next command line parameter if it is the value
 			// belonging to a flag
 			skip = handleFlags(arg, i, stFlags)
 			continue
@@ -142,7 +142,7 @@ func setUnsupportedFlag(val string, flags map[string]string) {
 	}
 }
 
-// ChkCliSyntax checks, if command line parameter are in the right order
+// ChkCliSyntax checks if command line parameter are in the right order
 // only checking the right position of the 'options' aka 'flags'
 // saptune globOpt realm realmOpt cmd cmdOpt param
 func ChkCliSyntax() bool {
@@ -260,7 +260,7 @@ func chkGlobalOpts(cmdLinePos map[string]int) bool {
 	return ret
 }
 
-// chkGlobalFlag checks, if the global flags are on the right position in the
+// chkGlobalFlag checks if the global flags are on the right position in the
 // command line
 func chkGlobalFlag(flag string, cliArg string, result bool, globOpt bool) (bool, bool) {
 	fval := "-" + flag
@@ -349,7 +349,7 @@ func chkCmdOpts(cmdLinePos map[string]int) bool {
 	return ret
 }
 
-// checkFlag checks, if the command flags are on the right position in the
+// checkFlag checks if the command flags are on the right position in the
 // command line
 func checkFlag(cmdLinePos map[string]int, flagValue string) bool {
 	stArgs := os.Args

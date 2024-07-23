@@ -285,12 +285,8 @@ func switchOffColor() {
 	}
 }
 
-// PrintHelpAndExit prints the usage and exit
-func PrintHelpAndExit(writer io.Writer, exitStatus int) {
-	if system.GetFlagVal("format") == "json" {
-		system.JInvalid(exitStatus)
-	}
-	fmt.Fprintln(writer, `saptune: Comprehensive system optimisation management for SAP solutions.
+func cmdLineSyntax() string {
+	return `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
   saptune [--format FORMAT] [--force-color] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
   saptune [--format FORMAT] [--force-color] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
@@ -325,6 +321,14 @@ Print this message:
 Deprecation list:
   all 'saptune daemon' actions
   'saptune note simulate'
-  'saptune solution simulate'`)
+  'saptune solution simulate' `
+}
+
+// PrintHelpAndExit prints the usage and exit
+func PrintHelpAndExit(writer io.Writer, exitStatus int) {
+	if system.GetFlagVal("format") == "json" {
+		system.JInvalid(exitStatus)
+	}
+	fmt.Fprintln(writer, cmdLineSyntax())
 	system.ErrorExit("", exitStatus)
 }
