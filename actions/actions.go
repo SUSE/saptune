@@ -321,7 +321,8 @@ Print this message:
 Deprecation list:
   all 'saptune daemon' actions
   'saptune note simulate'
-  'saptune solution simulate' `
+  'saptune solution simulate'
+`
 }
 
 // PrintHelpAndExit prints the usage and exit
@@ -329,6 +330,6 @@ func PrintHelpAndExit(writer io.Writer, exitStatus int) {
 	if system.GetFlagVal("format") == "json" {
 		system.JInvalid(exitStatus)
 	}
-	fmt.Fprintln(writer, cmdLineSyntax())
+	fmt.Fprintf(writer, cmdLineSyntax())
 	system.ErrorExit("", exitStatus)
 }
