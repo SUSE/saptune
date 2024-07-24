@@ -111,6 +111,47 @@ var tearDown = func(t *testing.T) {
 	}
 }
 
+func TestVerifyAction(t *testing.T) {
+	// test setup
+	setUp(t)
+
+	var verifyMatchText = `No notes or solutions enabled, nothing to verify.
+`
+	buffer := bytes.Buffer{}
+	VerifyAction(&buffer, "applied", tApp)
+	txt := buffer.String()
+	checkOut(t, txt, verifyMatchText)
+
+	// test for PrintHelpAndExit
+	oldOSExit := system.OSExit
+	defer func() { system.OSExit = oldOSExit }()
+	system.OSExit = tstosExit
+	oldErrorExitOut := system.ErrorExitOut
+	defer func() { system.ErrorExitOut = oldErrorExitOut }()
+	system.ErrorExitOut = tstErrorExitOut
+
+	// this errExitMatchText differs from the 'real' text by the last 2 lines
+	// because of test situation, the 'exit 1' in PrintHelpAndExit is not
+	// executed (as designed for testing)
+	errExitMatchText := PrintHelpAndExitMatchText + `No notes or solutions enabled, nothing to verify.
+`
+	buffer.Reset()
+	errExitbuffer := bytes.Buffer{}
+	tstwriter = &errExitbuffer
+	VerifyAction(&buffer, "NotApplied", tApp)
+	txt = buffer.String()
+	checkOut(t, txt, errExitMatchText)
+	if tstRetErrorExit != 1 {
+		t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
+	}
+	errExOut := errExitbuffer.String()
+	if errExOut != "" {
+		t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+	}
+	// reset tApp variables, which were deleted by 'revert all'
+	tearDown(t)
+}
+
 func TestRevertAction(t *testing.T) {
 	var revertMatchText = `Reverting all notes and solutions, this may take some time...
 Parameters tuned by the notes and solutions have been successfully reverted.

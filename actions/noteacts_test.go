@@ -219,6 +219,32 @@ current order of enabled notes is: simpleNote
 		checkOut(t, txt, verifyMatchText)
 	})
 
+	// Test NoteActionVerifyApplied
+	t.Run("NoteActionVerifyApplied", func(t *testing.T) {
+		var verifyMatchText = `
+   SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
+--------------------+------------------------------+-------------+-----------+-------------+-----------
+   simpleNote, 1    | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
+
+
+[31mAttention for SAP Note simpleNote:
+Hints or values not yet handled by saptune. So please read carefully, check and set manually, if needed:
+# Text to ignore for apply but to display.
+# Everything the customer should know about this note, especially
+# which parameters are NOT handled and the reason.
+[0m
+
+current order of enabled notes is: simpleNote
+
+[32m[1mThe running system is currently well-tuned according to all of the enabled notes.[22m[0m
+`
+		buffer := bytes.Buffer{}
+		nID := "applied"
+		NoteActionVerify(&buffer, nID, tApp)
+		txt := buffer.String()
+		checkOut(t, txt, verifyMatchText)
+	})
+
 	// Test NoteActionEnabled
 	t.Run("NoteActionEnabled", func(t *testing.T) {
 		enabledMatchText := "simpleNote"

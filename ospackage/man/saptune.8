@@ -28,13 +28,13 @@ ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate 
 ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
 \fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
-( list | revertall | enabled | applied )
+( list | verify | revertall | enabled | applied )
 
 \fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 
 \fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
-verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
+verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
 
 \fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
 rename NOTEID NEWNOTEID
@@ -62,6 +62,9 @@ rename SOLUTIONNAME NEWSOLUTIONNAME
 
 \fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
 release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBverify\fP
+applied
 
 \fBsaptune\fP [--format FORMAT] [--force-color] \fBrevert\fP
 all
@@ -290,7 +293,7 @@ Print all currently enabled notes as a list separated by blanks without trailing
 Print all currently applied notes as a list separated by blanks without trailing line feed.
 .TP
 .B verify
-If a Note ID is specified, saptune verifies the currently running system against the recommendations specified in the Note. If Note ID is not specified, saptune verifies all system parameters against all implemented Notes. As a result you will see a table containing the following columns
+If a Note ID is specified, saptune verifies the currently running system against the recommendations specified in the Note. If Note ID is \fBnot\fP specified or the string \fIapplied\fP is specified, saptune verifies all system parameters against all applied Notes. As a result you will see a table containing the following columns
 
 SAPNote, Version | Parameter | Expected | Override | Actual | Compliant
 
@@ -675,6 +678,13 @@ First the command will show an analysis of the objects going to be released to m
 .br
 
 Because the release is irreversible, the user has to confirm the action.
+
+.SH VERIFY ACTIONS
+.TP
+.B verify applied
+Verifies all system parameters against all applied Notes.
+.br
+Same as a \fIsaptune note verify\fP
 
 .SH REVERT ACTIONS
 .TP
