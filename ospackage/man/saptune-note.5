@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "19" "July 2024" "" "saptune note file format description"
+.TH "saptune-note" "5" "July 2024" "" "saptune note file format description"
 .SH NAME
 saptune\-note \- Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
@@ -69,6 +69,23 @@ Valid values for \fBarch=\fP are the output from \fBuname -i\fP
 Example:
 .br
 [sysctl:os=15-SP1:arch=ppc64le]
+.RE
+.TP
+.BI pmu_name= <CPU platform>
+to select a special \fICPU platform\fP:
+.br
+Valid values for \fBpmu_name=\fP are the content from \fB/sys/devices/cpu/caps/pmu_name\fP. So this tag is an Intel CPU only feature for now.
+.br
+The tag is \fBnot\fP limited to the cpu section, it can be used in any section
+
+.RS 4
+Example:
+.br
+[cpu:pmu_name=skylake]
+.br
+or
+.br
+[grub:pmu_name=haswell]
 .RE
 .TP
 .BI vendor= <hardware vendor>

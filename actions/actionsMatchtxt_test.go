@@ -42,6 +42,7 @@ applied Solution:
 additional enabled Notes: 900929 
 enabled Notes:            900929
 applied Notes:            
+orphaned Overrides:       
 staging:                  disabled
 staged Notes:             
 staged Solutions:         
@@ -55,7 +56,7 @@ tuning:                   not tuned
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
-`, system.GetTunedAdmProfile(), system.GetVirtStatus())
+`, "balanced", system.GetVirtStatus())
 
 var saptuneStatMatchText = fmt.Sprintf(`
 saptune.service:          disabled/inactive
@@ -66,6 +67,7 @@ applied Solution:
 additional enabled Notes: 
 enabled Notes:            
 applied Notes:            
+orphaned Overrides:       
 staging:                  disabled
 staged Notes:             
 staged Solutions:         
@@ -82,40 +84,4 @@ Your system has not yet been tuned. Please visit `+"`"+`saptune note`+"`"+` and 
 
 `, system.GetTunedAdmProfile(), system.GetVirtStatus())
 
-var PrintHelpAndExitMatchText = `saptune: Comprehensive system optimisation management for SAP solutions.
-Daemon control:
-  saptune [--format FORMAT] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
-  saptune [--format FORMAT] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
-Tune system according to SAP and SUSE notes:
-  saptune [--format FORMAT] note ( list | revertall | enabled | applied )
-  saptune [--format FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
-  saptune [--format FORMAT] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
-  saptune [--format FORMAT] note rename NOTEID NEWNOTEID
-Tune system for all notes applicable to your SAP solution:
-  saptune [--format FORMAT] solution ( list | verify | enabled | applied )
-  saptune [--format FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
-  saptune [--format FORMAT] solution change [--force] SOLUTIONNAME
-  saptune [--format FORMAT] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
-  saptune [--format FORMAT] solution rename SOLUTIONNAME NEWSOLUTIONNAME
-Staging control:
-   saptune [--format FORMAT] staging ( status | enable | disable | is-enabled | list )
-   saptune [--format FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
-   saptune [--format FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
-Revert all parameters tuned by the SAP notes or solutions:
-  saptune [--format FORMAT] revert all
-Remove the pending lock file from a former saptune call
-  saptune [--format FORMAT] lock remove
-Call external script '/usr/sbin/saptune_check'
-  saptune [--format FORMAT] check
-Print current saptune status:
-  saptune [--format FORMAT] status [--non-compliance-check]
-Print current saptune version:
-  saptune [--format FORMAT] version
-Print this message:
-  saptune [--format FORMAT] help
-
-Deprecation list:
-  all 'saptune daemon' actions
-  'saptune note simulate'
-  'saptune solution simulate'
-`
+var PrintHelpAndExitMatchText = cmdLineSyntax()

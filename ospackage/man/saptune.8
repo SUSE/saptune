@@ -1,5 +1,5 @@
 .\"/*
-.\" * Copyright (c) 2017-2022 SUSE LLC.
+.\" * Copyright (c) 2017-2024 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Soeren Schmidt, Angela Briel
 .\" *
@@ -14,65 +14,65 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "August 2022" "" "System optimization For SAP"
+.TH saptune "8" "July 2024" "" "System optimization For SAP"
 .SH NAME
 saptune \- Comprehensive system optimization management for SAP solutions (\fBVersion 3\fP)
 
 ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate to saptune version \fB3\fP, so please refer to man page saptune-migrate(7).
 
 .SH SYNOPSIS
-\fBsaptune\fP [--format FORMAT] \fBdaemon\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBdaemon\fP
 ( start | stop | status [--non-compliance-check] ) \fBATTENTION: deprecated\fP
 
-\fBsaptune\fP [--format FORMAT] \fBservice\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBservice\fP
 ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
-\fBsaptune\fP [--format FORMAT] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
 ( list | revertall | enabled | applied )
 
-\fBsaptune\fP [--format FORMAT] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 
-\fBsaptune\fP [--format FORMAT] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
 verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
 
-\fBsaptune\fP [--format FORMAT] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
 rename NOTEID NEWNOTEID
 
-\fBsaptune\fP [--format FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
 ( list | verify | enabled | applied )
 
-\fBsaptune\fP [--format FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
 
-\fBsaptune\fP [--format FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
 change [--force] SOLUTIONNAME
 
-\fBsaptune\fP [--format FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
 verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
 
-\fBsaptune\fP [--format FORMAT] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
 rename SOLUTIONNAME NEWSOLUTIONNAME
 
-\fBsaptune\fP [--format FORMAT] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
 ( status | enable | disable | is-enabled | list )
 
-\fBsaptune\fP [--format FORMAT] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
 ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune\fP [--format FORMAT] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
 release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune\fP [--format FORMAT] \fBrevert\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBrevert\fP
 all
 
-\fBsaptune\fP [--format FORMAT] \fBcheck\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBcheck\fP
 
-\fBsaptune\fP [--format FORMAT] \fBstatus [--non-compliance-check]\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBstatus [--non-compliance-check]\fP
 
-\fBsaptune\fP [--format FORMAT] \fBversion\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBversion\fP
 
-\fBsaptune\fP [--format FORMAT] \fBhelp\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBhelp\fP
 
 .SH DESCRIPTION
 saptune is designed to automate the configuration recommendations from SAP and SUSE to run an SAP application on SLES for SAP. These configuration recommendations are normally referred to as SAP Notes. So some dedicated SAP Notes are the base for the work of saptune. Additional some best practice guides are added as Note definitions to optimize the system for some really special cases.
@@ -86,7 +86,7 @@ saptune does not only set kernel values (like sysctl does), but also values like
 .PP
 /proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.d/, /etc/systemd/logind.conf.d/ and some others.
 
-By default saptune is printing all results to stdout, Errors and Warnings are printed to stderr. By using \fB[--format FORMAT]\fP this behaviour can be changed.
+By default saptune is printing all results to stdout, Errors and Warnings are printed to stderr. By using \fB--format FORMAT\fP this behaviour can be changed.
 .br
 Supported formats are:
 .TP
@@ -154,6 +154,10 @@ all currently applied Notes in applied order
 The list of 'applied Notes' includes the \fBmanually\fP applied Notes. Additional it includes all the Notes related to the 'configured Solution' too. These Notes get applied when using '\fIsaptune solution apply\fP'. The solutions and their related notes can be listed by '\fIsaptune solution list\fP'.
 
 And additional 'applied Notes' shows if the system is '\fBactively\fP' tuned at the moment. If the list is empty, the system is \fBnot\fP tuned. If the list is \fBnot\fP empty, the system \fBis\fP tuned.
+.IP \[bu]
+A list of orphaned Overrides
+.br
+These are override files existing in \fI/etc/saptune/override\fP, but with no related Note definition file found in the working area \fI/var/lib/saptune/working/\fP or in the custom/vendor directory \fI/etc/saptune/extra\fP.
 .IP \[bu]
 state of staging
 .IP \[bu]
@@ -895,6 +899,8 @@ Please do not change or remove files in this directory. The knowledge about the 
 
 .SH NOTE
 Using saptune within a pipe, the color information will be removed from the output.
+.br
+It is possible to change this behavior by using the command line option \fB--force-color\fP
 .SH NOTE
 When the values from the saptune Note definitions are applied to the system, no further monitoring of the system parameters are done. So changes of saptune relevant parameters by using the 'sysctl' command or by editing configuration files will not be observed. If the values set by saptune should be reverted, these unrecognized changed settings will be overwritten by the previous saved system settings from saptune.
 .SH NOTE

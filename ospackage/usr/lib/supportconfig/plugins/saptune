@@ -47,16 +47,6 @@ function display_dir_stat() {
     fi
 }
 
-function display_file_ls() {
-    echo -e "\n#==[ File List ]===========================#"
-    echo -e "# ls -lh ${1}\n"
-    if [ -e "${1}" ] ; then
-        ls -lh "${1}"
-    else
-        echo "${1} does not exist!"
-    fi
-}
-
 function display_ls() {
     echo -e "\n#==[ Dir List ]============================#"
     echo -e "# ls -Rlh ${1}\n"
@@ -125,6 +115,8 @@ display_file /etc/logrotate.d/saptune
 display_file /etc/sysconfig/saptune
 display_systemd_status saptune.service
 display_systemd_cat saptune.service
+display_cmd saptune status
+display_cmd saptune note verify
 
 display_ls /etc/saptune/extra
 display_ls /etc/saptune/override
@@ -150,17 +142,19 @@ display_ls /sys/devices/system/cpu/intel_pstate
 display_file /sys/devices/system/cpu/intel_pstate/status
 display_file /sys/devices/system/cpu/cpuidle/current_driver
 for file in /sys/devices/system/cpu/cpu*; do
-    display_file_ls "${file}"
+    display_file_stat "${file}"
     [ -e "${file}/cpufreq/scaling_available_governors" ] && display_file ${file}/cpufreq/scaling_available_governors
     [ -e "${file}/cpufreq/scaling_governor" ] && display_file ${file}/cpufreq/scaling_governor
-    [ -e "${file}/cpufreq/scaling_driver" ] && display_file {file}/cpufreq/scaling_driver
+    [ -e "${file}/cpufreq/scaling_driver" ] && display_file ${file}/cpufreq/scaling_driver
 done
 display_cmd /usr/bin/cpupower -c all info
 display_cmd /usr/bin/cpupower -c all frequency-info
 display_cmd /usr/bin/cpupower -c all info -b
 display_cmd /usr/bin/cpupower -c all idle-info
+# tuning parameter
+display_cmd sysctl -A
 # zypper history
-display_file_ls /var/log/zypp
+display_file_stat /var/log/zypp
 display_log /var/log/zypp/history
 
 # Bye.

@@ -58,6 +58,8 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			ret, blkDev = chkBlkTags(tagField[0], tagField[1], secFields, blkDev)
 		case "vendor", "model":
 			ret = chkHWTags(tagField[0], tagField[1], secFields)
+		case "pmu_name":
+			ret = chkCPUTags(tagField[1], secFields)
 		default:
 			ret = chkOtherTags(tagField[0], tagField[1], secFields)
 		}
@@ -150,6 +152,19 @@ func chkOtherTags(file, tagField string, secFields []string) bool {
 			system.InfoLog("the string '%s' in section definition '%v' does not match the content of the file '/sys/class/dmi/id/%s' ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, file, chkDmi)
 			ret = false
 		}
+	}
+	return ret
+}
+
+// chkCPUTags checks, if a cpu related section tag is valid or not
+// currently we only support the CPU platform (pmu_name)
+func chkCPUTags(tagField string, secFields []string) bool {
+	ret := true
+	chkCPUpf := system.CPUPlatform()
+	if tagField != chkCPUpf {
+		// CPU platform does not match
+		system.InfoLog("CPU platform '%s' in section definition '%v' does not match the CPU platform of the running system '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, chkCPUpf)
+		ret = false
 	}
 	return ret
 }

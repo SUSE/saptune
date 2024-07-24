@@ -31,8 +31,8 @@ func CliArgs(i int) []string {
 	return []string{}
 }
 
-// IsFlagSet returns true, if the flag is available on the command line
-// or false, if not
+// IsFlagSet returns true if the flag is available on the command line
+// or false if not
 func IsFlagSet(flag string) bool {
 	if saptFlags[flag] == "false" || saptFlags[flag] == "" {
 		return false
@@ -56,7 +56,7 @@ func GetFlagVal(flag string) string {
 func ParseCliArgs() ([]string, map[string]string) {
 	stArgs := []string{}
 	// supported flags
-	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "show-non-compliant": "false", "format": "", "colorscheme": "", "non-compliance-check": "false", "notSupported": ""}
+	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "show-non-compliant": "false", "format": "", "colorscheme": "", "non-compliance-check": "false", "notSupported": "", "force-color": "false"}
 	skip := false
 	for i, arg := range os.Args {
 		if skip {
@@ -67,7 +67,7 @@ func ParseCliArgs() ([]string, map[string]string) {
 		}
 		if strings.HasPrefix(arg, "--") || strings.HasPrefix(arg, "-") {
 			// argument is a flag
-			// skip next command line parameter, if it is the value
+			// skip next command line parameter if it is the value
 			// belonging to a flag
 			skip = handleFlags(arg, i, stFlags)
 			continue
@@ -125,6 +125,8 @@ func handleSimpleFlags(arg string, flags map[string]string) {
 		flags["show-non-compliant"] = "true"
 	case "--non-compliance-check", "-non-compliance-check":
 		flags["non-compliance-check"] = "true"
+	case "--force-color", "-force-color":
+		flags["force-color"] = "true"
 	default:
 		setUnsupportedFlag(arg, flags)
 	}
@@ -140,7 +142,7 @@ func setUnsupportedFlag(val string, flags map[string]string) {
 	}
 }
 
-// ChkCliSyntax checks, if command line parameter are in the right order
+// ChkCliSyntax checks if command line parameter are in the right order
 // only checking the right position of the 'options' aka 'flags'
 // saptune globOpt realm realmOpt cmd cmdOpt param
 func ChkCliSyntax() bool {
@@ -205,7 +207,8 @@ func chkGlobalSyntax(cmdLinePos map[string]int) bool {
 }
 
 // chkGlobalOpts checks for global options
-// saptune -format FORMAT [--version|--help]
+// saptune --format FORMAT [--version|--help]
+// saptune --force-color [--version|--help]
 // saptune --version or saptune --help
 func chkGlobalOpts(cmdLinePos map[string]int) bool {
 	stArgs := os.Args
@@ -240,24 +243,14 @@ func chkGlobalOpts(cmdLinePos map[string]int) bool {
 			cmdLinePos["cmdOpt"] = cmdLinePos["cmdOpt"] + 2
 		}
 	}
-	if IsFlagSet("version") {
-		// support '--version' and '-version'
-		if !strings.Contains(stArgs[globPos], "-version") {
-			DebugLog("chkGlobalOpts failed - 'version' flag on wrong position in command line")
-			ret = false
-		} else {
-			globOpt = true
-		}
-	}
-	if IsFlagSet("help") {
-		// support '--help' and '-help'
-		if !strings.Contains(stArgs[globPos], "-help") {
-			DebugLog("chkGlobalOpts failed - 'help' flag on wrong position in command line")
-			ret = false
-		} else {
-			globOpt = true
-		}
-	}
+
+	// check for '--version' or '-version'
+	ret, globOpt = chkGlobalFlag("version", stArgs[globPos], ret, globOpt)
+	// check for '--help' or '-help'
+	ret, globOpt = chkGlobalFlag("help", stArgs[globPos], ret, globOpt)
+	// check for '--force-color' or '-force-color'
+	ret, globOpt = chkGlobalFlag("force-color", stArgs[globPos], ret, globOpt)
+
 	if globOpt {
 		cmdLinePos["realm"] = cmdLinePos["realm"] + 1
 		cmdLinePos["realmOpt"] = cmdLinePos["realmOpt"] + 1
@@ -265,6 +258,21 @@ func chkGlobalOpts(cmdLinePos map[string]int) bool {
 		cmdLinePos["cmdOpt"] = cmdLinePos["cmdOpt"] + 1
 	}
 	return ret
+}
+
+// chkGlobalFlag checks if the global flags are on the right position in the
+// command line
+func chkGlobalFlag(flag string, cliArg string, result bool, globOpt bool) (bool, bool) {
+	fval := "-" + flag
+	if IsFlagSet(flag) {
+		if !strings.Contains(cliArg, fval) {
+			DebugLog("chkGlobalFlag failed - '%v' flag on wrong position in command line", flag)
+			result = false
+		} else {
+			globOpt = true
+		}
+	}
+	return result, globOpt
 }
 
 // chkRealmOpts checks for realm options
@@ -341,6 +349,8 @@ func chkCmdOpts(cmdLinePos map[string]int) bool {
 	return ret
 }
 
+// checkFlag checks if the command flags are on the right position in the
+// command line
 func checkFlag(cmdLinePos map[string]int, flagValue string) bool {
 	stArgs := os.Args
 	result := true

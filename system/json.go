@@ -178,6 +178,7 @@ type JStatus struct {
 	ConfiguredNotes []string       `json:"Notes enabled additionally"`
 	EnabledNotes    []string       `json:"Notes enabled"`
 	AppliedNotes    []string       `json:"Notes applied"`
+	OrphanedOver    []string       `json:"orphaned Overrides"`
 	Staging         JStatusStaging `json:"staging"`
 	Msg             string         `json:"remember message"`
 }

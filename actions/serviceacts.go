@@ -14,6 +14,9 @@ import (
 // ignore flag for takeover
 var ignoreFlag = "/run/.saptune.ignore"
 
+// list of orphaned override file for 'saptune status'
+var orphanedOverrides []string
+
 // ServiceAction handles service actions like start, stop, status, enable, disable
 // it controls the systemd saptune.service
 func ServiceAction(writer io.Writer, actionName, saptuneVersion string, tApp *app.App) {
@@ -546,6 +549,7 @@ func printTunedStatus(writer io.Writer, jstat *system.JStatusServs) {
 }
 
 // printNoteAndSols prints all enabled/active notes and solutions
+// and the orphaned overrides
 func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus) bool {
 	notTuned := true
 	partial := false
@@ -591,6 +595,11 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 	appliedNotes := tuneApp.AppliedNotes()
 	fmt.Fprintf(writer, "%s", appliedNotes)
 	fmt.Fprintf(writer, "\n")
+	fmt.Fprintf(writer, "orphaned Overrides:       ")
+	if len(orphanedOverrides) != 0 {
+		fmt.Fprintf(writer, "%s", strings.Join(orphanedOverrides, " "))
+	}
+	fmt.Fprintf(writer, "\n")
 	// initialise
 	jstat.ConfSolNotes = []system.JSol{}
 	jstat.AppliedNotes = []string{}
@@ -621,6 +630,7 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 	}
 	jstat.ConfiguredNotes = tuneApp.TuneForNotes
 	jstat.EnabledNotes = tuneApp.NoteApplyOrder
+	jstat.OrphanedOver = orphanedOverrides
 	return notTuned
 }
 
@@ -824,6 +834,25 @@ func preventReload() {
 		if ignoreServiceReload() {
 			system.NoticeLog("And 'IGNORE_RELOAD' is set in saptune configuration file, so nothing to do")
 			system.ErrorExit("", 0)
+		}
+	}
+}
+
+// CheckOrphanedOverrides checks, if there are override files left, where the
+// note definition file in the working area or the custom note is already
+// deleted.
+// create a list of orphaned override files for 'saptune status'
+func CheckOrphanedOverrides() {
+	dirCont, err := os.ReadDir(OverrideTuningSheets)
+	if err != nil {
+		system.ErrorExit("Problems reading override directory '%s' (%v). Please check your saptune installation\n", OverrideTuningSheets, err)
+	}
+	for _, entry := range dirCont {
+		ovFile := entry.Name()
+		_, _, err := chkFileName(ovFile, NoteTuningSheets, ExtraTuningSheets)
+		if os.IsNotExist(err) {
+			system.WarningLog("Found an orphaned override file '%s' in '%s'!\n Could not find a note definition file named '%s' in the working area '%s' nor '%s.conf' in the custom location '%s'. Please check and remove the override file, if it is a left over\n", ovFile, OverrideTuningSheets, ovFile, NoteTuningSheets, ovFile, ExtraTuningSheets)
+			orphanedOverrides = append(orphanedOverrides, ovFile)
 		}
 	}
 }
