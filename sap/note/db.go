@@ -48,8 +48,10 @@ func (paging LinuxPagingImprovements) Optimise() (Note, error) {
 	// Netweaver too.
 	// So for HANA and Netweaver: new limit is 2% system memory
 	newPaging.VMPagecacheLimitMB = system.GetMainMemSizeMB() * 2 / 100
+	system.InfoLog("Optimise pagecache - GetMainMemSizeMB returned '%+v', VMPagecacheLimitMB is '%+v'\n", system.GetMainMemSizeMB(), newPaging.VMPagecacheLimitMB)
 	if inputOverride != 0 {
 		newPaging.VMPagecacheLimitMB = uint64(inputOverride)
+		system.InfoLog("Optimise pagecache - inputOverride of '%+v' leads to VMPagecacheLimitMB as '%+v'\n", inputOverride, newPaging.VMPagecacheLimitMB)
 	}
 	if !inputEnable {
 		newPaging.VMPagecacheLimitMB = 0

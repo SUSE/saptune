@@ -44,18 +44,21 @@ func ParseMeminfo() (infoMap map[string]uint64) {
 // GetMainMemSizeMB return size of system main memory, excluding swap.
 // Panic on error.
 func GetMainMemSizeMB() uint64 {
+	InfoLog("GetMainMemSizeMB - MemTotal is '%+v'\n", ParseMeminfo()[MemMainTotalKey])
 	return ParseMeminfo()[MemMainTotalKey] / 1024
 }
 
 // GetTotalMemSizeMB return size of system main memory plus swap.
 // Panic on error.
 func GetTotalMemSizeMB() uint64 {
+	InfoLog("GetTotalMemSizeMB - MemTotal is '%+v', SwapTotal is '%+v'\n", ParseMeminfo()[MemMainTotalKey], ParseMeminfo()[MemSwapTotalKey])
 	return (ParseMeminfo()[MemMainTotalKey] + ParseMeminfo()[MemSwapTotalKey]) / 1024
 }
 
 // GetTotalMemSizePages return size of system main memory plus swap, in pages.
 // Panic on error.
 func GetTotalMemSizePages() uint64 {
+	InfoLog("GetTotalMemSizePages - MemTotal is '%+v', SwapTotal is '%+v', pagesize is '%+v'('%+v')\n", ParseMeminfo()[MemMainTotalKey], ParseMeminfo()[MemSwapTotalKey], os.Getpagesize(), uint64(os.Getpagesize()))
 	return (ParseMeminfo()[MemMainTotalKey] + ParseMeminfo()[MemSwapTotalKey]) / uint64(os.Getpagesize())
 }
 
