@@ -148,7 +148,25 @@ func TestServiceActions(t *testing.T) {
 	})
 	// Test ServiceActionEnable
 	t.Run("ServiceActionEnable", func(t *testing.T) {
+		oldOSExit := system.OSExit
+		defer func() { system.OSExit = oldOSExit }()
+		system.OSExit = tstosExit
+		oldErrorExitOut := system.ErrorExitOut
+		defer func() { system.ErrorExitOut = oldErrorExitOut }()
+		system.ErrorExitOut = tstErrorExitOut
+
+		errExitbuffer := bytes.Buffer{}
+		tstwriter = &errExitbuffer
+
 		ServiceActionEnable()
+		if tstRetErrorExit != 0 {
+			t.Logf("error exit should be '0' and NOT '%v'\n", tstRetErrorExit)
+		}
+		errExOut := errExitbuffer.String()
+		if errExOut != "" {
+			t.Logf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+		}
+
 		enabled, _ := system.SystemctlIsEnabled(testService)
 		if !enabled {
 			t.Errorf("'%s' not enabled", testService)
@@ -156,13 +174,30 @@ func TestServiceActions(t *testing.T) {
 	})
 	// Test ServiceActionDisable
 	t.Run("ServiceActionDisable", func(t *testing.T) {
+		oldOSExit := system.OSExit
+		defer func() { system.OSExit = oldOSExit }()
+		system.OSExit = tstosExit
+		oldErrorExitOut := system.ErrorExitOut
+		defer func() { system.ErrorExitOut = oldErrorExitOut }()
+		system.ErrorExitOut = tstErrorExitOut
+
+		errExitbuffer := bytes.Buffer{}
+		tstwriter = &errExitbuffer
+
 		ServiceActionDisable()
+		if tstRetErrorExit != 0 {
+			t.Logf("error exit should be '0' and NOT '%v'\n", tstRetErrorExit)
+		}
+		errExOut := errExitbuffer.String()
+		if errExOut != "" {
+			t.Logf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+		}
+
 		enabled, _ := system.SystemctlIsEnabled(testService)
 		if enabled {
 			t.Errorf("'%s' not disabled", testService)
 		}
 	})
-
 	// Test ServiceActionApply
 	t.Run("ServiceActionApply", func(t *testing.T) {
 		oldOSExit := system.OSExit
@@ -186,7 +221,24 @@ func TestServiceActions(t *testing.T) {
 	})
 	// Test ServiceActionRevert
 	t.Run("ServiceActionRevert", func(t *testing.T) {
+		oldOSExit := system.OSExit
+		defer func() { system.OSExit = oldOSExit }()
+		system.OSExit = tstosExit
+		oldErrorExitOut := system.ErrorExitOut
+		defer func() { system.ErrorExitOut = oldErrorExitOut }()
+		system.ErrorExitOut = tstErrorExitOut
+
+		errExitbuffer := bytes.Buffer{}
+		tstwriter = &errExitbuffer
+
 		ServiceActionRevert(sApp)
+		if tstRetErrorExit != 0 {
+			t.Logf("error exit should be '0' and NOT '%v'\n", tstRetErrorExit)
+		}
+		errExOut := errExitbuffer.String()
+		if errExOut != "" {
+			t.Logf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+		}
 	})
 
 	// Test ServiceActionStatus

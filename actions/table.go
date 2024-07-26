@@ -13,6 +13,7 @@ import (
 
 // define max column width
 var fmtmax = 30
+
 // number of lines printed for 'verify'
 var lineCnt = 0
 
