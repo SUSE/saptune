@@ -1,8 +1,6 @@
 name: Saptune Github Release
 
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on pull request events but only for the master and sle-12 branch
   push:
     tags:
       - '*'
@@ -25,12 +23,3 @@ jobs:
 
       - name: Run goreleaser release
         run: docker exec -t saptune-release /bin/sh -c "cd /app; ./run_saptune_goreleaser.sh;"
-
-      # - uses: goreleaser/goreleaser-action@v6
-      #   with:
-      #     distribution: goreleaser
-      #     version: latest
-      #     args: release --clean
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     bdate: ${{ env.bdate }}

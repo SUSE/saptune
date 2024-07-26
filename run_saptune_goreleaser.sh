@@ -3,8 +3,6 @@
 echo "----------"
 echo "Building SAPTUNE binary in $bdate with version $Version"
 echo "----------"
-pwd
-ls -altr
 zypper -n --gpg-auto-import-keys install git
 git config --global --add safe.directory /app
 go mod init github.com/SUSE/saptune
