@@ -1,0 +1,36 @@
+name: Saptune Github Release
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on pull request events but only for the master and sle-12 branch
+  push:
+    tags:
+      - '*'
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  Create_artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull the Container Image
+        run: docker pull registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base:latest
+
+      - name: Run Container Image
+        run: docker run --name saptune-release --privileged --tmpfs /run -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host -td -v "${{ github.workspace }}:/app" -e bdate=$(date +'%Y-%m-%d') -e Version=${{ github.ref_name }} -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }} registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base:latest
+
+      - name: Run goreleaser release
+        run: docker exec -t saptune-release /bin/sh -c "cd /app; ./run_saptune_goreleaser.sh;"
+
+      # - uses: goreleaser/goreleaser-action@v6
+      #   with:
+      #     distribution: goreleaser
+      #     version: latest
+      #     args: release --clean
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     bdate: ${{ env.bdate }}
