@@ -1,4 +1,4 @@
-name: saptuneUnittst
+name: Saptune Continuous Integration
 
 # Controls when the workflow will run
 on:
@@ -14,29 +14,10 @@ env:
   CC_PREFIX: github.com/SUSE/saptune/
 
 jobs:
-  saptuneUt:
+  Saptune_unit_test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set ENV for codeclimate (pull_request)
-        run: |
-          git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.head_ref }}
-          echo "GIT_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
-          echo "GIT_COMMIT_SHA=$(git rev-parse origin/${{ github.head_ref }})" >> $GITHUB_ENV
-        if: github.event_name == 'pull_request'
-
-      - name: Set ENV for codeclimate (push)
-        run: |
-          echo "GIT_BRANCH=${{ github.ref }}" >> $GITHUB_ENV
-          echo "GIT_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
-        if: github.event_name == 'push'
-
-      - name: Download test coverage reporter
-        run: |
-          curl -L $CC_TEST_REPORTER_URL > ./cc-test-reporter
-          chmod +x ./cc-test-reporter
-          ./cc-test-reporter before-build
 
       - name: Pull the Container Image
         run: docker pull registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base:latest
@@ -50,11 +31,37 @@ jobs:
       - name: Run saptune unit tests
         run: docker exec -t saptune-ci /bin/sh -c "cd /app; ./run_saptune_ci_tst.sh;"
 
-      - name: Code Climate report coverage
-        run: ./cc-test-reporter after-build --debug --prefix ${{ env.CC_PREFIX }} --exit-code $?
-        if: ${{ env.CC_TEST_REPORTER_ID }}
-
       - name: Stop and remove Container Image
         run: |
           docker stop saptune-ci
           docker rm saptune-ci
+
+  Code_climate_report:
+    needs: Saptune_unit_test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set ENV for codeclimate (push)
+        run: |
+          echo "GIT_BRANCH=${{ github.ref }}" >> $GITHUB_ENV
+          echo "GIT_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
+        if: github.event_name == 'push'
+
+      - name: Set ENV for codeclimate (pull_request)
+        run: |
+          git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.head_ref }}
+          echo "GIT_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
+          echo "GIT_COMMIT_SHA=$(git rev-parse origin/${{ github.head_ref }})" >> $GITHUB_ENV
+        if: github.event_name == 'pull_request'
+
+      - name: Download test coverage reporter
+        run: |
+          curl -L $CC_TEST_REPORTER_URL > ./cc-test-reporter
+          chmod +x ./cc-test-reporter
+          ./cc-test-reporter before-build
+
+      - name: Code Climate report coverage
+        run: ./cc-test-reporter after-build --debug --prefix ${{ env.CC_PREFIX }} --exit-code $?
+        if: ${{ env.CC_TEST_REPORTER_ID }}
+
