@@ -1,7 +1,6 @@
 package system
 
 import (
-	"io/ioutil"
 	"os"
 	"regexp"
 )
@@ -70,7 +69,7 @@ var allManufacturerProviders = [...]manufacturerProviders{
 func GetCSP() string {
 	cloudServiceProvider := ""
 	getCloudServiceProvider := func(manufacturer string, providers map[*regexp.Regexp]string) string {
-		if content, err := ioutil.ReadFile(manufacturer); err == nil {
+		if content, err := os.ReadFile(manufacturer); err == nil {
 			for providerRegex, provider := range providers {
 				matches := providerRegex.FindStringSubmatch(string(content))
 				if len(matches) != 0 {

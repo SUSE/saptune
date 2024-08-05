@@ -2,7 +2,6 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"syscall"
@@ -21,7 +20,7 @@ func isOwnLock() bool {
 		// no lock file found, return false
 		return false
 	}
-	p, err := ioutil.ReadFile(stLockFile)
+	p, err := os.ReadFile(stLockFile)
 	if err != nil {
 		ErrorLog("problems during reading the lock file - '%v'", err)
 		ReleaseSaptuneLock()
@@ -73,7 +72,7 @@ func saptuneIsLocked() bool {
 		return false
 	}
 	// file exists, read content
-	p, err := ioutil.ReadFile(stLockFile)
+	p, err := os.ReadFile(stLockFile)
 	if err != nil {
 		ErrorLog("problems during reading the lock file - '%v'", err)
 		ReleaseSaptuneLock()

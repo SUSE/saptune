@@ -3,7 +3,7 @@ package system
 // Gather information about kernel cmdline
 
 import (
-	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -11,7 +11,7 @@ import (
 // return value for given boot option or 'NA', if not available
 func ParseCmdline(fileName, option string) string {
 	opt := "NA"
-	cmdLine, err := ioutil.ReadFile(fileName)
+	cmdLine, err := os.ReadFile(fileName)
 	if err != nil {
 		WarningLog("ParseCmdline: failed to read  %s: %v", fileName, err)
 		return opt

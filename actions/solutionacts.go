@@ -8,7 +8,6 @@ import (
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
 	"io"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"sort"
@@ -420,7 +419,7 @@ func SolutionActionShow(writer io.Writer, solName string) {
 	}
 	solFName := fmt.Sprintf("%s.sol", solName)
 	fileName, _ := getFileName(solFName, SolutionSheets, ExtraTuningSheets)
-	cont, err := ioutil.ReadFile(fileName)
+	cont, err := os.ReadFile(fileName)
 	if err != nil {
 		system.ErrorExit("Failed to read file '%s' - %v", fileName, err)
 	}
@@ -536,7 +535,7 @@ func rewriteSolName(oldName, newName, newFile string) {
 	}
 	defer fn.Close()
 	// create temp file
-	tmpfn, err := ioutil.TempFile("", "replace-*")
+	tmpfn, err := os.CreateTemp("", "replace-*")
 	if err != nil {
 		system.ErrorExit("Unable to create temporary file - %v", err)
 	}

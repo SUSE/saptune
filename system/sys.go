@@ -3,7 +3,6 @@ package system
 // Manipulate /sys/ switches.
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -18,7 +17,7 @@ func GetSysString(parameter string) (string, error) {
 
 // getKeyStringFromPath generalizes the extraction of a string from path
 func getKeyStringFromPath(basePath string, parameter string, logFrom string) (string, error) {
-	val, err := ioutil.ReadFile(path.Join(basePath, strings.Replace(parameter, ".", "/", -1)))
+	val, err := os.ReadFile(path.Join(basePath, strings.Replace(parameter, ".", "/", -1)))
 	if err != nil {
 		WarningLog("failed to read %v string key '%s': %v", logFrom, parameter, err)
 		return "PNA", err
@@ -29,7 +28,7 @@ func getKeyStringFromPath(basePath string, parameter string, logFrom string) (st
 // GetSysChoice read a /sys/ key that comes with current value and alternative
 // choices, return the current choice or empty string.
 func GetSysChoice(parameter string) (string, error) {
-	val, err := ioutil.ReadFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)))
+	val, err := os.ReadFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)))
 	if err != nil {
 		WarningLog("failed to read sys key of choices '%s': %v", parameter, err)
 		return "PNA", err
@@ -60,7 +59,7 @@ func SetSysString(parameter, value string) error {
 		WarningLog("value is '%s', so sys key '%s' is/was not supported by os, skipping.", value, parameter)
 		return nil
 	}
-	err := ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
+	err := os.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
 	if os.IsNotExist(err) {
 		WarningLog("sys key '%s' is not supported by os, skipping.", parameter)
 	} else if err != nil {
@@ -82,9 +81,9 @@ func TestSysString(parameter, value string) error {
 		WarningLog("failed to get sys key '%s': %v", parameter, err)
 		return err
 	}
-	if err = ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644); err == nil {
+	if err = os.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644); err == nil {
 		// set key back to previous value, because this was only a test
-		err = ioutil.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(save), 0644)
+		err = os.WriteFile(path.Join("/sys", strings.Replace(parameter, ".", "/", -1)), []byte(save), 0644)
 	}
 	return err
 }

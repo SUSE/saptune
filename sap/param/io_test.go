@@ -2,7 +2,7 @@ package param
 
 import (
 	"github.com/SUSE/saptune/system"
-	"io/ioutil"
+	"os"
 	"path"
 	"testing"
 )
@@ -35,7 +35,7 @@ func TestIOElevators(t *testing.T) {
 	t.Logf("oldvals - '%+v'\n", oldvals)
 
 	// ANGI TODO - better solution
-	_, err = ioutil.ReadDir("/sys/block/sda/mq")
+	_, err = os.ReadDir("/sys/block/sda/mq")
 	if err != nil {
 		// single queue scheduler (values: noop deadline cfq)
 		scheduler = "noop"
@@ -398,12 +398,12 @@ func TestMaxSectorsKB(t *testing.T) {
 
 func TestIsValidScheduler(t *testing.T) {
 	scheduler := ""
-	dirCont, err := ioutil.ReadDir("/sys/block")
+	dirCont, err := os.ReadDir("/sys/block")
 	if err != nil {
 		t.Skip("no block files available. Skip test.")
 	}
 	for _, entry := range dirCont {
-		_, err := ioutil.ReadDir(path.Join("/sys/block/", entry.Name(), "mq"))
+		_, err := os.ReadDir(path.Join("/sys/block/", entry.Name(), "mq"))
 		if err != nil {
 			// single queue scheduler (values: noop deadline cfq)
 			scheduler = "cfq"
@@ -431,7 +431,7 @@ func TestIsValidScheduler(t *testing.T) {
 }
 
 func TestIsValidforNrRequests(t *testing.T) {
-	dirCont, err := ioutil.ReadDir("/sys/block")
+	dirCont, err := os.ReadDir("/sys/block")
 	if err != nil {
 		t.Skip("no block files available. Skip test.")
 	}
@@ -459,7 +459,7 @@ func TestIsValidforNrRequests(t *testing.T) {
 }
 
 func TestIsValidforReadAheadKB(t *testing.T) {
-	dirCont, err := ioutil.ReadDir("/sys/block")
+	dirCont, err := os.ReadDir("/sys/block")
 	if err != nil {
 		t.Skip("no block files available. Skip test.")
 	}

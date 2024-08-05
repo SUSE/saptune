@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/SUSE/saptune/system"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -42,7 +41,7 @@ func StoreSectionInfo(obj *INIFile, file, ID string, overwriteExisting bool) err
 		return err
 	}
 	if _, err := os.Stat(iniFileName); os.IsNotExist(err) || overwriteExisting {
-		return ioutil.WriteFile(iniFileName, content, 0644)
+		return os.WriteFile(iniFileName, content, 0644)
 	}
 	return nil
 }
@@ -63,7 +62,7 @@ func GetSectionInfo(initype, ID string, fileSelect bool) (*INIFile, error) {
 		KeyValue:  make(map[string]map[string]INIEntry),
 	}
 
-	content, err := ioutil.ReadFile(iniFileName)
+	content, err := os.ReadFile(iniFileName)
 	if err == nil {
 		// do not remove section runtime file, but remove section
 		// saved state file after reading
@@ -112,7 +111,7 @@ func readVersionSection(fileName string) ([]string, bool, error) {
 	if _, err := os.Stat(versRun); err == nil && !staging {
 		return getVersionRunInfo(versRun)
 	}
-	content, err := ioutil.ReadFile(fileName)
+	content, err := os.ReadFile(fileName)
 	if err != nil {
 		return vsection, chkVersEntries["isNew"], err
 	}
@@ -168,7 +167,7 @@ func getVersionRunInfo(versRun string) ([]string, bool, error) {
 	var dest []string
 	var vsection []string
 	isNew := true
-	content, err := ioutil.ReadFile(versRun)
+	content, err := os.ReadFile(versRun)
 	if err == nil && len(content) != 0 {
 		err = json.Unmarshal(content, &dest)
 		vsection = dest[0 : len(dest)-1]
@@ -197,7 +196,7 @@ func storeVersionRunInfo(versRun string, vsection []string, isNew bool) error {
 		return err
 	}
 	if _, err := os.Stat(versRun); os.IsNotExist(err) || overwriteExisting {
-		return ioutil.WriteFile(versRun, content, 0644)
+		return os.WriteFile(versRun, content, 0644)
 	}
 	return nil
 }

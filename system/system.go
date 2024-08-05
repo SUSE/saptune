@@ -3,7 +3,6 @@ package system
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -69,7 +68,7 @@ func GetOsVers() string {
 	// VERSION="12", VERSION="15"
 	// VERSION="12-SP1", VERSION="12-SP2", VERSION="12-SP3"
 	var re = regexp.MustCompile(`VERSION="([\w-]+)"`)
-	val, err := ioutil.ReadFile("/etc/os-release")
+	val, err := os.ReadFile("/etc/os-release")
 	if err != nil {
 		return ""
 	}
@@ -84,7 +83,7 @@ func GetOsVers() string {
 func GetOsName() string {
 	// NAME="SLES"
 	var re = regexp.MustCompile(`NAME="([\w\s]+)"`)
-	val, err := ioutil.ReadFile("/etc/os-release")
+	val, err := os.ReadFile("/etc/os-release")
 	if err != nil {
 		return ""
 	}
@@ -119,7 +118,7 @@ func CheckForPattern(file, pattern string) bool {
 	if _, err := os.Stat(file); os.IsNotExist(err) {
 		return false
 	}
-	content, err := ioutil.ReadFile(file)
+	content, err := os.ReadFile(file)
 	if err != nil {
 		return false
 	}
@@ -291,7 +290,7 @@ func GetDmiID(file string) (string, error) {
 	var content []byte
 	ret := ""
 	fileName := fmt.Sprintf("%s/%s", DmiID, file)
-	if content, err = ioutil.ReadFile(fileName); err == nil {
+	if content, err = os.ReadFile(fileName); err == nil {
 		ret = strings.TrimSpace(string(content))
 	} else {
 		InfoLog("failed to read %s - %v", fileName, err)
@@ -325,7 +324,7 @@ func GetHWIdentity(info string) (string, error) {
 		}
 	}
 	if fileName != "" {
-		if content, err = ioutil.ReadFile(fileName); err == nil {
+		if content, err = os.ReadFile(fileName); err == nil {
 			ret = strings.TrimSpace(string(content))
 		} else {
 			InfoLog("failed to read %s - %v", fileName, err)

@@ -3,7 +3,6 @@ package note
 import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -19,7 +18,7 @@ func GetLoginVal(key string) (string, error) {
 	var utmPat = regexp.MustCompile(`UserTasksMax=(.*)`)
 	switch key {
 	case "UserTasksMax":
-		logindContent, err := ioutil.ReadFile(path.Join(LogindConfDir, LogindSAPConfFile))
+		logindContent, err := os.ReadFile(path.Join(LogindConfDir, LogindSAPConfFile))
 		if err != nil && !os.IsNotExist(err) {
 			return "", err
 		}
@@ -97,7 +96,7 @@ func SetLoginVal(key, value string, revert bool) error {
 			if err := os.MkdirAll(LogindConfDir, 0755); err != nil {
 				return err
 			}
-			if err := ioutil.WriteFile(path.Join(LogindConfDir, LogindSAPConfFile), []byte(LogindSAPConfContent), 0644); err != nil {
+			if err := os.WriteFile(path.Join(LogindConfDir, LogindSAPConfFile), []byte(LogindSAPConfContent), 0644); err != nil {
 				return err
 			}
 			// reload-or-try-restart systemd-logind.service

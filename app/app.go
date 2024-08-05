@@ -8,7 +8,6 @@ import (
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
@@ -99,7 +98,7 @@ func (app *App) SaveConfig() error {
 	sysconf.SetStrArray(TuneForSolutionsKey, app.TuneForSolutions)
 	sysconf.SetStrArray(TuneForNotesKey, app.TuneForNotes)
 	sysconf.SetStrArray(NoteApplyOrderKey, app.NoteApplyOrder)
-	return ioutil.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), []byte(sysconf.ToText()), 0644)
+	return os.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), []byte(sysconf.ToText()), 0644)
 }
 
 // GetSortedSolutionEnabledNotes returns the number of all solution-enabled
@@ -256,7 +255,7 @@ func (app *App) NoteSanityCheck() error {
 		// file handling exists
 		fileName := fmt.Sprintf("/run/saptune/sections/%s.sections", note)
 		// check, if empty state file exists
-		if content, err := ioutil.ReadFile(app.State.GetPathToNote(note)); err == nil && len(content) == 0 {
+		if content, err := os.ReadFile(app.State.GetPathToNote(note)); err == nil && len(content) == 0 {
 			// remove empty state file
 			_ = app.State.Remove(note)
 			if _, err := os.Stat(fileName); err == nil {
@@ -579,7 +578,7 @@ func (app *App) RevertAll(permanent bool) error {
 	if err == nil {
 		for _, otherNoteID := range otherNotes {
 			// check, if empty state file exists
-			if content, err := ioutil.ReadFile(app.State.GetPathToNote(otherNoteID)); err == nil && len(content) == 0 {
+			if content, err := os.ReadFile(app.State.GetPathToNote(otherNoteID)); err == nil && len(content) == 0 {
 				// remove empty state file
 				_ = app.State.Remove(otherNoteID)
 				continue
