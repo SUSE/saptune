@@ -46,14 +46,15 @@ jobs:
     needs: Setup_Git_Env
     steps:
       - name: Download test coverage reporter
-        run: |
-          curl -L $CC_TEST_REPORTER_URL > ./cc-test-reporter
-          chmod +x ./cc-test-reporter
+        run: curl -L $CC_TEST_REPORTER_URL > ./cc-test-reporter
 
       - uses: actions/upload-artifact@v4
         with:
           name: codeclimate-reporter
           path: cc-test-reporter
+
+      - name: Grant execution permission to cc-test-reporter
+        run: chmod +x ./cc-test-reporter
 
       - name: Run the test reporter before-build
         env:
@@ -90,9 +91,15 @@ jobs:
           docker rm saptune-ci
 
   Code_climate_report_after_build:
-    needs: Saptune_unit_test
+    needs: [Saptune_unit_test, Setup_Git_Env]
     runs-on: ubuntu-latest
     steps:
+      - name: DEBUG
+        env:
+          GIT_BRANCH: ${{needs.Setup_Git_Env.outputs.branch}}
+          GIT_COMMIT_SHA: ${{needs.Setup_Git_Env.outputs.commit_sha}}
+        run: echo "$GIT_BRANCH - $GIT_COMMIT_SHA"
+
       - uses: actions/download-artifact@v4
         with:
           name: coverprofile
@@ -100,6 +107,9 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: codeclimate-reporter
+
+      - name: Grant execution permission to cc-test-reporter
+        run: chmod +x ./cc-test-reporter
 
       - name: Code Climate report coverage
         env:
