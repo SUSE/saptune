@@ -14,11 +14,21 @@ env:
   CC_PREFIX: github.com/SUSE/saptune/
 
 jobs:
+  Check_secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      run_cc: ${{ steps.run_cc.outputs.run_cc }}
+    steps:
+      - id: run_cc
+        run: if [ -z ${CC_TEST_REPORTER_ID} ]; then echo "run_cc=false" >> "$GITHUB_OUTPUT"; else echo "run_cc=true" >> "$GITHUB_OUTPUT"; fi
+
   Setup_Git_Env:
     runs-on: ubuntu-latest
+    needs: Check_secrets
     outputs:
       branch: ${{ steps.branch.outputs.GIT_BRANCH }}
       commit_sha: ${{ steps.commit_sha.outputs.GIT_COMMIT_SHA }}
+    if: ${{ needs.Check_secrets.outputs.run_cc == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -46,14 +56,15 @@ jobs:
     needs: Setup_Git_Env
     steps:
       - name: Download test coverage reporter
-        run: |
-          curl -L $CC_TEST_REPORTER_URL > ./cc-test-reporter
-          chmod +x ./cc-test-reporter
+        run: curl -L $CC_TEST_REPORTER_URL > ./cc-test-reporter
 
       - uses: actions/upload-artifact@v4
         with:
           name: codeclimate-reporter
           path: cc-test-reporter
+
+      - name: Grant execution permission to cc-test-reporter
+        run: chmod +x ./cc-test-reporter
 
       - name: Run the test reporter before-build
         env:
@@ -62,8 +73,9 @@ jobs:
         run: ./cc-test-reporter before-build
 
   Saptune_unit_test:
-    needs: Code_climate_report_before_build
     runs-on: ubuntu-latest
+    needs: Code_climate_report_before_build
+    if: ${{ always() }}
     steps:
       - uses: actions/checkout@v4
 
@@ -83,6 +95,7 @@ jobs:
         with:
           name: coverprofile
           path: c.out
+        if: ${{ env.CC_TEST_REPORTER_ID != '' }}
 
       - name: Stop and remove Container Image
         run: |
@@ -90,7 +103,7 @@ jobs:
           docker rm saptune-ci
 
   Code_climate_report_after_build:
-    needs: Saptune_unit_test
+    needs: [Setup_Git_Env, Saptune_unit_test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
@@ -101,9 +114,11 @@ jobs:
         with:
           name: codeclimate-reporter
 
+      - name: Grant execution permission to cc-test-reporter
+        run: chmod +x ./cc-test-reporter
+
       - name: Code Climate report coverage
         env:
           GIT_BRANCH: ${{needs.Setup_Git_Env.outputs.branch}}
           GIT_COMMIT_SHA: ${{needs.Setup_Git_Env.outputs.commit_sha}}
         run: ./cc-test-reporter after-build --debug --prefix ${{ env.CC_PREFIX }} --exit-code $?
-        if: env.CC_TEST_REPORTER_ID != ''
