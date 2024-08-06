@@ -1,4 +1,4 @@
-name: saptuneUnittst
+name: Saptune Continuous Integration
 
 # Controls when the workflow will run
 on:
@@ -14,29 +14,70 @@ env:
   CC_PREFIX: github.com/SUSE/saptune/
 
 jobs:
-  saptuneUt:
+  Check_secrets:
     runs-on: ubuntu-latest
+    outputs:
+      run_cc: ${{ steps.run_cc.outputs.run_cc }}
+    steps:
+      - id: run_cc
+        run: if [ -z ${CC_TEST_REPORTER_ID} ]; then echo "run_cc=false" >> "$GITHUB_OUTPUT"; else echo "run_cc=true" >> "$GITHUB_OUTPUT"; fi
+
+  Setup_Git_Env:
+    runs-on: ubuntu-latest
+    needs: Check_secrets
+    outputs:
+      branch: ${{ steps.branch.outputs.GIT_BRANCH }}
+      commit_sha: ${{ steps.commit_sha.outputs.GIT_COMMIT_SHA }}
+    if: ${{ needs.Check_secrets.outputs.run_cc == 'true' }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set ENV for codeclimate (pull_request)
+      - name: Set ENV (push)
+        run: |
+          echo "GIT_BRANCH=${{ github.ref }}" >> $GITHUB_ENV
+          echo "GIT_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
+        if: github.event_name == 'push'
+
+      - name: Set ENV (pull_request)
         run: |
           git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.head_ref }}
           echo "GIT_BRANCH=${{ github.head_ref }}" >> $GITHUB_ENV
           echo "GIT_COMMIT_SHA=$(git rev-parse origin/${{ github.head_ref }})" >> $GITHUB_ENV
         if: github.event_name == 'pull_request'
 
-      - name: Set ENV for codeclimate (push)
-        run: |
-          echo "GIT_BRANCH=${{ github.ref }}" >> $GITHUB_ENV
-          echo "GIT_COMMIT_SHA=${{ github.sha }}" >> $GITHUB_ENV
-        if: github.event_name == 'push'
+      - id: branch
+        run: echo "GIT_BRANCH=${GIT_BRANCH}" >> "$GITHUB_OUTPUT"
+          
+      - id: commit_sha
+        run: echo "GIT_COMMIT_SHA=${GIT_COMMIT_SHA}" >> "$GITHUB_OUTPUT"
 
+  Code_climate_report_before_build:
+    runs-on: ubuntu-latest
+    needs: Setup_Git_Env
+    steps:
       - name: Download test coverage reporter
-        run: |
-          curl -L $CC_TEST_REPORTER_URL > ./cc-test-reporter
-          chmod +x ./cc-test-reporter
-          ./cc-test-reporter before-build
+        run: curl -L $CC_TEST_REPORTER_URL > ./cc-test-reporter
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: codeclimate-reporter
+          path: cc-test-reporter
+
+      - name: Grant execution permission to cc-test-reporter
+        run: chmod +x ./cc-test-reporter
+
+      - name: Run the test reporter before-build
+        env:
+          GIT_BRANCH: ${{needs.Setup_Git_Env.outputs.branch}}
+          GIT_COMMIT_SHA: ${{needs.Setup_Git_Env.outputs.commit_sha}}
+        run: ./cc-test-reporter before-build
+
+  Saptune_unit_test:
+    runs-on: ubuntu-latest
+    needs: Code_climate_report_before_build
+    if: ${{ always() }}
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Pull the Container Image
         run: docker pull registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base:latest
@@ -50,11 +91,36 @@ jobs:
       - name: Run saptune unit tests
         run: docker exec -t saptune-ci /bin/sh -c "cd /app; ./run_saptune_ci_tst.sh;"
 
-      - name: Code Climate report coverage
-        run: ./cc-test-reporter after-build --debug --prefix ${{ env.CC_PREFIX }} --exit-code $?
-        if: ${{ env.CC_TEST_REPORTER_ID }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverprofile
+          path: c.out
+        if: ${{ env.CC_TEST_REPORTER_ID != '' }}
 
       - name: Stop and remove Container Image
         run: |
           docker stop saptune-ci
           docker rm saptune-ci
+
+  Code_climate_report_after_build:
+    needs: [Setup_Git_Env, Saptune_unit_test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverprofile
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: codeclimate-reporter
+
+      - name: Grant execution permission to cc-test-reporter
+        run: chmod +x ./cc-test-reporter
+
+      - name: Code Climate report coverage
+        env:
+          GIT_BRANCH: ${{needs.Setup_Git_Env.outputs.branch}}
+          GIT_COMMIT_SHA: ${{needs.Setup_Git_Env.outputs.commit_sha}}
+        run: ./cc-test-reporter after-build --debug --prefix ${{ env.CC_PREFIX }} --exit-code $?
