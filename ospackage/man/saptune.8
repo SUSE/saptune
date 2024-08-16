@@ -259,6 +259,15 @@ Success is reported on stdout, errors including systemd error messages are print
 
 If the action was successfully the exit code is 0, otherwise 1.
 
+ATTENTION:
+saptune is able to start/stopp/enable/disable systemd units, but on boot the outcome depends on the order of execution.
+
+If saptune is starting (or stopping) a systemd service ([service] section) it might happen, that the action gets reverted later by systemd because that service is disabled (or enabled) and executed after saptune.service.
+
+Similar a service enabled (or disabled) by saptune might already be stopped (or started) by systemd, because it came before saptune.service.
+
+If the execution order cannot be assured by service dependencies, it is recommended to set both ('start,enable' or 'stop,disable') in a Note definition or an Override.
+
 .SH NOTE ACTIONS
 Note denotes either a SAP Note, a vendor specific tuning definition or SUSE recommendation article.
 .SS
