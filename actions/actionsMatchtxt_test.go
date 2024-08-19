@@ -48,7 +48,7 @@ staged Notes:
 staged Solutions:         
 
 sapconf.service:          not available
-tuned.service:            disabled/active (profile: '%s')
+tuned.service:            disabled/active (profile: 'balanced')
 systemd system state:     running
 virtualization:           %s
 tuning:                   not tuned
@@ -56,9 +56,34 @@ tuning:                   not tuned
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
-`, "balanced", system.GetVirtStatus())
+`, system.GetVirtStatus())
 
 var saptuneStatMatchText = fmt.Sprintf(`
+saptune.service:          disabled/active
+saptune package:          'undef'
+configured version:       '3'
+enabled Solution:         sol1 (simpleNote)
+applied Solution:         
+additional enabled Notes: 900929 
+enabled Notes:            900929
+applied Notes:            
+orphaned Overrides:       
+staging:                  disabled
+staged Notes:             
+staged Solutions:         
+
+sapconf.service:          not available
+tuned.service:            disabled/active (profile: '')
+systemd system state:     running
+virtualization:           %s
+tuning:                   not tuned
+
+Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
+ 'saptune service enable'.
+
+`, system.GetVirtStatus())
+
+var saptuneStat2MatchText = fmt.Sprintf(`
 saptune.service:          disabled/inactive
 saptune package:          'undef'
 configured version:       '3'

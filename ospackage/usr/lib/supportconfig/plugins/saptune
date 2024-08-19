@@ -9,8 +9,8 @@ set -u
 
 function display_package_info() {
     echo -e "\n#==[ Command ]======================================#"
-    echo -e "# rpm -q ${1}"
-    rpm -q "${1}"
+    echo -e "# rpm -qi ${1}"
+    rpm -qi "${1}"
 
     echo -e "\n#==[ Command ]======================================#"
     echo -e "# rpm -V ${1}"

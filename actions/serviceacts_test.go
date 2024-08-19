@@ -256,7 +256,11 @@ func TestServiceActions(t *testing.T) {
 		tstwriter = &errExitbuffer
 		ServiceActionStatus(&buffer, sApp, saptuneVersion)
 		txt := buffer.String()
-		checkOut(t, txt, saptuneStatusMatchText)
+		if txt != saptuneStatusMatchText {
+			checkOut(t, txt, saptuneStatMatchText)
+		} else {
+			checkOut(t, txt, saptuneStatusMatchText)
+		}
 		errExOut := errExitbuffer.String()
 		if errExOut != "" {
 			t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)

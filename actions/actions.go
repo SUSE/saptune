@@ -303,13 +303,13 @@ Daemon control:
 Tune system according to SAP and SUSE notes:
   saptune [--format FORMAT] [--force-color] note ( list | verify | revertall | enabled | applied )
   saptune [--format FORMAT] [--force-color] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
-  saptune [--format FORMAT] [--force-color] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
+  saptune [--format FORMAT] [--force-color] [--fun] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
   saptune [--format FORMAT] [--force-color] note rename NOTEID NEWNOTEID
 Tune system for all notes applicable to your SAP solution:
   saptune [--format FORMAT] [--force-color] solution ( list | verify | enabled | applied )
   saptune [--format FORMAT] [--force-color] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
   saptune [--format FORMAT] [--force-color] solution change [--force] SOLUTIONNAME
-  saptune [--format FORMAT] [--force-color] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
+  saptune [--format FORMAT] [--force-color] [--fun] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
   saptune [--format FORMAT] [--force-color] solution rename SOLUTIONNAME NEWSOLUTIONNAME
 Staging control:
    saptune [--format FORMAT] [--force-color] staging ( status | enable | disable | is-enabled | list )
