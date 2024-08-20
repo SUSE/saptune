@@ -100,9 +100,19 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 		StagingAction(system.CliArg(2), system.CliArgs(3), stApp)
 	case "status":
 		ServiceAction(writer, "status", saptuneVers, stApp)
+	case "verify":
+		VerifyAction(writer, system.CliArg(2), stApp)
 	default:
 		PrintHelpAndExit(writer, 1)
 	}
+}
+
+// VerifyAction verifies all applied Notes
+func VerifyAction(writer io.Writer, actionName string, tuneApp *app.App) {
+	if actionName != "applied" {
+		PrintHelpAndExit(writer, 1)
+	}
+	VerifyAllParameters(writer, tuneApp)
 }
 
 // RevertAction Revert all notes and solutions
@@ -291,20 +301,22 @@ Daemon control:
   saptune [--format FORMAT] [--force-color] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
   saptune [--format FORMAT] [--force-color] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 Tune system according to SAP and SUSE notes:
-  saptune [--format FORMAT] [--force-color] note ( list | revertall | enabled | applied )
+  saptune [--format FORMAT] [--force-color] note ( list | verify | revertall | enabled | applied )
   saptune [--format FORMAT] [--force-color] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
-  saptune [--format FORMAT] [--force-color] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
+  saptune [--format FORMAT] [--force-color] [--fun] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
   saptune [--format FORMAT] [--force-color] note rename NOTEID NEWNOTEID
 Tune system for all notes applicable to your SAP solution:
   saptune [--format FORMAT] [--force-color] solution ( list | verify | enabled | applied )
   saptune [--format FORMAT] [--force-color] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
   saptune [--format FORMAT] [--force-color] solution change [--force] SOLUTIONNAME
-  saptune [--format FORMAT] [--force-color] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
+  saptune [--format FORMAT] [--force-color] [--fun] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
   saptune [--format FORMAT] [--force-color] solution rename SOLUTIONNAME NEWSOLUTIONNAME
 Staging control:
    saptune [--format FORMAT] [--force-color] staging ( status | enable | disable | is-enabled | list )
    saptune [--format FORMAT] [--force-color] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
    saptune [--format FORMAT] [--force-color] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+Verify all applied Notes:
+  saptune [--format FORMAT] [--force-color] verify applied
 Revert all parameters tuned by the SAP notes or solutions:
   saptune [--format FORMAT] [--force-color] revert all
 Remove the pending lock file from a former saptune call

@@ -147,7 +147,7 @@ func setupNoteListFormat(noteID string, solutionNoteIDs []string, tuneApp *app.A
 // NoteActionVerify compares all parameter settings from a Note definition
 // against the system settings
 func NoteActionVerify(writer io.Writer, noteID string, tuneApp *app.App) {
-	if noteID == "" {
+	if noteID == "" || noteID == "applied" {
 		VerifyAllParameters(writer, tuneApp)
 	} else {
 		result := system.JPNotes{

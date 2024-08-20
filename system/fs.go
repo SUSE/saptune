@@ -42,6 +42,7 @@ func (mount MountPoint) GetFileSystemSizeMB() uint64 {
 	if err != nil {
 		panic(fmt.Errorf("failed to stat file system on mount point %s - %v", mount.MountPoint, err))
 	}
+	InfoLog("GetFileSystemSizeMB - statfs for mountpoint '%s' returned blocksize '%+v' and blocks '%+v'\n", mount.MountPoint, fs.Bsize, fs.Blocks)
 	return uint64(fs.Bsize) * fs.Blocks / 1048576
 }
 
@@ -164,6 +165,7 @@ func ParseMtabMounts() MountPoints {
 
 // RemountSHM invoke mount command to resize /dev/shm to the specified value.
 func RemountSHM(newSizeMB uint64) error {
+	InfoLog("RemountSHM - remount size is '%d'M\n", newSizeMB)
 	cmd := exec.Command("mount", "-o", fmt.Sprintf("remount,size=%dM", newSizeMB), "/dev/shm")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("failed to invoke external command mount: %v, output: %s", err, out)

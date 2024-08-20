@@ -56,7 +56,7 @@ func GetFlagVal(flag string) string {
 func ParseCliArgs() ([]string, map[string]string) {
 	stArgs := []string{}
 	// supported flags
-	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "show-non-compliant": "false", "format": "", "colorscheme": "", "non-compliance-check": "false", "notSupported": "", "force-color": "false"}
+	stFlags := map[string]string{"force": "false", "dryrun": "false", "help": "false", "version": "false", "show-non-compliant": "false", "format": "", "colorscheme": "", "non-compliance-check": "false", "notSupported": "", "force-color": "false", "fun": "false"}
 	skip := false
 	for i, arg := range os.Args {
 		if skip {
@@ -127,6 +127,8 @@ func handleSimpleFlags(arg string, flags map[string]string) {
 		flags["non-compliance-check"] = "true"
 	case "--force-color", "-force-color":
 		flags["force-color"] = "true"
+	case "--fun", "-fun":
+		flags["fun"] = "true"
 	default:
 		setUnsupportedFlag(arg, flags)
 	}
@@ -208,7 +210,8 @@ func chkGlobalSyntax(cmdLinePos map[string]int) bool {
 
 // chkGlobalOpts checks for global options
 // saptune --format FORMAT [--version|--help]
-// saptune --force-color [--version|--help]
+// saptune --force-color
+// saptune --fun
 // saptune --version or saptune --help
 func chkGlobalOpts(cmdLinePos map[string]int) bool {
 	stArgs := os.Args
@@ -245,11 +248,13 @@ func chkGlobalOpts(cmdLinePos map[string]int) bool {
 	}
 
 	// check for '--version' or '-version'
-	ret, globOpt = chkGlobalFlag("version", stArgs[globPos], ret, globOpt)
 	// check for '--help' or '-help'
-	ret, globOpt = chkGlobalFlag("help", stArgs[globPos], ret, globOpt)
 	// check for '--force-color' or '-force-color'
-	ret, globOpt = chkGlobalFlag("force-color", stArgs[globPos], ret, globOpt)
+	// check for '--fun' or '-fun'
+	globalFlags := []string{"version", "help", "force-color", "fun"}
+	for _, gflag := range globalFlags {
+		ret, globOpt = chkGlobalFlag(gflag, stArgs[globPos], ret, globOpt)
+	}
 
 	if globOpt {
 		cmdLinePos["realm"] = cmdLinePos["realm"] + 1

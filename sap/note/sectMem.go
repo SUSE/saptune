@@ -18,10 +18,12 @@ func GetMemVal(key string) string {
 		mount, found := system.ParseProcMounts().GetByMountPoint("/dev/shm")
 		if found {
 			val = strconv.FormatUint(mount.GetFileSystemSizeMB(), 10)
+			system.InfoLog("GetMemVal - GetFileSystemSizeMB returned '%+v', converted to '%+v'\n", mount.GetFileSystemSizeMB(), val)
 			if key == "VSZ_TMPFS_PERCENT" {
 				// rounded value
 				percent := math.Floor(float64(mount.GetFileSystemSizeMB())*100/float64(system.GetTotalMemSizeMB()) + 0.5)
 				val = strconv.FormatFloat(percent, 'f', -1, 64)
+				system.InfoLog("GetMemVal - GetFileSystemSizeMB returned '%+v', GetTotalMemSizeMB returned '%+v', percent is '%+v', converted to '%+v'\n", mount.GetFileSystemSizeMB(), system.GetTotalMemSizeMB(), percent, val)
 			}
 		} else {
 			system.WarningLog("GetMemVal: failed to find /dev/shm mount point")
@@ -51,12 +53,15 @@ func OptMemVal(key, actval, cfgval, tmpfspercent string) string {
 			if tmpfspercent == "0" {
 				// Calculate optimal SHM size (TotalMemSizeMB*75/100) (SAP-Note 941735)
 				size = uint64(system.GetTotalMemSizeMB()) * 75 / 100
+				system.InfoLog("OptMemVal - tmpfspercent is '%s', GetTotalMemSizeMB returned '%+v', size is '%+v'\n", tmpfspercent, system.GetTotalMemSizeMB(), size)
 			} else {
 				// Calculate optimal SHM size (TotalMemSizeMB*VSZ_TMPFS_PERCENT/100)
 				val, _ := strconv.ParseUint(tmpfspercent, 10, 64)
 				size = uint64(system.GetTotalMemSizeMB()) * val / 100
+				system.InfoLog("OptMemVal - tmpfspercent is '%s', converted to '%+v', GetTotalMemSizeMB returned '%+v', size is '%+v'\n", tmpfspercent, val, system.GetTotalMemSizeMB(), size)
 			}
 			ret = strconv.FormatUint(size, 10)
+			system.InfoLog("OptMemVal - returns converted size as '%+v'\n", ret)
 		}
 	}
 	return ret
@@ -71,6 +76,7 @@ func SetMemVal(key, value string) error {
 		val, err = strconv.ParseUint(value, 10, 64)
 		if val > 0 {
 			if err = system.RemountSHM(uint64(val)); err != nil {
+				system.ErrorLog("Resizing /dev/shm failed - '%+v'", err)
 				return err
 			}
 		} else {

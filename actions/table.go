@@ -11,8 +11,14 @@ import (
 	"strings"
 )
 
+// define smiley for 'yes' and 'no' in 'verify'
+var smileYes = '\U0001F60E'
+var smileNo = '\U0001F61F'
+var smileDash = '\U0001F611'
+
 // define max column width
 var fmtmax = 30
+
 // number of lines printed for 'verify'
 var lineCnt = 0
 
@@ -443,6 +449,9 @@ func colorPrint(format, compliant, colorScheme string) (string, string) {
 	if colCompl == "" {
 		colCompl = compliant
 	}
+	if system.IsFlagSet("fun") {
+		colCompl = funPrint(colCompl)
+	}
 	return colFormat, colCompl
 }
 
@@ -467,6 +476,17 @@ func colorFormating(colCmpl, colNonCmpl, txt, compliant string) string {
 		}
 	}
 	return colFormat
+}
+
+// funPrint prints emojis instead of text in the 'compliant' column of 'verify'
+func funPrint(txt string) string {
+	if strings.Contains(txt, "yes") {
+		txt = strings.Replace(txt, "yes", " "+string(smileYes), 1)
+	}
+	if strings.Contains(txt, "no") {
+		txt = strings.Replace(txt, "no ", " "+string(smileNo), 1)
+	}
+	return txt
 }
 
 // printTableRow prints one row of the table
@@ -545,12 +565,13 @@ func printWrappedRow(writer io.Writer, wrappedElem map[string][]string, rowEleme
 // printRow prints now the row of the table
 func printRow(writer io.Writer, twist bool, cols []string, rowElements map[string]string) {
 	if rowElements["type"] == "verify" {
-		printVerifiedRow(twist, writer, rowElements, cols)
+		printVerifyRow(twist, writer, rowElements, cols)
 	} else {
 		printSimulateRow(twist, writer, rowElements, cols)
 	}
 }
 
+// printSimulateRow prints the 'simulate' row
 func printSimulateRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
 	if twist {
 		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["parameter"], cols[0], cols[1], cols[2], rowElements["comment"])
@@ -559,7 +580,8 @@ func printSimulateRow(twist bool, writer io.Writer, rowElements map[string]strin
 	}
 }
 
-func printVerifiedRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
+// printVerifyRow prints the 'verify' row
+func printVerifyRow(twist bool, writer io.Writer, rowElements map[string]string, cols []string) {
 	if twist {
 		fmt.Fprintf(writer, rowElements["colFormat"], rowElements["note"], rowElements["parameter"], cols[1], cols[2], cols[0], rowElements["compliant"])
 	} else {
