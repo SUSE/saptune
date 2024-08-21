@@ -3,7 +3,6 @@ package note
 import (
 	"encoding/json"
 	"github.com/SUSE/saptune/system"
-	"io/ioutil"
 	"os"
 	"path"
 )
@@ -44,7 +43,7 @@ func ListParams() (ret []string, err error) {
 		return
 	}
 	// List SaptuneParameterStateDir and collect parameter names from file names
-	dirContent, err := ioutil.ReadDir(SaptuneParameterStateDir)
+	dirContent, err := os.ReadDir(SaptuneParameterStateDir)
 	if os.IsNotExist(err) {
 		return []string{}, nil
 	} else if err != nil {
@@ -106,7 +105,7 @@ func GetSavedParameterNotes(param string) ParameterNotes {
 	pEntries := ParameterNotes{
 		AllNotes: make([]ParameterNoteEntry, 0, 64),
 	}
-	content, err := ioutil.ReadFile(GetPathToParameter(param))
+	content, err := os.ReadFile(GetPathToParameter(param))
 	if err != nil {
 		return pEntries
 	}
@@ -145,7 +144,7 @@ func StoreParameter(param string, obj ParameterNotes, overwriteExisting bool) er
 		return err
 	}
 	if _, err := os.Stat(GetPathToParameter(param)); os.IsNotExist(err) || overwriteExisting {
-		return ioutil.WriteFile(GetPathToParameter(param), content, 0644)
+		return os.WriteFile(GetPathToParameter(param), content, 0644)
 	}
 	return nil
 }

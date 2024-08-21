@@ -3,7 +3,6 @@ package system
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"regexp"
@@ -45,7 +44,7 @@ var isNvme = regexp.MustCompile(`^nvme\d+n\d+$`)
 // does not work for virtio and nvme block devices, needs workaround
 func BlockDeviceIsDisk(dev string) bool {
 	fname := fmt.Sprintf("/sys/block/%s/device/type", dev)
-	dtype, err := ioutil.ReadFile(fname)
+	dtype, err := os.ReadFile(fname)
 	if err != nil || strings.TrimSpace(string(dtype)) != "0" {
 		if isVD.FindStringSubmatch(dev) == nil && isNvme.FindStringSubmatch(dev) == nil {
 			// unsupported device
@@ -66,7 +65,7 @@ func GetBlockDeviceInfo() (*BlockDev, error) {
 		BlockAttributes: make(map[string]map[string]string),
 	}
 
-	content, err := ioutil.ReadFile(bdevFileName)
+	content, err := os.ReadFile(bdevFileName)
 	if err == nil && len(content) != 0 {
 		err = json.Unmarshal(content, &bdevConf)
 	}
@@ -87,7 +86,7 @@ func getValidBlockDevices() (valDevs []string) {
 	for _, bdev := range sysDevs {
 		dmUUID := fmt.Sprintf("/sys/block/%s/dm/uuid", bdev)
 		if _, err := os.Stat(dmUUID); err == nil {
-			cont, _ := ioutil.ReadFile(dmUUID)
+			cont, _ := os.ReadFile(dmUUID)
 			if isMpath.MatchString(string(cont)) {
 				candidates = append(candidates, bdev)
 				_, slaves := ListDir(fmt.Sprintf("/sys/block/%s/slaves", bdev), "dm slaves")
@@ -148,7 +147,7 @@ func CollectBlockDeviceInfo() []string {
 			elev, _ = GetSysString(path.Join("block", bdev, "queue", "scheduler"))
 		}
 		blockMap["IO_SCHEDULER"] = elev
-		val, err := ioutil.ReadFile(path.Join("/sys/block/", bdev, "/queue/scheduler"))
+		val, err := os.ReadFile(path.Join("/sys/block/", bdev, "/queue/scheduler"))
 		sched := ""
 		if err == nil {
 			sched = string(val)
@@ -222,7 +221,7 @@ func storeBlockDeviceInfo(obj BlockDev) error {
 		return err
 	}
 	if _, err := os.Stat(bdevFileName); os.IsNotExist(err) || overwriteExisting {
-		return ioutil.WriteFile(bdevFileName, content, 0644)
+		return os.WriteFile(bdevFileName, content, 0644)
 	}
 	return nil
 }

@@ -5,7 +5,6 @@ package system
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -60,9 +59,9 @@ type SecLimits struct {
 // structures.
 func ParseSecLimitsFile(fileName string) (*SecLimits, error) {
 	limitsConfFile := "/etc/security/limits.conf"
-	content, err := ioutil.ReadFile(fileName)
+	content, err := os.ReadFile(fileName)
 	if err != nil {
-		content, err = ioutil.ReadFile(limitsConfFile)
+		content, err = os.ReadFile(limitsConfFile)
 		if err != nil {
 			return nil, ErrorLog("failed to open limits config file: %v", err)
 		}
@@ -191,10 +190,10 @@ func (limits *SecLimits) ApplyDropIn(lim []string, noteID string) error {
 			return ErrorLog("failed to create needed directories for the limits drop in file: %v", err)
 		}
 	}
-	return ioutil.WriteFile(dropInFile, []byte(limits.ToDropIn(lim, noteID, dropInFile)), 0644)
+	return os.WriteFile(dropInFile, []byte(limits.ToDropIn(lim, noteID, dropInFile)), 0644)
 }
 
 // Apply overwrite /etc/security/limits.conf with the content of this structure.
 func (limits *SecLimits) Apply() error {
-	return ioutil.WriteFile("/etc/security/limits.conf", []byte(limits.ToText()), 0644)
+	return os.WriteFile("/etc/security/limits.conf", []byte(limits.ToText()), 0644)
 }

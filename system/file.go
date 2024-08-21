@@ -4,7 +4,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -13,12 +12,12 @@ import (
 
 // ReadConfigFile read content of config file
 func ReadConfigFile(fileName string, autoCreate bool) ([]byte, error) {
-	content, err := ioutil.ReadFile(fileName)
+	content, err := os.ReadFile(fileName)
 	if os.IsNotExist(err) && autoCreate {
 		content = []byte{}
 		err = os.MkdirAll(path.Dir(fileName), 0755)
 		if err == nil {
-			err = ioutil.WriteFile(fileName, []byte{}, 0644)
+			err = os.WriteFile(fileName, []byte{}, 0644)
 		}
 	}
 	return content, err
@@ -149,7 +148,7 @@ func CopyFile(srcFile, destFile string) error {
 // skip directories
 func GetFiles(dir string) map[string]string {
 	files := make(map[string]string)
-	entries, err := ioutil.ReadDir(dir)
+	entries, err := os.ReadDir(dir)
 	if err != nil {
 		DebugLog("failed to read %s, called from '%v' - %v", dir, CalledFrom(), err)
 	}
@@ -164,7 +163,7 @@ func GetFiles(dir string) map[string]string {
 // ListDir list directory content and returns a slice for the directory names
 // and a slice for the file names.
 func ListDir(dirPath, logMsg string) (dirNames, fileNames []string) {
-	entries, err := ioutil.ReadDir(dirPath)
+	entries, err := os.ReadDir(dirPath)
 	if err != nil && logMsg != "" {
 		// Not a fatal error
 		WarningLog("failed to read %s - %v", logMsg, err)
@@ -184,7 +183,7 @@ func ListDir(dirPath, logMsg string) (dirNames, fileNames []string) {
 // CleanUpRun cleans up runtime files
 func CleanUpRun() {
 	var runfile = regexp.MustCompile(`.*\.run$`)
-	content, _ := ioutil.ReadDir(SaptuneSectionDir)
+	content, _ := os.ReadDir(SaptuneSectionDir)
 	for _, entry := range content {
 		if runfile.MatchString(entry.Name()) {
 			// remove runtime file
@@ -197,7 +196,7 @@ func CleanUpRun() {
 // currently used for the former start TasksMax value
 func GetBackupValue(fileName string) string {
 	value := ""
-	content, err := ioutil.ReadFile(fileName)
+	content, err := os.ReadFile(fileName)
 	if err != nil {
 		DebugLog("reading backup file '%s' failed - '%v'", fileName, err)
 		return "NA"
@@ -212,7 +211,7 @@ func GetBackupValue(fileName string) string {
 // WriteBackupValue writes a value into the backup file
 // currently used for the former start TasksMax value
 func WriteBackupValue(value, fileName string) {
-	err := ioutil.WriteFile(fileName, []byte(value), 0600)
+	err := os.WriteFile(fileName, []byte(value), 0600)
 	if err != nil {
 		DebugLog("writing backup file '%s' for value '%s' failed - '%v'", fileName, value, err)
 	}

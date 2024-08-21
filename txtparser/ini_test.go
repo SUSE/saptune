@@ -3,7 +3,6 @@ package txtparser
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
@@ -201,13 +200,13 @@ func TestParseINI(t *testing.T) {
 	if !reflect.DeepEqual(*actualINI, expectedINI) {
 		t.Errorf("\n%+v\n%+v\n", *actualINI, expectedINI)
 	}
-	content, err := ioutil.ReadFile(tstFile)
+	content, err := os.ReadFile(tstFile)
 	if err != nil {
 		t.Error(err)
 	}
 	_ = ParseINI(string(content))
 
-	content, err = ioutil.ReadFile(tst2File)
+	content, err = os.ReadFile(tst2File)
 	if err != nil {
 		t.Error(err)
 	}

@@ -2,7 +2,7 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"reflect"
 	"regexp"
@@ -136,7 +136,7 @@ func ParseMounts(txt string) (mounts MountPoints) {
 // Returns empty list of mount points on error
 func ParseMtab(file string) MountPoints {
 	mounts := ""
-	content, err := ioutil.ReadFile(file)
+	content, err := os.ReadFile(file)
 	if err != nil {
 		ErrorLog("failed to read file '%s': %v", file, err)
 	} else {

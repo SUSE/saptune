@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/SUSE/saptune/sap/note"
-	"io/ioutil"
 	"os"
 	"path"
 )
@@ -33,7 +32,7 @@ func (state *State) Store(noteID string, obj note.Note, overwriteExisting bool) 
 		return err
 	}
 	if _, err := os.Stat(state.GetPathToNote(noteID)); os.IsNotExist(err) || overwriteExisting {
-		return ioutil.WriteFile(state.GetPathToNote(noteID), content, 0644)
+		return os.WriteFile(state.GetPathToNote(noteID), content, 0644)
 	}
 	return nil
 }
@@ -44,7 +43,7 @@ func (state *State) List() (ret []string, err error) {
 		return
 	}
 	// List SaptuneStateDir and collect number from file names
-	dirContent, err := ioutil.ReadDir(path.Join(state.StateDirPrefix, SaptuneStateDir))
+	dirContent, err := os.ReadDir(path.Join(state.StateDirPrefix, SaptuneStateDir))
 	if os.IsNotExist(err) {
 		return []string{}, nil
 	} else if err != nil {
@@ -60,7 +59,7 @@ func (state *State) List() (ret []string, err error) {
 // Retrieve deserialises a SAP note into the destination pointer.
 // The destination must be a pointer.
 func (state *State) Retrieve(noteID string, dest interface{}) error {
-	content, err := ioutil.ReadFile(state.GetPathToNote(noteID))
+	content, err := os.ReadFile(state.GetPathToNote(noteID))
 	if err != nil {
 		return err
 	}

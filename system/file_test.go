@@ -2,7 +2,6 @@ package system
 
 import (
 	"bytes"
-	"io/ioutil"
 	"os"
 	"path"
 	"reflect"
@@ -68,7 +67,7 @@ func TestCopyFile(t *testing.T) {
 }
 
 func TestListDir(t *testing.T) {
-	tmpDir, err := ioutil.TempDir("", "test")
+	tmpDir, err := os.MkdirTemp("", "test")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -2,7 +2,7 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -316,7 +316,7 @@ func CmpServiceStates(actStates, expStates string) bool {
 // WriteTunedAdmProfile write new profile to tuned, used instead of sometimes
 // unreliable 'tuned-adm' command
 func WriteTunedAdmProfile(profileName string) error {
-	err := ioutil.WriteFile(actTunedProfile, []byte(profileName), 0644)
+	err := os.WriteFile(actTunedProfile, []byte(profileName), 0644)
 	if err != nil {
 		return ErrorLog("Failed to write tuned profile '%s' to '%s': %v", profileName, actTunedProfile, err)
 	}
@@ -328,7 +328,7 @@ func WriteTunedAdmProfile(profileName string) error {
 // may be unreliable in newer tuned versions, so better use 'tuned-adm active'
 // Return empty string if it cannot be determined.
 func GetTunedProfile() string {
-	content, err := ioutil.ReadFile(actTunedProfile)
+	content, err := os.ReadFile(actTunedProfile)
 	if err != nil {
 		return ""
 	}

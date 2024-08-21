@@ -5,7 +5,6 @@ package system
 import (
 	"encoding/binary"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
@@ -139,7 +138,7 @@ func SecureBootEnabled() bool {
 		return false
 	}
 
-	content, err := ioutil.ReadFile(secureBootFile)
+	content, err := os.ReadFile(secureBootFile)
 	if err != nil {
 		InfoLog("failed to read EFI SecureBoot file '%s': %v", secureBootFile, err)
 		return false
@@ -183,7 +182,7 @@ func GetGovernor() map[string]string {
 		return gGov
 	}
 
-	dirCont, err := ioutil.ReadDir(cpuDir)
+	dirCont, err := os.ReadDir(cpuDir)
 	if err != nil {
 		WarningLog("Governor settings not supported by the system")
 		gGov["all"] = "none"
@@ -278,7 +277,7 @@ func supportsGovernorSettings(value string) bool {
 
 // isValidGovernor check, if the system will support CPU frequency settings
 func isValidGovernor(cpu, gov string) bool {
-	val, err := ioutil.ReadFile(path.Join(cpuDir, cpu, "/cpufreq/scaling_available_governors"))
+	val, err := os.ReadFile(path.Join(cpuDir, cpu, "/cpufreq/scaling_available_governors"))
 	if err == nil && strings.Contains(string(val), gov) {
 		return true
 	}
@@ -304,7 +303,7 @@ func GetFLInfo() (string, string, bool) {
 	}
 
 	// read /sys/devices/system/cpu
-	dirCont, err := ioutil.ReadDir(cpuDir)
+	dirCont, err := os.ReadDir(cpuDir)
 	if err != nil {
 		WarningLog("Latency settings not supported by the system")
 		return "all:none", "all:none", cpuStateDiffer
@@ -314,7 +313,7 @@ func GetFLInfo() (string, string, bool) {
 		cpuName := entry.Name()
 		if isCPU.MatchString(cpuName) {
 			// read /sys/devices/system/cpu/cpu*/cpuidle
-			cpudirCont, err := ioutil.ReadDir(path.Join(cpuDir, cpuName, "cpuidle"))
+			cpudirCont, err := os.ReadDir(path.Join(cpuDir, cpuName, "cpuidle"))
 			if err != nil {
 				// idle settings not supported for cpuName
 				continue
@@ -370,7 +369,7 @@ func SetForceLatency(value, savedStates string, revert bool) error {
 
 	flval, _ := strconv.Atoi(value) // decimal value for force latency
 
-	dirCont, err := ioutil.ReadDir(cpuDir)
+	dirCont, err := os.ReadDir(cpuDir)
 	if err != nil {
 		WarningLog("Latency settings not supported by the system")
 		return err
@@ -379,7 +378,7 @@ func SetForceLatency(value, savedStates string, revert bool) error {
 		// cpu0 ... cpuXY
 		cpuName := entry.Name()
 		if isCPU.MatchString(cpuName) {
-			cpudirCont, errns := ioutil.ReadDir(path.Join(cpuDir, cpuName, "cpuidle"))
+			cpudirCont, errns := os.ReadDir(path.Join(cpuDir, cpuName, "cpuidle"))
 			if errns != nil {
 				WarningLog("idle settings not supported for '%s'", cpuName)
 				continue
@@ -460,7 +459,7 @@ func currentCPUDriver() string {
 		InfoLog("File '%s' not found - %v", cpuDriverFile, err)
 		return cpuDriver
 	}
-	if val, err := ioutil.ReadFile(cpuDriverFile); err != nil {
+	if val, err := os.ReadFile(cpuDriverFile); err != nil {
 		InfoLog("Problems reading file '%s' - %+v\n", cpuDriverFile, err)
 	} else {
 		cpuDriver = string(val)
