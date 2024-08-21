@@ -67,8 +67,7 @@ func TestCopyFile(t *testing.T) {
 }
 
 func TestListDir(t *testing.T) {
-	tmpDirRaw, err := os.CreateTemp("", "test")
-	tmpDir := tmpDirRaw.Name()
+	tmpDir, err := os.MkdirTemp("", "test")
 	if err != nil {
 		t.Fatal(err)
 	}
