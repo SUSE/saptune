@@ -21,7 +21,7 @@ const (
 type Operator string
 
 // RegexKeyOperatorValue breaks up a line into key, operator, value.
-var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`)
+var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([!<=>]+)\s*["']*(.*?)["']*$`)
 
 // regKey gives the parameter part of the line from the note definition file
 var regKey = regexp.MustCompile(`^(.*?)\s*([!<=>]+)\s*["']*.*?["']*$`)
