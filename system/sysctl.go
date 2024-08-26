@@ -224,6 +224,9 @@ func SetSysctlString(parameter, value string) error {
 		WarningLog("value is '%s', so sysctl key '%s' is/was not supported by os, skipping.", value, parameter)
 		return nil
 	}
+	if value == "" {
+		value = "\n"
+	}
 	err := os.WriteFile(path.Join("/proc/sys", strings.Replace(parameter, ".", "/", -1)), []byte(value), 0644)
 	if os.IsNotExist(err) {
 		WarningLog("sysctl key '%s' is not supported by os, skipping.", parameter)

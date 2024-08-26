@@ -3,6 +3,7 @@ package system
 // Manipulate /sys/ switches.
 
 import (
+	"bytes"
 	"os"
 	"path"
 	"regexp"
@@ -17,11 +18,26 @@ func GetSysString(parameter string) (string, error) {
 
 // getKeyStringFromPath generalizes the extraction of a string from path
 func getKeyStringFromPath(basePath string, parameter string, logFrom string) (string, error) {
-	val, err := os.ReadFile(path.Join(basePath, strings.Replace(parameter, ".", "/", -1)))
+	// Seams that os.ReadFile reads only 512 Bytes, if it can not detect the
+	// filesize (which is the case for /proc/sys files, returns always 0)
+	// This might not enough for sysctl parameter like
+	// 'net.ipv4.ip_local_reserved_ports'
+	srcFile := path.Join(basePath, strings.Replace(parameter, ".", "/", -1))
+	file, err := os.Open(srcFile)
+	if err != nil {
+		WarningLog("failed to open %s : %v", srcFile, err)
+		return "PNA", err
+	}
+	defer file.Close()
+	val := make([]byte, 1024)
+	bytesread, err := file.Read(val)
+	DebugLog("getKeyStringFromPath - bytes read from '%s': '%+v'\n", srcFile, bytesread)
 	if err != nil {
 		WarningLog("failed to read %v string key '%s': %v", logFrom, parameter, err)
 		return "PNA", err
 	}
+	// remove NULL
+	val = bytes.Trim(val, "\x00")
 	return strings.TrimSpace(string(val)), nil
 }
 

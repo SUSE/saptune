@@ -304,7 +304,7 @@ func (vend INISettings) Apply() error {
 			continue
 		}
 
-		if revertValues && vend.SysctlParams[param.Key] != "" {
+		if revertValues && vend.SysctlParams[param.Key] != "PNA" {
 			// revert parameter value
 			pvendID, flstates = vend.setRevertParamValues(param.Key)
 		}
@@ -416,7 +416,7 @@ func (vend INISettings) setRevertParamValues(key string) (string, string) {
 func (vend INISettings) createParamSavedStates(key, flstates string) {
 	// do not write parameter values to the saved state file during
 	// a pure 'verify' action
-	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "" {
+	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "PNA" {
 		start := vend.SysctlParams[key]
 		if key == "UserTasksMax" {
 			if system.SystemctlIsStarting() {
@@ -437,7 +437,7 @@ func (vend INISettings) createParamSavedStates(key, flstates string) {
 func (vend INISettings) addParamSavedStates(key string) {
 	// do not write parameter values to the saved state file during
 	// a pure 'verify' action
-	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "" {
+	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "PNA" {
 		AddParameterNoteValues(key, vend.SysctlParams[key], vend.ID)
 	}
 }
