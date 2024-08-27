@@ -85,7 +85,7 @@ func TestCallSaptuneCheckScript(t *testing.T) {
 
 `
 
-	callSaptuneCheckScript("check")
+	callSaptuneCheckScript()
 	if tstRetErrorExit != 1 {
 		t.Errorf("error exit should be '1' and NOT '%v'\n", tstRetErrorExit)
 	}
@@ -107,7 +107,7 @@ func TestCallSaptuneCheckScript(t *testing.T) {
 	defer os.Remove(dest)
 	errExitbuffer.Reset()
 
-	callSaptuneCheckScript("check")
+	callSaptuneCheckScript()
 	if tstRetErrorExit != 0 {
 		t.Errorf("error exit should be '0' and NOT '%v'\n", tstRetErrorExit)
 	}
@@ -177,7 +177,6 @@ func TestCheckSaptuneConfigFile(t *testing.T) {
 
 	// check wrong STAGING value
 	saptuneConf = fmt.Sprintf("%s/saptune_WrongStaging", TstFilesInGOPATH)
-	saptuneVers = ""
 	matchTxt = fmt.Sprintf("Error: Variable 'STAGING' from file '%s' contains a wrong value 'hugo'. Needs to be 'true' or 'false'\n", saptuneConf)
 	lSwitch = logSwitch
 	_ = checkSaptuneConfigFile(&buffer, saptuneConf, lSwitch)
