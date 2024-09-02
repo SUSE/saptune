@@ -847,11 +847,21 @@ func CheckOrphanedOverrides() {
 	if err != nil {
 		system.ErrorExit("Problems reading override directory '%s' (%v). Please check your saptune installation\n", OverrideTuningSheets, err)
 	}
+	customName := ""
+	object := "note"
+	workDir := NoteTuningSheets
 	for _, entry := range dirCont {
 		ovFile := entry.Name()
-		_, _, err := chkFileName(ovFile, NoteTuningSheets, ExtraTuningSheets)
+		if strings.HasSuffix(ovFile, ".sol") {
+			object = "solution"
+			workDir = SolutionSheets
+			customName = ovFile
+		} else {
+			customName = ovFile + ".conf"
+		}
+		_, _, err := chkFileName(ovFile, workDir, ExtraTuningSheets)
 		if os.IsNotExist(err) {
-			system.WarningLog("Found an orphaned override file '%s' in '%s'!\n Could not find a note definition file named '%s' in the working area '%s' nor '%s.conf' in the custom location '%s'. Please check and remove the override file, if it is a left over\n", ovFile, OverrideTuningSheets, ovFile, NoteTuningSheets, ovFile, ExtraTuningSheets)
+			system.WarningLog("Found an orphaned override file '%s' in '%s'!\n Could not find a %s definition file named '%s' in the working area '%s' nor '%s' in the custom location '%s'. Please check and remove the override file, if it is a left over\n", ovFile, OverrideTuningSheets, object, ovFile, workDir, customName, ExtraTuningSheets)
 			orphanedOverrides = append(orphanedOverrides, ovFile)
 		}
 	}
