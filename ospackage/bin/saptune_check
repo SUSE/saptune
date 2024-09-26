@@ -23,6 +23,7 @@
 #                   1   Some warnings occurred. Saptune should work, but better check manually.
 #                   2   Some errors occurred. Saptune will not work.
 #                   3   Wrong parameters given to the tool on commandline.
+#                   5   Error in JSON string (bug in program!)
 #
 # Changelog:
 #
@@ -240,6 +241,7 @@ function start_json() {
     #
     # Initializes JSON_STRING and _JSON_NESTING to start
     # a new JSON string.
+    # JSON_STRING starts with a { for a new dict.
     # If DO_JSON is 0, the function returns immediately.
     #
     # Requires:    DO_JSON, JSON_STRING, _JSON_NESTING 
@@ -258,6 +260,7 @@ function end_json() {
     # Finalizes JSON_STRING and _JSON_NESTING to finish
     # a JSON string or terminates with exit code 5 if 
     # there is a problem.
+    # JSON_STRING ends with a } to close the overall dict.
     # If DO_JSON is 0, the function returns immediately.
     #
     # Requires:    DO_JSON, JSON_STRING, _JSON_NESTING 
@@ -308,6 +311,8 @@ function add2json() {
     #   add2json list_entry_number VALUE
     #   add2json list_entry_bool true|false
     #   add2json list_entry_null
+    #   add2json list_entry_dict_start
+    #   add2json list_entry_dict_end
     #   add2json list_end
     #   add2json string NAME VALUE 
     #   add2json number NAME VALUE
@@ -374,6 +379,18 @@ function add2json() {
             JSON_STRING="${JSON_STRING}null, "
             ;;
 
+        list_entry_dict_start)
+            _json_must_be L
+            JSON_STRING="${JSON_STRING}{"
+            _json_nesting_add D
+            ;;
+        
+        list_entry_dict_end)
+            _json_must_be D
+            JSON_STRING="${JSON_STRING%,*( )}},"
+            _json_nesting_pop
+            ;;
+
         list_end)
             _json_must_be L
             JSON_STRING="${JSON_STRING%,*( )}],"
@@ -415,6 +432,7 @@ function add2json() {
     esac
 }
 
+# MARKED FOR REMOVAL
 function add_msg_json() {
     # Params:       -
     # Output:       -
@@ -452,6 +470,7 @@ function add_msg_json() {
     esac
 }
 
+# MARKED FOR REMOVAL
 function update_messages_json() {
     # Params:       -
     # Output:       -
@@ -492,6 +511,41 @@ function update_messages_json() {
     done 
     add2json list_end
     add2json dict_end
+}
+
+function add_message_json() {
+    # Params:       TYPE TEXT REMEDIATION
+    # Output:       -
+    # Returncode:   -
+    #
+    # Adds dictionary to a list ()'messages'), which must 
+    # be present, with the elements 'type' (OK|WARN|FAIL|NOTE),
+    # 'text' and 'remediation' (optional) or terminates with
+    #  exit code 5 if there is a problem.
+    # The remediation is left out, except the type is FAIL or
+    # WARN.
+    # If DO_JSON is 0, the function returns immediately.
+    #
+    # Requires:    DO_JSON, JSON_STRING, _JSON_NESTING 
+
+    [ ${DO_JSON} -eq 0 ] && return
+
+    local parameter_failure=0
+    [ $# -lt 2 -o $# -gt 3 ] &&  parameter_failure=1
+    [[ "${1}" =~ ^(OK|WARN|FAIL|NOTE)$ ]] || parameter_failure=2
+    [ "${1}" == 'FAIL' -a $# -ne 3 ] &&  parameter_failure=3
+    [ "${1}" == 'WARN' -a $# -ne 3 ] &&  parameter_failure=3
+    if [ ${parameter_failure} -ne 0 ] ; then 
+        echo "${FUNCNAME@Q} wrongly called (code=${parameter_failure}) with: ${@@Q} " >&2
+        exit 5
+    fi
+
+    add2json list_entry_dict_start
+    add2json string 'type' "${1}"
+    add2json string 'text' "${2}"
+    [ -n "${3:-}" ] && add2json string 'remediation' "${3}"
+    add2json list_entry_dict_end
+
 }
 
 function is_in() {
@@ -689,7 +743,7 @@ function file_check() {
     #
     # The function updates the variables "warnings" and "fails" used in saptune_check(). 
     #
-    # Requires: print_warn(), print_fail() and print_note()
+    # Requires: print_warn(), print_fail(), print_note() and add_message_json()
 
     local VERSION_ID tag="${1}" mandatory_files invalid_files rpm_leftovers sapconf_leftovers critical_sapconf_leftovers
     declare -a mandatory_files invalid_files rpm_leftovers
@@ -720,57 +774,38 @@ function file_check() {
     # Critical leftovers from a damaged sapconf update/removal, which prevent saptune from starting.    
     critical_sapconf_leftovers=( '/var/lib/sapconf/act_profile' '/run/sapconf/active' )
 
-
     # Now check the existence of mandatory and invalid files and print warnings and fails.    
-    add2json dict_start 'mandantory_files'
     for ((i=0;i<${#mandatory_files[@]};i++)) ; do
         if [ ! -e "${mandatory_files[i]}" ] ; then 
             msg="${mandatory_files[i]} is missing, but a mandatory file."
             remediation="Check your installation!"
             print_fail "${msg}" "${remediation}"
-            add_msg_json fail "${msg}"
-            add_msg_json remediation "${remediation}"   
-            add2json bool "${mandatory_files[i]}" false
+            add_message_json FAIL "${msg}" "${remediation}"
             ((fails++))
-        else
-            add2json bool "${mandatory_files[i]}" true
         fi
         rpm_leftovers+=("${mandatory_files[i]}.rpmsave" "${mandatory_files[i]}.rpmnew" )
     done
-    add2json dict_end
-    add2json dict_start 'invalid_files'
     for ((i=0;i<${#invalid_files[@]};i++)) ; do
         if [ -e "${invalid_files[i]}" ] ; then   
             msg="${invalid_files[i]} is not used by this version. Maybe a leftover from an update?"
             remediation="Check the content and remove it."
             print_warn "${msg}" "${remediation}"
-            add_msg_json warn "${msg}"
-            add_msg_json remediation "${remediation}"   
-            add2json bool "${invalid_files[i]}" true
+            add_message_json WARN "${msg}" "${remediation}"
             ((warnings++))
-        else
-            add2json bool "${invalid_files[i]}" false
         fi
         rpm_leftovers+=("${invalid_files[i]}.rpmsave" "${invalid_files[i]}.rpmnew" )
     done 
-    add2json dict_end
     
     # Print a warning if we have found RPM leftovers!
-    add2json dict_start 'rpm_leftovers'
     for ((i=0;i<${#rpm_leftovers[@]};i++)) ; do
         if [ -e "${rpm_leftovers[i]}" ] ; then 
             msg="${rpm_leftovers[i]} found. This is a leftover from a package update!"
             remediation="Check the content of \"${rpm_leftovers[i]}\" and remove it."
             print_warn "${msg}" "${remediation}"
-            add_msg_json warn "${msg}"
-            add_msg_json remediation "${remediation}"
-            add2json bool "${rpm_leftovers[i]}" true
+            add_message_json WARN "${msg}" "${remediation}"
             ((warnings++))
-        else
-            add2json bool "${rpm_leftovers[i]}" false
         fi
     done 
-    add2json dict_end
 
     # Print a warning and recommend a deletion, if sapconf is not intalled and we found some files.
     if [ -z ${package_version['sapconf']} ] ; then
@@ -778,9 +813,7 @@ function file_check() {
             if [ -e "${sapconf_leftovers[i]}" ] ; then 
                 msg="${sapconf_leftovers[i]} found. This is a leftover from a sapconf package upgrade or removal!"
                 remediation="Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug."
-                print_warn "${msg}" "${remediation}"
-                add_msg_json warn "${msg}"
-                add_msg_json remediation "${remediation}"
+                add_message_json WARN "${msg}" "${remediation}"
                 ((warnings++))
             fi
         done 
@@ -793,8 +826,7 @@ function file_check() {
                 msg="${critical_sapconf_leftovers[i]} found. This is an unintended leftover from sapconf!"
                 remediation="Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug."
                 print_fail "${msg}" "${remediation}"
-                add_msg_json fail "${msg}"
-                add_msg_json remediation "${remediation}"
+                add_message_json FAIL "${msg}" "${remediation}"
                 ((fails++))
             fi
         done 
@@ -807,16 +839,16 @@ function check_saptune() {
 
     local fails=0 warnings=0 version_tag SAPTUNE_VERSION TUNE_FOR_SOLUTIONS TUNE_FOR_NOTES
 
-    start_json
+    start_json  # open new JSON document
+    add2json list_start messages  # open messages dilistct
 
     # We can stop, if saptune is not installed.
     if [ -z "${package_version['saptune']}" ] ; then
         msg="saptune is not installed"
         remediation="Install saptune with: zypper install saptune"
         print_fail "${msg}" "${remediation}"
-        add_msg_json fail "${msg}"
-        add_msg_json remediation "${remediation}"
-        update_messages_json
+        add_message_json FAIL "${msg}"  "${remediation}"
+        add2json list_end  # close messages list
         add2json number warnings 0
         add2json number errors 1
         end_json
@@ -832,9 +864,8 @@ function check_saptune() {
             msg="The saptune version ${package_version['saptune']} is unknown to this script! Exiting."
             remediation="Install a supported saptune version."
             print_fail "${msg}" "${remediation}"
-            add_msg_json fail "${msg}"
-            add_msg_json remediation "${remediation}"
-            update_messages_json
+            add_message_json FAIL "${msg}"  "${remediation}"
+            add2json list_end  # close messages list
             add2json number warnings 0
             add2json number errors 1
             end_json
@@ -844,164 +875,159 @@ function check_saptune() {
     esac
 
     # Let's test.
-    header "Checking saptune" 
-    print_note "saptune package has version ${package_version['saptune']}"
-    add2json string saptune_version "${package_version['saptune']}"
+    header "Checking saptune"
+    msg="saptune package has version ${package_version['saptune']}" 
+    print_note "${msg}"
+    add_message_json NOTE "${msg}"
 
     # Check if leftover files still in place.
     file_check saptune-3
 
-    # Checking if system is "running" and has no failed units.
-    add2json string systemd_system_status "${system_status['status']}"
+    # Checking if system is "running" and has no failed units."
     case "${system_status['status']}" in
         running)
-            print_ok "systemd reports status \"running\""
+            msg="systemd reports status \"running\""
+            print_ok "${msg}"
+            add_message_json OK "${msg}"
             ;;
         degraded)
-            if [ -n "${system_status['failed_units']}" ] ; then 
-                add2json list_start 'failed_units'
-                for unit in ${system_status['failed_units']} ; do
-                    add2json list_entry_string "${unit}"
-                done
-                add2json list_end
-            fi
             msg="systemd reports status \"${system_status['status']}\". Failed units: ${system_status['failed_units']}"
             remediation="Check the cause and reset the state with 'systemctl reset-failed'!"
             print_warn "${msg}" "${remediation}"
-            add_msg_json warn "${msg}"
-            add_msg_json remediation "${remediation}"   
+            add_message_json WARN "${msg}" "${remediation}"   
             msg="A degraded systemd system status means, that one or more systemd units failed. The system is still operational! Tuning might not be affected, please run 'saptune verfiy' for detailed information."
             print_note "${msg}" 
-            add_msg_json note "${msg}"
+            add_message_json NOTE "${msg}"
             ((warnings++))
             ;;
-        *)  print_fail "systemd reports status \"${system_status['status']}\"."  "Check systemd to see what is wrong!"
+        *)  msg="systemd reports status \"${system_status['status']}\"."
+            remediation="Check systemd to see what is wrong!"
+            print_fail "${msg}" "${remediation}"
+            add_message_json FAIL "${msg}" "${remediation}"
             ((fails++))
             ;;   
     esac  
 
     # Checking if the correct version has been configured.
-    add2json string configured_saptune_version "${configured_saptune_version}"
+    #add2json string configured_saptune_version "${configured_saptune_version}"
     case ${configured_saptune_version} in 
-        3)  print_ok "configured saptune version is 3"
+        3)  msg="configured saptune version is 3"
+            print_ok "${msg}"
+            add_message_json OK "${msg}"
             ;; 
         *)  msg="Configured saptune version is ${configured_saptune_version}"
             remediation="Misconfiguration happened or an update went wrong! This needs to be investigated."
             print_fail "${msg}" "${remediation}"
-            add_msg_json fail "${msg}"
-            add_msg_json remediation "${remediation}" 
+            add_message_json FAIL "${msg}" "${remediation}" 
             ((fails++))
             ;;
     esac 
 
     # Checking status of sapconf.service.
-    add2json list_start 'sapconf.service'
-    add2json list_entry_string "${unit_state_active['sapconf.service']}"
-    add2json list_entry_string "${unit_state_enabled['sapconf.service']}"
-    add2json list_end
     if [ -n "${package_version['sapconf']}" ] ; then 
         case "${unit_state_active['sapconf.service']}" in
             inactive)
-                print_ok "sapconf.service is inactive"
+                msg="sapconf.service is inactive"
+                print_ok "${msg}"
+                add_message_json OK "${msg}" 
                 ;;
             *)
                 msg="sapconf.service is ${unit_state_active['sapconf.service']}"
                 remediation="Run 'systemctl stop sapconf.service' or 'saptune service takeover'."
                 print_fail "${msg}" "${remediation}"
-                add_msg_json fail "${msg}"  
-                add_msg_json remediation "${remediation}" 
+                add_message_json FAIL "${msg}" "${remediation}" 
                 ((fails++))
                 ;;
         esac
         case "${unit_state_enabled['sapconf.service']}" in
             disabled)
-                print_ok "sapconf.service is disabled"
+                msg="sapconf.service is disabled"
+                print_ok "${msg}"
+                add_message_json OK "${msg}" 
                 ;;
              *)
                 msg="sapconf.service is ${unit_state_enabled['sapconf.service']}"
                 remediation="Run 'systemctl disable sapconf.service' or 'saptune service takeover'."
                 print_fail "${msg}" "${remediation}"
-                add_msg_json fail "${msg}"  
-                add_msg_json remediation "${remediation}" 
+                add_message_json FAIL "${msg}" "${remediation}"
                 ((fails++))
                 ;;
         esac
     fi
 
     # Checking if saptune.service is enabled and started.
-    add2json list_start 'saptune.service'
-    add2json list_entry_string "${unit_state_active['saptune.service']}"
-    add2json list_entry_string "${unit_state_enabled['saptune.service']}"
-    add2json list_end
+    #add2json list_start 'saptune.service'
+    #add2json list_entry_string "${unit_state_active['saptune.service']}"
+    #add2json list_entry_string "${unit_state_enabled['saptune.service']}"
+    #add2json list_end
     case "${unit_state_active['saptune.service']}" in
         active)
-            print_ok "saptune.service is active"
+            msg="saptune.service is active"
+            print_ok "${msg}"
+            add_message_json OK "${msg}"
             ;;
         *)
             msg="saptune.service is ${unit_state_active['saptune.service']}"
             remediation="Run 'systemctl start saptune.service', 'saptune service start' or 'saptune service takeover'."
             print_fail "${msg}" "${remediation}"
-            add_msg_json fail "${msg}"  
-            add_msg_json remediation "${remediation}" 
+            add_message_json FAIL "${msg}" "${remediation}" 
             ((fails++))
             ;;
     esac
     case "${unit_state_enabled['saptune.service']}" in
         enabled)
-            print_ok "saptune.service is enabled"
+            msg="saptune.service is enabled"
+            print_ok "${msg}"
+            add_message_json OK "${msg}"
             ;;
         *)
             msg="saptune.service is ${unit_state_enabled['saptune.service']}"
             remediation="Run 'systemctl enable saptune.service', 'saptune service enable' or 'saptune service takeover'."
             print_fail "${msg}" "${remediation}"
-            add_msg_json fail "${msg}"  
-            add_msg_json remediation "${remediation}" 
+            add_message_json FAIL "${msg}" "${remediation}" 
             ((fails++))
             ;;
     esac
 
     # Checking status of tuned.service. and the profile.
-    add2json list_start 'tuned.service'
-    add2json list_entry_string "${unit_state_active['tuned.service']}"
-    add2json list_entry_string "${unit_state_enabled['tuned.service']}"
-    add2json list_end
     if [ -n "${package_version['tuned']}" ] ; then 
         case "${tool_profile['tuned']}" in
             saptune)
                 msg="tuned.service is ${unit_state_active['tuned.service']}/${unit_state_enabled['tuned.service']} with profile ('${tool_profile['tuned']}')"
                 remediation="This profile should not exist anymore! This needs to be investigated."
                 print_fail "${msg}" "${remediation}"
-                add_msg_json fail "${msg}"  
-                add_msg_json remediation "${remediation}"
+                add_message_json FAIL "${msg}" "${remediation}"
                 ((fails++))
                 ;;
             *)
                 msg="tuned profile is '${tool_profile['tuned']}'"
                 print_note "${msg}"
-                add_msg_json note "${msg}"  
+                add_message_json NOTE "${msg}"
                 case "${unit_state_active['tuned.service']}" in
                     inactive)
-                        print_ok "tuned.service is inactive"
+                        msg="tuned.service is inactive"
+                        print_ok "${msg}"
+                        add_message_json OK "${msg}"
                         ;;
                     *)
                         msg="tuned.service is ${unit_state_active['tuned.service']}"
                         remediation="Verify that tuning does not conflict with saptune or run 'systemctl stop tuned.service'!"
                         print_warn "${msg}" "${remediation}"
-                        add_msg_json warn "${msg}"  
-                        add_msg_json remediation "${remediation}"
+                        add_message_json WARN "${msg}" "${remediation}"
                         ((warnings++))
                         ;;
                 esac
                 case "${unit_state_enabled['tuned.service']}" in
                     disabled)
-                        print_ok "tuned.service is disabled"
+                        msg="tuned.service is disabled"
+                        print_ok "${msg}"
+                        add_message_json OK "${msg}"
                         ;;
                     *) 
                         msg="tuned.service is ${unit_state_enabled['tuned.service']}"
                         remediation="Verify that tuning does not conflict with saptune or run 'systemctl disable tuned.service'!"
                         print_warn "${msg}" "${remediation}"
-                        add_msg_json warn "${msg}"  
-                        add_msg_json remediation "${remediation}"
+                        add_message_json WARN "${msg}" "${remediation}"
                         ((warnings++))
                         ;;
                 esac
@@ -1010,12 +1036,13 @@ function check_saptune() {
     fi
 
     # Print JSON output.
+    add2json list_end  # close messages list
     add2json number warnings ${warnings}
     add2json number errors ${fails}
-    update_messages_json
-    end_json
+    #update_messages_json
+      
+    end_json    # finialize JSON string
     print_json
-    #if [ ${DO_JSON} -eq 0 ] ; then
 
     # Summary.
     if [ ${DO_JSON} -eq 0 ] ; then
