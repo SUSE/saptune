@@ -259,7 +259,9 @@ Success is reported on stdout, errors including systemd error messages are print
 
 If the action was successfully the exit code is 0, otherwise 1.
 
-ATTENTION:
+.TP
+.B ATTENTION:
+.br
 saptune is able to start/stop/enable/disable systemd units, but on boot the outcome depends on the order of execution.
 
 If saptune is starting (or stopping) a systemd service ([service] section) it might happen, that the action gets reverted later by systemd because that service is disabled (or enabled) and executed after saptune.service.
