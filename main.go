@@ -243,6 +243,9 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 
 	// set values read from the config file
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
+	if saptuneVers != "1" && saptuneVers != "2" && saptuneVers != "3" {
+		system.ErrorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", SaptuneVersion, 128)
+	}
 
 	// Switch Debug on ("on") or off ("off" - default)
 	// Switch verbose mode on ("on" - default) or off ("off")
