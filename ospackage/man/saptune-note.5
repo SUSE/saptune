@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "July 2024" "" "saptune note file format description"
+.TH "saptune-note" "5" "October 2024" "" "saptune note file format description"
 .SH NAME
 saptune\-note \- Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
@@ -122,6 +122,17 @@ Valid values for \fBcsp=\fP are \fBazure\fP and \fBaws\fP
 Example:
 .br
 [sysctl:csp=azure]
+.RE
+.TP
+.BI virt= <virtualization type>
+to define a special \fIvirtualization\fP type (as reported by \fI/usr/bin/systemd-detect-virt -v|-c|-r\fP)
+.br
+Valid values for \fBvirt=\fP are \fBvm\fP, \fBchroot\fP and \fBcontainer\fP
+
+.RS 4
+Example:
+.br
+[sysctl:virt=vm]
 .RE
 .TP
 .BI DMI interface tag: <filename>= <file content>
