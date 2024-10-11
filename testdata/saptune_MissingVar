@@ -31,7 +31,7 @@ NOTE_APPLY_ORDER="2205917 2684254 1680803"
 ## Default: "3"
 #
 # Version of saptune
-#SAPTUNE_VERSION="3"
+SAPTUNE_VERSION="3"
 
 ## Type:    boolean
 ## Default: "false"
@@ -48,7 +48,7 @@ STAGING="false"
 # 'cmpl-blue-zebra', 'full-red-noncmpl', 'red-noncmpl', 'full-yellow-noncmpl'
 # 'yellow-noncmpl'
 # Refer to the man page for a desciprion of the color schemes.
-COLOR_SCHEME=""
+#COLOR_SCHEME=""
 
 ## Type:    string
 ## Default: "/boot"

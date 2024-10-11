@@ -31,7 +31,7 @@ NOTE_APPLY_ORDER="2205917 2684254 1680803"
 ## Default: "3"
 #
 # Version of saptune
-SAPTUNE_VERSION="5"
+SAPTUNE_VERSION="3"
 
 ## Type:    boolean
 ## Default: "false"
