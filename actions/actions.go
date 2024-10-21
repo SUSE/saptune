@@ -57,7 +57,7 @@ var RPMDate = "undef"
 var solutionSelector = system.GetSolutionSelector()
 
 // saptune configuration file
-var saptuneSysconfig = "/etc/sysconfig/saptune"
+var saptuneSysconfig = system.SaptuneConfigFile()
 
 // set colors for the table and list output
 // var setYellowText = "\033[38;5;220m"
@@ -82,7 +82,7 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 
 	// check for test packages
 	if RPMDate != "undef" {
-		system.NoticeLog("ATTENTION: You are running a test version (%s from %s) of saptune which is not supported for production use", RPMVersion, RPMDate)
+		system.NoticeLog("ATTENTION: You are running a test version (%s for SLES4SAP %d from %s) of saptune which is not supported for production use", RPMVersion, system.IfdefVers(), RPMDate)
 	}
 
 	switch system.CliArg(1) {
@@ -94,6 +94,8 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 		NoteAction(writer, system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "solution":
 		SolutionAction(writer, system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
+	case "configure":
+		ConfigureAction(writer, system.CliArg(2), system.CliArgs(3), stApp)
 	case "revert":
 		RevertAction(writer, system.CliArg(2), stApp)
 	case "staging":
@@ -315,6 +317,9 @@ Staging control:
    saptune [--format FORMAT] [--force-color] staging ( status | enable | disable | is-enabled | list )
    saptune [--format FORMAT] [--force-color] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
    saptune [--format FORMAT] [--force-color] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+Config (re-)settings:
+  saptune [--format FORMAT] [--force-color] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG ) Value
+  saptune [--format FORMAT] [--force-color] configure ( reset | show )
 Verify all applied Notes:
   saptune [--format FORMAT] [--force-color] verify applied
 Revert all parameters tuned by the SAP notes or solutions:

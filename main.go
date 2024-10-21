@@ -36,7 +36,7 @@ func main() {
 	}
 
 	// get saptune version and log switches from saptune sysconfig file
-	SaptuneVersion = checkSaptuneConfigFile(os.Stderr, app.SysconfigSaptuneFile, logSwitch)
+	SaptuneVersion = checkSaptuneConfigFile(os.Stderr, system.SaptuneConfigFile(), logSwitch)
 
 	arg1 := system.CliArg(1)
 	if arg1 == "version" || system.IsFlagSet("version") {
@@ -63,6 +63,7 @@ func main() {
 	// now system.ErrorExit can write to log and os.Stderr. No longer extra
 	// care is needed.
 	system.InfoLog("saptune (%s) started with '%s'", actions.RPMVersion, strings.Join(os.Args, " "))
+	system.InfoLog("build for '%d'", system.IfdefVers())
 
 	if arg1 == "lock" {
 		if arg2 := system.CliArg(2); arg2 == "remove" {
@@ -217,10 +218,10 @@ func checkWorkingArea() {
 // returns the saptune version and changes some log switches
 func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) string {
 	missingKey := []string{}
-	keyList := []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD"}
+	keyList := actions.MandKeyList()
 	sconf, err := txtparser.ParseSysconfigFile(saptuneConf, false)
 	if err != nil {
-		fmt.Fprintf(writer, "Error: Unable to read file '%s': %v\n", saptuneConf, err)
+		fmt.Fprintf(writer, "Error: Checking saptune configuration file - Unable to read file '%s': %v\n", saptuneConf, err)
 		system.ErrorExit("", 128)
 	}
 	// check, if all needed variables are available in the saptune

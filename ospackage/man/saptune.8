@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "July 2024" "" "System optimization For SAP"
+.TH saptune "8" "October 2024" "" "System optimization For SAP"
 .SH NAME
 saptune \- Comprehensive system optimization management for SAP solutions (\fBVersion 3\fP)
 
@@ -62,6 +62,12 @@ rename SOLUTIONNAME NEWSOLUTIONNAME
 
 \fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
 release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBconfigure\fP
+( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG ) Value
+
+\fBsaptune\fP [--format FORMAT] [--force-color] \fBconfigure\fP
+( reset | show )
 
 \fBsaptune\fP [--format FORMAT] [--force-color] \fBverify\fP
 applied
@@ -690,6 +696,29 @@ First the command will show an analysis of the objects going to be released to m
 
 Because the release is irreversible, the user has to confirm the action.
 
+.SH CONFIGURE ACTIONS
+Replaces the direct editing of the saptune configuration file /etc/sysconfig/saptune, which will be replaced by an intern configuration file and not be present in future versions.
+.br
+Not all of the former variables will be available as configure option, only those who should be changeable by the user.
+.br
+.SS
+.TP
+.B COLOR_SCHEME SCHEME
+Default color scheme. See saptune verify --colorscheme SCHEME for available schemes.
+.TP
+.B SKIP_SYSCTL_FILES FILE[,FILE...]
+Comma-separated list of sysctl config files or directories which should be excluded when checking if parameters handled by saptune are handled by sysctl as well.
+Input is checked, if the given files are in a location which is searched by sysctl command. If not, the files will be skipped.
+.TP
+.B IGNORE_RELOAD yes||no
+Controls behavior of systemctl reload saptune.service and the systemctl try-restart saptune.service during package installation.
+.TP
+.B reset
+Reverts the tuning and reset the content of the saptune configuration file to the installation default. Asks for confirmation.
+.TP
+.B show
+Shows the content of the saptune configuration file
+
 .SH VERIFY ACTIONS
 .TP
 .B verify applied
@@ -886,6 +915,11 @@ the saptune SAP Note or solution definitions, which are present in the Package A
 \fI/etc/sysconfig/saptune\fP
 .RS 4
 the central saptune configuration file containing the information about the currently enabled notes and solutions, the order in which these notes are applied and the version of saptune currently used.
+.br
+ATTENTION:
+the manual editing of this file will be \fBdeprecated\fP as the main configuration file will be (re)moved in the near future.
+.br
+Please use \fBsaptune configure\fP command instead of editing the file directly.
 .RE
 .PP
 \fI/etc/saptune/extra\fP

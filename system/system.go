@@ -9,14 +9,31 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
 	"unicode"
 )
 
-// SaptuneSectionDir defines saptunes saved state directory
+// SaptuneSectionDir defines saptunes saved state directory for section info
 const SaptuneSectionDir = "/run/saptune/sections"
+
+// SaptuneSavedStateDir defines saptunes saved state directory for previous
+// system values
+const SaptuneSavedStateDir = "/run/saptune/saved_state"
+
+// SaptuneParameterStateDir defines the directory where to store the
+// parameter state files
+// separated from the note state file directory
+const SaptuneParameterStateDir = "/run/saptune/parameter"
+
+// RPMBldVers is the version of the RPM build process (suse_version)
+// defaults to '15'
+// needs to be a string as replacement with -X during build does not work
+// with int variables (or const)
+// cannot set with -X: not a var of type string (type:int)
+var RPMBldVers = "15"
 
 // map to hold the current available systemd services
 var services map[string]string
@@ -39,6 +56,38 @@ var InfoOut = InfoLog
 
 // DmiID is the path to the dmidecode representation in the /sys filesystem
 var DmiID = "/sys/class/dmi/id"
+
+// IfdefVers returns the integer representation of the RPMBldVers variable
+func IfdefVers() int {
+	intValue, _ := strconv.Atoi(RPMBldVers)
+	return intValue
+}
+
+// SaptuneConfigFile returns the name of the saptune configuration file
+// /etc/sysconfig/saptune in SLE12 and SLE15
+// /var/lib/saptune/config/saptune in SLE16
+func SaptuneConfigFile() string {
+	if IfdefVers() > 15 {
+		return "/var/lib/saptune/config/saptune"
+	} else {
+		return "/etc/sysconfig/saptune"
+	}
+}
+
+// SaptuneConfigTemplate returns the name of the template file for the
+// saptune configuration file
+// /usr/share/fillup-templates/sysconfig.saptune in SLE12 and SLE15
+// /usr/share/saptune/saptuneTemplate.conf in SLE16
+func SaptuneConfigTemplate() string {
+	if IfdefVers() > 15 {
+		return "/usr/share/saptune/saptuneTemplate.conf"
+	} else {
+		if _, err := os.Stat("/var/adm/fillup-templates/sysconfig.saptune"); err == nil {
+			return "/var/adm/fillup-templates/sysconfig.saptune"
+		}
+		return "/usr/share/fillup-templates/sysconfig.saptune"
+	}
+}
 
 // IsUserRoot return true only if the current user is root.
 func IsUserRoot() bool {

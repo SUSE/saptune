@@ -21,11 +21,6 @@ import (
 	"strings"
 )
 
-// SaptuneParameterStateDir defines the directory where to store the
-// parameter state files
-// separated from the note state file directory
-const SaptuneParameterStateDir = "/run/saptune/parameter"
-
 // Note defines the structure and actions for a SAP Note
 // An SAP note consisting of a series of tunable parameters that can be
 // applied and reverted.
