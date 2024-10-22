@@ -15,12 +15,11 @@ import (
 	"strings"
 )
 
-// define saptunes main configuration file and variables
+// define saptunes main configuration variables
 const (
-	SysconfigSaptuneFile = "/etc/sysconfig/saptune"
-	TuneForSolutionsKey  = "TUNE_FOR_SOLUTIONS"
-	TuneForNotesKey      = "TUNE_FOR_NOTES"
-	NoteApplyOrderKey    = "NOTE_APPLY_ORDER"
+	TuneForSolutionsKey = "TUNE_FOR_SOLUTIONS"
+	TuneForNotesKey     = "TUNE_FOR_NOTES"
+	NoteApplyOrderKey   = "NOTE_APPLY_ORDER"
 )
 
 // App defines the application configuration and serialised state information.
@@ -34,6 +33,9 @@ type App struct {
 	State            *State                       // examine and manage serialised notes.
 }
 
+// define saptunes main configuration file
+var sysconfigSaptuneFile = system.SaptuneConfigFile()
+
 // InitialiseApp load application configuration. Panic on error.
 func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]note.Note, allSolutions map[string]solution.Solution) (app *App) {
 	app = &App{
@@ -42,7 +44,7 @@ func InitialiseApp(sysconfigPrefix, stateDirPrefix string, allNotes map[string]n
 		AllNotes:        allNotes,
 		AllSolutions:    allSolutions,
 	}
-	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, sysconfigSaptuneFile), true)
 	if err == nil {
 		app.TuneForSolutions = sysconf.GetStringArray(TuneForSolutionsKey, []string{})
 		app.TuneForNotes = sysconf.GetStringArray(TuneForNotesKey, []string{})
@@ -91,14 +93,14 @@ func (app *App) PositionInNoteApplyOrder(noteID string) int {
 
 // SaveConfig save configuration to file /etc/sysconfig/saptune.
 func (app *App) SaveConfig() error {
-	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), true)
+	sysconf, err := txtparser.ParseSysconfigFile(path.Join(app.SysconfigPrefix, sysconfigSaptuneFile), true)
 	if err != nil {
 		return err
 	}
 	sysconf.SetStrArray(TuneForSolutionsKey, app.TuneForSolutions)
 	sysconf.SetStrArray(TuneForNotesKey, app.TuneForNotes)
 	sysconf.SetStrArray(NoteApplyOrderKey, app.NoteApplyOrder)
-	return os.WriteFile(path.Join(app.SysconfigPrefix, SysconfigSaptuneFile), []byte(sysconf.ToText()), 0644)
+	return os.WriteFile(path.Join(app.SysconfigPrefix, sysconfigSaptuneFile), []byte(sysconf.ToText()), 0644)
 }
 
 // GetSortedSolutionEnabledNotes returns the number of all solution-enabled

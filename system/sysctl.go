@@ -270,3 +270,23 @@ func IsPagecacheAvailable() bool {
 	_, err := os.ReadFile(path.Join("/proc/sys", strings.Replace(SysctlPagecacheLimitMB, ".", "/", -1)))
 	return err == nil
 }
+
+// IsValidSysctlLocations returns true, if the given string is a valid
+// location for sysctl files
+func IsValidSysctlLocations(location string) bool {
+	validLocation := false
+	sysctlFiles := make(map[string]string)
+	getSysctlFilelist(sysctlDirs, sysctlFiles, false)
+	if _, ok := sysctlFiles[location]; ok {
+		validLocation = true
+	} else {
+		for _, dir := range sysctlDirs {
+			dir = strings.TrimSuffix(dir, "/")
+			if dir == location || dir == filepath.Dir(location) {
+				validLocation = true
+				break
+			}
+		}
+	}
+	return validLocation
+}
