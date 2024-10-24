@@ -217,6 +217,10 @@ func checkWorkingArea() {
 // checks, if the values is valid
 // returns the saptune version and changes some log switches
 func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) string {
+	if system.CliArg(1) == "configure" && system.CliArg(2) == "reset" {
+		return "3"
+	}
+
 	missingKey := []string{}
 	keyList := actions.MandKeyList()
 	sconf, err := txtparser.ParseSysconfigFile(saptuneConf, false)
