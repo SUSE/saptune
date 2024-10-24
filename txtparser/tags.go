@@ -54,6 +54,8 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			ret = chkArchTags(tagField[1], secFields)
 		case "csp":
 			ret = chkCspTags(tagField[1], secFields)
+		case "virt":
+			ret = chkVirtTags(tagField[1], secFields)
 		case "blkvendor", "blkmodel", "blkpat":
 			ret, blkDev = chkBlkTags(tagField[0], tagField[1], secFields, blkDev)
 		case "vendor", "model":
@@ -128,6 +130,18 @@ func chkCspTags(tagField string, secFields []string) bool {
 			chkCsp = "not a cloud"
 		}
 		system.InfoLog("cloud service provider '%s' in section definition '%v' does not match the cloud service provider of the running system ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, chkCsp)
+		ret = false
+	}
+	return ret
+}
+
+// chkVirtTags checks if the virtualization type section tag is valid or not
+func chkVirtTags(tagField string, secFields []string) bool {
+	ret := true
+	chkVirt := system.GetVirtStatus()
+	if tagField != chkVirt {
+		// virtualization type does not match
+		system.InfoLog("virtualization type '%s' in section definition '%v' does not match the virtualization type of the running system ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, chkVirt)
 		ret = false
 	}
 	return ret

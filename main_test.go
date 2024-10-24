@@ -156,8 +156,8 @@ func TestCheckSaptuneConfigFile(t *testing.T) {
 	tstwriter = &errExitbuffer
 
 	// check missing variable
-	saptuneConf = fmt.Sprintf("%s/saptune_NoVersion", TstFilesInGOPATH)
-	matchTxt := fmt.Sprintf("Error: File '%s' is broken. Missing variables 'SAPTUNE_VERSION'\n", saptuneConf)
+	saptuneConf = fmt.Sprintf("%s/saptune_MissingVar", TstFilesInGOPATH)
+	matchTxt := fmt.Sprintf("Error: File '%s' is broken. Missing variables 'COLOR_SCHEME'\n", saptuneConf)
 	lSwitch = logSwitch
 	_ = checkSaptuneConfigFile(&buffer, saptuneConf, lSwitch)
 
@@ -168,7 +168,7 @@ func TestCheckSaptuneConfigFile(t *testing.T) {
 	}
 	errExOut := errExitbuffer.String()
 	if errExOut != "" {
-		t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+		t.Errorf("wrong text returned by ErrorExit: '%v' instead of '%v'\n", errExOut, matchTxt)
 	}
 
 	// initialise next test

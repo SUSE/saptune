@@ -534,7 +534,7 @@ func (vend INISettings) useOverrides(key, scheds, val string) (bool, string, str
 // till now for /sys parameter settings
 // like KSM, THP and /sys/block/*/queue
 func (vend INISettings) chkDoubles(key, info string) string {
-	paramFiles := system.GetFiles(SaptuneParameterStateDir)
+	paramFiles := system.GetFiles(system.SaptuneParameterStateDir)
 
 	syskey := key
 	inf := ""

@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "July 2024" "" "saptune note file format description"
+.TH "saptune-note" "5" "October 2024" "" "saptune note file format description"
 .SH NAME
 saptune\-note \- Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
@@ -122,6 +122,17 @@ Valid values for \fBcsp=\fP are \fBazure\fP and \fBaws\fP
 Example:
 .br
 [sysctl:csp=azure]
+.RE
+.TP
+.BI virt= <virtualization type>
+to define a special \fIvirtualization\fP type (as reported by \fI/usr/bin/systemd-detect-virt -v|-c|-r\fP)
+.br
+Valid values for \fBvirt=\fP are \fBvm\fP, \fBchroot\fP and \fBcontainer\fP
+
+.RS 4
+Example:
+.br
+[sysctl:virt=vm]
 .RE
 .TP
 .BI DMI interface tag: <filename>= <file content>
@@ -603,7 +614,7 @@ Concerning \fBsysstat.service\fP please be in mind: A running sysstat service ca
 .br
 See sar(1), sa2(8), sa1(8) for more information
 
-If a service is enabled or disabled by default or admin choice, saptune will NOT disable or enable this service, if only '\fBstart\fP' or '\fBstop\fP' is used. In this case it will only start/stop the service. If such a service is started by systemd during a system reboot \fBafter\fP the start of saptune.service it will be possible that a service is stopped/running even if it was started/stopped by saptune. To change this, the service can be additional enabled or disabled by using '\fBenable\fP' or '\fBdisable\fP' in the Note definition file.
+If a service is enabled or disabled by default or admin choice, saptune will NOT disable or enable this service, if only '\fBstart\fP' or '\fBstop\fP' is used. In this case it will only start/stop the service. If such a service is started by systemd during a system reboot \fBafter\fP the start of saptune.service it will be possible that a service is stopped/running even if it was started/stopped by saptune. To change this, the service can be additional enabled or disabled by using '\fBenable\fP' or '\fBdisable\fP' in the Note definition or Override file.
 \" section sysctl
 .SH "[sysctl]"
 The section "[sysctl]" can be used to modify kernel parameters. The parameters available are those listed under /proc/sys/.

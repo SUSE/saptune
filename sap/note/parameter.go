@@ -23,7 +23,7 @@ type ParameterNotes struct {
 
 // GetPathToParameter returns path to the serialised parameter state file.
 func GetPathToParameter(param string) string {
-	return path.Join(SaptuneParameterStateDir, param)
+	return path.Join(system.SaptuneParameterStateDir, param)
 }
 
 // IDInParameterList checks, if given noteID is already part of the
@@ -39,11 +39,11 @@ func IDInParameterList(noteID string, list []ParameterNoteEntry) bool {
 
 // ListParams lists all stored parameter states. Return parameter names
 func ListParams() (ret []string, err error) {
-	if err = os.MkdirAll(SaptuneParameterStateDir, 0755); err != nil {
+	if err = os.MkdirAll(system.SaptuneParameterStateDir, 0755); err != nil {
 		return
 	}
 	// List SaptuneParameterStateDir and collect parameter names from file names
-	dirContent, err := os.ReadDir(SaptuneParameterStateDir)
+	dirContent, err := os.ReadDir(system.SaptuneParameterStateDir)
 	if os.IsNotExist(err) {
 		return []string{}, nil
 	} else if err != nil {
@@ -140,7 +140,7 @@ func StoreParameter(param string, obj ParameterNotes, overwriteExisting bool) er
 	if err != nil {
 		return err
 	}
-	if err = os.MkdirAll(SaptuneParameterStateDir, 0755); err != nil {
+	if err = os.MkdirAll(system.SaptuneParameterStateDir, 0755); err != nil {
 		return err
 	}
 	if _, err := os.Stat(GetPathToParameter(param)); os.IsNotExist(err) || overwriteExisting {
