@@ -23,6 +23,7 @@
 #                   1   Some warnings occurred. Saptune should work, but better check manually.
 #                   2   Some errors occurred. Saptune will not work.
 #                   3   Wrong parameters given to the tool on commandline.
+#                   5   Error in JSON string (bug in program!)
 #
 # Changelog:
 #
@@ -33,9 +34,11 @@
 # 09.11.2021  v0.2.2    degraded system is no longer considered an error
 # 26.09.2022  v0.2.3    degraded systemd state gets explained in more detail (TEAM-6584)
 # 26.09.2022  v0.3      reactivate unused function compile_filelists() as file_check() and add detection of sapconf remains (TEAM-6275)
-# 03.04.2023  v0.3.1    Removed error regarding tuned sapconf profile (TEAM-7529)
+# 03.04.2023  v0.3.1    removed error regarding tuned sapconf profile (TEAM-7529)
+# 28.08.2024  v0.4      a little rework and added JSON support (TEAM-8959)
 
-version="0.3.1"
+
+declare -r VERSION="0.4"
 
 # We use these global arrays through out the program:
 #
@@ -49,7 +52,8 @@ declare -A package_version os_version system_status unit_state_active unit_state
 
 color=1     # we like it colorful
 
-function header() { 
+function header() {
+    [ ${DO_JSON} -ne 0 ] && return 
     local len=${#1}
     echo -e "\n${1}"
     printf '=%.s' $(eval "echo {1.."$((${len}))"}")
@@ -57,6 +61,7 @@ function header() {
 }
 
 function print_ok() {
+    [ ${DO_JSON} -ne 0 ] && return
     local col_on col_off
     [ -t 1 ] || color=0  # Disable color if we run in a pipe
     if [ ${color} -eq 1 ] ; then
@@ -70,6 +75,7 @@ function print_ok() {
 }
 
 function print_fail() {
+    [ ${DO_JSON} -ne 0 ] && return
     local col_on col_off bold_on
     [ -t 1 ] || color=0  # Disable color if we run in a pipe
     if [ ${color} -eq 1 ] ; then
@@ -85,6 +91,7 @@ function print_fail() {
 }
 
 function print_warn() {
+    [ ${DO_JSON} -ne 0 ] && return
     local col_on col_off bold_on
     [ -t 1 ] || color=0  # Disable color if we run in a pipe
     if [ ${color} -eq 1 ] ; then
@@ -100,6 +107,7 @@ function print_warn() {
 }
 
 function print_note() {
+    [ ${DO_JSON} -ne 0 ] && return
     local col_on col_off
     [ -t 1 ] || color=0  # Disable color if we run in a pipe
     if [ ${color} -eq 1 ] ; then
@@ -110,6 +118,434 @@ function print_note() {
         col_off=""
     fi
     echo -e "[${col_on}NOTE${col_off}] ${1}"
+}
+
+function _json_must_be() {
+    # Params:       OBJECT_TYPE...
+    # Output:       -
+    # Returncode:   -
+    #
+    # Checks if one of the given object types is the last character
+    # of_JSON_NESTING. Terminates with exit code 5 an an error nmessage
+    # if not, otherwise returns.
+    #
+    # Requires:     _JSON_NESTING
+
+    local current_object="${_JSON_NESTING: -1:1}"
+    local object_type
+
+    for object_type in ${@} ; do
+        [ "${object_type}" == "${current_object}" ] && return
+    done
+    echo "Current object type \"${current_object}\" is not in the allowed types: ${@}" >&2
+    exit 5
+}
+
+function _json_must_be_number() {
+    # Params:       VALUE
+    # Output:       -
+    # Returncode:   -
+    #
+    # Checks if one of the given parameter is a number.
+    # Terminates with exit code 5 if not, otherwise returns.
+    #
+    # Requires:    -
+
+    if [[ ! ${1} =~ ^[+-]?([0-9]+([.][0-9]*)?|\.[0-9]+)$ ]] ; then
+        echo "JSON value is not a number: ${1}" >&2
+        exit 5
+    fi
+}
+
+function _json_must_be_bool() {
+    # Params:       VALUE
+    # Output:       -
+    # Returncode:   -
+    #
+    # Checks if one of the given parameter is a 'true'
+    # or 'false'.
+    # Terminates with exit code 5 if not, otherwise returns.
+    #
+    # Requires:    -
+
+    if [[ ! "${1}" =~ ^(true|false)$ ]] ; then
+        echo "JSON value is no neither 'true' nor 'false: ${1}" >&2
+        exit 5
+    fi
+}            
+
+function _json_key_must_exist() {
+    # Params:       ARG...
+    # Output:       -
+    # Returncode:   -
+    #
+    # Checks if the second parameter exists.
+    # The function normaly will be called by `add2json` with
+    # its arguments (`add2json REG_TYPE [KEY [VALUE]]`).
+    # Terminates with exit code 5 if not, otherwise returns.
+    #
+    # Requires:    -
+
+    if [ -z "${2}" ] ; then
+        echo "JSON key is missing! Command: ${*}" >&2
+        exit 5
+    fi
+}
+
+function _json_value_must_exist() {
+    # Params:       ARG...
+    # Output:       -
+    # Returncode:   -
+    #
+    # Checks if the third parameter exists.
+    # The function normaly will be called by `add2json` with
+    # its arguments (`add2json REG_TYPE [KEY [VALUE]]`).
+    # Terminates with exit code 5 if not, otherwise returns.
+    #
+    # Requires:    -
+
+    if [ -z "${3}" ] ; then
+        echo "JSON value is missing! Command: ${*}" >&2
+        exit 5
+    fi
+}
+
+function _json_nesting_add() {
+    # Params:       DATATYPE
+    # Output:       -
+    # Returncode:   -
+    #
+    # Appends the argument (typically D or L) to _JSON_NESTING.
+    #
+    # Requires:    _JSON_NESTING
+    
+    _JSON_NESTING="${_JSON_NESTING}${1}"
+}
+
+function _json_nesting_pop() {
+    # Params:       -
+    # Output:       -
+    # Returncode:   -
+    #
+    # Removes the last character from _JSON_NESTING.
+    #
+    # Requires:    _JSON_NESTING
+
+    _JSON_NESTING="${_JSON_NESTING:0: -1}"
+}
+
+function start_json() {
+    # Params:       -
+    # Output:       -
+    # Returncode:   -
+    #
+    # Initializes JSON_STRING and _JSON_NESTING to start
+    # a new JSON string.
+    # JSON_STRING starts with a { for a new dict.
+    # If DO_JSON is 0, the function returns immediately.
+    #
+    # Requires:    DO_JSON, JSON_STRING, _JSON_NESTING 
+
+    [ ${DO_JSON} -eq 0 ] && return
+    shopt -s extglob
+    JSON_STRING='{'
+    _JSON_NESTING='D'
+}
+
+function end_json() {
+    # Params:       -
+    # Output:       -
+    # Returncode:   -
+    #
+    # Finalizes JSON_STRING and _JSON_NESTING to finish
+    # a JSON string or terminates with exit code 5 if 
+    # there is a problem.
+    # JSON_STRING ends with a } to close the overall dict.
+    # If DO_JSON is 0, the function returns immediately.
+    #
+    # Requires:    DO_JSON, JSON_STRING, _JSON_NESTING 
+
+    [ ${DO_JSON} -eq 0 ] && return
+    if [ "${_JSON_NESTING}" != 'D' ] ; then 
+        echo "Cannot terminate JSON string with nesting: ${_JSON_NESTING}" >&2
+        exit 5
+    fi
+    JSON_STRING="${JSON_STRING%,*( )}}"
+    _JSON_NESTING='E'
+}
+
+function print_json() {
+    # Params:       -
+    # Output:       JSON_STRING
+    # Returncode:   -
+    #
+    # Prints JSON_STRING to stdout or terminates with 
+    # exit code 5 if there is a problem.
+    # If DO_JSON is 0, the function returns immediately.
+    #
+    # Requires:    DO_JSON, JSON_STRING, _JSON_NESTING 
+
+    [ ${DO_JSON} -eq 0 ] && return
+    if [ "${_JSON_NESTING}" != 'E' ] ; then 
+        echo "Cannot print incomplete JSON string with nesting: ${_JSON_NESTING}" >&2
+        exit 5
+    fi
+    echo "${JSON_STRING}"
+}
+
+function add2json() {
+    # Params:       REQ_TYPE [KEY [VALUE]]
+    # Output:       -
+    # Returncode:   -
+    #
+    # Extends JSON_STRING with the given entry and 
+    # updates _JSON_NESTING accordingly. 
+    # Terminates with exit code 5 if there is a problem.
+    # If DO_JSON is 0, the function returns immediately.
+    #
+    # Implemented commands are:
+    #   add2json dict_start NAME 
+    #   add2json dict_end
+    #   add2json list_start NAME 
+    #   add2json list_entry_string VALUE
+    #   add2json list_entry_number VALUE
+    #   add2json list_entry_bool true|false
+    #   add2json list_entry_null
+    #   add2json list_entry_dict_start
+    #   add2json list_entry_dict_end
+    #   add2json list_end
+    #   add2json string NAME VALUE 
+    #   add2json number NAME VALUE
+    #   add2json bool NAME  true|false
+    #   add2json nul NAME
+    #
+    # Requires:    DO_JSON, JSON_STRING, _JSON_NESTING 
+    
+    [ ${DO_JSON} -eq 0 ] && return
+
+    local req_type="${1}"
+    local key="${2}"
+    local value="${3}"
+
+    # Escape quotes in keys and values.
+    key="${key//\"/\\\"}" 
+    value="${value//\"/\\\"}" 
+
+    # Act on the request type.
+    case "${req_type}" in 
+
+        dict_start)
+            _json_must_be L D
+            _json_key_must_exist "$@"
+            JSON_STRING="${JSON_STRING}\"${key}\":{"
+            _json_nesting_add D
+            ;;
+
+        dict_end)
+            _json_must_be D
+            JSON_STRING="${JSON_STRING%,*( )}},"
+            _json_nesting_pop
+            ;;
+
+        list_start)
+            _json_must_be L D
+            _json_key_must_exist "$@"
+            JSON_STRING="${JSON_STRING}\"${key}\":["
+            _json_nesting_add L
+            ;;
+
+        list_entry_string)
+            _json_must_be L
+            _json_key_must_exist "$@"   # key is really a value (list entry)
+            JSON_STRING="${JSON_STRING}\"${key}\", "
+            ;;
+
+        list_entry_number)
+            _json_must_be L
+            _json_key_must_exist "$@"   # key is really a value (list entry)
+            _json_must_be_number ${key}   # key is really a value (list entry)
+            JSON_STRING="${JSON_STRING}${key}, "
+            ;;
+
+        list_entry_bool)
+            _json_must_be L
+            _json_key_must_exist "$@"   # key is really a value (list entry)
+            _json_must_be_bool ${key}   # key is really a value (list entry)
+            JSON_STRING="${JSON_STRING}${key}, "
+            ;;
+
+        list_entry_null)
+            _json_must_be L
+            JSON_STRING="${JSON_STRING}null, "
+            ;;
+
+        list_entry_dict_start)
+            _json_must_be L
+            JSON_STRING="${JSON_STRING}{"
+            _json_nesting_add D
+            ;;
+        
+        list_entry_dict_end)
+            _json_must_be D
+            JSON_STRING="${JSON_STRING%,*( )}},"
+            _json_nesting_pop
+            ;;
+
+        list_end)
+            _json_must_be L
+            JSON_STRING="${JSON_STRING%,*( )}],"
+            _json_nesting_pop
+            ;;
+        
+        string)
+            _json_must_be D
+            _json_key_must_exist "$@"
+            _json_value_must_exist "$@"
+            JSON_STRING="${JSON_STRING}\"${key}\":\"${value}\", "
+            ;;
+
+        number)
+            _json_must_be D
+            _json_key_must_exist "$@"
+            _json_value_must_exist "$@"
+            _json_must_be_number ${value}
+            JSON_STRING="${JSON_STRING}\"${key}\":${value}, "
+            ;;
+
+        bool)
+            _json_must_be D
+            _json_key_must_exist "$@"
+            _json_must_be_bool ${value}
+            JSON_STRING="${JSON_STRING}\"${key}\":${value}, "
+            ;;
+
+        null)
+            _json_must_be D
+            _json_key_must_exist "$@"
+            JSON_STRING="${JSON_STRING}\"${key}\":null, "
+            ;;
+
+        *)
+            echo "Unknown request type: ${req_type}" >&2
+            exit 5
+            ;;
+    esac
+}
+
+# MARKED FOR REMOVAL
+function add_msg_json() {
+    # Params:       -
+    # Output:       -
+    # Returncode:   -
+    #
+    # Adds a note, warning or fail message to the arrays
+    # JSON_NOTE_MESSAGES, JSON_WARN_MESSAGES, JSON_FAIL_MESSAGES
+    # or JSON_REMEDIATION_MESSAGES which are added to JSON_STRING
+    # by update_messages_json().
+    # Terminates with exit code 5 if there is a problem.
+    # If DO_JSON is 0, the function returns immediately.
+    #
+    # Requires:    JSON_NOTE_MESSAGES JSON_WARN_MESSAGES 
+    #              JSON_FAIL_MESSAGES JSON_REMEDIATION_MESSAGES
+
+    [ ${DO_JSON} -eq 0 ] && return
+
+    case "${1}" in 
+        note)
+            JSON_NOTE_MESSAGES+=("${2}")
+            ;;
+        warn)
+            JSON_WARN_MESSAGES+=("${2}")
+            ;;
+        fail)
+            JSON_FAIL_MESSAGES+=("${2}")
+            ;;
+        remediation)
+            JSON_REMEDIATION_MESSAGES+=("${2}")
+            ;;  
+        *)
+            echo "Unknown JSON message type: ${1}" >&2
+            exit 5
+            ;;
+    esac
+}
+
+# MARKED FOR REMOVAL
+function update_messages_json() {
+    # Params:       -
+    # Output:       -
+    # Returncode:   -
+    #
+    # Adds a 'messages' dictionary with lists for 'notes'
+    # (JSON_NOTE_MESSAGES), 'warnings' (JSON_WARN_MESSAGES)
+    # 'remediations' (JSON_REMEDIATION_MESSAGES) and 'errors'
+    # (JSON_FAIL_MESSAGES) or terminates with exit code 5 if
+    # there is a problem.
+    # If DO_JSON is 0, the function returns immediately.
+    #
+    # Requires:    DO_JSON, JSON_STRING, _JSON_NESTING 
+    #              JSON_NOTE_MESSAGES JSON_WARN_MESSAGES 
+    #              JSON_FAIL_MESSAGES JSON_REMEDIATION_MESSAGES
+
+    [ ${DO_JSON} -eq 0 ] && return
+
+    add2json dict_start 'messages'
+    add2json list_start 'notes'
+    for msg in "${JSON_NOTE_MESSAGES[@]}" ; do
+        add2json list_entry_string "${msg}"
+    done 
+    add2json list_end
+    add2json list_start 'warnings'
+    for msg in "${JSON_WARN_MESSAGES[@]}" ; do
+        add2json list_entry_string "${msg}"
+    done 
+    add2json list_end
+    add2json list_start 'errors'
+    for msg in "${JSON_FAIL_MESSAGES[@]}" ; do
+        add2json list_entry_string "${msg}"
+    done 
+    add2json list_end
+    add2json list_start 'remediations'
+    for msg in "${JSON_REMEDIATION_MESSAGES[@]}" ; do
+        add2json list_entry_string "${msg}"
+    done 
+    add2json list_end
+    add2json dict_end
+}
+
+function add_message_json() {
+    # Params:       TYPE TEXT REMEDIATION
+    # Output:       -
+    # Returncode:   -
+    #
+    # Adds dictionary to a list ()'messages'), which must 
+    # be present, with the elements 'type' (OK|WARN|FAIL|NOTE),
+    # 'text' and 'remediation' (optional) or terminates with
+    #  exit code 5 if there is a problem.
+    # The remediation is left out, except the type is FAIL or
+    # WARN.
+    # If DO_JSON is 0, the function returns immediately.
+    #
+    # Requires:    DO_JSON, JSON_STRING, _JSON_NESTING 
+
+    [ ${DO_JSON} -eq 0 ] && return
+
+    local parameter_failure=0
+    [ $# -lt 2 -o $# -gt 3 ] &&  parameter_failure=1
+    [[ "${1}" =~ ^(OK|WARN|FAIL|NOTE)$ ]] || parameter_failure=2
+    [ "${1}" == 'FAIL' -a $# -ne 3 ] &&  parameter_failure=3
+    [ "${1}" == 'WARN' -a $# -ne 3 ] &&  parameter_failure=3
+    if [ ${parameter_failure} -ne 0 ] ; then 
+        echo "${FUNCNAME@Q} wrongly called (code=${parameter_failure}) with: ${@@Q} " >&2
+        exit 5
+    fi
+
+    add2json list_entry_dict_start
+    add2json string 'type' "${1}"
+    add2json string 'text' "${2}"
+    [ -n "${3:-}" ] && add2json string 'remediation' "${3}"
+    add2json list_entry_dict_end
+
 }
 
 function is_in() {
@@ -151,7 +587,6 @@ function get_os_version() {
     os_version['servicepack']="${VERSION_ID#*.}"
 }
 
-
 function get_package_versions() {
     # Params:   PACKAGE...
     # Output:   -
@@ -173,7 +608,6 @@ function get_package_versions() {
         fi
     done
 }
-
 
 function get_system_status() {
     # Params:   -
@@ -309,7 +743,7 @@ function file_check() {
     #
     # The function updates the variables "warnings" and "fails" used in saptune_check(). 
     #
-    # Requires: print_warn(), print_fail() and print_note()
+    # Requires: print_warn(), print_fail(), print_note() and add_message_json()
 
     local VERSION_ID tag="${1}" mandatory_files invalid_files rpm_leftovers sapconf_leftovers critical_sapconf_leftovers
     declare -a mandatory_files invalid_files rpm_leftovers
@@ -340,18 +774,23 @@ function file_check() {
     # Critical leftovers from a damaged sapconf update/removal, which prevent saptune from starting.    
     critical_sapconf_leftovers=( '/var/lib/sapconf/act_profile' '/run/sapconf/active' )
 
-
     # Now check the existence of mandatory and invalid files and print warnings and fails.    
     for ((i=0;i<${#mandatory_files[@]};i++)) ; do
         if [ ! -e "${mandatory_files[i]}" ] ; then 
-            print_fail "${mandatory_files[i]} is missing, but a mandatory file." "Check your installation!"
+            msg="${mandatory_files[i]} is missing, but a mandatory file."
+            remediation="Check your installation!"
+            print_fail "${msg}" "${remediation}"
+            add_message_json FAIL "${msg}" "${remediation}"
             ((fails++))
         fi
         rpm_leftovers+=("${mandatory_files[i]}.rpmsave" "${mandatory_files[i]}.rpmnew" )
-    done 
+    done
     for ((i=0;i<${#invalid_files[@]};i++)) ; do
-        if [ -e "${invalid_files[i]}" ] ; then 
-            print_warn "${invalid_files[i]} is not used by this version. Maybe a leftover from an update?" "Check the content and remove it."
+        if [ -e "${invalid_files[i]}" ] ; then   
+            msg="${invalid_files[i]} is not used by this version. Maybe a leftover from an update?"
+            remediation="Check the content and remove it."
+            print_warn "${msg}" "${remediation}"
+            add_message_json WARN "${msg}" "${remediation}"
             ((warnings++))
         fi
         rpm_leftovers+=("${invalid_files[i]}.rpmsave" "${invalid_files[i]}.rpmnew" )
@@ -360,7 +799,10 @@ function file_check() {
     # Print a warning if we have found RPM leftovers!
     for ((i=0;i<${#rpm_leftovers[@]};i++)) ; do
         if [ -e "${rpm_leftovers[i]}" ] ; then 
-            print_warn "${rpm_leftovers[i]} found. This is a leftover from a package update!" "Check the content and remove it."
+            msg="${rpm_leftovers[i]} found. This is a leftover from a package update!"
+            remediation="Check the content of \"${rpm_leftovers[i]}\" and remove it."
+            print_warn "${msg}" "${remediation}"
+            add_message_json WARN "${msg}" "${remediation}"
             ((warnings++))
         fi
     done 
@@ -369,7 +811,9 @@ function file_check() {
     if [ -z ${package_version['sapconf']} ] ; then
         for ((i=0;i<${#sapconf_leftovers[@]};i++)) ; do
             if [ -e "${sapconf_leftovers[i]}" ] ; then 
-                print_warn "${sapconf_leftovers[i]} found. This is a leftover from a sapconf package upgrade or removal!" "Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug,"
+                msg="${sapconf_leftovers[i]} found. This is a leftover from a sapconf package upgrade or removal!"
+                remediation="Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug."
+                add_message_json WARN "${msg}" "${remediation}"
                 ((warnings++))
             fi
         done 
@@ -379,7 +823,10 @@ function file_check() {
     if [ "${unit_state_active['sapconf.service']}" == 'inactive' ] ; then 
         for ((i=0;i<${#critical_sapconf_leftovers[@]};i++)) ; do
             if [ -e "${critical_sapconf_leftovers[i]}" ] ; then 
-                print_fail "${critical_sapconf_leftovers[i]} found. This is an unintended leftover from sapconf!" "Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug,"
+                msg="${critical_sapconf_leftovers[i]} found. This is an unintended leftover from sapconf!"
+                remediation="Delete ${critical_sapconf_leftovers[i]}. If this happens regularly, please report a bug."
+                print_fail "${msg}" "${remediation}"
+                add_message_json FAIL "${msg}" "${remediation}"
                 ((fails++))
             fi
         done 
@@ -392,9 +839,20 @@ function check_saptune() {
 
     local fails=0 warnings=0 version_tag SAPTUNE_VERSION TUNE_FOR_SOLUTIONS TUNE_FOR_NOTES
 
+    start_json  # open new JSON document
+    add2json list_start messages  # open messages dilistct
+
     # We can stop, if saptune is not installed.
     if [ -z "${package_version['saptune']}" ] ; then
-        echo "saptune is not installed" 
+        msg="saptune is not installed"
+        remediation="Install saptune with: zypper install saptune"
+        print_fail "${msg}" "${remediation}"
+        add_message_json FAIL "${msg}"  "${remediation}"
+        add2json list_end  # close messages list
+        add2json number warnings 0
+        add2json number errors 1
+        end_json
+        print_json
         return 2    
     fi
 
@@ -403,39 +861,64 @@ function check_saptune() {
             version_tag='saptune-3'
             ;;
         *)  
-            print_fail "The saptune version ${package_version['saptune']} is unknown to this script! Exiting."
+            msg="The saptune version ${package_version['saptune']} is unknown to this script! Exiting."
+            remediation="Install a supported saptune version."
+            print_fail "${msg}" "${remediation}"
+            add_message_json FAIL "${msg}"  "${remediation}"
+            add2json list_end  # close messages list
+            add2json number warnings 0
+            add2json number errors 1
+            end_json
+            print_json
             return 2 
             ;;
     esac
 
     # Let's test.
-    header "Checking saptune" 
-    print_note "saptune package has version ${package_version['saptune']}"
-
+    header "Checking saptune"
+    msg="saptune package has version ${package_version['saptune']}" 
+    print_note "${msg}"
+    add_message_json NOTE "${msg}"
 
     # Check if leftover files still in place.
     file_check saptune-3
 
-    # Checking if system is "running" and has no failed units.
+    # Checking if system is "running" and has no failed units."
     case "${system_status['status']}" in
         running)
-            print_ok "systemd reports status \"running\""
+            msg="systemd reports status \"running\""
+            print_ok "${msg}"
+            add_message_json OK "${msg}"
             ;;
         degraded)
-            print_warn "systemd reports status \"${system_status['status']}\". Failed units: ${system_status['failed_units']}"  "Check the cause and reset the state with 'systemctl reset-failed'!"
-            print_note "A degraded systemd system status means, that one or more systemd units failed. The system is still operational! Tuning might not be affected, please run 'saptune verfiy' for detailed information."
+            msg="systemd reports status \"${system_status['status']}\". Failed units: ${system_status['failed_units']}"
+            remediation="Check the cause and reset the state with 'systemctl reset-failed'!"
+            print_warn "${msg}" "${remediation}"
+            add_message_json WARN "${msg}" "${remediation}"   
+            msg="A degraded systemd system status means, that one or more systemd units failed. The system is still operational! Tuning might not be affected, please run 'saptune verfiy' for detailed information."
+            print_note "${msg}" 
+            add_message_json NOTE "${msg}"
             ((warnings++))
             ;;
-        *)  print_fail "systemd reports status \"${system_status['status']}\"."  "Check systemd to see what is wrong!"
+        *)  msg="systemd reports status \"${system_status['status']}\"."
+            remediation="Check systemd to see what is wrong!"
+            print_fail "${msg}" "${remediation}"
+            add_message_json FAIL "${msg}" "${remediation}"
             ((fails++))
             ;;   
     esac  
 
     # Checking if the correct version has been configured.
+    #add2json string configured_saptune_version "${configured_saptune_version}"
     case ${configured_saptune_version} in 
-        3)  print_ok "configured saptune version is 3"
+        3)  msg="configured saptune version is 3"
+            print_ok "${msg}"
+            add_message_json OK "${msg}"
             ;; 
-        *)  print_fail "Configured saptune version is ${configured_saptune_version}" "Misconfiguration happened or an update went wrong! This needs to be investigated."
+        *)  msg="Configured saptune version is ${configured_saptune_version}"
+            remediation="Misconfiguration happened or an update went wrong! This needs to be investigated."
+            print_fail "${msg}" "${remediation}"
+            add_message_json FAIL "${msg}" "${remediation}" 
             ((fails++))
             ;;
     esac 
@@ -444,111 +927,175 @@ function check_saptune() {
     if [ -n "${package_version['sapconf']}" ] ; then 
         case "${unit_state_active['sapconf.service']}" in
             inactive)
-                print_ok "sapconf.service is inactive"
+                msg="sapconf.service is inactive"
+                print_ok "${msg}"
+                add_message_json OK "${msg}" 
                 ;;
             *)
-                print_fail "sapconf.service is ${unit_state_active['sapconf.service']}" "Run 'systemctl stop sapconf.service' or 'saptune service takeover'."
+                msg="sapconf.service is ${unit_state_active['sapconf.service']}"
+                remediation="Run 'systemctl stop sapconf.service' or 'saptune service takeover'."
+                print_fail "${msg}" "${remediation}"
+                add_message_json FAIL "${msg}" "${remediation}" 
                 ((fails++))
                 ;;
         esac
         case "${unit_state_enabled['sapconf.service']}" in
             disabled)
-                print_ok "sapconf.service is disabled"
+                msg="sapconf.service is disabled"
+                print_ok "${msg}"
+                add_message_json OK "${msg}" 
                 ;;
              *)
-                print_fail "sapconf.service is ${unit_state_enabled['sapconf.service']}" "Run 'systemctl disable sapconf.service' or 'saptune service takeover'."
+                msg="sapconf.service is ${unit_state_enabled['sapconf.service']}"
+                remediation="Run 'systemctl disable sapconf.service' or 'saptune service takeover'."
+                print_fail "${msg}" "${remediation}"
+                add_message_json FAIL "${msg}" "${remediation}"
                 ((fails++))
                 ;;
         esac
     fi
 
     # Checking if saptune.service is enabled and started.
+    #add2json list_start 'saptune.service'
+    #add2json list_entry_string "${unit_state_active['saptune.service']}"
+    #add2json list_entry_string "${unit_state_enabled['saptune.service']}"
+    #add2json list_end
     case "${unit_state_active['saptune.service']}" in
         active)
-            print_ok "saptune.service is active"
+            msg="saptune.service is active"
+            print_ok "${msg}"
+            add_message_json OK "${msg}"
             ;;
         *)
-            print_fail "saptune.service is ${unit_state_active['saptune.service']}" "Run 'systemctl start saptune.service', 'saptune service start' or 'saptune service takeover'."
+            msg="saptune.service is ${unit_state_active['saptune.service']}"
+            remediation="Run 'systemctl start saptune.service', 'saptune service start' or 'saptune service takeover'."
+            print_fail "${msg}" "${remediation}"
+            add_message_json FAIL "${msg}" "${remediation}" 
             ((fails++))
             ;;
     esac
     case "${unit_state_enabled['saptune.service']}" in
         enabled)
-            print_ok "saptune.service is enabled"
+            msg="saptune.service is enabled"
+            print_ok "${msg}"
+            add_message_json OK "${msg}"
             ;;
         *)
-            print_fail "saptune.service is ${unit_state_enabled['saptune.service']}" "Run 'systemctl enable saptune.service', 'saptune service enable' or 'saptune service takeover'."
+            msg="saptune.service is ${unit_state_enabled['saptune.service']}"
+            remediation="Run 'systemctl enable saptune.service', 'saptune service enable' or 'saptune service takeover'."
+            print_fail "${msg}" "${remediation}"
+            add_message_json FAIL "${msg}" "${remediation}" 
             ((fails++))
             ;;
     esac
 
     # Checking status of tuned.service. and the profile.
     if [ -n "${package_version['tuned']}" ] ; then 
-            case "${tool_profile['tuned']}" in
-                saptune)
-                    print_fail "tuned.service is ${unit_state_active['tuned.service']}/${unit_state_enabled['tuned.service']} with profile ('${tool_profile['tuned']}')" "This profile should not exist anymore! This needs to be investigated."
-                    ((fails++))
-                    ;;
-                *)
-                    print_note "tuned profile is '${tool_profile['tuned']}'"
-                    case "${unit_state_active['tuned.service']}" in
-                        inactive)
-                            print_ok "tuned.service is inactive"
-                            ;;
-                        *)
-                            print_warn "tuned.service is ${unit_state_active['tuned.service']}" "Verify that tuning does not conflict with saptune or run 'systemctl stop tuned.service'!"
-                            ((warnings++))
-                            ;;
-                    esac
-                    case "${unit_state_enabled['tuned.service']}" in
-                        disabled)
-                            print_ok "tuned.service is disabled"
-                            ;;
-                        *)
-                            print_warn "tuned.service is ${unit_state_enabled['tuned.service']}" "Verify that tuning does not conflict with saptune or run 'systemctl disable tuned.service'!"
-                            ((warnings++))
-                            ;;
-                    esac
-                    ;;
-            esac
+        case "${tool_profile['tuned']}" in
+            saptune)
+                msg="tuned.service is ${unit_state_active['tuned.service']}/${unit_state_enabled['tuned.service']} with profile ('${tool_profile['tuned']}')"
+                remediation="This profile should not exist anymore! This needs to be investigated."
+                print_fail "${msg}" "${remediation}"
+                add_message_json FAIL "${msg}" "${remediation}"
+                ((fails++))
+                ;;
+            *)
+                msg="tuned profile is '${tool_profile['tuned']}'"
+                print_note "${msg}"
+                add_message_json NOTE "${msg}"
+                case "${unit_state_active['tuned.service']}" in
+                    inactive)
+                        msg="tuned.service is inactive"
+                        print_ok "${msg}"
+                        add_message_json OK "${msg}"
+                        ;;
+                    *)
+                        msg="tuned.service is ${unit_state_active['tuned.service']}"
+                        remediation="Verify that tuning does not conflict with saptune or run 'systemctl stop tuned.service'!"
+                        print_warn "${msg}" "${remediation}"
+                        add_message_json WARN "${msg}" "${remediation}"
+                        ((warnings++))
+                        ;;
+                esac
+                case "${unit_state_enabled['tuned.service']}" in
+                    disabled)
+                        msg="tuned.service is disabled"
+                        print_ok "${msg}"
+                        add_message_json OK "${msg}"
+                        ;;
+                    *) 
+                        msg="tuned.service is ${unit_state_enabled['tuned.service']}"
+                        remediation="Verify that tuning does not conflict with saptune or run 'systemctl disable tuned.service'!"
+                        print_warn "${msg}" "${remediation}"
+                        add_message_json WARN "${msg}" "${remediation}"
+                        ((warnings++))
+                        ;;
+                esac
+                ;;
+        esac
     fi
 
+    # Print JSON output.
+    add2json list_end  # close messages list
+    add2json number warnings ${warnings}
+    add2json number errors ${fails}
+    #update_messages_json
+      
+    end_json    # finialize JSON string
+    print_json
+
     # Summary.
-    echo
-    [ ${warnings} -gt 0 ] && echo "${warnings} warning(s) have been found."
-    [ ${fails} -gt 0 ] && echo "${fails} error(s) have been found."
-    if [ ${fails} -gt 0 ] ; then
-        echo "Saptune will not work properly!"
-        return 1
-    else 
-        if [ ${warnings} -gt 0 ] ; then
-            echo "Saptune should work properly, but better investigate!"
-        else
-            echo "Saptune is set up correctly."
+    if [ ${DO_JSON} -eq 0 ] ; then
+        echo
+        [ ${warnings} -gt 0 ] && echo "${warnings} warning(s) have been found."
+        [ ${fails} -gt 0 ] && echo "${fails} error(s) have been found."
+        if [ ${fails} -gt 0 ] ; then
+            echo "Saptune will not work properly!"
+        else 
+            if [ ${warnings} -gt 0 ] ; then
+                echo "Saptune should work properly, but better investigate!"
+            else
+                echo "Saptune is set up correctly."
+            fi
         fi
-    fi
+    fi 
+    [ ${fails} -gt 0 ] && return 1
     return 0    
+}
+
+function help() {
+    echo "Usage: ${0##*/} [--json]"
+}
+
+function intro() {
+    [ ${DO_JSON} -ne 0 ] && return
+    echo -e "\nThis is ${0##*/} v${VERSION}.\n"
+    echo -e "It verifies if saptune is set up correctly."
+    echo -e "Please keep in mind:"
+    echo -e " - This tool does not check, if the tuning itself works correctly."
+    echo -e " - Follow the hints from top to down to minimize side effects.\n"
 }
 
 
 # --- MAIN ---
 
-# Introduction.
-echo -e "\nThis is ${0##*/} v${version}.\n"
-echo -e "It verifies if saptune is set up correctly."
-echo -e "Please keep in mind:"
-echo -e " - This tool does not check, if the tuning itself works correctly."
-echo -e " - Follow the hints from top to down to minimize side effects.\n"
+declare -a JSON_NOTE_MESSAGES JSON_WARN_MESSAGES JSON_FAIL_MESSAGES JSON_REMEDIATION_MESSAGES
+unset JSON_STRING _JSON_NESTING
+DO_JSON=0
+
+# Check parameters.
+[ $# -gt 1 ] && { help ; exit 3 ; }
+if [ $# -eq 1 ] ; then
+    [ "${1}" != '--json' ] && { help ; exit 3 ; }
+    DO_JSON=1
+fi
 
 # Determine if we are running a SLES.
 eval $(grep ^ID= /etc/os-release)
 [ "${ID}" != "sles" ] && { echo "Only SLES is supported! Your OS ID is ${ID}! Exiting." ; exit 2 ; }
 
-# Check parameters.
-if [ -n "${1}" ] ; then
-    echo "Usage: ${0##*/}"
-    exit 3
-fi
+# Introduction.
+intro
 
 collect_data
 check_saptune
