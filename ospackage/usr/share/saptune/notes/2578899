@@ -13,6 +13,15 @@ uuidd.socket=start
 sysstat.service=start
 sysctl-logger.service=start
 
+[service:os=15-SP4]
+sysctl-logger.service=start
+
+[service:os=15-SP5]
+sysctl-logger.service=start
+
+[service:os=15-SP6]
+sysctl-logger.service=start
+
 [block]
 # The default I/O scheduler for single-queued block layer devices offers
 # satisfactory performance for wide range of I/O task, however choosing an
