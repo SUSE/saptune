@@ -857,6 +857,8 @@ func CheckOrphanedOverrides() {
 			workDir = SolutionSheets
 			customName = ovFile
 		} else {
+			object = "note"
+			workDir = NoteTuningSheets
 			customName = ovFile + ".conf"
 		}
 		_, _, err := chkFileName(ovFile, workDir, ExtraTuningSheets)
