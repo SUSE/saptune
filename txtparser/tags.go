@@ -138,7 +138,28 @@ func chkCspTags(tagField string, secFields []string) bool {
 // chkVirtTags checks if the virtualization type section tag is valid or not
 func chkVirtTags(tagField string, secFields []string) bool {
 	ret := true
-	chkVirt := system.GetVirtStatus()
+	vopt := ""
+	switch tagField {
+	case "vm":
+		vopt = "-v"
+	case "chroot":
+		vopt = "-r"
+	case "container":
+		vopt = "-c"
+	}
+	virt, chkVirt, err := system.SystemdDetectVirt(vopt)
+	if vopt != "" {
+		if !virt {
+			ret = false
+			system.InfoLog("virtualization class type '%s' in section definition '%v' does not match the virtualization class type of the running system. Skipping whole section with all lines till next valid section definition", tagField, secFields)
+		}
+		return ret
+	}
+	// order of vopt and err check is by intention
+	if err != nil {
+		system.InfoLog("No virtualization detected - bare metal system or error with systemd-detect-virt. Skipping whole section '%v' with all lines till next valid section definition", secFields)
+		return false
+	}
 	if tagField != chkVirt {
 		// virtualization type does not match
 		system.InfoLog("virtualization type '%s' in section definition '%v' does not match the virtualization type of the running system ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, chkVirt)

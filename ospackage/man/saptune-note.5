@@ -125,9 +125,9 @@ Example:
 .RE
 .TP
 .BI virt= <virtualization type>
-to define a special \fIvirtualization\fP type (as reported by \fI/usr/bin/systemd-detect-virt -v|-c|-r\fP)
+to define a special \fIvirtualization\fP class or type
 .br
-Valid values for \fBvirt=\fP are \fBvm\fP, \fBchroot\fP and \fBcontainer\fP
+Valid class values for \fBvirt=\fP are \fBvm\fP, \fBchroot\fP and \fBcontainer\fP. Valid type values for \fBvirt=\fP are the output reported by \fI/usr/bin/systemd-detect-virt\fP
 
 .RS 4
 Example:
