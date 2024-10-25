@@ -1,5 +1,5 @@
 .\"/*
-.\" * Copyright (c) 2017-2022 SUSE LLC.
+.\" * Copyright (c) 2017-2024 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Soeren Schmidt, Angela Briel
 .\" *
@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "August 2022" "" "System optimization For SAP"
+.TH saptune "8" "October 2024" "" "System optimization For SAP"
 .SH NAME
 saptune \- Comprehensive system optimization management for SAP solutions (\fBVersion 3\fP)
 
@@ -251,6 +251,17 @@ Calls '\fIsystemctl enablestart saptune.service\fP' after stopping and disabling
 Success is reported on stdout, errors including systemd error messages are printed on stderr. The action gets logged.
 
 If the action was successfully the exit code is 0, otherwise 1.
+
+.TP
+.B ATTENTION:
+.br
+saptune is able to start/stopp/enable/disable systemd units, but on boot the outcome depends on the order of execution.
+
+If saptune is starting (or stopping) a systemd service ([service] section) it might happen, that the action gets reverted later by systemd because that service is disabled (or enabled) and executed after saptune.service.
+
+Similar a service enabled (or disabled) by saptune might already be stopped (or started) by systemd, because it came before saptune.service.
+
+If the execution order cannot be assured by service dependencies, it is recommended to set both ('start,enable' or 'stop,disable') in a Note definition or an Override.
 
 .SH NOTE ACTIONS
 Note denotes either a SAP Note, a vendor specific tuning definition or SUSE recommendation article.

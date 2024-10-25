@@ -2,10 +2,10 @@
 # Description:    HANA DB settings
 
 [version]
-VERSION=23
+VERSION=24
 DATE=03.05.2023
 DESCRIPTION=SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
-REFERENCES=https://launchpad.support.sap.com/#/notes/2684254
+REFERENCES=https://me.sap.com/notes/2684254
 
 [vm]
 # Disable transparent hugepages (THP)
@@ -25,7 +25,21 @@ THP=never
 #
 KSM=0
 
-[cpu]
+[vm:os=15-SP5]
+# Enable transparent hugepages (THP)
+# changes /sys/kernel/mm/transparent_hugepage/enabled
+# 'never' to disable, 'always' to enable
+# 'madvise' will enter direct reclaim like 'always' but only for regions that
+# are have used madvise(MADV_HUGEPAGE). This is the default behaviour.
+# SAP Note 2131662, 2031375
+#
+THP=madvise
+[vm:os=15-SP6]
+THP=madvise
+[vm:os=15-SP7]
+THP=madvise
+
+[cpu:arch=x86_64]
 # Energy Performance Bias EPB (applies to Intel-based systems only)
 # energy_perf_bias: performance - 0, normal - 6, powersave - 15
 # cpupower set -b 0, if system supports Intel's performance bias setting
@@ -98,7 +112,7 @@ glibc 2.31-150300.46.1
 [rpm:os=15-SP4:arch=x86_64]
 glibc 2.31-150300.46.1
 
-[grub]
+[grub:arch=x86_64]
 # /etc/default/grub GRUB_CMDLINE_LINUX_DEFAULT
 # saptune only checks the values. Changing the grub configuration is not
 # supported by saptune

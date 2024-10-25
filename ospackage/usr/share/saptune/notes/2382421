@@ -1,23 +1,12 @@
 # 2382421 - Optimizing the Network Configuration on HANA- and OS-Level
 
 [version]
-VERSION=45
-DATE=02.08.2023
+VERSION=47
+DATE=12.03.2024
 DESCRIPTION=Optimizing the Network Configuration on HANA- and OS-Level
-REFERENCES=https://launchpad.support.sap.com/#/notes/2382421
+REFERENCES=https://me.sap.com/notes/2382421
 
 [sysctl]
-# This parameter limits the size of the accept backlog of a listening socket.
-# The Linux default of 128 is not sufficient. You need to set the parameter
-# to 4096 in order that the HANA system can use higher values.
-# There is an interdependency between this parameter and HANA configuration
-# parameter tcp_backlog. If net.core.somaxconn is set to a lower value than
-# tcp_backlog, tcp_backlog will be silently truncated to the value set for
-# net.core.somaxconn. Therefore, you need to ensure that net.core.somaxconn
-# is always set to a value equal to or greater than tcp_backlog.
-# net.core.somaxconn >= 4096
-net.core.somaxconn = 4096
-
 # This is the size of the SYN backlog.
 # To prevent the kernel from using SYN cookies in a situation where lots of
 # connection requests are sent in a short timeframe and to prevent a
@@ -156,6 +145,22 @@ net.ipv4.tcp_tw_reuse =
 # It also prevents processes to set a longer timeout. The recommended value is
 # 8, which translates into a timeout of 190 seconds.
 net.ipv4.tcp_syn_retries = 8
+
+[sysctl:os=15-SP3]
+# This parameter limits the size of the accept backlog of a listening socket.
+# The Linux default of 128 is not sufficient. You need to set the parameter
+# to 4096 in order that the HANA system can use higher values.
+# There is an interdependency between this parameter and HANA configuration
+# parameter tcp_backlog. If net.core.somaxconn is set to a lower value than
+# tcp_backlog, tcp_backlog will be silently truncated to the value set for
+# net.core.somaxconn. Therefore, you need to ensure that net.core.somaxconn
+# is always set to a value equal to or greater than tcp_backlog.
+# net.core.somaxconn >= 4096
+net.core.somaxconn = 4096
+[sysctl:os=15-SP2]
+net.core.somaxconn = 4096
+[sysctl:os=15-SP1]
+net.core.somaxconn = 4096
 
 [sysctl:os=12-SP3]
 # net.ipv4.tcp_tw_recycle
