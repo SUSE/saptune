@@ -139,6 +139,10 @@ func checkUpdateLeftOvers() {
 		system.WarningLog("found file '/etc/tuned/saptune/tuned.conf' left over from the migration of saptune version 1 to saptune version 3. Please check and remove this file as it may work against the settings of some SAP Notes. For more information refer to the man page saptune-migrate(7)")
 	}
 
+	if system.CliArg(1) == "configure" && system.CliArg(2) == "reset" {
+		return
+	}
+
 	// check if old solution or notes are applied
 	if tuneApp != nil && (len(tuneApp.NoteApplyOrder) == 0 && (len(tuneApp.TuneForNotes) != 0 || len(tuneApp.TuneForSolutions) != 0)) {
 		system.ErrorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'. Seems there were some steps missed during the migration from saptune version 1 to version 3. Please check. Refer to saptune-migrate(7) for more information")
@@ -218,6 +222,15 @@ func checkWorkingArea() {
 // returns the saptune version and changes some log switches
 func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) string {
 	if system.CliArg(1) == "configure" && system.CliArg(2) == "reset" {
+		if lswitch["debug"] == "" {
+			lswitch["debug"] = "off"
+		}
+		if lswitch["verbose"] == "" {
+			lswitch["verbose"] = "on"
+		}
+		if lswitch["error"] == "" {
+			lswitch["error"] = "on"
+		}
 		return "3"
 	}
 
@@ -249,7 +262,8 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 	// set values read from the config file
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
 	if saptuneVers != "1" && saptuneVers != "2" && saptuneVers != "3" {
-		system.ErrorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", SaptuneVersion, 128)
+		fmt.Fprintf(writer, "Error: Wrong saptune version in file '/etc/sysconfig/saptune': %s\n", saptuneVers)
+		system.ErrorExit("", 128)
 	}
 
 	// Switch Debug on ("on") or off ("off" - default)

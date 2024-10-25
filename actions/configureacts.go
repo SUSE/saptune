@@ -143,6 +143,7 @@ func ConfigureActionShow(writer io.Writer) {
 
 // ConfigureActionReset(writer)
 func ConfigureActionReset(reader io.Reader, writer io.Writer, tuneApp *app.App) {
+	errcnt := 0
 	fmt.Fprintf(writer, "\nATTENTION: resetting the main saptune configuration.\nThis will reset the tuning of the system and remove/reset all saptune related configuration and runtime files.\n")
 	txtConfirm := fmt.Sprintf("Do you really want to reset the main saptune configuration?")
 	if readYesNo(txtConfirm, reader, writer) {
@@ -150,6 +151,7 @@ func ConfigureActionReset(reader io.Reader, writer io.Writer, tuneApp *app.App) 
 		// revert all
 		if err := tuneApp.RevertAll(true); err != nil {
 			system.ErrorLog("Failed to revert notes: %v", err)
+			errcnt = errcnt + 1
 		}
 		// remove saved_state files, if some left over
 		os.RemoveAll(system.SaptuneSectionDir)
@@ -160,6 +162,10 @@ func ConfigureActionReset(reader io.Reader, writer io.Writer, tuneApp *app.App) 
 		saptuneTemplate := system.SaptuneConfigTemplate()
 		if err := system.CopyFile(saptuneTemplate, saptuneSysconfig); err != nil {
 			system.ErrorLog("Failed to set saptune configuration file '%s' back to delivery state by copying the template file '%s'", saptuneSysconfig, saptuneTemplate)
+			errcnt = errcnt + 1
 		}
+	}
+	if errcnt != 0 {
+		system.ErrorExit("", 1)
 	}
 }
