@@ -11,7 +11,6 @@ REFERENCES=https://launchpad.support.sap.com/#/notes/2578899
 # start the related services
 uuidd.socket=start
 sysstat.service=start
-sysctl-logger.service=start
 
 [service:os=15-SP4]
 sysctl-logger.service=start
