@@ -94,6 +94,7 @@ func supportedRACMap() map[string]bool {
 	supportedRAC["solution applied"] = true
 	supportedRAC["status"] = true
 	supportedRAC["version"] = true
+	supportedRAC["check"] = true
 
 	return supportedRAC
 }

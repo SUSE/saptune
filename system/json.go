@@ -321,6 +321,9 @@ func Jcollect(data interface{}) {
 	case JSolList, JNoteList, JStatus, JPNotes:
 		//"solution list", "note list", "status", "daemon status", "service status", "note verify", "solution verify", "note simulate", "solution simulate":
 		jentry.CmdResult = res
+	case []byte:
+		// "saptune check" - "saptune_check --json" - []uint8
+		jentry.CmdResult = json.RawMessage(string(res))
 	default:
 		WarningLog("Unknown data type '%T' for command '%s' in Jcollect, skipping", data, rac)
 	}

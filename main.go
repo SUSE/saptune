@@ -164,13 +164,19 @@ func checkForTuned() {
 // running as root
 func callSaptuneCheckScript(arg string) {
 	if arg == "check" {
-		system.JnotSupportedYet()
-		// call external scrip saptune_check
-		cmd := exec.Command(saptcheck)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
+		var err error
+		if system.GetFlagVal("format") == "json" {
+			var cmdOut []byte
+			cmdOut, err = exec.Command(saptcheck, "--json").CombinedOutput()
+			system.Jcollect(cmdOut)
+		} else {
+			// call external scrip saptune_check
+			cmd := exec.Command(saptcheck)
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Run()
+		}
 		if err != nil {
 			system.ErrorExit("command '%+s' failed with error '%v'\n", saptcheck, err)
 		} else {
