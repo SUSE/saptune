@@ -14,16 +14,17 @@ const (
 	OperatorMoreThan      = ">"
 	OperatorMoreThanEqual = ">="
 	OperatorEqual         = "="
+	OperatorNotEqual      = "!="
 )
 
 // Operator is the comparison or assignment operator used in an INI file entry
 type Operator string
 
 // RegexKeyOperatorValue breaks up a line into key, operator, value.
-var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.*?)["']*$`)
+var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([!<=>]+)\s*["']*(.*?)["']*$`)
 
 // regKey gives the parameter part of the line from the note definition file
-var regKey = regexp.MustCompile(`(.*)\s*[<=>]+\s*["']*.*?["']*$`)
+var regKey = regexp.MustCompile(`^(.*?)\s*([!<=>]+)\s*["']*.*?["']*$`)
 
 // counter to control the [login] section info message
 var loginCnt = 0
