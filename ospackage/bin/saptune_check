@@ -36,9 +36,9 @@
 # 26.09.2022  v0.3      reactivate unused function compile_filelists() as file_check() and add detection of sapconf remains (TEAM-6275)
 # 03.04.2023  v0.3.1    removed error regarding tuned sapconf profile (TEAM-7529)
 # 28.08.2024  v0.4      a little rework and added JSON support (TEAM-8959)
+# 31.10.2024  v0.4.1    added --force-color to support forced colored output by saptune
 
-
-declare -r VERSION="0.4"
+declare -r VERSION="0.4.1"
 
 # We use these global arrays through out the program:
 #
@@ -64,6 +64,7 @@ function print_ok() {
     [ ${DO_JSON} -ne 0 ] && return
     local col_on col_off
     [ -t 1 ] || color=0  # Disable color if we run in a pipe
+    [ ${FORCE_COLOR} -eq 1 ] && color=1  # force colored output
     if [ ${color} -eq 1 ] ; then
         col_on="\033[0;32m"
         col_off="\033[0m"
@@ -78,6 +79,7 @@ function print_fail() {
     [ ${DO_JSON} -ne 0 ] && return
     local col_on col_off bold_on
     [ -t 1 ] || color=0  # Disable color if we run in a pipe
+    [ ${FORCE_COLOR} -eq 1 ] && color=1  # force colored output
     if [ ${color} -eq 1 ] ; then
         col_on="\033[0;31m"
         col_off="\033[0m"
@@ -94,6 +96,7 @@ function print_warn() {
     [ ${DO_JSON} -ne 0 ] && return
     local col_on col_off bold_on
     [ -t 1 ] || color=0  # Disable color if we run in a pipe
+    [ ${FORCE_COLOR} -eq 1 ] && color=1  # force colored output
     if [ ${color} -eq 1 ] ; then
         col_on="\033[0;33m"
         col_off="\033[0m"
@@ -110,6 +113,7 @@ function print_note() {
     [ ${DO_JSON} -ne 0 ] && return
     local col_on col_off
     [ -t 1 ] || color=0  # Disable color if we run in a pipe
+    [ ${FORCE_COLOR} -eq 1 ] && color=1  # force colored output
     if [ ${color} -eq 1 ] ; then
         col_on="\033[0;37m"
         col_off="\033[0m"
@@ -1064,7 +1068,7 @@ function check_saptune() {
 }
 
 function help() {
-    echo "Usage: ${0##*/} [--json]"
+    echo "Usage: ${0##*/} [--json] [--force-color]"
 }
 
 function intro() {
@@ -1082,13 +1086,24 @@ function intro() {
 declare -a JSON_NOTE_MESSAGES JSON_WARN_MESSAGES JSON_FAIL_MESSAGES JSON_REMEDIATION_MESSAGES
 unset JSON_STRING _JSON_NESTING
 DO_JSON=0
+FORCE_COLOR=0
 
 # Check parameters.
-[ $# -gt 1 ] && { help ; exit 3 ; }
-if [ $# -eq 1 ] ; then
-    [ "${1}" != '--json' ] && { help ; exit 3 ; }
-    DO_JSON=1
-fi
+for param in ${@} ; do
+    case "${param}" in
+        --json)
+            DO_JSON=1
+            ;;
+        --force-color)
+            FORCE_COLOR=1
+            ;;
+        *)
+            echo "Unknown parameter: ${param}" >&2
+            help
+            exit 3
+            ;;
+    esac
+done
 
 # Determine if we are running a SLES.
 eval $(grep ^ID= /etc/os-release)
