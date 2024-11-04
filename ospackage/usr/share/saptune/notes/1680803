@@ -3,106 +3,27 @@
 #
 # as described in the current online version of the best practice document
 # 'Best Practice for SAP Business Suite and SAP BW' linked in the
-# 'Solution' section of the related SAP Note 1680803 on SAP launchpad
+# 'Solution' section of the related SAP Note 1680803 at SAP (me.sap.com)
 #
-# chapter 3.2 Configuration for Linux
+# chapter Operating System Configuration - Prerequisites
 #
 # SAP Applications on SAP Adaptive Server Enterprise
 # - Best Practices for Migration and Runtime
-# Version 3.0 from 2020-07-31
-#
-# SAP ASE (Sybase)
-# Version 27 from 04.11.2021 in English
+# v3.2  2023-09-20
 #
 
 [version]
-VERSION=27
-DATE=04.11.2021
+VERSION=28
+DATE=26.10.2023
 DESCRIPTION=Sybase - SAP Adaptive Server Enterprise
-REFERENCES=https://launchpad.support.sap.com/#/notes/1680803
-
-[block]
-## Type:    string
-## Default: noop, none
-#
-# The default I/O scheduler for single-queued block layer devices offers
-# satisfactory performance for wide range of I/O task, however choosing an
-# alternative scheduler may potentially yield better latency characteristics
-# and throughput.
-# "noop" is an alternative scheduler, in comparison to other schedulers it
-# may offer more consistent performance, lower computation overhead, and
-# potentially higher throughput.
-# For most SAP environments (RAID, storage arrays, virtualizaton) 'noop' is
-# the better choice.
-# With the new introduced multi-queue scheduler for block layer devices the
-# recommended I/O scheduler is 'none' as an equivalent to 'noop' for
-# single-queued block layer devices.
-#
-# So IO_SCHEDULER can now contain a comma separated list of possible
-# schedulers, which are checked from left to right. The first one which is
-# available in /sys/block/<device>/queue/scheduler will be used as new
-# scheduler setting for the respective block device.
-#
-# When set, all block devices on the system will be switched to one of the
-# chosen schedulers.
-IO_SCHEDULER=noop, none
-
-## Type:    integer
-## Default: depends on the used I/O scheduler
-#
-# IO nr_requests
-# Increasing the value will improve the I/O throughput, but will also
-# increase the memory usage.
-# Decreasing the value will benefit the real-time applications that are
-# sensitive to latency, but it also decreases the I/O throughput.
-#
-# possible maximum value depends on the chosen scheduler
-# When set, the number of requests for all block devices on the system will 
-# be switched to the chosen value
-NRREQ=
-
-[vm]
-# Disable transparent hugepages (THP)
-# changes /sys/kernel/mm/transparent_hugepage/enabled
-# 'never' to disable, 'always' to enable
-THP=never
+REFERENCES=https://me.sap.com/notes/1680803
 
 [sysctl]
-# maximum number of asynchronous I/Os.
-fs.aio-max-nr = 1048576
-
-# Increase system file descriptor limit
-fs.file-max = 6291456
-
-# Increase Linux autotuning TCP buffer limits
-# Set max to 16MB (16777216) for 1GE and 32M (33554432) or 54M (56623104) for 10GE
-# Don't set tcp_mem itself! Let the kernel scale it based on RAM.
-net.core.rmem_max = 16777216
-net.core.wmem_max = 16777216
-net.core.rmem_default = 16777216
-net.core.wmem_default = 16777216
-net.ipv4.tcp_rmem = 4096 87380 16777216
-net.ipv4.tcp_wmem = 4096 65536 16777216
-
 # Set the keepalive interval to a value higher than 1200 seconds.
 # The ABAP dispatcher initiates an empty network request to the database
 # connection every 1200 seconds. If the keepalive interval is lower, the
 # operating system might close the database connection.
 net.ipv4.tcp_keepalive_time = 1250
 
-# Increase the max packet backlog
-net.core.netdev_max_backlog = 30000
-
-# Discourage Linux from swapping idle processes to disk (default = 60)
-# value between 20 and 10
-vm.swappiness = 15
-
 [sysctl:csp=azure]
 net.ipv4.tcp_keepalive_time =
-
-[reminder]
-# DBMS data storage settings: use ext4 or xfs file system. 
-# For best performance, disable the journal via tune2fs ^has_journal.
-# For ext4 the recommended mount options are 'noatime,nodiratime', if journaling is disabled or 'noatime,nodiratime,cache=writeback,barrier=0', if journaling is not disabled
-# For xfs the recommended mount options are 'noatime,nodiratime,logbufs=8'.
-# network tuning including transmit queue (ifconfig <eth#> txqueuelen <value>). See the current online version of the best practice document 'Best Practice for SAP Business Suite and SAP BW' linked in the 'Solution' section of the related SAP Note 1680803 on SAP launchpad

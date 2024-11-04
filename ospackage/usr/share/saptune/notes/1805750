@@ -3,10 +3,10 @@
 #
 
 [version]
-VERSION=9
-DATE=10.03.2020
+VERSION=10
+DATE=21.05.2024
 DESCRIPTION=SYB: Usage of HugePages on Linux Systems with Sybase ASE
-REFERENCES=https://launchpad.support.sap.com/#/notes/1805750
+REFERENCES=https://me.sap.com/notes/1805750
 
 [limits]
 # Allow Sybase ASE owner to make use of available HugePages.
