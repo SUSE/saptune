@@ -39,7 +39,7 @@ func TestNoteActions(t *testing.T) {
 All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note):
  C	900929		Linux: STORAGE_PARAMETERS_WRONG_SET and 'mmap() failed'
 			Version 7 from 31.07.2017
-			https://launchpad.support.sap.com/#/notes/900929
+			https://me.sap.com/notes/900929
  [32m+	NEWSOL2NOTE	
 [0m [32m- O	extraNote	Configuration drop in for extra tests
 			Version 0 from 04.06.2019
