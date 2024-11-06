@@ -9,11 +9,26 @@ docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/compl
 sed -n "1,/${separator}/p" "${pass1}" > "${pass2}"
 cat <<'EOF' >> "${pass2}"
 
-  if [[ "${COMP_WORDS[*]}" =~ ^saptune\ --format\ json ]] ; then
-      unset COMP_WORDS[1]  # remove '--format'
-      unset COMP_WORDS[2]  # remove 'json'
-      COMP_WORDS=( ${COMP_WORDS[@]} )
-      ((COMP_CWORD-=2))
+  if [[ "${COMP_WORDS[*]}" =~ (--format\ json|--force-color|--fun) ]] ; then
+    word_count=${#COMP_WORDS[@]}
+    for (( index=0; index<${word_count}; index++ )) ; do
+      case "${COMP_WORDS[index]}" in
+        --format)
+            if [ "${COMP_WORDS[index+1]}" == json ] ; then
+              unset COMP_WORDS[index]    # remove '--format'
+              unset COMP_WORDS[index+1]  # remove 'json'
+            fi
+            ;;
+        --force-color)
+            unset COMP_WORDS[index]    # remove '--force-color'
+            ;;
+        --fun)
+            unset COMP_WORDS[index]    # remove '--fun'
+            ;;
+      esac          
+    done
+    COMP_CWORD=$(( ${#COMP_WORDS[@]}-1 ))
+    COMP_WORDS=( ${COMP_WORDS[@]} )
   fi
 
 EOF

@@ -1,7 +1,7 @@
 # This is the input configuration for 'completely' (https://github.com/DannyBen/completely)
 # to generate the bash completion script.
 #
-# v2.3
+# v3.0
 #
 # Changelog:    29.09.2022  v2.0  - first release for saptune 3.1
 #               21.11.2022  v2.1  - Replace --output with --format in syntax description
@@ -13,51 +13,87 @@
 #                                 - Bugfix: some `saptune note verify` commands did not remove the `.conf` suffix
 #                                 - Bugfix: `saptune note|solution revert` now only completes applied notes/solutions.
 #                                 - Bugfix: `saptune solution edit` now only completes custom solutions
+#               06.11.2024  v3.0  - Bugfix: 
 #
-# Syntax:       saptune [--format FORMAT] help
-#               saptune [--format FORMAT] version  
-#               saptune [--format FORMAT] status [--non-compliance-check] 
-#               saptune [--format FORMAT] daemon ( start | stop | status [--non-compliance-check] )
-#               saptune [--format FORMAT] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
-#               saptune [--format FORMAT] note ( list | revertall | enabled | applied )
-#               saptune [--format FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
-#               saptune [--format FORMAT] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
-#               saptune [--format FORMAT] note rename NOTEID NEWNOTEID
-#               saptune [--format FORMAT] solution ( list | verify | enabled | applied )
-#               saptune [--format FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete | change [--force] ) SOLUTIONNAME
-#               saptune [--format FORMAT] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
-#               saptune [--format FORMAT] solution rename SOLUTIONNAME NEWSSOLUTIONNAME
-#               saptune [--format FORMAT] staging ( status | enable | disable | is-enabled | list )
-#               saptune [--format FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
-#               saptune [--format FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
-#               saptune [--format FORMAT] revert all
-#               saptune [--format FORMAT] lock remove
-#               saptune [--format FORMAT] check
+# Syntax:       saptune [--format FORMAT] [--fun] [--force-color] help
+#               saptune [--format FORMAT] [--fun] [--force-color] version  
+#               saptune [--format FORMAT] [--fun] [--force-color] status [--non-compliance-check] 
+#               saptune [--format FORMAT] [--fun] [--force-color] daemon ( start | stop | status [--non-compliance-check] )
+#               saptune [--format FORMAT] [--fun] [--force-color] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
+
+#               saptune [--format FORMAT] [--fun] [--force-color] note ( list | revertall | enabled | applied )
+#               saptune [--format FORMAT] [--fun] [--force-color] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+#               saptune [--format FORMAT] [--fun] [--force-color] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
+#               saptune [--format FORMAT] [--fun] [--force-color] note rename NOTEID NEWNOTEID
+#               saptune [--format FORMAT] [--fun] [--force-color] solution ( list | verify | enabled | applied )
+#               saptune [--format FORMAT] [--fun] [--force-color] solution ( apply | simulate | customise | create | edit | revert | show | delete | change [--force] ) SOLUTIONNAME
+#               saptune [--format FORMAT] [--fun] [--force-color] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
+#               saptune [--format FORMAT] [--fun] [--force-color] solution rename SOLUTIONNAME NEWSSOLUTIONNAME
+#               saptune [--format FORMAT] [--fun] [--force-color] staging ( status | enable | disable | is-enabled | list )
+#               saptune [--format FORMAT] [--fun] [--force-color] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+#               saptune [--format FORMAT] [--fun] [--force-color] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+#               saptune [--format FORMAT] [--fun] [--force-color] revert all
+#               saptune [--format FORMAT] [--fun] [--force-color] lock remove
+#               saptune [--format FORMAT] [--fun] [--force-color] check
 #
+
+
+# Tune system according to SAP and SUSE notes:
+#   saptune [--format FORMAT] [--force-color] note ( list | verify | revertall | enabled | applied )
+#   saptune [--format FORMAT] [--force-color] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+#   saptune [--format FORMAT] [--force-color] [--fun] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
+#   saptune [--format FORMAT] [--force-color] note rename NOTEID NEWNOTEID
+# Tune system for all notes applicable to your SAP solution:
+#   saptune [--format FORMAT] [--force-color] solution ( list | verify | enabled | applied )
+#   saptune [--format FORMAT] [--force-color] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
+#   saptune [--format FORMAT] [--force-color] solution change [--force] SOLUTIONNAME
+#   saptune [--format FORMAT] [--force-color] [--fun] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
+#   saptune [--format FORMAT] [--force-color] solution rename SOLUTIONNAME NEWSOLUTIONNAME
+# Staging control:
+#    saptune [--format FORMAT] [--force-color] staging ( status | enable | disable | is-enabled | list )
+#    saptune [--format FORMAT] [--force-color] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
+#    saptune [--format FORMAT] [--force-color] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+# Config (re-)settings:
+#   saptune [--format FORMAT] [--force-color] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG ) Value
+#   saptune [--format FORMAT] [--force-color] configure ( reset | show )
+# Verify all applied Notes:
+#   saptune [--format FORMAT] [--force-color] verify applied
+# Revert all parameters tuned by the SAP notes or solutions:
+#   saptune [--format FORMAT] [--force-color] revert all
+# Remove the pending lock file from a former saptune call
+#   saptune [--format FORMAT] [--force-color] lock remove
+# Call external script '/usr/sbin/saptune_check'
+#   saptune [--format FORMAT] [--force-color] check
+
+
+
+
+
+
 #
 # Caveats:      - It is not possible to use the '=' sign in options. Completion will stop at the '=' sign. The reason for this
 #                 is that the character is listed in `COMP_WORDBREAKS`. Removing it can break other completions, so this is not an option.
 #                 (Tricks to use a different character as marker and overwriting the space with an injected backspace to add the `=` later
-#                  doesn't work. The completions prints the code instead. Anyways the added `=` would break the completion during corrections.)
+#                 doesn't work. The completions prints the code instead. Anyways the added `=` would break the completion during corrections.)
 #                 There might a way to implement this (https://www.gnu.org/software/gnuastro/manual/html_node/Bash-TAB-completion-tutorial.html),
 #                 but trying it out and rewriting the code would cost to much time for now.
+#                 There seems to be added support in `completely` v0.6.3. Not investigated yet, but we won't introduce a `=` anymore. It would
+#                 break the introduced CLI interface.
 #
-#               - It is not feasible to write this YAML file to fully support the option ('--format FORMAT') which comes immediately 
-#                 after 'saptune'. Each combination must be listed in this file, which would double the current entries. 
-#                 Therefore all more complex completion lack these variations, because a snippet gets injected into the compiled completion, 
-#                 which removes `--format json` it from the COMP_WORDS, so it does not needed to take into account.
+#               - It is not feasible to write this YAML file to fully support global options which come immediately after 'saptune'. 
+#                 Each combination must be listed in this file, which would double the entries for each global option. 
+#                 Therefore all saptune command completions lack these variations, because a snippet gets injected into the compiled 
+#                 completion script, which removes global options from the COMP_WORDS, so they don't need to take into account.
 #
 #               - The completely resolved command needs to have a dummy entry: '$()' (empty command) to stop further
 #                 processing.
-#
-#
-# ToDo :        - Implementing support for the `=` sign.
-
-
+           
 
 # --- First level ---
 saptune:
   - --format
+  - --force-color
+  - --fun
   - help
   - version  
   - status
@@ -70,28 +106,43 @@ saptune:
   - lock
   - check
 
-# --- start: support for global format option ---
+# --- start: support for global options ---
 #
-# THIS BLOCK PREVENTS A WORKABLE SOLUTION WITH THE REST
-# OF THE DEFINITION UNLESS THE FOLLOWING BLOCK GETS ADDED
-# TO THE RESULTING SCRIPT AS FIRST LINES OF THE FUNCTION
-# '_saptune_completions()':
+# THIS BLOCK GUARANTEES A WORKABLE SOLUTION WITH THE REST OF
+# THE DEFINITION AND MUST BE ADDED TO THE RESULTING SCRIPT 
+# AS FIRST LINES OF THE FUNCTION '_saptune_completions()':
 #
-#  if [[ "${COMP_WORDS[*]}" =~ ^saptune\ --format\ json ]] ; then
-#        unset COMP_WORDS[1]  # remove '--format'
-#        unset COMP_WORDS[2]  # remove 'json'
-#        COMP_WORDS=( ${COMP_WORDS[@]} )
-#        ((COMP_CWORD-=2))
-#  fi
+# if [[ "${COMP_WORDS[*]}" =~ (--format\ json|--force-color|--fun) ]] ; then
+#   word_count=${#COMP_WORDS[@]}
+#   for (( index=0; index<${word_count}; index++ )) ; do
+#     case "${COMP_WORDS[index]}" in
+#       --format)
+#           if [ "${COMP_WORDS[index+1]}" == json ] ; then
+#             unset COMP_WORDS[index]    # remove '--format'
+#             unset COMP_WORDS[index+1]  # remove 'json'
+#           fi
+#           ;;
+#       --force-color)
+#           unset COMP_WORDS[index]    # remove '--force-color'
+#           ;;
+#       --fun)
+#           unset COMP_WORDS[index]    # remove '--fun'
+#           ;;
+#     esac          
+#   done
+#   COMP_CWORD=$(( ${#COMP_WORDS[@]}-1 ))
+#   COMP_WORDS=( ${COMP_WORDS[@]} )
+# fi
 #
-# THIS IS CURRENTLY THE ONLY WAY TO SUPPORT THE FORMAT
-# OPTION WITHOUT LETTING THE AMOUNT OF DEFINITIONS IN THIS
-# FILE EXPLODE.
+# THIS IS CURRENTLY THE ONLY WAY TO SUPPORT THE GLOBAL OPTIONS
+# WITHOUT LETTING THE AMOUNT OF DEFINITIONS IN THIS FILE EXPLODE.
 
 saptune --format:
   - json
 
 saptune --format *:
+  - --force-color
+  - --fun
   - help
   - version  
   - status
