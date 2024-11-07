@@ -432,7 +432,7 @@ Configure C-States for lower latency in Linux (applies to Intel-based systems on
 Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl] as 'alternative' settings
 .TP
 .BI transparent_hugepage=never
-Disable transparent hugepages - see THP in section [vm] as 'alternative' settings
+Configure transparent hugepages - see THP in section [vm] as 'alternative' settings
 \" section limits
 .SH "[limits]"
 The section "[limits]" is dealing with ulimit settings for user login sessions in the pam_limits module. The settings will \fBNOT\fP be done in the central limits file \fI/etc/security/limits.conf\fP. Instead there will be a \fBdrop-in file\fP in \fI/etc/security/limits.d\fP for each domain-item-type combination used in the Note definition file.
@@ -653,9 +653,9 @@ The section "[vm]" manipulates \fI/sys/kernel/mm\fP switches.
 This section can to contain the following options:
 .TP
 .BI THP= STRING
-This option disables transparent hugepages by changing \fI/sys/kernel/mm/transparent_hugepage/enabled\fP
+This option configures transparent hugepages by changing \fI/sys/kernel/mm/transparent_hugepage/enabled\fP
 .br
-Possible values are '\fBnever\fP' to disable and '\fBalways\fP' to enable.
+Possible values are '\fBnever\fP' to disable, '\fBalways\fP' to enable and '\fBmadvise\fP'.
 .TP
 .BI KSM= INT
 Kernel Samepage Merging (KSM). KSM allows for an application to register with the kernel so as to have its memory pages merged with other processes that also register to have their pages merged. For KVM the KSM mechanism allows for guest virtual machines to share pages with each other. In today's environment where many of the guest operating systems like XEN, KVM are similar and are running on same host machine, this can result in significant memory savings, the default value is set to 0.
