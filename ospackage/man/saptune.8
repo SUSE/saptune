@@ -21,67 +21,67 @@ saptune \- Comprehensive system optimization management for SAP solutions (\fBVe
 ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate to saptune version \fB3\fP, so please refer to man page saptune-migrate(7).
 
 .SH SYNOPSIS
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBdaemon\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBdaemon\fP
 ( start | stop | status [--non-compliance-check] ) \fBATTENTION: deprecated\fP
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBservice\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBservice\fP
 ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 ( list | verify | revertall | enabled | applied )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 rename NOTEID NEWNOTEID
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 ( list | verify | enabled | applied )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 change [--force] SOLUTIONNAME
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 rename SOLUTIONNAME NEWSOLUTIONNAME
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstaging\fP
 ( status | enable | disable | is-enabled | list )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstaging\fP
 ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstaging\fP
 release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBconfigure\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBconfigure\fP
 ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG ) Value
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBconfigure\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBconfigure\fP
 ( reset | show )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBverify\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBverify\fP
 applied
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBrevert\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBrevert\fP
 all
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBcheck\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBcheck\fP
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBstatus [--non-compliance-check]\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstatus [--non-compliance-check]\fP
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBversion\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBversion\fP
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBhelp\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBhelp\fP
 
 .SH DESCRIPTION
 saptune is designed to automate the configuration recommendations from SAP and SUSE to run an SAP application on SLES for SAP. These configuration recommendations are normally referred to as SAP Notes. So some dedicated SAP Notes are the base for the work of saptune. Additional some best practice guides are added as Note definitions to optimize the system for some really special cases.
