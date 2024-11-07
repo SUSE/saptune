@@ -1,0 +1,17 @@
+Changes from 1.0 to 1.1:
+
+- new link in `templates/`: `saptune_verify_applied.schema.json.template -> saptune_note_verify.schema.json.template` to support the newly introduced command
+
+- newly introduced commands without JSON output get their templates and schemas by `generate_unsupported.sh`
+    - `saptune note refresh`: `saptune_note_refresh.schema.json.template` -> `saptune_note_refresh.schema.json`
+    - `saptune configure`: `saptune_configure.schema.json.template` -> `saptune_configure.schema.json`
+    - `saptune refresh`: `saptune_refresh.schema.json.template` -> `saptune_refresh.schema.json`
+
+
+
+TODO:
+
+- /templates/saptune_check.schema.json.template: added new output and generated schema file ...
+
+- templates/saptune_check.schema.json.template: Is implemented now
+
