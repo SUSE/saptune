@@ -15,6 +15,7 @@
 #                                 - Bugfix: `saptune solution edit` now only completes custom solutions
 #               07.11.2024  v3.0  - Bugfix: Note and Solution lists for revert contained warning and notice messages 
 #                                 - Added `saptune note verify applied` and `saptune verify applied`
+#                                 - Added `--fun` and `--force-color`` and therefore rewrote injected script. 
 #                                 - Added `saptune configure`
 #                                 - Added `saptune note refresh` and `saptune refresh applied`
 #
