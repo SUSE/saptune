@@ -1,7 +1,7 @@
 # This is the input configuration for 'completely' (https://github.com/DannyBen/completely)
 # to generate the bash completion script.
 #
-# v2.3
+# v3.0
 #
 # Changelog:    29.09.2022  v2.0  - first release for saptune 3.1
 #               21.11.2022  v2.1  - Replace --output with --format in syntax description
@@ -13,51 +13,62 @@
 #                                 - Bugfix: some `saptune note verify` commands did not remove the `.conf` suffix
 #                                 - Bugfix: `saptune note|solution revert` now only completes applied notes/solutions.
 #                                 - Bugfix: `saptune solution edit` now only completes custom solutions
+#               07.11.2024  v3.0  - Bugfix: Note and Solution lists for revert contained warning and notice messages 
+#                                 - Added `saptune note verify applied` and `saptune verify applied`
+#                                 - Added `--fun` and `--force-color`` and therefore rewrote injected script. 
+#                                 - Added `saptune configure`
+#                                 - Added `saptune note refresh` and `saptune refresh applied`
 #
-# Syntax:       saptune [--format FORMAT] help
-#               saptune [--format FORMAT] version  
-#               saptune [--format FORMAT] status [--non-compliance-check] 
-#               saptune [--format FORMAT] daemon ( start | stop | status [--non-compliance-check] )
-#               saptune [--format FORMAT] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
-#               saptune [--format FORMAT] note ( list | revertall | enabled | applied )
-#               saptune [--format FORMAT] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
-#               saptune [--format FORMAT] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID]
-#               saptune [--format FORMAT] note rename NOTEID NEWNOTEID
-#               saptune [--format FORMAT] solution ( list | verify | enabled | applied )
-#               saptune [--format FORMAT] solution ( apply | simulate | customise | create | edit | revert | show | delete | change [--force] ) SOLUTIONNAME
-#               saptune [--format FORMAT] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
-#               saptune [--format FORMAT] solution rename SOLUTIONNAME NEWSSOLUTIONNAME
-#               saptune [--format FORMAT] staging ( status | enable | disable | is-enabled | list )
-#               saptune [--format FORMAT] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
-#               saptune [--format FORMAT] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
-#               saptune [--format FORMAT] revert all
-#               saptune [--format FORMAT] lock remove
-#               saptune [--format FORMAT] check
+# Syntax:       saptune [--format FORMAT] [--fun] [--force-color] help
+#               saptune [--format FORMAT] [--fun] [--force-color] version  
+#               saptune [--format FORMAT] [--fun] [--force-color] status [--non-compliance-check] 
+#               saptune [--format FORMAT] [--fun] [--force-color] daemon ( start | stop | status [--non-compliance-check] )
+#               saptune [--format FORMAT] [--fun] [--force-color] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
+#               saptune [--format FORMAT] [--fun] [--force-color] note ( list | revertall | enabled | applied | verify )
+#               saptune [--format FORMAT] [--fun] [--force-color] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+#               saptune [--format FORMAT] [--fun] [--force-color] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
+#               saptune [--format FORMAT] [--fun] [--force-color] note rename NOTEID NEWNOTEID
+#               saptune [--format FORMAT] [--fun] [--force-color] solution ( list | verify | enabled | applied )
+#               saptune [--format FORMAT] [--fun] [--force-color] solution ( apply | simulate | customise | create | edit | revert | show | delete | change [--force] ) SOLUTIONNAME
+#               saptune [--format FORMAT] [--fun] [--force-color] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
+#               saptune [--format FORMAT] [--fun] [--force-color] solution rename SOLUTIONNAME NEWSSOLUTIONNAME
+#               saptune [--format FORMAT] [--fun] [--force-color] staging ( status | enable | disable | is-enabled | list )
+#               saptune [--format FORMAT] [--fun] [--force-color] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+#               saptune [--format FORMAT] [--fun] [--force-color] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+#               saptune [--format FORMAT] [--fun] [--force-color] configure OPTION VALUE
+#               saptune [--format FORMAT] [--fun] [--force-color] configure ( reset | show )
+#               saptune [--format FORMAT] [--fun] [--force-color] refresh NOTEID|applied
+#               saptune [--format FORMAT] [--fun] [--force-color] revert all
+#               saptune [--format FORMAT] [--fun] [--force-color] lock remove
+#               saptune [--format FORMAT] [--fun] [--force-color] check
+#               saptune [--format FORMAT] [--fun] [--force-color] verify applied
+#               saptune [--format FORMAT] [--fun] [--force-color] refresh applied
+#
 #
 #
 # Caveats:      - It is not possible to use the '=' sign in options. Completion will stop at the '=' sign. The reason for this
 #                 is that the character is listed in `COMP_WORDBREAKS`. Removing it can break other completions, so this is not an option.
 #                 (Tricks to use a different character as marker and overwriting the space with an injected backspace to add the `=` later
-#                  doesn't work. The completions prints the code instead. Anyways the added `=` would break the completion during corrections.)
+#                 doesn't work. The completions prints the code instead. Anyways the added `=` would break the completion during corrections.)
 #                 There might a way to implement this (https://www.gnu.org/software/gnuastro/manual/html_node/Bash-TAB-completion-tutorial.html),
 #                 but trying it out and rewriting the code would cost to much time for now.
+#                 There seems to be added support in `completely` v0.6.3. Not investigated yet, but we won't introduce a `=` anymore. It would
+#                 break the introduced CLI interface.
 #
-#               - It is not feasible to write this YAML file to fully support the option ('--format FORMAT') which comes immediately 
-#                 after 'saptune'. Each combination must be listed in this file, which would double the current entries. 
-#                 Therefore all more complex completion lack these variations, because a snippet gets injected into the compiled completion, 
-#                 which removes `--format json` it from the COMP_WORDS, so it does not needed to take into account.
+#               - It is not feasible to write this YAML file to fully support global options which come immediately after 'saptune'. 
+#                 Each combination must be listed in this file, which would double the entries for each global option. 
+#                 Therefore all saptune command completions lack these variations, because a snippet gets injected into the compiled 
+#                 completion script, which removes global options from the COMP_WORDS, so they don't need to take into account.
 #
 #               - The completely resolved command needs to have a dummy entry: '$()' (empty command) to stop further
 #                 processing.
-#
-#
-# ToDo :        - Implementing support for the `=` sign.
-
-
+           
 
 # --- First level ---
 saptune:
   - --format
+  - --force-color
+  - --fun
   - help
   - version  
   - status
@@ -69,29 +80,47 @@ saptune:
   - revert
   - lock
   - check
+  - verify
+  - configure
+  - refresh
 
-# --- start: support for global format option ---
+# --- start: support for global options ---
 #
-# THIS BLOCK PREVENTS A WORKABLE SOLUTION WITH THE REST
-# OF THE DEFINITION UNLESS THE FOLLOWING BLOCK GETS ADDED
-# TO THE RESULTING SCRIPT AS FIRST LINES OF THE FUNCTION
-# '_saptune_completions()':
+# THIS BLOCK GUARANTEES A WORKABLE SOLUTION WITH THE REST OF
+# THE DEFINITION AND MUST BE ADDED TO THE RESULTING SCRIPT 
+# AS FIRST LINES OF THE FUNCTION '_saptune_completions()':
 #
-#  if [[ "${COMP_WORDS[*]}" =~ ^saptune\ --format\ json ]] ; then
-#        unset COMP_WORDS[1]  # remove '--format'
-#        unset COMP_WORDS[2]  # remove 'json'
-#        COMP_WORDS=( ${COMP_WORDS[@]} )
-#        ((COMP_CWORD-=2))
-#  fi
+# if [[ "${COMP_WORDS[*]}" =~ (--format\ json|--force-color|--fun) ]] ; then
+#   word_count=${#COMP_WORDS[@]}
+#   for (( index=0; index<${word_count}; index++ )) ; do
+#     case "${COMP_WORDS[index]}" in
+#       --format)
+#           if [ "${COMP_WORDS[index+1]}" == json ] ; then
+#             unset COMP_WORDS[index]    # remove '--format'
+#             unset COMP_WORDS[index+1]  # remove 'json'
+#           fi
+#           ;;
+#       --force-color)
+#           unset COMP_WORDS[index]    # remove '--force-color'
+#           ;;
+#       --fun)
+#           unset COMP_WORDS[index]    # remove '--fun'
+#           ;;
+#     esac          
+#   done
+#   COMP_CWORD=$(( ${#COMP_WORDS[@]}-1 ))
+#   COMP_WORDS=( ${COMP_WORDS[@]} )
+# fi
 #
-# THIS IS CURRENTLY THE ONLY WAY TO SUPPORT THE FORMAT
-# OPTION WITHOUT LETTING THE AMOUNT OF DEFINITIONS IN THIS
-# FILE EXPLODE.
+# THIS IS CURRENTLY THE ONLY WAY TO SUPPORT THE GLOBAL OPTIONS
+# WITHOUT LETTING THE AMOUNT OF DEFINITIONS IN THIS FILE EXPLODE.
 
 saptune --format:
   - json
 
 saptune --format *:
+  - --force-color
+  - --fun
   - help
   - version  
   - status
@@ -103,6 +132,9 @@ saptune --format *:
   - revert
   - lock
   - check
+  - verify
+  - configure
+  - refresh
 
 # --- end: support for global format option ---
 
@@ -194,6 +226,7 @@ saptune note:
   - delete
   - verify
   - rename
+  - refresh
 
 saptune note list: &stop
   - $()
@@ -228,7 +261,7 @@ saptune note edit:
 saptune note edit *: *stop
 
 saptune note revert:
-  - $(saptune note applied)
+  - $(saptune note applied 2> /dev/null | egrep -v -e '^[[:space:]]*$' -e '^(WARNING|NOTICE|INFO|DEBUG)' )
 
 saptune note revert *: *stop
 
@@ -246,6 +279,7 @@ saptune note verify:
   - --show-non-compliant
   - $(ls /var/lib/saptune/working/notes/)
   - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
+  - applied
 
 saptune note verify *: *stop
   
@@ -253,6 +287,7 @@ saptune note verify --show-non-compliant:
   - --colorscheme
   - $(ls /var/lib/saptune/working/notes/)
   - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
+  - applied
 
 saptune note verify --show-non-compliant *: *stop
 
@@ -266,7 +301,10 @@ saptune note verify --show-non-compliant --colorscheme: &color-schemes
   - red-noncmpl
   - yellow-noncmpl
 
-saptune note verify --show-non-compliant --colorscheme *: *list-all-notes
+saptune note verify --show-non-compliant --colorscheme *:
+  - $(ls /var/lib/saptune/working/notes/)
+  - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
+  - applied
 
 saptune note verify --show-non-compliant --colorscheme * *: *stop
 
@@ -276,6 +314,7 @@ saptune note verify --colorscheme *:
   - --show-non-compliant
   - $(ls /var/lib/saptune/working/notes/)
   - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
+  - applied
 
 saptune note verify --colorscheme * *: *stop
 
@@ -287,6 +326,13 @@ saptune note rename:
   - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
 
 saptune note rename *: *stop 
+
+saptune note refresh:
+  - $(ls /var/lib/saptune/working/notes/)
+  - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
+  - applied  
+
+saptune note refresh *: *stop
 
 
 # --- saptune solution ---
@@ -337,7 +383,7 @@ saptune solution edit:
 saptune solution edit *: *stop
 
 saptune solution revert: 
-  - $(saptune solution applied | sed 's/(partial)//g')
+  - $(saptune solution applied 2> /dev/null | egrep -v -e '^[[:space:]]*$' -e '^(WARNING|NOTICE|INFO|DEBUG)' | sed 's/(partial)//g')
 
 saptune solution revert *: *stop
 
@@ -416,21 +462,16 @@ saptune staging:
   - analysis
   - release
 
-saptune staging status:
+saptune staging status: &stop
   - $()
 
-saptune staging enable:
-  - $()
+saptune staging enable: *stop
 
-saptune staging disable:
-  - $()
+saptune staging disable: *stop
 
-saptune staging is-enabled:
-  - $()
+saptune staging is-enabled: *stop
 
-saptune staging list:
-  - $()
-
+saptune staging list: *stop
 
 saptune staging diff:
   - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
@@ -439,8 +480,7 @@ saptune staging diff:
 saptune staging diff *:
   - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
 
-saptune staging diff all:
-  - $()
+saptune staging diff all: *stop
 
 saptune staging analysis:
   - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
@@ -449,8 +489,7 @@ saptune staging analysis:
 saptune staging analysis *:
   - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
 
-saptune staging analysis all:
-  - $()
+saptune staging analysis all: *stop
 
 saptune staging release:
   - --force
@@ -462,21 +501,18 @@ saptune staging release --force:
   - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
   - all
 
-saptune staging release --force all:
-  - $()
+saptune staging release --force all: *stop
 
 saptune staging release --dry-run:
   - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
   - all
 
-saptune staging release --dry-run all:
-  - $()
+saptune staging release --dry-run all: *stop
 
 saptune staging release *:
   - $(find /var/lib/saptune/staging/latest/ -printf '%P ')
 
-saptune staging release all:
-  - $()
+saptune staging release all:  *stop
 
 
 # --- saptune revert ---
@@ -498,4 +534,65 @@ saptune lock remove:
 # --- saptune check ---
 saptune check: 
   - $()
+
+
+# --- saptune verify ---
+saptune verify: 
+  - applied
+
+saptune verify applied: 
+  - $()
+
+
+# --- saptune configure ---
+saptune configure: 
+  - reset
+  - show
+  - COLOR_SCHEME
+  - SKIP_SYSCTL_FILES
+  - IGNORE_RELOAD
+  - DEBUG 
+  - trento-agent-saptune-discovery-period
+
+saptune configure COLOR_SCHEME: *color-schemes
+
+saptune configure COLOR_SCHEME *: &stop 
+  - $() 
+
+saptune configure SKIP_SYSCTL_FILES: *stop    # no file suggestions, because the list must be comma separated. 
+
+saptune configure SKIP_SYSCTL_FILES *: *stop 
+
+saptune configure IGNORE_RELOAD:
+  - "yes"
+  - "no"
+
+saptune configure IGNORE_RELOAD *:  *stop
+
+saptune configure DEBUG:
+  - "on"
+  - "off" 
+
+saptune configure DEBUG *:  *stop
+
+saptune configure trento-agent-saptune-discovery-period:
+  - "300"
+  - "600"
+  - "900"
+  - "1800"
+  - "3600"
+
+saptune configure trento-agent-saptune-discovery-period *: *stop
+
+saptune configure reset: *stop
+  
+saptune configure show: *stop 
+
+
+# --- saptune refresh ---
+saptune refresh: 
+  - applied
+
+saptune refresh applied: 
+  - $()  
 
