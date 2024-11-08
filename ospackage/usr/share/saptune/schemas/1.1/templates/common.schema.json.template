@@ -144,13 +144,13 @@
         },
 
         "systemd state": {
-            "description": "Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages.",
+            "description": "The systemd states of a service 'is-enabled' and 'is-active' in this order. Empty for a missing package.",
             "type": "array",
             "prefixItems": [
                 { "$ref": "#/$defs/systemd state is-enabled" },
                 { "$ref": "#/$defs/systemd state is-active" }
             ],
-            "examples": [["disabled", "inactive"], ["enabled", "active"]]
+            "examples": [["disabled", "inactive"], ["enabled", "active"], []]
         },
 
         "saptune parameter id": {
