@@ -13,4 +13,6 @@ Changes from 1.0 to 1.1:
 
 - templates/saptune_check.schema.json.template: ONLY FIRST DRAFT! THE COMMAND DOES NOT GENERATE JSON OUTPUT YET; SO A FINAL TEST CAN NOT BE DONE!
 
+- templates/common.schema.json.template: Rephrased description of "systemd state". Missing package results in an empty array and the order of "systemd state is-enabled" and "systemd state is-active" is fixed.
+
 
