@@ -4,7 +4,7 @@
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
-{% block result_required %}["services", "systemd system state", "tuning state", "virtualization", "configured version", "package version", "Solution enabled", "Notes enabled by Solution", "Solution applied", "Notes applied by Solution", "Notes enabled additionally", "Notes enabled", "Notes applied", "staging", "remember message"]{% endblock %}
+{% block result_required %}["services", "systemd system state", "tuning state", "virtualization", "configured version", "package version", "Solution enabled", "Notes enabled by Solution", "Solution applied", "Notes applied by Solution", "Notes enabled additionally", "Notes enabled", "Notes applied", "orphaned Overrides", "staging", "remember message"]{% endblock %}
 
 {% block result_properties %}
                  "services": {
@@ -56,6 +56,7 @@
                 "Notes enabled additionally" : { "$ref": "#/$defs/saptune additional enabled Notes" },
                 "Notes enabled": { "$ref": "#/$defs/saptune enabled Notes" },
                 "Notes applied": { "$ref": "#/$defs/saptune applied Notes" },
+                "orphaned Overrides": { "$ref": "#/$defs/orphaned Overrides" },
                 "staging": {
                     "description": "Details about staging.",
                     "type": "object",

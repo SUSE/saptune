@@ -7,11 +7,18 @@ Changes from 1.0 to 1.1:
     - `saptune configure`: `saptune_configure.schema.json.template` -> `saptune_configure.schema.json`
     - `saptune refresh`: `saptune_refresh.schema.json.template` -> `saptune_refresh.schema.json`
 
+- /templates/saptune_check.schema.json.template: added changes and generated schema file ...
+    - new format of `saptune package`:  `3.1.3` --> `3.2.0_tst (2024/10/25)`  !!!NOT YET IMPLEMENTED BECAUSE NOT CLEAR IF FINAL!!!
+    - new entry `orphaned Overrides` as list filenames of Notes and Solutions (`.sol` suffix)
+
+
+
 
 
 TODO:
 
-- /templates/saptune_check.schema.json.template: added new output and generated schema file ...
+
+
 
 - templates/saptune_check.schema.json.template: Is implemented now
 

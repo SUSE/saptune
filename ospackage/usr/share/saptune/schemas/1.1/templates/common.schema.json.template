@@ -124,6 +124,13 @@
             "examples": ["HANA", "myNetWeaver"]
         },
 
+        "saptune override file": {
+            "description": "File name of an Override file.",
+            "type": "string",
+            "pattern": "^[^/]+$",
+            "examples": ["1656250", "HANA.sol"]
+        },
+
         "systemd state is-enabled": {
             "description": "Possible systemd states for 'is-enabled' of a service.",
             "type": "string",
@@ -217,6 +224,12 @@
             "description": "List of the applied Notes.",
             "type":  "array",
             "items": { "$ref": "#/$defs/saptune note id" }                       
+        },    
+
+        "orphaned Overrides": {
+            "description": "List of the orphaned Override files (file names).",
+            "type":  "array",
+            "items": { "$ref": "#/$defs/saptune override file" }
         },    
 
         "saptune staged Notes": {

@@ -83,6 +83,7 @@
                 "Notes enabled additionally",
                 "Notes enabled",
                 "Notes applied",
+                "orphaned Overrides",
                 "staging",
                 "remember message"
             ],
@@ -470,6 +471,19 @@
                         "examples": [
                             "1656250",
                             "SAP_BOBJ"
+                        ]
+                    }
+                },
+                "orphaned Overrides": {
+                    "description": "List of the orphaned Override files (file names).",
+                    "type": "array",
+                    "items": {
+                        "description": "File name of an Override file.",
+                        "type": "string",
+                        "pattern": "^[^/]+$",
+                        "examples": [
+                            "1656250",
+                            "HANA.sol"
                         ]
                     }
                 },
