@@ -161,6 +161,8 @@ net.core.somaxconn = 4096
 net.core.somaxconn = 4096
 [sysctl:os=15-SP1]
 net.core.somaxconn = 4096
+[sysctl:os=12-SP5]
+net.core.somaxconn = 4096
 
 [sysctl:os=12-SP3]
 # net.ipv4.tcp_tw_recycle
