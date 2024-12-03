@@ -58,10 +58,10 @@ rename SOLUTIONNAME NEWSOLUTIONNAME
 ( status | enable | disable | is-enabled | list )
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstaging\fP
-( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
+( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstaging\fP
-release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBconfigure\fP
 ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG ) Value
@@ -672,7 +672,7 @@ The solution definition is shown as a whole object. It is only possible to relea
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them and that it is possible to view the changes.
 .TP
-.B diff [ ( NOTEID | SOLUTIONNAME )... | all ]
+.B diff [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Shows the differences between the Note (or all Notes) or the Solution definition in the staging area and the working area.
 .br
 For each Note in the staging area the output contains the values of all parameter which differ. This includes new or removed parameters as well as changes in the reminder section.
@@ -681,12 +681,12 @@ For the Solution, all changed solutions are displayed with their differences.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them.
 .TP
-.B analysis [ ( NOTEID | SOLUTIONNAME )... | all ]
+.B analysis [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Does an analysis of the requested Notes, the Solution definitions or everything in the staging area to warn the user about possible issues or additional steps to perform.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them as well that he should check out the differences.
 .TP
-.B release [ ( NOTEID | SOLUTIONNAME )... | all ]
+.B release [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Releases the requested Notes, the Solution definitions or everything in the stages area.
 .br
 This means the Notes or the Solution definitions get moved from the staging area to the working area. In case of a deleted Note/Solution, it will be removed from the working area.
