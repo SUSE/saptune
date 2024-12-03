@@ -146,20 +146,25 @@ net.ipv4.tcp_tw_reuse =
 # 8, which translates into a timeout of 190 seconds.
 net.ipv4.tcp_syn_retries = 8
 
-[sysctl:os=15-SP3]
 # This parameter limits the size of the accept backlog of a listening socket.
-# The Linux default of 128 is not sufficient. You need to set the parameter
-# to 4096 in order that the HANA system can use higher values.
+# The Linux default of 128 on systems <= 15SP3 is not sufficient. You need to
+# set the parameter to 4096 in order that the HANA system can use higher values.
 # There is an interdependency between this parameter and HANA configuration
 # parameter tcp_backlog. If net.core.somaxconn is set to a lower value than
 # tcp_backlog, tcp_backlog will be silently truncated to the value set for
 # net.core.somaxconn. Therefore, you need to ensure that net.core.somaxconn
 # is always set to a value equal to or greater than tcp_backlog.
 # net.core.somaxconn >= 4096
+# On systems >= 15SP4 the default value is sufficient.
+net.core.somaxconn =
+
+[sysctl:os=15-SP3]
 net.core.somaxconn = 4096
 [sysctl:os=15-SP2]
 net.core.somaxconn = 4096
 [sysctl:os=15-SP1]
+net.core.somaxconn = 4096
+[sysctl:os=12-SP5]
 net.core.somaxconn = 4096
 
 [sysctl:os=12-SP3]
