@@ -76,11 +76,12 @@ func execSystemctlCmd(service, cmd string) error {
 		return ErrorLog("%v - Failed to call systemctl %s on %s", err, cmd, service)
 	}
 	if running {
+		DebugLog("execSystemctlCmd, called from '%v' - executing command '%s %s %s'", CalledFrom(), systemctlCmd, cmd, service)
 		out, err := exec.Command(systemctlCmd, cmd, service).CombinedOutput()
 		if err != nil {
 			return ErrorLog("%v - Failed to call systemctl %s on %s - %s", err, cmd, service, strings.TrimSpace(string(out)))
 		}
-		DebugLog("execSystemctlCmd, called from '%v' - /usr/bin/systemctl %s '%s' : '%+v %s'", CalledFrom(), cmd, service, err, strings.TrimSpace(string(out)))
+		DebugLog("execSystemctlCmd, called from '%v' - command '%s %s %s' returned '%+v : %s'", CalledFrom(), systemctlCmd, cmd, service, err, strings.TrimSpace(string(out)))
 	}
 	return nil
 }
