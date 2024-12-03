@@ -8,9 +8,10 @@ the sources should be available at $GOPATH/src/github.com/SUSE/saptune
 
 ## build saptune v3
 	cd $GOPATH/src/github.com/SUSE/saptune
-	version="3.0.0-test"
+	version="3.2.0-test"
 	bdate=$(date +"%Y/%m/%d")
-	go build -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion=$version' -X 'github.com/SUSE/saptune/actions.RPMDate=$bdate'"
+	bvers=15
+	go build -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion=$version' -X 'github.com/SUSE/saptune/actions.RPMDate=$bdate' -X '%{GONS}/%{name}/system.RPMBldVers=$bvers'"
 
 ## lint and format checks for the sources before committing changes
 
