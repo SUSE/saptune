@@ -297,7 +297,7 @@ func TestGetNoteHeadData(t *testing.T) {
 	tstDesc := "Linux: STORAGE_PARAMETERS_WRONG_SET and 'mmap() failed'"
 	tstVers := "7"
 	tstDate := "31.07.2017"
-	tstRef := "https://launchpad.support.sap.com/#/notes/900929"
+	tstRef := "https://me.sap.com/notes/900929"
 	noteDesc, noteVers, noteRdate, noteRefs := GetNoteHeadData(tstNote)
 	if noteDesc != tstDesc {
 		t.Errorf("got: %+v, expected: %+v\n", noteDesc, tstDesc)

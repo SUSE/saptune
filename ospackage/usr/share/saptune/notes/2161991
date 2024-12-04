@@ -5,7 +5,7 @@
 VERSION=28
 DATE=29.07.2021
 DESCRIPTION=VMware vSphere configuration guidelines
-REFERENCES=https://launchpad.support.sap.com/#/notes/2161991
+REFERENCES=https://me.sap.com/notes/2161991
 
 [block]
 ## Type:    string

@@ -2,10 +2,10 @@
 # Description:    HANA DB settings
 
 [version]
-VERSION=23
-DATE=03.05.2023
+VERSION=24
+DATE=06.11.2024
 DESCRIPTION=SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
-REFERENCES=https://launchpad.support.sap.com/#/notes/2684254
+REFERENCES=https://me.sap.com/notes/2684254
 
 [vm]
 # Disable transparent hugepages (THP)
@@ -24,6 +24,20 @@ THP=never
 # memory savings, the default value is set to 0.
 #
 KSM=0
+
+[vm:os=15-SP5]
+# Configure transparent hugepages (THP)
+# changes /sys/kernel/mm/transparent_hugepage/enabled
+# 'never' to disable, 'always' to enable or 'madvise'
+# 'madvise' will enter direct reclaim like 'always' but only for regions that
+# are have used madvise(MADV_HUGEPAGE). This is the default behaviour.
+# SAP Note 2131662, 2031375
+#
+THP=madvise
+[vm:os=15-SP6]
+THP=madvise
+[vm:os=15-SP7]
+THP=madvise
 
 [cpu:arch=x86_64]
 # Energy Performance Bias EPB (applies to Intel-based systems only)

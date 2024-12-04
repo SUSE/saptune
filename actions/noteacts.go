@@ -334,10 +334,6 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID string, tuneApp
 	if !extraNote && !overrideNote {
 		system.ErrorExit("The Note definition file you want to delete is a saptune internal (shipped) Note and can NOT be deleted. Exiting ...")
 	}
-	inSolution, _ := getNoteInSol(tuneApp, noteID)
-	if inSolution != "" {
-		system.ErrorExit("The Note definition file you want to delete is part of a Solution(s) (%s). Please fix the Solution first and then try deleting again.", inSolution)
-	}
 
 	if !extraNote && overrideNote {
 		// system note, override file exists
@@ -354,6 +350,10 @@ func NoteActionDelete(reader io.Reader, writer io.Writer, noteID string, tuneApp
 		}
 	}
 	if extraNote {
+		inSolution, _ := getNoteInSol(tuneApp, noteID)
+		if inSolution != "" {
+			system.ErrorExit("The Note definition file you want to delete is part of a Solution(s) (%s). Please fix the Solution first and then try deleting again.", inSolution)
+		}
 		// custom note
 		txtConfirm = fmt.Sprintf("Note to delete is a customer/vendor specific Note.\nDo you really want to delete this Note (%s)?", noteID)
 		// remove customer/vendor specific note definition file

@@ -5,7 +5,7 @@
 VERSION=63
 DATE=18.05.2021
 DESCRIPTION=SAP HANA DB: Recommended OS settings for SLES 12 / SLES for SAP Applications 12
-REFERENCES=https://launchpad.support.sap.com/#/notes/2205917
+REFERENCES=https://me.sap.com/notes/2205917
 
 [login]
 # /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf UserTasksMax setting

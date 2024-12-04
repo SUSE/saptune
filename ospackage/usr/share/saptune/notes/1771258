@@ -7,7 +7,7 @@
 VERSION=8
 DATE=05.01.2023
 DESCRIPTION=Linux: User and system resource limits
-REFERENCES=https://launchpad.support.sap.com/#/notes/1771258
+REFERENCES=https://me.sap.com/notes/1771258
 
 [limits]
 # /etc/security/limits.conf or drop-in file in /etc/securitty/limits.d

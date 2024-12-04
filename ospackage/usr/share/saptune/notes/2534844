@@ -4,7 +4,7 @@
 VERSION=15
 DATE=26.05.2023
 DESCRIPTION=Indexserver Crash During Startup due to Insufficient Shared Memory Segment
-REFERENCES=https://launchpad.support.sap.com/#/notes/2534844
+REFERENCES=https://me.sap.com/notes/2534844
 
 [sysctl]
 # kernel.shmmni
