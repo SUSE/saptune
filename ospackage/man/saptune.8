@@ -839,6 +839,77 @@ REFERENCES=
 1980196 CUSTOMNOTE1 CUSTOMNOTE2
 .PP
 
+.SH EXIT CODES
+All saptune commands share the following exit codes:
+.RS
+.TP 5
+0
+action was successfully
+.TP
+1
+action failed
+.TP
+128
+an error in the configuration file occurred e.g. missing variables)
+.RE
+
+The following commands have individual exit codes additionally or alternatively:
+.TP
+.B saptune service status
+.RS
+.TP 4
+1
+saptune.service is not started (regardless if configured or not)
+.TP
+2
+not used
+.TP
+3
+saptune.service has been started, but tuning (Note or Solution) is not configured
+.TP
+4
+saptune.service has been started, but tuning is not compliant.
+.RE
+.TP
+.B saptune staging analysis
+.RS
+.TP 4
+1
+actions are required by the user, but no solution might break
+.TP
+2
+a Solution might break
+.TP
+5
+error during calculation
+.RE
+.TP
+.B saptune staging release
+.RS
+.TP 4
+2
+a Solution might break
+.TP
+5
+error during calculation
+.RE
+.TP
+.B saptune check
+.RS
+.TP 4
+1
+some warnings occurred and  saptune should work
+.TP
+2
+some errors occurred and  saptune will not work
+.TP
+3
+wrong parameters has been given to the tool (should never happen, if called by saptune check!)
+.TP
+5
+unexpected errors in regards of JSON output occurred
+.RE
+
 .SH CHANGES
 .TP
 .B changelog
