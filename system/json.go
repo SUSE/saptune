@@ -111,6 +111,7 @@ type JNoteListEntry struct {
 	ManReverted  bool   `json:"Note reverted manually"`
 	NoteOverride bool   `json:"Note override exists"`
 	CustomNote   bool   `json:"custom Note"`
+	DepNote      bool   `json:"Note deprecated"`
 }
 
 // JNoteList is the whole 'saptune note list'
