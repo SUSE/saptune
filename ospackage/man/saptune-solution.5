@@ -1,0 +1,134 @@
+.\"/* 
+.\" * Copyright (c) 2024 SUSE LLC.
+.\" * All rights reserved
+.\" * Authors: Angela Briel
+.\" *
+.\" * This program is free software; you can redistribute it and/or
+.\" * modify it under the terms of the GNU General Public License
+.\" * as published by the Free Software Foundation; either version 2
+.\" * of the License, or (at your option) any later version.
+.\" *
+.\" * This program is distributed in the hope that it will be useful,
+.\" * but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" * GNU General Public License for more details.
+.\" */
+.\" 
+
+.TH "saptune-solution" "5" "December 2024" "" "saptune solution file format description"
+.SH NAME
+saptune\-solution \- Solution definition files for saptune version \fB3\fP
+.SH DESCRIPTION
+This man page documents the format of the Solution definition files for saptune version \fB3\fP.
+
+The saptune Solution definitions will be installed by the rpm in \fI/usr/share/saptune/sols\fP (the \fBPackage Area\fP), but for the execution they will be searched in \fI/var/lib/saptune/working/sols\fP (the \fBWorking Area\fP) for shipped definitions and in \fI/etc/saptune/extra\fP for vendor or customer specific definitions. Customer specific changes are placed in \fI/etc/saptune/override\fP.
+.br
+Solution definition files are suffixed with .sol to distinguish them from Note definition files.
+
+The \fBSolution definition\fP files use the INI file format.
+.br
+A comment line starts with #.
+.br
+Inline comments are possible and start with a blank followed by a # followed by any non-# character. (' #anything except #')
+.br
+If you need to add a character sequenze of ' #anything' to your description, please write it as ' ##anything' (double the #) to give saptune the chance to distinguish this text from an inline comment. saptune will strip the second # from the output result, so that the resulting text will appear as ' #anything'.
+.br
+Lines starting with '[' indicate the begin of a new section.
+.SH SECTIONS
+A section starts with a '[section_name]' keyword in the first line, followed by lines with options and comments.
+
+The following section definitions are available and used in the saptune SAP Solution definition files. Each of these sections can be used in a vendor or customer specific Solution definition file placed in \fI/etc/saptune/extra\fP.
+
+List of supported sections:
+.br
+version, ArchX86, ArchPPC64LE
+
+See detailed description below:
+.SH "[version]"
+This section is an optional section and is used to track changes.
+.br
+.nf
+.B
+VERSION=<versionNo>
+.br
+DATE=<release date>
+.br
+DESCRIPTION=<description of the Solution>
+.br
+REFERENCES=<list of URLs containing information regarding the Solution separated by blank>
+
+Example:
+.br
+VERSION=1
+.br
+DATE=07.07.2021
+.br
+.br
+DESCRIPTION=Definition of HANA solution for SLE15
+.br
+REFERENCES=
+
+The entries are treated as 'Key Value' pairs. The equal operator (=) is mandatory, but can be used with spaces around. The entries can be placed in any order inside the version section.
+
+VERSION is a number that should indicate how many changes are done for this Solution definition in the past. Allowed are digits, upper-case and lower-case letters, dots, underscores, minus and plus signs.
+
+DATE is the date of the last changes.
+
+DESCRIPTION is the description of the Solution.
+
+REFERENCES is a list of URLs separated by blank, which contain additional information about the Solution definition and the content. If you need to use a 'blank' inside the URL definition please mask it as '%20'.
+\" section ArchX86
+.SH "[ArchX86]"
+This section will be used only on \fB64bit Intel x86\fP systems and contains exactly \fBone\fP line with the SAP Notes separated by spaces which shall be applied in the given order.
+       
+The section is optional and do not need to be part of a Solution if it not meant for this architecture. If the section is missing, the Solution will not be listed and can not be applied or customized on \fBx86_64\fP systems.
+       
+If you customize the Solution you have to define the entire SAP Note list you want to have for this section.
+\" section ArchPPC64LE
+.SH "[ArchPPC64LE]"
+This section will be used only on \fB64bit PowerPC little-endian\fP systems and contains exactly one line with the SAP Notes separated by spaces which shall be applied in the given order.
+       
+The section is optional and do not need to be part of a Solution if it not meant for this architecture. If the section is missing, the Solution will not be listed and can not be applied or customized on \fBppc64le\fP systems.
+ 
+If you customize the Solution you have to define the entire SAP Note list you want to have for this section.
+   
+.SH FILES
+.PP
+\fI/usr/share/saptune/sols\fP
+.RS 4
+The directory (Package Area) contains the Solutions, which are shipped by the saptune RPM package. They are not directly used by \fBsaptune\fP but get copied during installation or update to the Working or Staging Area.
+.br
+Do not change the files located here. You will lose all your changes during a saptune package update. Use an override or extra file for your changes as described in saptune(8).
+.RE
+.PP
+\fI/var/lib/saptune/working/sols\fP
+.RS 4
+The directory (the Working Area) contains Solutions, which are shipped by the saptune RPM package. They are copied from the Package Area during installation or update if they do not belong to the Staging Area due to the configuration.
+.br
+Do not change the files located here. Depending on your configuration you will lose all your changes during a saptune package update or a '\fBsaptune staging release\fP' command later. Use an override or extra file for your changes as described in saptune(8).
+.RE
+.PP
+\fI/var/lib/saptune/staging/latests\fP
+.RS 4
+The directory (the Staging Area) contains Solutions coming from the package. They are copied from the Package Area during installation or update if they do not belong to the Working Area due to the configuration.
+.br
+Do not change the files located here. You will lose all your changes during a saptune package update. Use an override or extra file for your changes as described in saptune(8).
+.RE
+.PP
+\fI/etc/saptune/extra\fP
+.RS 4
+The directory contains vendor or customer specific Solutions created by '\fBsaptune solution create SolutionName\fP'
+.RE
+.PP
+\fI/etc/saptune/override\fP
+.RS 4
+The directory contains overrides for Notes created by '\fBsaptune note customise SolutionName\fP'
+.RE
+
+.SH "SEE ALSO"
+.LP
+saptune-note(5) saptune(8)
+
+.SH AUTHOR
+.NF
+Soeren Schmidt <soeren.schmidt@suse.com>, Angela Briel <abriel@suse.com>

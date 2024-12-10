@@ -15,13 +15,13 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "October 2024" "" "saptune note file format description"
+.TH "saptune-note" "5" "December 2024" "" "saptune note file format description"
 .SH NAME
 saptune\-note \- Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
-This man page documents the format of the Note definition files for saptune version \fB3\fP. If you still use version \fB1\fP of saptune please refer to the configuration files \fI/etc/sysconfig/saptune-note-*\fP
+This man page documents the format of the Note definition files for saptune version \fB3\fP.
 
-The saptune Note definitions will be installed by the rpm in \fI/usr/share/saptune/notes\fP (the \fBpackage area\fP), but for the execution they will be searched in \fI/var/lib/saptune/working/notes\fP (the \fBworking area\fP) for the saptune SAP Note definitions or in \fI/etc/saptune/override\fP for customer specific changes to the saptune SAP Note definitions or in \fI/etc/saptune/extra\fP for vendor or customer specific tuning definitions.
+The saptune Note definitions will be installed by the rpm in \fI/usr/share/saptune/notes\fP (the \fBPackage Area\fP), but for the execution they will be searched in \fI/var/lib/saptune/working/notes\fP (the \fBWorking Area\fP) for the saptune SAP Note definitions or in \fI/etc/saptune/override\fP for customer specific changes to the saptune SAP Note definitions or in \fI/etc/saptune/extra\fP for vendor or customer specific tuning definitions.
 .br
 The \fBNote definition\fP files use the INI file format.
 .br
@@ -661,16 +661,41 @@ Possible values are '\fBnever\fP' to disable, '\fBalways\fP' to enable and '\fBm
 Kernel Samepage Merging (KSM). KSM allows for an application to register with the kernel so as to have its memory pages merged with other processes that also register to have their pages merged. For KVM the KSM mechanism allows for guest virtual machines to share pages with each other. In today's environment where many of the guest operating systems like XEN, KVM are similar and are running on same host machine, this can result in significant memory savings, the default value is set to 0.
 
 .SH FILES
+.PP
 \fI/usr/share/saptune/notes\fP
 .RS 4
-here you can find examples how to set the 'parameter value' pairs of the available sections.
+The directory (Package Area) contains the Notes, which are shipped by the saptune RPM package. They are not directly used by \fBsaptune\fP but get copied during installation or update to the Working or Staging Area.
 .br
-But please do not change the files located here. You will lose all your changes during a saptune package update. Use an override or extra file for your changes as described in saptune_v2(8).
+Do not change the files located here. You will lose all your changes during a saptune package update. Use an override or extra file for your changes as described in saptune(8).
+.RE
+.PP
+\fI/var/lib/saptune/working/notes\fP
+.RS 4
+The directory (the Working Area) contains Notes, which are shipped by the saptune RPM package. They are copied from the Package Area during installation or update if they do not belong to the Staging Area due to the configuration.
+.br
+Do not change the files located here. Depending on your configuration you will lose all your changes during a saptune package update or a '\fBsaptune staging release\fP' command later. Use an override or extra file for your changes as described in saptune(8).
+.RE
+.PP
+\fI/var/lib/saptune/staging/latests\fP
+.RS 4
+The directory (the Staging Area) contains Notes coming from the package. They are copied from the Package Area during installation or update if they do not belong to the Working Area due to the configuration.
+.br
+Do not change the files located here. You will lose all your changes during a saptune package update. Use an override or extra file for your changes as described in saptune(8).
+.RE
+.PP
+\fI/etc/saptune/extra\fP
+.RS 4
+The directory contains vendor or customer specific Notes created by '\fBsaptune note create NoteID\fP'
+.RE
+.PP
+\fI/etc/saptune/override\fP
+.RS 4
+The directory contains overrides for Notes created by '\fBsaptune note customise NoteID\fP'
 .RE
 
 .SH "SEE ALSO"
 .LP
-saptune-migrate(7) saptune(8)
+saptune-migrate(7) saptune-solution(5) saptune(8)
 
 .SH AUTHOR
 .NF
