@@ -342,6 +342,7 @@ Deprecation list:
   all 'saptune daemon' actions
   'saptune note simulate'
   'saptune solution simulate'
+  'Solution SAP-ASE.sol and related Note 1680803'
 `
 }
 

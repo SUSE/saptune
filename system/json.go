@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var schemaDir = "file:///usr/share/saptune/schemas/1.0/"
+var schemaDir = "file:///usr/share/saptune/schemas/1.1/"
 var supportedRAC map[string]bool = supportedRACMap()
 
 // jentry is the json entry to display
