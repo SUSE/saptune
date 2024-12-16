@@ -76,7 +76,7 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 
 // NoteActionList lists all available Note definitions
 func NoteActionList(writer io.Writer, tuneApp *app.App) {
-	fmt.Fprintf(writer, "\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note):\n")
+	fmt.Fprintf(writer, "\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note, D denotes deprecated notes):\n")
 	format := ""
 	jnoteList := []system.JNoteListEntry{}
 	jnoteListEntry := system.JNoteListEntry{}
@@ -125,6 +125,11 @@ func setupNoteListFormat(noteID string, solutionNoteIDs []string, tuneApp *app.A
 		// custom note
 		format = " C" + format
 		jnoteListEntry.CustomNote = true
+	}
+	if _, err := os.Stat(fmt.Sprintf("%s%s", DeprecationSheets, noteID)); err == nil {
+		// deprecated note
+		format = " D" + format
+		jnoteListEntry.DepNote = true
 	}
 	if i := sort.SearchStrings(solutionNoteIDs, noteID); i < len(solutionNoteIDs) && solutionNoteIDs[i] == noteID {
 		j := tuneApp.PositionInNoteApplyOrder(noteID)

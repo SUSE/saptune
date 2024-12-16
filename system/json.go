@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-var schemaDir = "file:///usr/share/saptune/schemas/1.0/"
+var schemaDir = "file:///usr/share/saptune/schemas/1.1/"
 var supportedRAC map[string]bool = supportedRACMap()
 
 // jentry is the json entry to display
@@ -111,6 +111,7 @@ type JNoteListEntry struct {
 	ManReverted  bool   `json:"Note reverted manually"`
 	NoteOverride bool   `json:"Note override exists"`
 	CustomNote   bool   `json:"custom Note"`
+	DepNote      bool   `json:"Note deprecated"`
 }
 
 // JNoteList is the whole 'saptune note list'
