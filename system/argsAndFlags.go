@@ -214,12 +214,10 @@ func chkGlobalSyntax(cmdLinePos map[string]int) bool {
 // saptune --fun
 // saptune --version or saptune --help
 func chkGlobalOpts(cmdLinePos map[string]int) bool {
+	globalFlags := []string{"format", "version", "help", "force-color", "fun"}
 	stArgs := os.Args
 	ret := true
-	globOpt := false
-	globPos := 1
-	posOffset := 1
-	if len(stArgs) < globPos {
+	if len(stArgs) < 1 {
 		// too few arguments
 		DebugLog("chkGlobalOpts failed - too few arguments")
 		return false
@@ -234,27 +232,9 @@ func chkGlobalOpts(cmdLinePos map[string]int) bool {
 			DebugLog("chkGlobalOpts failed - wrong 'format' value '%+v'", GetFlagVal("format"))
 			ret = false
 		}
-		if !strings.Contains(stArgs[1], "--format") {
-			DebugLog("chkGlobalOpts failed - 'format' flag on wrong position in command line")
-			ret = false
-		} else {
-			globPos = globPos + 2
-			// the flag '--format' has a value (e.g. json), so we
-			// have '2' positions to skip in the command line
-			cmdLinePos["realm"] = cmdLinePos["realm"] + 2
-			cmdLinePos["realmOpt"] = cmdLinePos["realmOpt"] + 2
-			cmdLinePos["cmd"] = cmdLinePos["cmd"] + 2
-			cmdLinePos["cmdOpt"] = cmdLinePos["cmdOpt"] + 2
-		}
 	}
 
-	// check for '--version' or '-version'
-	// check for '--help' or '-help'
-	// check for '--force-color' or '-force-color'
-	// check for '--fun' or '-fun'
-	globalFlags := []string{"version", "help", "force-color", "fun"}
-
-	ret, globOpt, posOffset = chkGlobalFlag(globalFlags, globPos, ret, globOpt)
+	ret, globOpt, posOffset := chkGlobalFlag(globalFlags, ret)
 	if globOpt {
 		cmdLinePos["realm"] = cmdLinePos["realm"] + posOffset
 		cmdLinePos["realmOpt"] = cmdLinePos["realmOpt"] + posOffset
@@ -266,14 +246,22 @@ func chkGlobalOpts(cmdLinePos map[string]int) bool {
 
 // chkGlobalFlag checks if the global flags are on the right position in the
 // command line
-func chkGlobalFlag(globalFlags []string, globPos int, result bool, globOpt bool) (bool, bool, int) {
+func chkGlobalFlag(globalFlags []string, result bool) (bool, bool, int) {
 	stArgs := os.Args
-	posOffset := 0
+	globOpt := false
+	posOffset := 1
 	setglobFlags := []string{}
 	for _, gflag := range globalFlags {
 		if IsFlagSet(gflag) {
 			setglobFlags = append(setglobFlags, gflag)
-			posOffset = posOffset + 1
+			if gflag == "format" {
+				// the flag '--format' has a value (e.g. json),
+				// so we have '2' positions to skip in the
+				// command line
+				posOffset = posOffset + 2
+			} else {
+				posOffset = posOffset + 1
+			}
 		}
 	}
 	if posOffset < 1 {
@@ -282,7 +270,7 @@ func chkGlobalFlag(globalFlags []string, globPos int, result bool, globOpt bool)
 	for _, sflag := range setglobFlags {
 		fval := "-" + sflag
 		found := false
-		for i := globPos; i < globPos+posOffset; i++ {
+		for i := 1; i < posOffset; i++ {
 			if strings.Contains(stArgs[i], fval) {
 				found = true
 				globOpt = true
