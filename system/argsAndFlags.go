@@ -282,7 +282,7 @@ func chkGlobalFlag(globalFlags []string, globPos int, result bool, globOpt bool)
 	for _, sflag := range setglobFlags {
 		fval := "-" + sflag
 		found := false
-		for i := globPos; i < globPos + posOffset; i++ {
+		for i := globPos; i < globPos+posOffset; i++ {
 			if strings.Contains(stArgs[i], fval) {
 				found = true
 				globOpt = true
