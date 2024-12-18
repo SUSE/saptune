@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "November 2024" "" "System optimization For SAP"
+.TH saptune "8" "December 2024" "" "System optimization For SAP"
 .SH NAME
 saptune \- Comprehensive system optimization management for SAP solutions (\fBVersion 3\fP)
 
@@ -94,6 +94,8 @@ Additionally, it can simulate the setting of a single SAP Note definition or a d
 saptune does not only set kernel values (like sysctl does), but also values like cpu governor, energy perf bias, force latency (dma latency) and the disk io scheduler. Additionally it will check/verify, if suitable rpm versions are installed and special kernel command line values are set, according to the relevant SAP Notes. So saptune checks and applies values in various locations during runtime like
 .PP
 /proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.d/, /etc/systemd/logind.conf.d/ and some others.
+
+To do most of these settings saptune needs to run with root privilege. So please be in mind that users who run saptune are considered privileged users with administrative rights.
 
 By default saptune is printing all results to stdout, Errors and Warnings are printed to stderr. By using \fB--format FORMAT\fP this behaviour can be changed.
 .br
