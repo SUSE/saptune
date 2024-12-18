@@ -11,7 +11,7 @@ import (
 )
 
 var mandatoryConfigKeys = []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD"}
-var changeableConfigKeys = []string{"COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD", "DEBUG"}
+var changeableConfigKeys = []string{"COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD", "DEBUG", "TrentoASDP"}
 
 // MandKeyList returns a list of mandatory configuration parameter, which need
 // to be available in the saptune configuration file
@@ -43,6 +43,8 @@ func ConfigureAction(writer io.Writer, configEntry string, configVals []string, 
 		ConfigureActionSetIgnoreReload(configVals[0])
 	case "DEBUG":
 		ConfigureActionSetDebug(configVals[0])
+	case "TrentoASDP":
+		ConfigureActionSetTrentoASDP(configVals[0])
 	case "reset":
 		ConfigureActionReset(os.Stdin, writer, tuneApp)
 	case "show":
@@ -79,6 +81,21 @@ func ConfigureActionSetDebug(configVal string) {
 		writeConfigEntry("DEBUG", configVal)
 	default:
 		system.ErrorExit("wrong value '%s' for config variable 'DEBUG'. Only 'on' or 'off' supported. Please check.", configVal)
+	}
+}
+
+// ConfigureActionSetTrentoASDP sets the saptune-discovery-period of the
+// Trento Agent
+func ConfigureActionSetTrentoASDP(configVal string) {
+	switch configVal {
+	case "300", "600", "900", "1800", "3600", "off":
+		err := system.CheckAndSetTrento("TrentoASDP", configVal, true)
+		if err != nil {
+			system.ErrorExit("", 1)
+		}
+		writeConfigEntry("TrentoASDP", configVal)
+	default:
+		system.ErrorExit("wrong value '%s' for the Trento Agent saptune-discovery-period. Supported values are '300', '600', '900', '1800', '3600'. Please check.", configVal)
 	}
 }
 
@@ -122,9 +139,9 @@ func writeConfigEntry(entry, val string) {
 		system.ErrorExit("Unable to read file '%s': '%v'\n", saptuneSysconfig, err, 128)
 	}
 	if val == "" {
-		system.NoticeLog("Reset '%s' to empty value", entry)
+		system.InfoLog("Reset '%s' to empty value", entry)
 	} else {
-		system.NoticeLog("Set '%s' to '%s'", entry, val)
+		system.InfoLog("Set '%s' to '%s'", entry, val)
 	}
 	sconf.Set(entry, val)
 	if err := os.WriteFile(saptuneSysconfig, []byte(sconf.ToText()), 0644); err != nil {
@@ -141,7 +158,8 @@ func ConfigureActionShow(writer io.Writer) {
 	fmt.Fprintf(writer, "\nContent of saptune configuration file %s:\n\n%s\n", saptuneSysconfig, string(cont))
 }
 
-// ConfigureActionReset(writer)
+// ConfigureActionReset resets the main saptune configuration to the delivery
+// state
 func ConfigureActionReset(reader io.Reader, writer io.Writer, tuneApp *app.App) {
 	errcnt := 0
 	fmt.Fprintf(writer, "\nATTENTION: resetting the main saptune configuration.\nThis will reset the tuning of the system and remove/reset all saptune related configuration and runtime files.\n")

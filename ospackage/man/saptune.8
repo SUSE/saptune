@@ -712,6 +712,20 @@ Input is checked, if the given files are in a location which is searched by sysc
 .TP
 .B IGNORE_RELOAD yes||no
 Controls behavior of systemctl reload saptune.service and the systemctl try-restart saptune.service during package installation.
+
+.TP
+.B TrentoASDP <period>||off
+Sets the discovery period (saptune-discovery-period) of the Trento Agent in /etc/trento/agent.yaml for collecting \fIsaptune\fP information from the system.
+.br
+The discovery period is the time in seconds between 2 \fIsaptune\fP calls initiated by the Trento Agent - the tick interval for the saptune discovery loop. Adapting this value can prevent 'saptune currently in use, try later' errors (exit code \fB11\fP) from saptune.
+.br
+Trento will start with a default of 900s
+.br
+Possible values are "300", "600", "900", "1800" and "3600" seconds or "off" to disable the check during start of saptune
+
+If the variable is set saptune will check during start if the value of the variable found in the saptune configuration file is valid and still set in /etc/trento/agent.yaml. If not a Warning will pop up.
+.br
+Setting TrentoASDP to "off" will disable the check during start of saptune. The setting of 'saptune-discovery-period' in the Trento Agent config is not affected by this setting.
 .TP
 .B reset
 Reverts the tuning and reset the content of the saptune configuration file to the installation default. Asks for confirmation.

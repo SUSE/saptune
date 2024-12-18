@@ -1,6 +1,7 @@
 package system
 
 import (
+	"bytes"
 	"crypto/md5"
 	"fmt"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"os/exec"
 	"path"
 	"regexp"
+	"strings"
 )
 
 // ReadConfigFile read content of config file
@@ -17,10 +19,94 @@ func ReadConfigFile(fileName string, autoCreate bool) ([]byte, error) {
 		content = []byte{}
 		err = os.MkdirAll(path.Dir(fileName), 0755)
 		if err == nil {
-			err = os.WriteFile(fileName, []byte{}, 0644)
+			err = os.WriteFile(fileName, []byte{}, 0600)
 		}
 	}
 	return content, err
+}
+
+// readConfValues returns the value of an entry in a config file
+func readConfValue(file, entry string) string {
+	value := ""
+	content, err := ReadConfigFile(file, false)
+	if err != nil {
+		ErrorLog("Problems reading config file '%s'.", file)
+		return value
+	}
+	for _, line := range strings.Split(string(content), "\n") {
+		line = strings.TrimSpace(line)
+		if len(line) == 0 {
+			// skip empty lines
+			continue
+		}
+		if strings.HasPrefix(line, "#") {
+			// skip comments
+			continue
+		}
+		if strings.HasPrefix(line, entry) {
+			// entry found
+			fields := strings.Fields(line)
+			if fields[0] == entry && len (fields) > 1 {
+				value = fields[1]
+			}
+		}
+	}
+	return strings.TrimSpace(value)
+}
+
+// appendEntry appends entry/string to a config file
+func appendEntry(file, entry, comment string) error {
+	fd, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0640)
+	if os.IsNotExist(err) {
+		ErrorLog("Config file '%s' does not exist.", file)
+		return err
+	}
+	if err != nil {
+		ErrorLog("Problems to open file '%s' to append entry '%s'.", file, entry)
+		return err
+	}
+	defer fd.Close()
+	strToAppend := "\n" + entry + "\n"
+	if comment != "" {
+		strToAppend = "\n" + comment + strToAppend
+	}
+	if _, err = fd.WriteString(strToAppend); err != nil {
+		ErrorLog("problems during append of entry '%s' to file '%s'.", entry, file)
+	}
+	return err
+}
+
+// changeEntry changes the value of an entry in a config file
+func changeEntry(file, param, value, comment string) error {
+	oldLine := ""
+	commentFound := false
+	content, err := ReadConfigFile(file, false)
+	if err != nil {
+		ErrorLog("Problems reading config file '%s'.", file)
+		return err
+	}
+	for _, line := range strings.Split(string(content), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, param) {
+			// entry found
+			oldLine = line
+		}
+		if comment != "" && strings.HasPrefix(line, comment) {
+			// comment found
+			commentFound = true
+		}
+	}
+
+	newLine := param + " " + value
+	if comment != "" && !commentFound {
+		newLine = comment + "\n" + newLine
+	}
+	newCont := bytes.Replace(content, []byte(oldLine), []byte(newLine), -1)
+	err = os.WriteFile(file, newCont, 0640)
+	if err != nil {
+		ErrorLog("Problems writing config file '%s'.", file)
+	}
+	return err
 }
 
 // FileIsEmpty returns true, if the given file is empty or does not exist

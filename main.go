@@ -271,6 +271,11 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 		system.ErrorExit("", 128)
 	}
 
+	// check saptune-discovery-period of the Trento Agent
+	if sconf.IsKeyAvail("TrentoASDP") {
+		_ = system.CheckAndSetTrento("TrentoASDP", sconf.GetString("TrentoASDP", ""), false)
+	}
+
 	// set values read from the config file
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
 	if saptuneVers != "1" && saptuneVers != "2" && saptuneVers != "3" {
