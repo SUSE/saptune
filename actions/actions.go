@@ -321,7 +321,7 @@ Staging control:
    saptune [--format FORMAT] [--force-color] [--fun] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
    saptune [--format FORMAT] [--force-color] [--fun] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Config (re-)settings:
-  saptune [--format FORMAT] [--force-color] [--fun] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG ) Value
+  saptune [--format FORMAT] [--force-color] [--fun] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP ) Value
   saptune [--format FORMAT] [--force-color] [--fun] configure ( reset | show )
 Verify all applied Notes:
   saptune [--format FORMAT] [--force-color] [--fun] verify applied

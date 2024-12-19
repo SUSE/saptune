@@ -3,18 +3,6 @@ Description=Optimise system for running SAP workloads
 After=syslog.target systemd-sysctl.service network.target tuned.service multipathd.service
 
 [Service]
-ProtectSystem=full
-ProtectHome=true
-PrivateDevices=true
-ProtectHostname=true
-ProtectClock=true
-ProtectKernelTunables=false
-ProtectKernelModules=true
-ProtectKernelLogs=true
-ProtectControlGroups=false
-MountAPIVFS=no
-RestrictRealtime=true
-
 Type=oneshot
 RemainAfterExit=true
 ExecStart=/usr/sbin/saptune service apply
