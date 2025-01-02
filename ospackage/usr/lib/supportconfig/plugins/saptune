@@ -101,7 +101,6 @@ function display_log() {
 
 # ---- Main ----
 display_cmd saptune_check
-display_cmd saptune_check --json
 display_package_info tuned
 display_file_stat /usr/lib/tuned/functions
 display_systemd_status tuned

@@ -20,6 +20,10 @@ var orphanedOverrides []string
 // ServiceAction handles service actions like start, stop, status, enable, disable
 // it controls the systemd saptune.service
 func ServiceAction(writer io.Writer, actionName, saptuneVersion string, tApp *app.App) {
+	// check command line syntax
+	if system.CliArg(3) != "" {
+		PrintHelpAndExit(writer, 1)
+	}
 	preventReload()
 	switch actionName {
 	case "apply":
