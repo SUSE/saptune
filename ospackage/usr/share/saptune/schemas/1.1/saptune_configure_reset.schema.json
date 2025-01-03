@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_refresh.schema.json",
+    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_configure_reset.schema.json",
     "title": "",
-    "description": "Describes the output of 'saptune refresh.",
+    "description": "Describes the output of 'saptune configure reset.",
     "type": "object",
     "required": [
         "$schema",
@@ -61,7 +61,7 @@
             "description": "The saptune command (classifier), which was executed.",
             "type": "string",
             "enum": [
-                "refresh"
+                "configure reset"
             ]
         },
         "result": {

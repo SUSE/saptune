@@ -1,8 +1,8 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_check.schema.json",
+    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_refresh_applied.schema.json",
     "title": "",
-    "description": "Describes the output of 'saptune check.",
+    "description": "Describes the output of 'saptune refresh applied.",
     "type": "object",
     "required": [
         "$schema",
@@ -61,61 +61,23 @@
             "description": "The saptune command (classifier), which was executed.",
             "type": "string",
             "enum": [
-                "check"
+                "refresh applied"
             ]
         },
         "result": {
             "description": "The result (output) of the command.",
             "type": "object",
             "required": [
-                "messages",
-                "warnings",
-                "errors"
+                "implemented"
             ],
             "additionalProperties": false,
             "properties": {
-                "messages": {
-                    "description": "List of check messages.",
-                    "type": "array",
-                    "items": {
-                        "description": "A single message.",
-                        "type": "object",
-                        "required": [
-                            "type",
-                            "text"
-                        ],
-                        "additionalProperties": false,
-                        "properties": {
-                            "type": {
-                                "description": "Type of the message.",
-                                "type": "string",
-                                "enum": [
-                                    "OK",
-                                    "WARN",
-                                    "FAIL",
-                                    "NOTE"
-                                ]
-                            },
-                            "text": {
-                                "description": "Text describing the check.",
-                                "type": "string"
-                            },
-                            "remediation": {
-                                "description": "Text describing how to fix the problem.",
-                                "type": "string"
-                            }
-                        }
-                    }
-                },
-                "warnings": {
-                    "description": "Number of warnings.",
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "errors": {
-                    "description": "Number of errors.",
-                    "type": "integer",
-                    "minimum": 0
+                "implemented": {
+                    "description": "Indicates that JSON output has not yet been implemented yet.",
+                    "type": "boolean",
+                    "enum": [
+                        false
+                    ]
                 }
             }
         },

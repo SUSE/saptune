@@ -12,7 +12,7 @@
                     "type":  "array",
                     "items": {
                         "type": "object",
-                        "required": [ "Note ID", "Note description", "Note reference", "Note version", "Note release date", "Note enabled manually", "Note enabled by Solution", "Note reverted manually", "Note override exists", "custom Note" ],
+                        "required": [ "Note ID", "Note description", "Note reference", "Note version", "Note release date", "Note enabled manually", "Note enabled by Solution", "Note reverted manually", "Note override exists", "custom Note", "Note deprecated" ],
                         "additionalProperties": false,
                         "properties": {
                             "Note ID": { "$ref": "#/$defs/saptune note id" },
@@ -51,6 +51,10 @@
                             }, 
                             "custom Note": {
                                 "description": "States if the Note is a custom Note.",
+                                "type": "boolean"
+                            },
+                            "Note deprecated": {
+                                "description": "States if the Note is deprecated.",
                                 "type": "boolean"
                             }
                         }

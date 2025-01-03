@@ -8,43 +8,38 @@
 
 {% block result_properties %}
                 "messages": {
-                    "description": "List of checks and their results.",
+                    "description": "List of check messages.",
                     "type": "array",
                     "items": {
-                        "description": "A single check.",
+                        "description": "A single message.",
                         "type": "object",
                         "required": ["type", "text"],
                         "additionalProperties": false,
                         "properties": {
-
                             "type": {
-                                "description": "Result of the check.",
+                                "description": "Type of the message.",
                                 "type": "string",
-                                "enum": ["OK", "WARN" ,"FAIL" ,"NOTE"]
+                                "enum": ["OK", "WARN", "FAIL", "NOTE"]
                             },
-
                             "text": {
-                                "description": "Description of the check.",
-                                "type": "string",
-                                "minLength": 1,
-                                "examples": ["configured saptune version is 3"]
+                                "description": "Text describing the check.",
+                                "type": "string"
                             },
-
                             "remediation": {
-                                "description": "The log message itself.",
-                                "type": "string",
-                                "minLength": 1,
-                                "examples": ["Run 'systemctl start saptune.service', 'saptune service start' or 'saptune service takeover'."]
+                                "description": "Text describing how to fix the problem.",
+                                "type": "string"
                             }
                         }
                     }
-                },    
+                },
                 "warnings": {
-                    "description": "Amount of warnings.",
-                    "type": "integer"
-                }, 
+                    "description": "Number of warnings.",
+                    "type": "integer",
+                    "minimum": 0
+                },
                 "errors": {
-                    "description": "Amount of errors.",
-                    "type": "integer"
-                }         
+                    "description": "Number of errors.",
+                    "type": "integer",
+                    "minimum": 0
+                }               
 {% endblock %}

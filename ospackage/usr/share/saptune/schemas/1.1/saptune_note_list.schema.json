@@ -89,7 +89,8 @@
                             "Note enabled by Solution",
                             "Note reverted manually",
                             "Note override exists",
-                            "custom Note"
+                            "custom Note",
+                            "Note deprecated"
                         ],
                         "additionalProperties": false,
                         "properties": {
@@ -157,6 +158,10 @@
                             },
                             "custom Note": {
                                 "description": "States if the Note is a custom Note.",
+                                "type": "boolean"
+                            },
+                            "Note deprecated": {
+                                "description": "States if the Note is deprecated.",
                                 "type": "boolean"
                             }
                         }

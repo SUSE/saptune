@@ -108,7 +108,7 @@
                     },
                     "properties": {
                         "saptune": {
-                            "description": "Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages.",
+                            "description": "The systemd states of a service 'is-enabled' and 'is-active' in this order. Empty for a missing package.",
                             "type": "array",
                             "prefixItems": [
                                 {
@@ -148,11 +148,12 @@
                                 [
                                     "enabled",
                                     "active"
-                                ]
+                                ],
+                                []
                             ]
                         },
                         "sapconf": {
-                            "description": "Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages.",
+                            "description": "The systemd states of a service 'is-enabled' and 'is-active' in this order. Empty for a missing package.",
                             "type": "array",
                             "prefixItems": [
                                 {
@@ -192,11 +193,12 @@
                                 [
                                     "enabled",
                                     "active"
-                                ]
+                                ],
+                                []
                             ]
                         },
                         "tuned": {
-                            "description": "Possible systemd states for 'is-active' and 'is-enabled' of a service plus a 'not-available' option for missing packages.",
+                            "description": "The systemd states of a service 'is-enabled' and 'is-active' in this order. Empty for a missing package.",
                             "type": "array",
                             "prefixItems": [
                                 {
@@ -236,7 +238,8 @@
                                 [
                                     "enabled",
                                     "active"
-                                ]
+                                ],
+                                []
                             ]
                         },
                         "tuned profile": {
@@ -313,7 +316,7 @@
                 "package version": {
                     "description": "The version string of the installed saptune package.",
                     "type": "string",
-                    "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(-.+)*$",
+                    "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+([-_][a-zA-Z0-9]+)?$",
                     "examples": [
                         "3.0.1",
                         "3.1.0",

@@ -1,6 +1,6 @@
 {% extends "common.schema.json.template" %}
 
-{% block command %}saptune refresh{% endblock %}
+{% block command %}saptune configure reset{% endblock %}
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 
