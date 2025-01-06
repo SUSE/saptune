@@ -18,6 +18,8 @@
 #                                 - Added `--fun` and `--force-color`` and therefore rewrote injected script. 
 #                                 - Added `saptune configure`
 #                                 - Added `saptune note refresh` and `saptune refresh applied`
+#               03.01.2025  v3.1  - Changed `trento-agent-saptune-discovery-period` to `TrentoASDP` for `saptune configure`.
+
 #
 # Syntax:       saptune [--format FORMAT] [--fun] [--force-color] help
 #               saptune [--format FORMAT] [--fun] [--force-color] version  
@@ -552,7 +554,7 @@ saptune configure:
   - SKIP_SYSCTL_FILES
   - IGNORE_RELOAD
   - DEBUG 
-  - trento-agent-saptune-discovery-period
+  - TrentoASDP
 
 saptune configure COLOR_SCHEME: *color-schemes
 
@@ -575,14 +577,14 @@ saptune configure DEBUG:
 
 saptune configure DEBUG *:  *stop
 
-saptune configure trento-agent-saptune-discovery-period:
+saptune configure TrentoASDP:
   - "300"
   - "600"
   - "900"
   - "1800"
   - "3600"
 
-saptune configure trento-agent-saptune-discovery-period *: *stop
+saptune configure TrentoASDP *: *stop
 
 saptune configure reset: *stop
   
