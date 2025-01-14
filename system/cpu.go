@@ -37,7 +37,7 @@ func GetPerfBias() string {
 	cmdName := cpupowerCmd
 	cmdArgs := []string{"-c", "all", "info", "-b"}
 
-	if !supportsPerfBiosSettings() {
+	if !supportsPerfBiasSettings() {
 		return "all:none"
 	}
 
@@ -50,7 +50,7 @@ func GetPerfBias() string {
 	for k, line := range strings.Split(strings.TrimSpace(string(cmdOut)), "\n") {
 		switch {
 		case line == notSupportedX86 || line == notSupportedIBM:
-			// safety net - check already done in supportsPerfBiosSettings()
+			// safety net - check already done in supportsPerfBiasSettings()
 			return "all:none"
 		case isPBCpu.MatchString(line):
 			str = str + fmt.Sprintf("cpu%d", k/2)
@@ -77,7 +77,7 @@ func GetPerfBias() string {
 // SetPerfBias set CPU performance configuration to the system using 'cpupower' command
 func SetPerfBias(value string) error {
 	//cmd := exec.Command("cpupower", "-c", "all", "set", "-b", value)
-	if !supportsPerfBiosSettings() {
+	if !supportsPerfBiasSettings() {
 		return nil
 	}
 
@@ -101,17 +101,13 @@ func SetPerfBias(value string) error {
 	return nil
 }
 
-// supportsPerfBiosSettings checks, if Perf Bias is supported for the system
-func supportsPerfBiosSettings() bool {
+// supportsPerfBiasSettings checks, if Perf Bias is supported for the system
+func supportsPerfBiasSettings() bool {
 	setPerf := true
 	if GetCSP() == "azure" {
 		WarningLog("Perf Bias settings not supported on '%s'\n", CSPAzureLong)
 		setPerf = false
-	} else if SecureBootEnabled() {
-		WarningLog("Cannot set Perf Bias when SecureBoot is enabled, skipping")
-		setPerf = false
 	} else if !supportsPerfBias() {
-		WarningLog("Perf Bias settings not supported by the system")
 		setPerf = false
 	}
 	return setPerf
@@ -164,6 +160,11 @@ func supportsPerfBias() bool {
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
 	if err != nil || (err == nil && (strings.Contains(string(cmdOut), notSupportedX86) || strings.Contains(string(cmdOut), notSupportedIBM))) {
 		// does not support perf bias
+		if SecureBootEnabled() {
+			WarningLog("Cannot set Perf Bias when SecureBoot is enabled, skipping")
+		} else {
+			WarningLog("Perf Bias settings not supported by the system")
+		}
 		return false
 	}
 	return true
@@ -184,17 +185,21 @@ func GetGovernor() map[string]string {
 
 	dirCont, err := os.ReadDir(cpuDir)
 	if err != nil {
-		WarningLog("Governor settings not supported by the system")
+		WarningLog("Governor settings not supported by the system - %v", err)
 		gGov["all"] = "none"
 		return gGov
 	}
 	for _, entry := range dirCont {
 		cpuName := entry.Name()
 		if isCPU.MatchString(cpuName) {
+			if !isCPUonline(cpuName) {
+				DebugLog("GetGovernor - Skipping CPU '%s' because it's offline", cpuName)
+				continue
+			}
 			if _, err = os.Stat(path.Join(cpuDir, cpuName, "cpufreq", "scaling_governor")); os.IsNotExist(err) {
-				// os.Stat needs cpuDir as path - including /sys
+				// os/sys/devices/system/cpu/cpu*/online.Stat needs cpuDir as path - including /sys
 				tmpfile := path.Join(cpuDir, cpuName, "cpufreq", "scaling_governor")
-				InfoLog("Unable to identify the current scaling governor for CPU '%s', missing file '%s'. Check your intel_pstate.", cpuName, tmpfile)
+				InfoLog("Unable to identify the current scaling governor for CPU '%s', missing file '%s'.", cpuName, tmpfile)
 				gov = ""
 			} else {
 				// GetSysString needs cpuDirSys as path - without /sys
@@ -213,6 +218,8 @@ func GetGovernor() map[string]string {
 			gGov[cpuName] = gov
 		}
 	}
+	fmt.Printf("setAll is '%+v'\n", setAll)
+	fmt.Printf("gGov is '%+v'\n", gGov)
 	if setAll {
 		gGov = make(map[string]string)
 		gGov["all"] = oldgov
@@ -267,12 +274,85 @@ func supportsGovernorSettings(value string) bool {
 	} else if !CmdIsAvailable(cpupowerCmd) {
 		WarningLog("command '%s' not found", cpupowerCmd)
 		setGov = false
+	} else if !chkKernelCmdline() || !chkCPUDriver() {
+		setGov = false
 	} else if _, err := os.Stat(path.Join(cpuDir, "cpu0/cpufreq/scaling_governor")); os.IsNotExist(err) {
 		// check only first cpu - cpu0, not all
 		WarningLog("Governor settings not supported by the system")
 		setGov = false
 	}
 	return setGov
+}
+
+// chkKernelCmdline
+func chkKernelCmdline() bool {
+	validCmdline := true
+	val := ParseCmdline("/proc/cmdline", "idle")
+	if val == "poll" || val == "halt" {
+		WarningLog("The entire CPUIdle subsystem is disabled, acpi_idle and intel_idle drivers are disabled altogether (idle=%s).", val)
+		validCmdline = false
+	}
+	if val == "nomwait" {
+		WarningLog("intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (idle=%s).", val)
+		validCmdline = false
+	}
+	if val := ParseCmdline("/proc/cmdline", "cpuidle.off"); val == "1" {
+		WarningLog("CPU idle time management entirely disabled (cpuidle.off=%s).", val)
+		validCmdline = false
+	}
+	if val := ParseCmdline("/proc/cmdline", "intel_idle.max_cstate"); val == "0" {
+		WarningLog("intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_idle.max_cstate=%s).", val)
+		validCmdline = false
+	}
+	if val := ParseCmdline("/proc/cmdline", "intel_pstate"); val == "disable" {
+		WarningLog("intel_pstate driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_pstate=%s).", val)
+		validCmdline = false
+	}
+	return validCmdline
+}
+
+// chkCPUDriver checks, which CPUIdle driver is used
+// currently only intel_idle and intel_pstate are supported
+func chkCPUDriver() bool {
+	validDriver := true
+	val, err := os.ReadFile(path.Join(cpuDir, "cpuidle/current_driver"))
+	if err != nil || !strings.Contains(string(val), "intel_idle") {
+		WarningLog("Unsupported CPUIdle driver '%s' used (%v)", val, err)
+		validDriver = false
+	}
+	val, err = os.ReadFile(path.Join(cpuDir, "cpu0/cpufreq/scaling_driver"))
+	if err != nil || !strings.Contains(string(val), "intel_pstate") {
+		WarningLog("Unsupported CPU driver '%s' used (%v)", val, err)
+		validDriver = false
+	}
+	_, err = os.Stat(path.Join(cpuDir, "intel_pstate"))
+	if err != nil {
+		WarningLog("Missing directory '%s'", path.Join(cpuDir, "intel_pstate"))
+		validDriver = false
+	} else {
+		val, err := os.ReadFile(path.Join(cpuDir, "intel_pstate/status"))
+		if err != nil || !strings.Contains(string(val), "active") {
+			WarningLog("Status of intel_pstate driver is '%s' %v)", val, err)
+			validDriver = false
+		}
+	}
+	return validDriver
+}
+
+// isCPUonline checks, if the cpu is currently online
+// check cotent of file /sys/devices/system/cpu/cpu*/online
+// '0' means offline, '1' means online
+func isCPUonline(cpu string) bool {
+	// cpu0 is special case. As there is always a cpu0 and as it can not
+	// be brought offline, there is no file 'online' available in sysfs
+	if cpu == "cpu0" {
+		return true
+	}
+	val, err := os.ReadFile(path.Join(cpuDir, cpu, "/online"))
+	if err == nil && strings.TrimSpace(string(val)) == "1" {
+		return true
+	}
+	return false
 }
 
 // isValidGovernor check, if the system will support CPU frequency settings
@@ -312,6 +392,10 @@ func GetFLInfo() (string, string, bool) {
 		// cpu0 ... cpuXY
 		cpuName := entry.Name()
 		if isCPU.MatchString(cpuName) {
+			if !isCPUonline(cpuName) {
+				DebugLog("GetFLInfo - Skipping CPU '%s' because it's offline", cpuName)
+				continue
+			}
 			// read /sys/devices/system/cpu/cpu*/cpuidle
 			cpudirCont, err := os.ReadDir(path.Join(cpuDir, cpuName, "cpuidle"))
 			if err != nil {
@@ -378,6 +462,10 @@ func SetForceLatency(value, savedStates string, revert bool) error {
 		// cpu0 ... cpuXY
 		cpuName := entry.Name()
 		if isCPU.MatchString(cpuName) {
+			if !isCPUonline(cpuName) {
+				DebugLog("SetForceLatency - Skipping CPU '%s' because it's offline", cpuName)
+				continue
+			}
 			cpudirCont, errns := os.ReadDir(path.Join(cpuDir, cpuName, "cpuidle"))
 			if errns != nil {
 				WarningLog("idle settings not supported for '%s'", cpuName)
