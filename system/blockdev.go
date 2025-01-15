@@ -39,6 +39,26 @@ var isVD = regexp.MustCompile(`^x?vd\w+$`)
 //	nvme0n1p1: first registered device's first namespace's first partition
 var isNvme = regexp.MustCompile(`^nvme\d+n\d+$`)
 
+// isValidDisk checks, if the device is a valid disk for us
+func isValidDisk(dev string) bool {
+	if isVD.FindStringSubmatch(dev) == nil && isNvme.FindStringSubmatch(dev) == nil {
+		// not a virtual disk or Nvme
+		return false
+	}
+	if isNvme.FindStringSubmatch(dev) != nil {
+		// check for valid Nvme
+		fname := fmt.Sprintf("/sys/block/%s/queue/scheduler", dev)
+		if _, err := os.Stat(fname); err != nil {
+			return false
+		}
+		fname = fmt.Sprintf("/sys/block/%s/queue/nr_requests", dev)
+		if _, err := os.Stat(fname); err != nil {
+			return false
+		}
+	}
+	return true
+}
+
 // BlockDeviceIsDisk checks, if a block device is a disk
 // /sys/block/*/device/type (TYPE_DISK / 0x00)
 // does not work for virtio and nvme block devices, needs workaround
@@ -46,7 +66,8 @@ func BlockDeviceIsDisk(dev string) bool {
 	fname := fmt.Sprintf("/sys/block/%s/device/type", dev)
 	dtype, err := os.ReadFile(fname)
 	if err != nil || strings.TrimSpace(string(dtype)) != "0" {
-		if isVD.FindStringSubmatch(dev) == nil && isNvme.FindStringSubmatch(dev) == nil {
+		// check for virtio and nvme block devices
+		if !isValidDisk(dev) {
 			// unsupported device
 			return false
 		}

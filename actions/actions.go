@@ -104,6 +104,9 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 	case "staging":
 		StagingAction(system.CliArg(2), system.CliArgs(3), stApp)
 	case "status":
+		if system.CliArg(2) != "" {
+			PrintHelpAndExit(writer, 1)
+		}
 		ServiceAction(writer, "status", saptuneVers, stApp)
 	case "verify":
 		VerifyAction(writer, system.CliArg(2), stApp)

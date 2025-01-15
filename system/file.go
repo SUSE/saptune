@@ -19,7 +19,7 @@ func ReadConfigFile(fileName string, autoCreate bool) ([]byte, error) {
 		content = []byte{}
 		err = os.MkdirAll(path.Dir(fileName), 0755)
 		if err == nil {
-			err = os.WriteFile(fileName, []byte{}, 0600)
+			err = os.WriteFile(fileName, []byte{}, 0644)
 		}
 	}
 	return content, err
@@ -46,7 +46,7 @@ func readConfValue(file, entry string) string {
 		if strings.HasPrefix(line, entry) {
 			// entry found
 			fields := strings.Fields(line)
-			if fields[0] == entry && len (fields) > 1 {
+			if fields[0] == entry && len(fields) > 1 {
 				value = fields[1]
 			}
 		}
