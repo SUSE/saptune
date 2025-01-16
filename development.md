@@ -8,9 +8,10 @@ the sources should be available at $GOPATH/src/github.com/SUSE/saptune
 
 ## build saptune v3
 	cd $GOPATH/src/github.com/SUSE/saptune
-	version="3.0.0-test"
+	version="3.2.0-test"
 	bdate=$(date +"%Y/%m/%d")
-	go build -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion=$version' -X 'github.com/SUSE/saptune/actions.RPMDate=$bdate'"
+	bvers=15
+	go build -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion=$version' -X 'github.com/SUSE/saptune/actions.RPMDate=$bdate' -X '%{GONS}/%{name}/system.RPMBldVers=$bvers'"
 
 ## lint and format checks for the sources before committing changes
 
@@ -23,12 +24,12 @@ and run the unit tests (in a docker container)
 ## unit tests for saptune:
 after committing the changes to git travis is used for automatic testing
 
-But before committing the sources, run the tests locally by using docker and the same workflow as on travis
+But before committing the sources, run the tests locally by using docker and the same workflow as with github actions
 
 	su -
 	systemctl start docker
 	cd $GOPATH/src/github.com/SUSE/saptune
-	docker run --name saptune-ci --privileged -v /sys/fs/cgroup:/sys/fs/cgroup:ro -td -v "$(pwd):/app" registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base
+	docker run --name saptune-ci --privileged --tmpfs /run -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host -td -v "$(pwd):/app" registry.opensuse.org/home/angelabriel/st-ci-base/containers/st-ci-base
 	docker exec -t saptune-ci /bin/sh -c "cd /app; ./run_saptune_ci_tst.sh;"
 
 in $GOPATH/src/github.com/SUSE/saptune

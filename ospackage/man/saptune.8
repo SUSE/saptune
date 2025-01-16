@@ -14,74 +14,74 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "October 2024" "" "System optimization For SAP"
+.TH saptune "8" "December 2024" "" "System optimization For SAP"
 .SH NAME
 saptune \- Comprehensive system optimization management for SAP solutions (\fBVersion 3\fP)
 
 ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate to saptune version \fB3\fP, so please refer to man page saptune-migrate(7).
 
 .SH SYNOPSIS
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBdaemon\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBdaemon\fP
 ( start | stop | status [--non-compliance-check] ) \fBATTENTION: deprecated\fP
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBservice\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBservice\fP
 ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 ( list | verify | revertall | enabled | applied )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBnote\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 rename NOTEID NEWNOTEID
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 ( list | verify | enabled | applied )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 change [--force] SOLUTIONNAME
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBsolution\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBsolution\fP
 rename SOLUTIONNAME NEWSOLUTIONNAME
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstaging\fP
 ( status | enable | disable | is-enabled | list )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
-( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstaging\fP
+( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBstaging\fP
-release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstaging\fP
+release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBconfigure\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBconfigure\fP
 ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG ) Value
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBconfigure\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBconfigure\fP
 ( reset | show )
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBverify\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBverify\fP
 applied
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBrevert\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBrevert\fP
 all
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBcheck\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBcheck\fP
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBstatus [--non-compliance-check]\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBstatus [--non-compliance-check]\fP
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBversion\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBversion\fP
 
-\fBsaptune\fP [--format FORMAT] [--force-color] \fBhelp\fP
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBhelp\fP
 
 .SH DESCRIPTION
 saptune is designed to automate the configuration recommendations from SAP and SUSE to run an SAP application on SLES for SAP. These configuration recommendations are normally referred to as SAP Notes. So some dedicated SAP Notes are the base for the work of saptune. Additional some best practice guides are added as Note definitions to optimize the system for some really special cases.
@@ -94,6 +94,8 @@ Additionally, it can simulate the setting of a single SAP Note definition or a d
 saptune does not only set kernel values (like sysctl does), but also values like cpu governor, energy perf bias, force latency (dma latency) and the disk io scheduler. Additionally it will check/verify, if suitable rpm versions are installed and special kernel command line values are set, according to the relevant SAP Notes. So saptune checks and applies values in various locations during runtime like
 .PP
 /proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.d/, /etc/systemd/logind.conf.d/ and some others.
+
+To do most of these settings saptune needs to run with root privilege. So please be in mind that users who run saptune are considered privileged users with administrative rights.
 
 By default saptune is printing all results to stdout, Errors and Warnings are printed to stderr. By using \fB--format FORMAT\fP this behaviour can be changed.
 .br
@@ -672,7 +674,7 @@ The solution definition is shown as a whole object. It is only possible to relea
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them and that it is possible to view the changes.
 .TP
-.B diff [ ( NOTEID | SOLUTIONNAME )... | all ]
+.B diff [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Shows the differences between the Note (or all Notes) or the Solution definition in the staging area and the working area.
 .br
 For each Note in the staging area the output contains the values of all parameter which differ. This includes new or removed parameters as well as changes in the reminder section.
@@ -681,12 +683,12 @@ For the Solution, all changed solutions are displayed with their differences.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them.
 .TP
-.B analysis [ ( NOTEID | SOLUTIONNAME )... | all ]
+.B analysis [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Does an analysis of the requested Notes, the Solution definitions or everything in the staging area to warn the user about possible issues or additional steps to perform.
 .br
 Lastly a hint is printed to remind the user that he has to release staged objects before he can use them as well that he should check out the differences.
 .TP
-.B release [ ( NOTEID | SOLUTIONNAME )... | all ]
+.B release [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Releases the requested Notes, the Solution definitions or everything in the stages area.
 .br
 This means the Notes or the Solution definitions get moved from the staging area to the working area. In case of a deleted Note/Solution, it will be removed from the working area.
@@ -704,7 +706,7 @@ Not all of the former variables will be available as configure option, only thos
 .SS
 .TP
 .B COLOR_SCHEME SCHEME
-Default color scheme. See saptune verify --colorscheme SCHEME for available schemes.
+Default color scheme. See 'saptune verify' in this man page for available color schemes.
 .TP
 .B SKIP_SYSCTL_FILES FILE[,FILE...]
 Comma-separated list of sysctl config files or directories which should be excluded when checking if parameters handled by saptune are handled by sysctl as well.
@@ -712,6 +714,20 @@ Input is checked, if the given files are in a location which is searched by sysc
 .TP
 .B IGNORE_RELOAD yes||no
 Controls behavior of systemctl reload saptune.service and the systemctl try-restart saptune.service during package installation.
+
+.TP
+.B TrentoASDP <period>||off
+Sets the discovery period (saptune-discovery-period) of the Trento Agent in /etc/trento/agent.yaml for collecting \fIsaptune\fP information from the system.
+.br
+The discovery period is the time in seconds between 2 \fIsaptune\fP calls initiated by the Trento Agent - the tick interval for the saptune discovery loop. Adapting this value can prevent 'saptune currently in use, try later' errors (exit code \fB11\fP) from saptune.
+.br
+Trento will start with a default of 900s
+.br
+Possible values are "300", "600", "900", "1800" and "3600" seconds or "off" to disable the check during start of saptune
+
+If the variable is set saptune will check during start if the value of the variable found in the saptune configuration file is valid and still set in /etc/trento/agent.yaml. If not a Warning will pop up.
+.br
+Setting TrentoASDP to "off" will disable the check during start of saptune. The setting of 'saptune-discovery-period' in the Trento Agent config is not affected by this setting.
 .TP
 .B reset
 Reverts the tuning and reset the content of the saptune configuration file to the installation default. Asks for confirmation.
@@ -839,6 +855,77 @@ REFERENCES=
 1980196 CUSTOMNOTE1 CUSTOMNOTE2
 .PP
 
+.SH EXIT CODES
+All saptune commands share the following exit codes:
+.RS
+.TP 5
+0
+action was successfully
+.TP
+1
+action failed
+.TP
+128
+an error in the configuration file occurred e.g. missing variables)
+.RE
+
+The following commands have individual exit codes additionally or alternatively:
+.TP
+.B saptune service status
+.RS
+.TP 4
+1
+saptune.service is not started (regardless if configured or not)
+.TP
+2
+not used
+.TP
+3
+saptune.service has been started, but tuning (Note or Solution) is not configured
+.TP
+4
+saptune.service has been started, but tuning is not compliant.
+.RE
+.TP
+.B saptune staging analysis
+.RS
+.TP 4
+1
+actions are required by the user, but no solution might break
+.TP
+2
+a Solution might break
+.TP
+5
+error during calculation
+.RE
+.TP
+.B saptune staging release
+.RS
+.TP 4
+2
+a Solution might break
+.TP
+5
+error during calculation
+.RE
+.TP
+.B saptune check
+.RS
+.TP 4
+1
+some warnings occurred and  saptune should work
+.TP
+2
+some errors occurred and  saptune will not work
+.TP
+3
+wrong parameters has been given to the tool (should never happen, if called by saptune check!)
+.TP
+5
+unexpected errors in regards of JSON output occurred
+.RE
+
 .SH CHANGES
 .TP
 .B changelog
@@ -855,12 +942,22 @@ So we now \fBdeprecated\fP all "DAEMON ACTIONS" like '\fIsaptune daemon start\fP
 .TP
 .B version 3.1
 With the update to saptune version 3.1 we \fBdeprecated\fP the actions '\fIsaptune note simulate\fP' and '\fIsaptune solution simulate\fP'.
+.TP
+.B version 3.2
+With the update to saptune version 3.2 we \fBdeprecated\fP the manual editing of the file \fI/etc/sysconfig/saptune\fP as the main configuration file will be (re)moved in future versions.
+.br
+Additional the Solution \fBSAP-ASE.sol\fP and the related Note \fB1680803\fP are \fBdeprecated\fP.
 
 .SH FILES
 .PP
 \fI/usr/share/saptune/schemas/1.0\fP
 .RS 4
 schemata defining the json output format available since saptune version 3.1
+.RE
+.PP
+\fI/usr/share/saptune/schemas/1.1\fP
+.RS 4
+schemata defining the json output format available since saptune version 3.2
 .RE
 .PP
 \fI/usr/share/saptune/notes\fP

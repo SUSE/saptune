@@ -11,7 +11,7 @@ _saptune_completions_filter() {
 
   if [[ "${cur:0:1}" == "-" ]]; then
     echo "$words"
-  
+
   else
     for word in $words; do
       [[ "${word:0:1}" != "-" ]] && result+=("$word")
@@ -24,11 +24,26 @@ _saptune_completions_filter() {
 
 _saptune_completions() {
 
-  if [[ "${COMP_WORDS[*]}" =~ ^saptune\ --format\ json ]] ; then
-      unset COMP_WORDS[1]  # remove '--format'
-      unset COMP_WORDS[2]  # remove 'json'
-      COMP_WORDS=( ${COMP_WORDS[@]} )
-      ((COMP_CWORD-=2))
+  if [[ "${COMP_WORDS[*]}" =~ (--format\ json|--force-color|--fun) ]] ; then
+    word_count=${#COMP_WORDS[@]}
+    for (( index=0; index<${word_count}; index++ )) ; do
+      case "${COMP_WORDS[index]}" in
+        --format)
+            if [ "${COMP_WORDS[index+1]}" == json ] ; then
+              unset COMP_WORDS[index]    # remove '--format'
+              unset COMP_WORDS[index+1]  # remove 'json'
+            fi
+            ;;
+        --force-color)
+            unset COMP_WORDS[index]    # remove '--force-color'
+            ;;
+        --fun)
+            unset COMP_WORDS[index]    # remove '--fun'
+            ;;
+      esac          
+    done
+    COMP_CWORD=$(( ${#COMP_WORDS[@]}-1 ))
+    COMP_WORDS=( ${COMP_WORDS[@]} )
   fi
 
   local cur=${COMP_WORDS[COMP_CWORD]}
@@ -36,488 +51,564 @@ _saptune_completions() {
   local compline="${compwords[*]}"
 
   case "$compline" in
-    'solution verify --colorscheme '*' --show-non-compliant '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution verify --colorscheme '*' --show-non-compliant '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution verify --show-non-compliant --colorscheme '*' '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution verify --show-non-compliant --colorscheme '*' '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'solution verify --colorscheme '*' --show-non-compliant')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
       ;;
 
-    'solution verify --show-non-compliant --colorscheme '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
+    'solution verify --show-non-compliant --colorscheme '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
       ;;
 
-    'note verify --colorscheme '*' --show-non-compliant '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'note verify --colorscheme '*' --show-non-compliant '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'solution verify --show-non-compliant --colorscheme'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur")
       ;;
 
-    'note verify --show-non-compliant --colorscheme '*' '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'note verify --show-non-compliant --colorscheme '*' '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'note verify --colorscheme '*' --show-non-compliant')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur")
       ;;
 
-    'note verify --show-non-compliant --colorscheme '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
+    'note verify --show-non-compliant --colorscheme '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done) applied")" -- "$cur")
       ;;
 
     'note verify --show-non-compliant --colorscheme'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur")
       ;;
 
-    'solution verify --show-non-compliant '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution verify --show-non-compliant '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'service status'*'--non-compliance-check')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'solution verify --show-non-compliant'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--colorscheme $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--colorscheme $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')")" -- "$cur")
       ;;
 
     'daemon status --non-compliance-check'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'note verify --show-non-compliant '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'note verify --show-non-compliant '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution verify --colorscheme '*' '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution verify --colorscheme '*' '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'note verify --show-non-compliant'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--colorscheme $(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--colorscheme $(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done) applied")" -- "$cur")
       ;;
 
-    'solution verify --colorscheme '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--show-non-compliant $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')")" -- "$cur" )
-      ;;
-
-    'note verify --colorscheme '*' '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'status --non-compliance-check'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution verify --colorscheme '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--show-non-compliant $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')")" -- "$cur")
       ;;
 
     'staging release --dry-run all'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'configure SKIP_SYSCTL_FILES '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'status --non-compliance-check'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'solution verify --colorscheme'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur")
       ;;
 
-    'note verify --colorscheme '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--show-non-compliant $(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
+    'note verify --colorscheme '*' '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'configure SKIP_SYSCTL_FILES'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'staging release --force all'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note verify --colorscheme '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--show-non-compliant $(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done) applied")" -- "$cur")
       ;;
 
     'staging release --dry-run'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur")
+      ;;
+
+    'configure IGNORE_RELOAD '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'note verify --colorscheme'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur")
       ;;
 
-    'solution change --force '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution change --force '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution change --force'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
+    'configure COLOR_SCHEME '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'configure IGNORE_RELOAD'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "yes no")" -- "$cur")
       ;;
 
     'staging release --force'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur")
       ;;
 
-    'solution customise '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution change --force'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
+      ;;
+
+    'configure TrentoASDP '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'configure COLOR_SCHEME'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur")
       ;;
 
     'staging analysis all'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'solution customise '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'configure TrentoASDP'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "300 600 900 1800 3600")" -- "$cur")
       ;;
 
     'service disablestop'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'service enablestart'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'solution simulate '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'staging release all'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution simulate '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'solution customise'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
-      ;;
-
-    'staging analysis '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ')")" -- "$cur" )
+    'staging analysis '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ')")" -- "$cur")
       ;;
 
     'staging is-enabled'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution create '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution customise'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
       ;;
 
-    'solution revert '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'configure DEBUG '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution verify '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution create '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'staging release '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ')")" -- "$cur")
+      ;;
+
+    'solution delete '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'solution verify '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'solution revert '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'solution simulate'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
       ;;
 
-    'solution rename '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution change '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution change '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution rename '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution delete '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'staging release '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ')")" -- "$cur" )
-      ;;
-
-    'note customise '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'solution applied'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution apply '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'solution enabled'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'service takeover'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'note customise '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'staging diff all'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'staging analysis'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur")
       ;;
 
-    'solution apply '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'service takeover'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'note simulate '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution applied'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution show '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'solution rename'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
-      ;;
-
-    'solution verify'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--colorscheme --show-non-compliant $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')")" -- "$cur" )
-      ;;
-
-    'solution edit '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'solution create'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'service disable'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'service restart'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution show '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'solution revert'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(saptune solution applied | sed 's/(partial)//g')")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(saptune solution applied 2> /dev/null | egrep -v -e '^[[:space:]]*$' -e '^(WARNING|NOTICE|INFO|DEBUG)' | sed 's/(partial)//g')")" -- "$cur")
       ;;
 
-    'staging release'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--force --dry-run $(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur" )
-      ;;
-
-    'solution change'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--force $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')")" -- "$cur" )
-      ;;
-
-    'staging disable'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution edit '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'solution delete'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
       ;;
 
-    'solution apply'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
+    'solution change'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--force $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')")" -- "$cur")
       ;;
 
-    'staging diff '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ')")" -- "$cur" )
+    'solution verify'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--colorscheme --show-non-compliant $(find /var/lib/saptune/working/sols/ /etc/saptune/extra/ -name '*.sol' -printf '%P ' | sed 's/\.sol//g')")" -- "$cur")
       ;;
 
-    'note customise'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
+    'solution rename'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
       ;;
 
-    'note revertall'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'staging disable'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'service status'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--non-compliance-check $()")" -- "$cur" )
+    'staging release'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--force --dry-run $(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur")
+      ;;
+
+    'configure DEBUG'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "on off")" -- "$cur")
+      ;;
+
+    'configure reset'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'refresh applied'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'service restart'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'solution create'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'service disable'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note simulate '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'service enable'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'staging status'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'service status'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--non-compliance-check $()")" -- "$cur")
+      ;;
+
+    'verify applied'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note revertall'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'staging diff '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ')")" -- "$cur")
       ;;
 
     'staging enable'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution list'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'staging status'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'note rename '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'note customise'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur")
       ;;
 
-    'note verify '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'note refresh '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'note delete '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution apply'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
       ;;
 
-    'note create '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'note revert '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'note simulate'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
-      ;;
-
-    'solution edit'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
-      ;;
-
-    'service start'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'configure show'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'daemon status'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--non-compliance-check $()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--non-compliance-check $()")" -- "$cur")
+      ;;
+
+    'note simulate'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur")
+      ;;
+
+    'note rename '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note verify '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'service start'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note create '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'solution list'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note revert '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'solution show'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
       ;;
 
-    'note apply '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'solution edit'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
+      ;;
+
+    'note delete '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'note enabled'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'note applied'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'daemon start'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'service stop'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'staging list'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'note refresh'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done) applied")" -- "$cur")
       ;;
 
     'staging diff'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur")
+      ;;
+
+    'staging list'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note apply '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'daemon start'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'note rename'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
-      ;;
-
-    'note verify'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--colorscheme --show-non-compliant $(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
-      ;;
-
-    'note delete'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
-      ;;
-
-    'note show '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'note edit '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'note create'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
-      ;;
-
-    'note revert'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(saptune note applied)")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur")
       ;;
 
     'daemon stop'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note verify'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--colorscheme --show-non-compliant $(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done) applied")" -- "$cur")
+      ;;
+
+    'note create'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note edit '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note revert'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(saptune note applied 2> /dev/null | egrep -v -e '^[[:space:]]*$' -e '^(WARNING|NOTICE|INFO|DEBUG)' )")" -- "$cur")
+      ;;
+
+    'note show '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note delete'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur")
       ;;
 
     'lock remove'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'note apply'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
+    '--format '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--force-color --fun help version status daemon service note solution staging revert lock check verify configure refresh")" -- "$cur")
       ;;
 
     'revert all'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    '--format '*'')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "help version status daemon service note solution staging revert lock check")" -- "$cur" )
-      ;;
-
-    'note edit'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
-      ;;
-
-    'note list'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+    'note apply'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur")
       ;;
 
     'note show'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(ls /var/lib/saptune/working/notes/) $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur")
+      ;;
+
+    'configure'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "reset show COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP")" -- "$cur")
+      ;;
+
+    'note list'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'note edit'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)")" -- "$cur")
       ;;
 
     'solution'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "list enabled applied apply simulate customise create edit revert show delete change verify rename")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "list enabled applied apply simulate customise create edit revert show delete change verify rename")" -- "$cur")
       ;;
 
     '--format'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "json")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "json")" -- "$cur")
       ;;
 
-    'staging'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "status enable disable is-enabled list diff analysis release")" -- "$cur" )
-      ;;
-
-    'service'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "start stop restart takeover enable disable enablestart disablestop status")" -- "$cur" )
+    'refresh'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "applied")" -- "$cur")
       ;;
 
     'version'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'status'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--non-compliance-check $()")" -- "$cur" )
+    'staging'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "status enable disable is-enabled list diff analysis release")" -- "$cur")
+      ;;
+
+    'service'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "start stop restart takeover enable disable enablestart disablestop status")" -- "$cur")
       ;;
 
     'daemon'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "start stop status")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "start stop status")" -- "$cur")
+      ;;
+
+    'status'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--non-compliance-check $()")" -- "$cur")
+      ;;
+
+    'verify'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "applied")" -- "$cur")
       ;;
 
     'revert'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "all")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "all")" -- "$cur")
       ;;
 
     'check'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'note'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "list revertall enabled applied apply simulate customise create edit revert show delete verify rename")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "list revertall enabled applied apply simulate customise create edit revert show delete verify rename refresh")" -- "$cur")
       ;;
 
     'help'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "$()")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'lock'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "remove")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "remove")" -- "$cur")
       ;;
 
     *)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_saptune_completions_filter "--format help version status daemon service note solution staging revert lock check")" -- "$cur" )
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "--format --force-color --fun help version status daemon service note solution staging revert lock check verify configure refresh")" -- "$cur")
       ;;
 
   esac
 } &&
-complete -F _saptune_completions saptune
+  complete -F _saptune_completions saptune
 
 # ex: filetype=sh

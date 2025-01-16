@@ -170,8 +170,14 @@ func callSaptuneCheckScript(arg string) {
 			cmdOut, err = exec.Command(saptcheck, "--json").CombinedOutput()
 			system.Jcollect(cmdOut)
 		} else {
-			// call external scrip saptune_check
-			cmd := exec.Command(saptcheck)
+			var cmd *exec.Cmd
+			// call external script saptune_check
+			if system.IsFlagSet("force-color") {
+				// call saptune_check unbuffered
+				cmd = exec.Command("unbuffer", saptcheck)
+			} else {
+				cmd = exec.Command(saptcheck)
+			}
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -263,6 +269,11 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 	if stageVal != "true" && stageVal != "false" {
 		fmt.Fprintf(writer, "Error: Variable 'STAGING' from file '%s' contains a wrong value '%s'. Needs to be 'true' or 'false'\n", saptuneConf, stageVal)
 		system.ErrorExit("", 128)
+	}
+
+	// check saptune-discovery-period of the Trento Agent
+	if sconf.IsKeyAvail("TrentoASDP") {
+		_ = system.CheckAndSetTrento("TrentoASDP", sconf.GetString("TrentoASDP", ""), false)
 	}
 
 	// set values read from the config file

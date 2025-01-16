@@ -5,7 +5,7 @@
 VERSION=16
 DATE=06.02.2020
 DESCRIPTION=Linux paging improvements
-REFERENCES=https://launchpad.support.sap.com/#/notes/1557506
+REFERENCES=https://me.sap.com/notes/1557506
 
 [pagecache]
 ## Type:    yesno

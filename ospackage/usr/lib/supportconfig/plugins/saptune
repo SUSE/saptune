@@ -3,9 +3,11 @@ set -u
 
 # supportconfig plugin for saptune.
 #
-# v1.0
+# v3.0
 #
-# July 2021    v1.0    first release
+# July 2021     v1.0    first release
+# August 2023   v2.0    3.1
+# December 2024 v3.0    3.2
 
 function display_package_info() {
     echo -e "\n#==[ Command ]======================================#"
@@ -99,6 +101,7 @@ function display_log() {
 
 # ---- Main ----
 display_cmd saptune_check
+display_cmd saptune_check --json
 display_package_info tuned
 display_file_stat /usr/lib/tuned/functions
 display_systemd_status tuned
@@ -116,7 +119,14 @@ display_file /etc/sysconfig/saptune
 display_systemd_status saptune.service
 display_systemd_cat saptune.service
 display_cmd saptune status
+display_cmd saptune --format json status
 display_cmd saptune note verify
+display_cmd saptune --format json note verify
+display_cmd saptune note list
+display_cmd saptune --format json note list
+display_cmd saptune solution list
+display_cmd saptune --format json solution list
+display_cmd saptune --format json check
 
 display_ls /etc/saptune/extra
 display_ls /etc/saptune/override

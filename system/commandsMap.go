@@ -57,6 +57,7 @@ var defaultCommand = map[string]bool{
 	"configure SKIP_SYSCTL_FILES": false,
 	"configure IGNORE_RELOAD":     false,
 	"configure DEBUG":             false,
+	"configure TrentoASDP":        false,
 	"configure reset":             false,
 	"configure show":              false,
 	"verify applied":              false,
@@ -140,6 +141,7 @@ func lockCommandsMap() map[string]bool {
 	lockCommand["staging analysis"] = true
 	lockCommand["staging release"] = true
 	lockCommand["configure reset"] = true
+	lockCommand["configure TrentoASDP"] = true
 	lockCommand["revert all"] = true
 
 	return lockCommand

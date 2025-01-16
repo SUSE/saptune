@@ -69,9 +69,8 @@ func IfdefVers() int {
 func SaptuneConfigFile() string {
 	if IfdefVers() > 15 {
 		return "/var/lib/saptune/config/saptune"
-	} else {
-		return "/etc/sysconfig/saptune"
 	}
+	return "/etc/sysconfig/saptune"
 }
 
 // SaptuneConfigTemplate returns the name of the template file for the
@@ -81,12 +80,11 @@ func SaptuneConfigFile() string {
 func SaptuneConfigTemplate() string {
 	if IfdefVers() > 15 {
 		return "/usr/share/saptune/saptuneTemplate.conf"
-	} else {
-		if _, err := os.Stat("/var/adm/fillup-templates/sysconfig.saptune"); err == nil {
-			return "/var/adm/fillup-templates/sysconfig.saptune"
-		}
-		return "/usr/share/fillup-templates/sysconfig.saptune"
 	}
+	if _, err := os.Stat("/var/adm/fillup-templates/sysconfig.saptune"); err == nil {
+		return "/var/adm/fillup-templates/sysconfig.saptune"
+	}
+	return "/usr/share/fillup-templates/sysconfig.saptune"
 }
 
 // IsUserRoot return true only if the current user is root.

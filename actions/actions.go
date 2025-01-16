@@ -42,6 +42,9 @@ var OverrideTuningSheets = "/etc/saptune/override/"
 // ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
 var ExtraTuningSheets = "/etc/saptune/extra/"
 
+// DeprecationSheets s the directory for the deprecated Notes and Solutions
+var DeprecationSheets = "/usr/share/saptune/deprecated/"
+
 // SolutionSheets is the working directory of available sap solutions
 var SolutionSheets = "/var/lib/saptune/working/sols/"
 
@@ -300,45 +303,46 @@ func switchOffColor() {
 func cmdLineSyntax() string {
 	return `saptune: Comprehensive system optimisation management for SAP solutions.
 Daemon control:
-  saptune [--format FORMAT] [--force-color] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
-  saptune [--format FORMAT] [--force-color] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
+  saptune [--format FORMAT] [--force-color] [--fun] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
+  saptune [--format FORMAT] [--force-color] [--fun] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 Tune system according to SAP and SUSE notes:
-  saptune [--format FORMAT] [--force-color] note ( list | verify | revertall | enabled | applied )
-  saptune [--format FORMAT] [--force-color] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+  saptune [--format FORMAT] [--force-color] [--fun] note ( list | verify | revertall | enabled | applied )
+  saptune [--format FORMAT] [--force-color] [--fun] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
   saptune [--format FORMAT] [--force-color] [--fun] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
-  saptune [--format FORMAT] [--force-color] note rename NOTEID NEWNOTEID
+  saptune [--format FORMAT] [--force-color] [--fun] note rename NOTEID NEWNOTEID
 Tune system for all notes applicable to your SAP solution:
-  saptune [--format FORMAT] [--force-color] solution ( list | verify | enabled | applied )
-  saptune [--format FORMAT] [--force-color] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
-  saptune [--format FORMAT] [--force-color] solution change [--force] SOLUTIONNAME
+  saptune [--format FORMAT] [--force-color] [--fun] solution ( list | verify | enabled | applied )
+  saptune [--format FORMAT] [--force-color] [--fun] solution ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
+  saptune [--format FORMAT] [--force-color] [--fun] solution change [--force] SOLUTIONNAME
   saptune [--format FORMAT] [--force-color] [--fun] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
-  saptune [--format FORMAT] [--force-color] solution rename SOLUTIONNAME NEWSOLUTIONNAME
+  saptune [--format FORMAT] [--force-color] [--fun] solution rename SOLUTIONNAME NEWSOLUTIONNAME
 Staging control:
-   saptune [--format FORMAT] [--force-color] staging ( status | enable | disable | is-enabled | list )
-   saptune [--format FORMAT] [--force-color] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME )... | all ]
-   saptune [--format FORMAT] [--force-color] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME )... | all ]
+   saptune [--format FORMAT] [--force-color] [--fun] staging ( status | enable | disable | is-enabled | list )
+   saptune [--format FORMAT] [--force-color] [--fun] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+   saptune [--format FORMAT] [--force-color] [--fun] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Config (re-)settings:
-  saptune [--format FORMAT] [--force-color] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG ) Value
-  saptune [--format FORMAT] [--force-color] configure ( reset | show )
+  saptune [--format FORMAT] [--force-color] [--fun] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP ) Value
+  saptune [--format FORMAT] [--force-color] [--fun] configure ( reset | show )
 Verify all applied Notes:
-  saptune [--format FORMAT] [--force-color] verify applied
+  saptune [--format FORMAT] [--force-color] [--fun] verify applied
 Revert all parameters tuned by the SAP notes or solutions:
-  saptune [--format FORMAT] [--force-color] revert all
+  saptune [--format FORMAT] [--force-color] [--fun] revert all
 Remove the pending lock file from a former saptune call
-  saptune [--format FORMAT] [--force-color] lock remove
+  saptune [--format FORMAT] [--force-color] [--fun] lock remove
 Call external script '/usr/sbin/saptune_check'
-  saptune [--format FORMAT] [--force-color] check
+  saptune [--format FORMAT] [--force-color] [--fun] check
 Print current saptune status:
-  saptune [--format FORMAT] [--force-color] status [--non-compliance-check]
+  saptune [--format FORMAT] [--force-color] [--fun] status [--non-compliance-check]
 Print current saptune version:
-  saptune [--format FORMAT] [--force-color] version
+  saptune [--format FORMAT] [--force-color] [--fun] version
 Print this message:
-  saptune [--format FORMAT] [--force-color] help
+  saptune [--format FORMAT] [--force-color] [--fun] help
 
 Deprecation list:
   all 'saptune daemon' actions
   'saptune note simulate'
   'saptune solution simulate'
+  'Solution SAP-ASE.sol and related Note 1680803'
 `
 }
 
