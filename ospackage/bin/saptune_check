@@ -37,8 +37,9 @@
 # 03.04.2023  v0.3.1    removed error regarding tuned sapconf profile (TEAM-7529)
 # 28.08.2024  v0.4      a little rework and added JSON support (TEAM-8959)
 # 31.10.2024  v0.4.1    added --force-color to support forced colored output by saptune
+# 16.01.2025  v0.4.2    a failed sapconf.service causes just a warning an remediation is now correct
 
-declare -r VERSION="0.4.1"
+declare -r VERSION="0.4.2"
 
 # We use these global arrays through out the program:
 #
@@ -811,7 +812,7 @@ function file_check() {
         fi
     done 
 
-    # Print a warning and recommend a deletion, if sapconf is not intalled and we found some files.
+    # Print a warning and recommend a deletion, if sapconf is not installed and we found some files.
     if [ -z ${package_version['sapconf']} ] ; then
         for ((i=0;i<${#sapconf_leftovers[@]};i++)) ; do
             if [ -e "${sapconf_leftovers[i]}" ] ; then 
@@ -934,6 +935,12 @@ function check_saptune() {
                 msg="sapconf.service is inactive"
                 print_ok "${msg}"
                 add_message_json OK "${msg}" 
+                ;;
+            failed)
+                msg="sapconf.service is failed"
+                remediation="Run 'systemctl reset-failed sapconf.service', but investigate cause!"
+                print_warn "${msg}" "${remediation}"  
+                add_message_json WARN "${msg}" "${remediation}"  
                 ;;
             *)
                 msg="sapconf.service is ${unit_state_active['sapconf.service']}"
