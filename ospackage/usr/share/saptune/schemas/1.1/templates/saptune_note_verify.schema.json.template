@@ -1,6 +1,6 @@
 {% extends "common.schema.json.template" %}
 
-{% block command %}saptune note verify|saptune solution verify{% endblock %}
+{% block command %}saptune note verify|saptune solution verify|saptune verify applied{% endblock %}
 
 {% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
 

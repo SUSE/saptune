@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Builds schema definitions in ../ from all templates in this directory.
-It will resolv all references and remove the $defs section before writing
+It will resolve all references and remove the $defs section before writing
 the final json schema.
 Existing files get overwritten!
 
