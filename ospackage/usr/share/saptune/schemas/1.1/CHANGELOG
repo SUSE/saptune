@@ -1,0 +1,22 @@
+Changes from 1.0 to 1.1:
+
+- new link in `templates/`: `saptune_verify_applied.schema.json.template -> saptune_note_verify.schema.json.template` to support the newly introduced command
+
+- newly introduced commands without JSON output get their templates and schemas by `generate_unsupported.sh`
+    - `saptune note refresh`: `saptune_note_refresh.schema.json.template` -> `saptune_note_refresh.schema.json`
+    - `saptune configure`: `saptune_configure.schema.json.template` -> `saptune_configure.schema.json`
+    - `saptune configure show`: `saptune_configure_show.schema.json.template` -> `saptune_configure_show.schema.json`
+    - `saptune configure reset`: `saptune_configure_reset.schema.json.template` -> `saptune_configure_reset.schema.json`
+    - `saptune refresh applied`: `saptune_refresh_applied.schema.json.template` -> `saptune_refresh_applied.schema.json`
+
+- /templates/saptune_status.schema.json.template: added changes and generated schema file ...
+    - Rephrased saptune package version to include underscore as extension as well.
+    - new entry `orphaned Overrides` as list filenames of Notes and Solutions (`.sol` suffix)
+
+- templates/saptune_check.schema.json.template: newly implemented
+
+- templates/common.schema.json.template: Rephrased description of "systemd state". Missing package results in an empty array and the order of "systemd state is-enabled" and "systemd state is-active" is fixed.
+
+- templates/saptune_note_list.schema.json.template: added new attribute `Note deprecated`
+
+- first implementation of `examples/mk_examples` to create examples and `examples/validate_examples` to check them

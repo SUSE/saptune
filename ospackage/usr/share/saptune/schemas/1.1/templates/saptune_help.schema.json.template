@@ -1,0 +1,15 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune help{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["implemented"]{% endblock %}
+
+{% block result_properties %}
+                "implemented": {
+                    "description": "Indicates that JSON output has not yet been implemented yet.",
+                    "type": "boolean",
+                    "enum": [false]
+                }            
+{% endblock %}

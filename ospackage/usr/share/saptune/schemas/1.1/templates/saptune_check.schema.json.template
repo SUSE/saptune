@@ -1,0 +1,45 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune check{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["messages", "warnings", "errors"]{% endblock %}
+
+{% block result_properties %}
+                "messages": {
+                    "description": "List of check messages.",
+                    "type": "array",
+                    "items": {
+                        "description": "A single message.",
+                        "type": "object",
+                        "required": ["type", "text"],
+                        "additionalProperties": false,
+                        "properties": {
+                            "type": {
+                                "description": "Type of the message.",
+                                "type": "string",
+                                "enum": ["OK", "WARN", "FAIL", "NOTE"]
+                            },
+                            "text": {
+                                "description": "Text describing the check.",
+                                "type": "string"
+                            },
+                            "remediation": {
+                                "description": "Text describing how to fix the problem.",
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "warnings": {
+                    "description": "Number of warnings.",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "errors": {
+                    "description": "Number of errors.",
+                    "type": "integer",
+                    "minimum": 0
+                }               
+{% endblock %}
