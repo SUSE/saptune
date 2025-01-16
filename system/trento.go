@@ -49,7 +49,7 @@ func CheckAndSetTrento(entry, val string, change bool) error {
 			} else {
 				// logging not initialised
 				fmt.Fprintf(os.Stderr, "WARNING: Value '%s' of entry '%s' in Trento config file '%s' differs from the value configured with saptune ('%s'). Please check.\n", value, param, trentoFile, val)
-			}	
+			}
 		}
 		if value != "" && change {
 			// entry available in config file but value differs
@@ -60,7 +60,7 @@ func CheckAndSetTrento(entry, val string, change bool) error {
 		if value == "" && change {
 			InfoLog("Entry '%s' not yet available in Trento config file '%s'. Adding entry with value '%s'....", param, trentoFile, val)
 			// entry not found in config file, append with comment
-			err = appendEntry(trentoFile, param + " " + val, comment)
+			err = appendEntry(trentoFile, param+" "+val, comment)
 		}
 	}
 	return err
@@ -78,8 +78,8 @@ func checkForValidValue(value string, logSwitch bool) error {
 		WarningLog(errorTXT, value)
 	} else {
 		// logging not initialised
-		fmt.Fprintf(os.Stderr, "WARNING: " + errorTXT + "\n", value)
-	}	
+		fmt.Fprintf(os.Stderr, "WARNING: "+errorTXT+"\n", value)
+	}
 	return fmt.Errorf(errorTXT, value)
 }
 

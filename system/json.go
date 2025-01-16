@@ -357,8 +357,7 @@ func realmAndCmd() string {
 func racIsSupported(rac string) bool {
 	if _, ok := supportedRAC[rac]; !ok {
 		// rac not a valid combination
-		// return true to let PrintHelpAndExit later do it's job
-		return true
+		JInvalid(1)
 	}
 	return supportedRAC[rac]
 }

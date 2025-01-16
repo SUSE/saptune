@@ -127,7 +127,17 @@ processor.max_cstate=1
 # Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl]
 numa_balancing=disable
 # Disable transparent hugepages - see THP in section [vm]
+# recommended for systems <=15SP4
 transparent_hugepage=never
+
+# Configure transparent hugepages (THP)
+# recommended for systems >=15SP5
+[grub:os=15-SP5:arch=x86_64]
+transparent_hugepage=madvise
+[grub:os=15-SP6:arch=x86_64]
+transparent_hugepage=madvise
+[grub:os=15-SP7:arch=x86_64]
+transparent_hugepage=madvise
 
 [filesystem:os=15-SP2]
 xfs_options= -nobarrier, -barrier
