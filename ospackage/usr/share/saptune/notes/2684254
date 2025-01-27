@@ -129,6 +129,14 @@ numa_balancing=disable
 # Disable transparent hugepages - see THP in section [vm]
 transparent_hugepage=never
 
+[grub:os=15-SP5:arch=x86_64]
+# Configure transparent hugepages (THP)
+transparent_hugepage=madvise
+[grub:os=15-SP6:arch=x86_64]
+transparent_hugepage=madvise
+[grub:os=15-SP7:arch=x86_64]
+transparent_hugepage=madvise
+
 [filesystem:os=15-SP2]
 xfs_options= -nobarrier, -barrier
 

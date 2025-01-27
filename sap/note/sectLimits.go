@@ -34,7 +34,7 @@ func GetLimitsVal(value string) (string, string, error) {
 		secLimits, err := system.ParseSecLimitsFile(dropInFile)
 		if err != nil {
 			//ANGI TODO - check, if other files in /etc/security/limits.d contain a value for the touple "<domain>-<item>-<type>"
-			return "", info, err
+			return "NA", info, err
 		}
 		lim[3], _ = secLimits.Get(lim[0], lim[1], lim[2])
 		if lim[3] == "" {
