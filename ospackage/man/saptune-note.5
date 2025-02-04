@@ -1,5 +1,5 @@
 .\"/* 
-.\" * Copyright (c) 2018-2024 SUSE LLC.
+.\" * Copyright (c) 2018-2025 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Angela Briel
 .\" *
@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "November 2024" "" "saptune note file format description"
+.TH "saptune-note" "5" "February 2025" "" "saptune note file format description"
 .SH NAME
 saptune\-note - Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
@@ -267,7 +267,7 @@ The following rules apply for \fBvalid\fP devices:
 .IP \[bu]
 all multipath devices (dm-*, if mpath-, but not LVM- or other dm-)
 .IP \[bu]
-all physical disks (indicated by device/type=0 or names like nvme*, vd*)
+all physical disks (indicated by device/type=0 or names like nvme*, vd*; for nvme* devices additional check for existence of file 'queue/scheduler' and 'queue/nr_requests')
 .br
 \fBexcept\fP they are part of a device mapper construct (like mpath-).
 .RE
