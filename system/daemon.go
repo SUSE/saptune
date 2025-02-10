@@ -190,6 +190,16 @@ func SystemctlIsActive(thing string) (string, error) {
 	return strings.TrimSpace(string(out)), err
 }
 
+// SystemctlDaemonReload calls 'systemctl daemon-reload'
+func SystemctlDaemonReload() error {
+	out, err := exec.Command(systemctlCmd, "daemon-reload").CombinedOutput()
+	DebugLog("SystemctlDaemonReload - /usr/bin/systemctl daemon-reload : '%+v %s'", err, strings.TrimSpace(string(out)))
+	if err != nil {
+		ErrorLog("%v - Failed to call systemctl daemon-reload", err)
+	}
+	return err
+}
+
 // GetSystemState returns the output of 'systemctl is-system-running'
 func GetSystemState() (string, error) {
 	retval := ""
