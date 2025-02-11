@@ -86,6 +86,9 @@ func main() {
 	// additional clear ignore flag for the sapconf/saptune service deadlock
 	os.Remove("/run/.saptune.ignore")
 
+	// check saptune service drop-in (azure only)
+	checkSaptuneServiceDropIn()
+
 	//check, running config exists
 	checkWorkingArea()
 
@@ -170,6 +173,37 @@ func callSaptuneCheckScript(arg string) {
 		} else {
 			system.ErrorExit("", 0)
 		}
+	}
+}
+
+// checkSaptuneServiceDropIn checks on Azure cloud if saptune service drop-in
+// is available
+// if not, create the needed directories, the file and make it visible
+func checkSaptuneServiceDropIn() {
+	if system.GetCSP() != "azure" {
+		// not on azure cloude, nothing to do
+		return
+	}
+	saptuneServiceDir := "/etc/systemd/system/saptune.service.d"
+	saptuneServiceDropIn := fmt.Sprintf("%s/%s", saptuneServiceDir, "10-after_cloud-init.conf")
+	if _, err := os.Stat(saptuneServiceDropIn); err == nil {
+		// file exists, nothing to do
+		return
+	}
+	system.NoticeLog("creating saptune service drop-in file...")
+	if err := os.MkdirAll(saptuneServiceDir, 0755); err != nil {
+		system.ErrorLog("can not create directory '%s', so writing saptune service drop-in file '%s' will not work!", saptuneServiceDir, saptuneServiceDropIn)
+		return
+	}
+	dropInContent := fmt.Sprintf("[Unit]\nAfter=cloud-final.service\n")
+	if err := os.WriteFile(saptuneServiceDropIn, []byte(dropInContent), 0644); err == nil {
+		system.NoticeLog("file '%s' successfully created!", saptuneServiceDropIn)
+		// make drop-in visible for systemd
+		// errors are reported by the function, no need to react here
+		// is handled during next reboot
+		_ = system.SystemctlDaemonReload()
+	} else {
+		system.ErrorLog("can not write saptune service drop-in file '%s' - %v", saptuneServiceDropIn, err)
 	}
 }
 
