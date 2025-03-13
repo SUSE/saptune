@@ -179,7 +179,7 @@ func TestStoreParameter(t *testing.T) {
 		Value:  "TestAddValue1",
 	}
 	paramList.AllNotes = append(paramList.AllNotes, param)
-	err := StoreParameter("TEST_PARAMETER_1", paramList, true)
+	err := paramList.StoreParameter("TEST_PARAMETER_1", true)
 	if err != nil {
 		CleanUpParamFile("TEST_PARAMETER_1")
 		t.Errorf("failed to store values for parameter '%s' in file: '%+v'\n", "TEST_PARAMETER_1", paramList)
