@@ -341,3 +341,14 @@ func cmpFieldValue(fNo int, fieldName string, actNote, expNote reflect.Value) Fi
 	}
 	return fieldComparison
 }
+
+// GetVendInfo reads content of stored vend information.
+func GetVendInfo(initype, ID string) (Note, error) {
+	var vendConf INISettings
+	vendFileName := fmt.Sprintf("%s/%s_%s.run", system.SaptuneSectionDir, initype, ID)
+	content, err := system.ReadConfigFile(vendFileName, false)
+	if err == nil && len(content) != 0 {
+		err = json.Unmarshal(content, &vendConf)
+	}
+	return vendConf, err
+}

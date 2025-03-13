@@ -36,6 +36,8 @@ func NoteAction(writer io.Writer, actionName, noteID, newNoteID string, tuneApp 
 		NoteActionShow(writer, noteID, tuneApp)
 	case "delete":
 		NoteActionDelete(os.Stdin, writer, noteID, tuneApp)
+	case "refresh":
+		NoteActionRefresh(writer, noteID, tuneApp)
 	case "rename":
 		NoteActionRename(os.Stdin, writer, noteID, newNoteID, tuneApp)
 	case "revert":
@@ -480,4 +482,32 @@ func NoteActionApplied(writer io.Writer, tuneApp *app.App) {
 	notesApplied := tuneApp.AppliedNotes()
 	fmt.Fprintf(writer, "%s", notesApplied)
 	system.Jcollect(strings.Split(notesApplied, " "))
+}
+
+// NoteActionRefresh re-applies Note parameter settings to the system
+// if an already applied Note got changed.
+func NoteActionRefresh(writer io.Writer, noteID string, tuneApp *app.App) {
+	errCount := 0
+	noteList := make([]string, 0)
+	if noteID == "" || noteID == "applied" {
+		if len(tuneApp.NoteApplyOrder) == 0 {
+			system.NoticeLog("No notes enabled, nothing to refresh.\n")
+			system.ErrorExit("", 0)
+		}
+		noteList = tuneApp.NoteApplyOrder
+	} else {
+		noteList = append(noteList, noteID)
+	}
+	for _, note := range noteList {
+		if err := tuneApp.RefreshNote(note); err != nil {
+			errCount++
+			system.ErrorLog("Failed to refresh tuning for note '%s': %v", note, err)
+		} else {
+			system.NoticeLog("The note '%s' has been refreshed successfully.\n", note)
+		}
+	}
+	if errCount != 0 {
+		system.ErrorExit("At least the refresh of the tuning of one Notes was not successful. Please check.", 1)
+	}
+	rememberMessage(writer)
 }

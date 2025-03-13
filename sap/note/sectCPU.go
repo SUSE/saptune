@@ -95,7 +95,7 @@ func SetCPUVal(key, value, noteID, savedStates, oval string, revert bool) error 
 				// the 'force_latency' value and the related
 				// cpu state values
 				_, flstates, _ = system.GetFLInfo()
-				AddParameterNoteValues("fl_states", flstates, noteID)
+				AddParameterNoteValues("fl_states", flstates, noteID, "add")
 			}
 		}
 	case "energy_perf_bias":

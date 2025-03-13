@@ -257,10 +257,14 @@ func (vend INISettings) Optimise() (Note, error) {
 	if _, ok := vend.ValuesToApply["verify"]; !ok {
 		// this code section was moved from function 'Apply'
 		err = txtparser.StoreSectionInfo(ini, "section", vend.ID, true)
-		if err != nil {
-			system.ErrorLog("Problems during storing of section information")
-			return vend, err
-		}
+	} else {
+		// write vend data to runtime file, if in 'verify' to support
+		// 'refresh'
+		err = txtparser.StoreSectionInfo(vend, "vend", vend.ID, true)
+	}
+	if err != nil {
+		system.ErrorLog("Problems during storing of section information")
+		return vend, err
 	}
 	return vend, nil
 }
@@ -288,6 +292,13 @@ func (vend INISettings) Apply() error {
 		if err != nil {
 			return err
 		}
+	}
+	// for refresh to support deleted parameter
+	// edge case - last note in parameter file, so apply is needed
+	// del-run file will be removed after reading
+	del, err := txtparser.GetSectionInfo("del", vend.ID, false)
+	if err == nil {
+		ini.AllValues = append(ini.AllValues, del.AllValues...)
 	}
 
 	for _, param := range ini.AllValues {
@@ -372,8 +383,7 @@ func (vend INISettings) getCounterPart(key string, revert bool) (string, string)
 	// vm.dirty_background_ratio is set to 0 and vice versa
 	// if vm.dirty_bytes is set to a value != 0,
 	// vm.dirty_ratio is set to 0 and vice versa
-	rkey := key
-	rval := vend.SysctlParams[key]
+	val := vend.SysctlParams[key]
 	cpart := "" //counterpart parameter
 	switch key {
 	case "vm.dirty_background_bytes":
@@ -389,10 +399,10 @@ func (vend INISettings) getCounterPart(key string, revert bool) (string, string)
 	// check, if the saved counterpart value is != 0
 	// then revert this value
 	if revert && cpart != "" && vend.SysctlParams[cpart] != "0" {
-		rkey = cpart
-		rval = vend.SysctlParams[cpart]
+		key = cpart
+		val = vend.SysctlParams[cpart]
 	}
-	return rkey, rval
+	return key, val
 }
 
 // setRevertParamValues sets the parameter values for revert
@@ -403,6 +413,7 @@ func (vend INISettings) setRevertParamValues(key string) (string, string) {
 	if pvendID == "" {
 		pvendID = vend.ID
 	}
+	// if pvalue != "_undef_"
 	if pvalue != "" {
 		vend.SysctlParams[key] = pvalue
 	}
@@ -414,8 +425,11 @@ func (vend INISettings) setRevertParamValues(key string) (string, string) {
 
 // createParamSavedStates creates the parameter saved state file
 func (vend INISettings) createParamSavedStates(key, flstates string) {
-	// do not write parameter values to the saved state file during
+	// Do not write parameter values to the saved state file during
 	// a pure 'verify' action
+	// Do not check for 'empty' value as the start/system value can be
+	// empty for some parameter in /sys filesystem and we need to create
+	// the parameter file in these cases
 	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "PNA" {
 		start := vend.SysctlParams[key]
 		if key == "UserTasksMax" {
@@ -435,10 +449,13 @@ func (vend INISettings) createParamSavedStates(key, flstates string) {
 
 // addParamSavedStates adds values to the parameter saved state file
 func (vend INISettings) addParamSavedStates(key string) {
-	// do not write parameter values to the saved state file during
+	// Do not write parameter values to the saved state file during
 	// a pure 'verify' action
-	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "PNA" {
-		AddParameterNoteValues(key, vend.SysctlParams[key], vend.ID)
+	// Check for empty value is ok because an empty value in the note or
+	// override file means 'untouched' parameter. In this case the
+	// NoteID should not added to the parameter state file
+	if _, ok := vend.ValuesToApply["verify"]; !ok && (vend.SysctlParams[key] != "" && vend.SysctlParams[key] != "PNA") {
+		AddParameterNoteValues(key, vend.SysctlParams[key], vend.ID, "add")
 	}
 }
 
