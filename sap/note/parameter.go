@@ -5,6 +5,7 @@ import (
 	"github.com/SUSE/saptune/system"
 	"os"
 	"path"
+	"strconv"
 )
 
 // ParameterNoteEntry stores the parameter values set by a Note
@@ -24,17 +25,6 @@ type ParameterNotes struct {
 // GetPathToParameter returns path to the serialised parameter state file.
 func GetPathToParameter(param string) string {
 	return path.Join(system.SaptuneParameterStateDir, param)
-}
-
-// IDInParameterList checks, if given noteID is already part of the
-// parameter list of notes
-func IDInParameterList(noteID string, list []ParameterNoteEntry) bool {
-	for _, note := range list {
-		if note.NoteID == noteID {
-			return true
-		}
-	}
-	return false
 }
 
 // ListParams lists all stored parameter states. Return parameter names
@@ -59,10 +49,7 @@ func ListParams() (ret []string, err error) {
 // CreateParameterStartValues creates the parameter state file and inserts
 // the start values.
 func CreateParameterStartValues(param, value string) {
-	pEntries := ParameterNotes{
-		AllNotes: make([]ParameterNoteEntry, 0, 64),
-	}
-	pEntries = GetSavedParameterNotes(param)
+	pEntries := GetSavedParameterNotes(param)
 	if len(pEntries.AllNotes) == 0 {
 		system.DebugLog("Write parameter start value '%s' to file '%s'", value, GetPathToParameter(param))
 		// file does not exist, create start entry
@@ -71,7 +58,7 @@ func CreateParameterStartValues(param, value string) {
 			Value:  value,
 		}
 		pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
-		err := StoreParameter(param, pEntries, true)
+		err := pEntries.StoreParameter(param, true)
 		if err != nil {
 			system.WarningLog("Failed to store start values for parameter file '%s' for parameter '%s'", GetPathToParameter(param), param)
 		}
@@ -79,20 +66,55 @@ func CreateParameterStartValues(param, value string) {
 }
 
 // AddParameterNoteValues adds note parameter values to the state file.
-func AddParameterNoteValues(param, value, noteID string) {
-	pEntries := ParameterNotes{
-		AllNotes: make([]ParameterNoteEntry, 0, 64),
-	}
-	pEntries = GetSavedParameterNotes(param)
-	if len(pEntries.AllNotes) != 0 && !IDInParameterList(noteID, pEntries.AllNotes) {
+func AddParameterNoteValues(param, value, noteID, action string) {
+	pEntries := GetSavedParameterNotes(param)
+	if len(pEntries.AllNotes) != 0 {
+		// file exist
 		system.DebugLog("Write note '%s' parameter value '%s' to file '%s'", noteID, value, GetPathToParameter(param))
-		// file exis
 		pEntry := ParameterNoteEntry{
 			NoteID: noteID,
 			Value:  value,
 		}
-		pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
-		err := StoreParameter(param, pEntries, true)
+		if !pEntries.IDInParameterList(noteID) {
+			// noteID not yet available in file, add or insert
+			if action == "add" {
+				// append entry at the end of the file
+				// regular apply workflow
+				system.DebugLog("append note '%s' parameter value '%s'", noteID, value)
+				pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
+			} else {
+				// workflow needed by 'note refresh'
+				// action contains the index position to insert
+				// the new entry
+				system.DebugLog("insert note '%s' parameter value '%s' at position '%s'", noteID, value, action)
+				idx, _ := strconv.Atoi(action)
+				// ignore idx <= 0 (index cannot be less than 0
+				// and idx == 0 is the 'start' entry)
+				if idx >= len(pEntries.AllNotes) {
+					// append to the end
+					pEntries.AllNotes = append(pEntries.AllNotes, pEntry)
+				} else if idx > 0 {
+					// allocate space for new element
+					//pEntries.AllNotes = append(pEntries.AllNotes, 0)
+					// shift elements
+					//copy(pEntries.AllNotes[idx+1:], pEntries.AllNotes[idx:]
+					pEntries.AllNotes = append(pEntries.AllNotes[:idx+1], pEntries.AllNotes[idx:]...)
+					// insert at 'idx' position
+					pEntries.AllNotes[idx] = pEntry
+				}
+			}
+		} else {
+			// noteID available in file, change value
+			// workflow needed by 'note refresh'
+			system.DebugLog("change note '%s' parameter value '%s'", noteID, value)
+			idx := pEntries.PositionInParameterList(noteID)
+			// ignore idx == 0 (note ID not in file, no file or
+			// only 'start' in file)
+			if idx > 0 {
+				pEntries.AllNotes[idx] = pEntry
+			}
+		}
+		err := pEntries.StoreParameter(param, true)
 		if err != nil {
 			system.WarningLog("Failed to store note '%s' values for parameter file '%s' for parameter '%s'", noteID, GetPathToParameter(param), param)
 		}
@@ -120,14 +142,15 @@ func GetSavedParameterNotes(param string) ParameterNotes {
 func GetAllSavedParameters() map[string]ParameterNotes {
 	params := make(map[string]ParameterNotes)
 	allParams, err := ListParams()
-	if err == nil {
-		for _, param := range allParams {
-			pEntries := GetSavedParameterNotes(param)
-			if len(pEntries.AllNotes) == 0 {
-				return params
-			}
-			params[param] = pEntries
+	if err != nil {
+		return params
+	}
+	for _, param := range allParams {
+		pEntries := GetSavedParameterNotes(param)
+		if len(pEntries.AllNotes) == 0 {
+			continue
 		}
+		params[param] = pEntries
 	}
 	return params
 }
@@ -135,8 +158,8 @@ func GetAllSavedParameters() map[string]ParameterNotes {
 // StoreParameter stores parameter values to state directory
 // Write a json file with the name of the given parameter containing the
 // applied noteIDs for this parameter and the associated parameter values
-func StoreParameter(param string, obj ParameterNotes, overwriteExisting bool) error {
-	content, err := json.Marshal(obj)
+func (pent ParameterNotes) StoreParameter(param string, overwriteExisting bool) error {
+	content, err := json.Marshal(pent)
 	if err != nil {
 		return err
 	}
@@ -149,12 +172,23 @@ func StoreParameter(param string, obj ParameterNotes, overwriteExisting bool) er
 	return nil
 }
 
+// IDInParameterList checks, if given noteID is already part of the
+// parameter list of notes
+func (pent ParameterNotes) IDInParameterList(noteID string) bool {
+	for _, note := range pent.AllNotes {
+		if note.NoteID == noteID {
+			return true
+		}
+	}
+	return false
+}
+
 // PositionInParameterList gets the position in the slice AllNotes for a
 // given noteID
 // return the position of the note within the slice.
 // do not sort the slice
-func PositionInParameterList(noteID string, list []ParameterNoteEntry) int {
-	for cnt, note := range list {
+func (pent ParameterNotes) PositionInParameterList(noteID string) int {
+	for cnt, note := range pent.AllNotes {
 		if note.NoteID == noteID {
 			return cnt
 		}
@@ -168,11 +202,8 @@ func PositionInParameterList(noteID string, list []ParameterNoteEntry) int {
 func RevertParameter(param, noteID string) (string, string) {
 	pvalue := ""
 	pnoteID := ""
-	pEntries := ParameterNotes{
-		AllNotes: make([]ParameterNoteEntry, 0, 64),
-	}
 	// read values from the parameter state file
-	pEntries = GetSavedParameterNotes(param)
+	pEntries := GetSavedParameterNotes(param)
 	if len(pEntries.AllNotes) == 0 {
 		return pvalue, pnoteID
 	}
@@ -193,7 +224,7 @@ func RevertParameter(param, noteID string) (string, string) {
 		// if the requested noteID has no entry in the parameter file
 		// because an override file disabled the parameter setting
 		// prevent removal of start value by checking 'entry > 0'
-		entry := PositionInParameterList(noteID, pEntries.AllNotes)
+		entry := pEntries.PositionInParameterList(noteID)
 		if entry > 0 {
 			// the requested noteID is NOT the last one in AllNotes
 			pEntries.AllNotes = append(pEntries.AllNotes[0:entry], pEntries.AllNotes[entry+1:]...)
@@ -204,7 +235,7 @@ func RevertParameter(param, noteID string) (string, string) {
 		CleanUpParamFile(param)
 	} else {
 		//store changes pEntries
-		err := StoreParameter(param, pEntries, true)
+		err := pEntries.StoreParameter(param, true)
 		if err != nil {
 			system.WarningLog("Problems during storing new parameter values")
 		}

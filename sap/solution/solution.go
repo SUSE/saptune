@@ -5,6 +5,7 @@ Solutions are collections of relevant SAP notes, all of which are applicable to 
 */
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
@@ -324,4 +325,40 @@ func Refresh() {
 	CustomSolutions = GetOtherSolution(ExtraTuningSheets, NoteTuningSheets, ExtraTuningSheets)
 	OverrideSolutions = GetOtherSolution(OverrideSolutionSheets, NoteTuningSheets, ExtraTuningSheets)
 	AllSolutions = GetSolutionDefintion(SolutionSheets, ExtraTuningSheets, NoteTuningSheets)
+}
+
+// StoreActiveSolNoteInfo stores the note list of the currently active/applied
+// solution definition
+// solution run time info at least needed for refresh
+func StoreActiveSolNoteInfo(sol Solution, noteID string) error {
+	err := txtparser.StoreSectionInfo(sol, "sol", noteID, true)
+	if err != nil {
+		system.InfoLog("Problems during storing of solution note list as run time information")
+	}
+	return err
+}
+
+// GetActiveSolNoteInfo reads the stored information about the note list of
+// the currently active solution
+func GetActiveSolNoteInfo(ID string, fileSelect bool) (Solution, error) {
+	var err error
+	iniFileName := fmt.Sprintf("%s/%s_active.sol", system.SaptuneSectionDir, ID)
+	sol := Solution{}
+
+	content, err := os.ReadFile(iniFileName)
+	if err != nil {
+		return sol, err
+	}
+	if fileSelect {
+		// remove the solution note list
+		err = os.Remove(iniFileName)
+		if err != nil {
+			system.ErrorLog("Problems during remove of file '%s' - '%+v'.", iniFileName, err)
+		}
+	}
+	if len(content) != 0 {
+		// ANGI TODO - check, if correct output
+		err = json.Unmarshal(content, &sol)
+	}
+	return sol, err
 }

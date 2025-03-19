@@ -31,6 +31,7 @@ var defaultCommand = map[string]bool{
 	"note delete":                 false,
 	"note verify":                 false,
 	"note rename":                 false,
+	"note refresh":                false,
 	"solution list":               false,
 	"solution verify":             false,
 	"solution enabled":            false,
@@ -60,6 +61,7 @@ var defaultCommand = map[string]bool{
 	"configure TrentoASDP":        false,
 	"configure reset":             false,
 	"configure show":              false,
+	"refresh applied":             false,
 	"verify applied":              false,
 	"revert all":                  false,
 	"lock remove":                 false,
@@ -125,6 +127,7 @@ func lockCommandsMap() map[string]bool {
 	lockCommand["note revert"] = true
 	lockCommand["note delete"] = true
 	lockCommand["note rename"] = true
+	lockCommand["note refresh"] = true
 	lockCommand["solution apply"] = true
 	lockCommand["solution change"] = true
 	lockCommand["solution customise"] = true
@@ -143,6 +146,7 @@ func lockCommandsMap() map[string]bool {
 	lockCommand["staging release"] = true
 	lockCommand["configure reset"] = true
 	lockCommand["configure TrentoASDP"] = true
+	lockCommand["refresh applied"] = true
 	lockCommand["revert all"] = true
 
 	return lockCommand

@@ -1,5 +1,5 @@
 .\"/*
-.\" * Copyright (c) 2017-2024 SUSE LLC.
+.\" * Copyright (c) 2017-2025 SUSE LLC.
 .\" * All rights reserved
 .\" * Authors: Soeren Schmidt, Angela Briel
 .\" *
@@ -14,7 +14,7 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "December 2024" "" "System optimization For SAP"
+.TH saptune "8" "March 2025" "" "System optimization For SAP"
 .SH NAME
 saptune \- Comprehensive system optimization management for SAP solutions (\fBVersion 3\fP)
 
@@ -28,10 +28,13 @@ ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate 
 ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
-( list | verify | revertall | enabled | applied )
+( list | verify | refresh | revertall | enabled | applied )
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
+refresh [NOTEID|applied]
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
@@ -268,6 +271,10 @@ Success is reported on stdout, errors including systemd error messages are print
 If the action was successfully the exit code is 0, otherwise 1.
 
 .TP
+.B Note:
+On Azure cloud we create a saptune service drop-in file to start saptune.service after cloud-final.service to tune the system after the swap space was added by cloud-init.
+
+.TP
 .B ATTENTION:
 .br
 saptune is able to start/stop/enable/disable systemd units, but on boot the outcome depends on the order of execution.
@@ -451,6 +458,17 @@ That means: When creating or changing an override file for an \fBalready applied
 This allows to create own Note definition files in \fI/etc/saptune/extra\fP. The Note definition file will be created from a template file into the location \fI/etc/saptune/extra\fP, if the file does not exist already. After that an editor will be launched to allow changing the Note definitions.
 The editor is defined by the \fBEDITOR\fP environment variable. If not set editor defaults to /usr/bin/vim.
 You need to choose an unique NoteID for this operation. Use '\fIsaptune note list\fP' to find the already used NoteIDs.
+.TP
+.B refresh
+Identifies and activates changed parameter settings of a Note definition. The changes get active without first reverting the 'old' settings, so the tuning of the system gets not interrupted.
+
+ATTENTION:
+.br
+Currently only parameter of section "[sysctl]", "[sys]" and "[vm]" are supported by the \fIrefresh\fP action.
+
+Parameter of section "[version]", "[rpm]", "[grub]", "[fs]" and "[reminder]" are only checked by saptune, but not applied. So there is nothing to do during refresh of a note and these sections are skipped without notice.
+
+Parameter of all other sections are currently \fBnot\fP supported by the \fIrefresh\fP action and \fBnot\fP evaluated. If such parameter are available in the to be refreshed Note an info is logged per affected parameter.
 .TP
 .B revert
 Revert optimization settings carried out by the Note, and the Note will no longer be activated automatically upon system boot.
@@ -742,6 +760,13 @@ Verifies all system parameters against all applied Notes.
 .br
 Same as a \fIsaptune note verify\fP
 
+.SH REFRESH ACTIONS
+.TP
+.B refresh applied
+Refreshes all applied Notes.
+.br
+Same as a \fIsaptune note refresh\fP
+
 .SH REVERT ACTIONS
 .TP
 .B revert all
@@ -946,7 +971,7 @@ With the update to saptune version 3.1 we \fBdeprecated\fP the actions '\fIsaptu
 .B version 3.2
 With the update to saptune version 3.2 we \fBdeprecated\fP the manual editing of the file \fI/etc/sysconfig/saptune\fP as the main configuration file will be (re)moved in future versions.
 .br
-Additional the Solution \fBSAP-ASE.sol\fP and the related Note \fB1680803\fP are \fBdeprecated\fP.
+Additional the Solution \fBSAP-ASE.sol\fP and the related Notes \fB1680803\fP and \fB1805750\fP are \fBdeprecated\fP.
 
 .SH FILES
 .PP

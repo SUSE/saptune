@@ -99,6 +99,8 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 		SolutionAction(writer, system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "configure":
 		ConfigureAction(writer, system.CliArg(2), system.CliArgs(3), stApp)
+	case "refresh":
+		RefreshAction(writer, system.CliArg(2), stApp)
 	case "revert":
 		RevertAction(writer, system.CliArg(2), stApp)
 	case "staging":
@@ -113,6 +115,14 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 	default:
 		PrintHelpAndExit(writer, 1)
 	}
+}
+
+// RefreshAction refreshes all applied Notes
+func RefreshAction(writer io.Writer, actionName string, tuneApp *app.App) {
+	if actionName != "applied" {
+		PrintHelpAndExit(writer, 1)
+	}
+	NoteActionRefresh(writer, "", tuneApp)
 }
 
 // VerifyAction verifies all applied Notes
@@ -309,8 +319,9 @@ Daemon control:
   saptune [--format FORMAT] [--force-color] [--fun] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
   saptune [--format FORMAT] [--force-color] [--fun] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 Tune system according to SAP and SUSE notes:
-  saptune [--format FORMAT] [--force-color] [--fun] note ( list | verify | revertall | enabled | applied )
+  saptune [--format FORMAT] [--force-color] [--fun] note ( list | verify | refresh | revertall | enabled | applied )
   saptune [--format FORMAT] [--force-color] [--fun] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+  saptune [--format FORMAT] [--force-color] [--fun] note refresh [NOTEID|applied]
   saptune [--format FORMAT] [--force-color] [--fun] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
   saptune [--format FORMAT] [--force-color] [--fun] note rename NOTEID NEWNOTEID
 Tune system for all notes applicable to your SAP solution:
@@ -328,6 +339,8 @@ Config (re-)settings:
   saptune [--format FORMAT] [--force-color] [--fun] configure ( reset | show )
 Verify all applied Notes:
   saptune [--format FORMAT] [--force-color] [--fun] verify applied
+Refresh all applied Notes:
+  saptune [--format FORMAT] [--force-color] [--fun] refresh applied
 Revert all parameters tuned by the SAP notes or solutions:
   saptune [--format FORMAT] [--force-color] [--fun] revert all
 Remove the pending lock file from a former saptune call

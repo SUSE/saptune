@@ -23,14 +23,24 @@ var oldStyleCnt = map[string]int{"file": 0}
 // counter to control the error message of missing or wrong version section
 var missVersionCnt = map[string]int{"file": 0}
 
-// StoreSectionInfo stores INIFile section information to section directory
-func StoreSectionInfo(obj *INIFile, file, ID string, overwriteExisting bool) error {
+// StoreSectionInfo stores run time information (e.g. INIFile section information)
+// to section directory
+func StoreSectionInfo(obj interface{}, file, ID string, overwriteExisting bool) error {
 	iniFileName := ""
-	if file == "run" {
+	switch file {
+	case "run":
 		iniFileName = fmt.Sprintf("%s/%s.run", saptuneSectionDir, ID)
-	} else if file == "ovw" {
+	case "ovw":
 		iniFileName = fmt.Sprintf("%s/over_%s.run", saptuneSectionDir, ID)
-	} else {
+	case "del":
+		iniFileName = fmt.Sprintf("%s/del_%s.run", saptuneSectionDir, ID)
+	case "vend":
+		iniFileName = fmt.Sprintf("%s/%s_%s.run", saptuneSectionDir, file, ID)
+	case "angi":
+		iniFileName = fmt.Sprintf("%s/%s.angi_sections", saptuneSectionDir, ID)
+	case "sol":
+		iniFileName = fmt.Sprintf("%s/%s_active.sol", saptuneSectionDir, ID)
+	default:
 		iniFileName = fmt.Sprintf("%s/%s.sections", saptuneSectionDir, ID)
 	}
 	content, err := json.Marshal(obj)
@@ -48,12 +58,18 @@ func StoreSectionInfo(obj *INIFile, file, ID string, overwriteExisting bool) err
 
 // GetSectionInfo reads content of stored INIFile information.
 // Return the content as INIFile
+// initype: 'ovw' = override file, 'rosi' = read only section info
+// 'sns' = saved note section == 'run'
+// 'del' = deleted by refresh (last note in parameter file)
+// fileSelect: true - read section info and remove file == 'revert'
 func GetSectionInfo(initype, ID string, fileSelect bool) (*INIFile, error) {
 	iniFileName := ""
-	if fileSelect {
+	if fileSelect || initype == "rosi" {
 		iniFileName = fmt.Sprintf("%s/%s.sections", saptuneSectionDir, ID)
 	} else if initype == "ovw" {
 		iniFileName = fmt.Sprintf("%s/over_%s.run", saptuneSectionDir, ID)
+	} else if initype == "del" {
+		iniFileName = fmt.Sprintf("%s/del_%s.run", saptuneSectionDir, ID)
 	} else {
 		iniFileName = fmt.Sprintf("%s/%s.run", saptuneSectionDir, ID)
 	}
@@ -66,9 +82,13 @@ func GetSectionInfo(initype, ID string, fileSelect bool) (*INIFile, error) {
 	if err == nil {
 		// do not remove section runtime file, but remove section
 		// saved state file after reading
-		if fileSelect {
-			// remove section saved state file after reading
+		if fileSelect || initype == "del" {
+			// remove section saved state file or the delete
+			// parameter file after reading
 			err = os.Remove(iniFileName)
+			if err != nil {
+				system.ErrorLog("Problems during remove of file '%s' - '%+v'.", iniFileName, err)
+			}
 		}
 		if len(content) != 0 {
 			err = json.Unmarshal(content, &iniConf)
@@ -78,8 +98,10 @@ func GetSectionInfo(initype, ID string, fileSelect bool) (*INIFile, error) {
 }
 
 // GetOverrides is looking for an override file and parse the content
+// func GetOverrides(filetype, ID string) (bool, bool, *INIFile) {
 func GetOverrides(filetype, ID string) (bool, *INIFile) {
 	override := false
+	//runtime := false
 	ow, err := GetSectionInfo(filetype, ID, false)
 	if err != nil {
 		// Parse the override file
@@ -91,7 +113,9 @@ func GetOverrides(filetype, ID string) (bool, *INIFile) {
 		}
 	} else {
 		override = true
+		//runtime = true
 	}
+	//return override, runtime, ow
 	return override, ow
 }
 

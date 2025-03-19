@@ -332,7 +332,7 @@ func chkCPUDriver() bool {
 	} else {
 		val, err := os.ReadFile(path.Join(cpuDir, "intel_pstate/status"))
 		if err != nil || !strings.Contains(string(val), "active") {
-			WarningLog("Status of intel_pstate driver is '%s' %v)", val, err)
+			WarningLog("Status of intel_pstate driver is '%s' (%v)", val, err)
 			validDriver = false
 		}
 	}
