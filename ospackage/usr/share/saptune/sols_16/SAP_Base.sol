@@ -1,0 +1,11 @@
+[version]
+VERSION=1
+DATE=20.03.2025
+DESCRIPTION=Definition of SAP_Base solution for SLE16
+REFERENCES=
+
+[ArchX86]
+1275776
+
+[ArchPPC64LE]
+1275776
