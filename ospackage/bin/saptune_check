@@ -38,8 +38,9 @@
 # 28.08.2024  v0.4      a little rework and added JSON support (TEAM-8959)
 # 31.10.2024  v0.4.1    added --force-color to support forced colored output by saptune
 # 16.01.2025  v0.4.2    a failed sapconf.service causes just a warning an remediation is now correct
+# 21.03.2025  v0.4.3    fix missing warning increment if saptune.service is inactive
 
-declare -r VERSION="0.4.2"
+declare -r VERSION="0.4.3"
 
 # We use these global arrays through out the program:
 #
@@ -940,7 +941,8 @@ function check_saptune() {
                 msg="sapconf.service is failed"
                 remediation="Run 'systemctl reset-failed sapconf.service', but investigate cause!"
                 print_warn "${msg}" "${remediation}"  
-                add_message_json WARN "${msg}" "${remediation}"  
+                add_message_json WARN "${msg}" "${remediation}"
+                ((warnings++))  
                 ;;
             *)
                 msg="sapconf.service is ${unit_state_active['sapconf.service']}"
