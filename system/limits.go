@@ -80,7 +80,7 @@ func ParseSecLimitsFile(fileName string) (*SecLimits, error) {
 		DebugLog("ParseSecLimitsFile - failed to read drop in file '%s': '%v'.", fileName, err)
 		content, err = systemLimitsConfFile()
 		if err != nil {
-			return limits, nil
+			return limits, err
 		}
 	}
 	return ParseSecLimits(string(content)), nil
