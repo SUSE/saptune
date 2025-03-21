@@ -1,0 +1,69 @@
+# 3565382 - SUSE Linux Enterprise Server 16: Installation Note
+# Description:    You want to use SAP software on SUSE Linux Enterprise Server 16 (SLES 16) or SUSE Linux Enterprise Server 16 for SAP Applications  (SLES for SAP 16).
+
+[version]
+VERSION=1
+DATE=29.01.2025
+DESCRIPTION=SUSE Linux Enterprise Server 16: Installation Note
+REFERENCES=https://me.sap.com/notes/3565382
+
+[service]
+# start the related services
+uuidd.socket=start
+sysstat.service=start
+sysctl-logger.service=start
+
+[block]
+# The default I/O scheduler for single-queued block layer devices offers
+# satisfactory performance for wide range of I/O task, however choosing an
+# alternative scheduler may potentially yield better latency characteristics
+# and throughput.
+# "noop" is an alternative scheduler, in comparison to other schedulers it
+# may offer more consistent performance, lower computation overhead, and
+# potentially higher throughput.
+# For most SAP environments (RAID, storage arrays, virtualizaton) 'noop' is
+# the better choice.
+# With the new introduced multi-queue scheduler for block layer devices the
+# recommended I/O scheduler is 'none' as an equivalent to 'noop' for
+# single-queued block layer devices.
+#
+# So IO_SCHEDULER can now contain a comma separated list of possible
+# schedulers, which are checked from left to right. The first one which is
+# available in /sys/block/<device>/queue/scheduler will be used as new
+# scheduler setting for the respective block device.
+#
+# When set, all block devices on the system will be switched to one of the
+# chosen schedulers.
+IO_SCHEDULER=noop, none
+
+#[rpm]
+# dependencies handled by saptune package installation
+
+[sysctl]
+# vm.dirty_bytes (indirect vm.dirty_ratio)
+# Contains the amount of dirty memory at which a process generating disk writes
+# will itself start writeback.
+# Note: dirty_bytes is the counterpart of dirty_ratio. Only one of them may be
+# specified at a time. When one sysctl is written it is immediately taken into
+# account to evaluate the dirty memory limits and the other appears as 0 when
+# read.
+# Note: the minimum value allowed for dirty_bytes is two pages (in bytes); any
+# value lower than this limit will be ignored and the old configuration will be
+# retained.
+#
+# vm.dirty_bytes should be set to 629145600 (see TID_7010287)
+#
+vm.dirty_bytes=629145600
+
+# vm.dirty_background_bytes (indirect vm.dirty_background_ratio)
+# Contains the amount of dirty memory at which the background kernel
+# flusher threads will start writeback.
+# Note: dirty_background_bytes is the counterpart of dirty_background_ratio.
+# Only one of them may be specified at a time. When one sysctl is written it is
+# immediately taken into account to evaluate the dirty memory limits and the
+# other appears as 0 when read.
+#
+# vm.dirty_background_bytes should be set to 314572800 (see TID_7010287)
+#
+vm.dirty_background_bytes=314572800
+

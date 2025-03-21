@@ -11,7 +11,7 @@ the sources should be available at $GOPATH/src/github.com/SUSE/saptune
 	version="3.2.0-test"
 	bdate=$(date +"%Y/%m/%d")
 	bvers=15
-	go build -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion=$version' -X 'github.com/SUSE/saptune/actions.RPMDate=$bdate' -X '%{GONS}/%{name}/system.RPMBldVers=$bvers'"
+	go build -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion=$version' -X 'github.com/SUSE/saptune/actions.RPMDate=$bdate' -X 'github.com/SUSE/saptune/system.RPMBldVers=$bvers'"
 
 ## lint and format checks for the sources before committing changes
 

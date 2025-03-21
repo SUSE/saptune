@@ -42,11 +42,6 @@ func collectChangedParameterInfo(noteID, fileName string, comparisons map[string
 			continue
 		}
 
-		// value for 'optimize' during 'verify'
-		// needed value for apply, if changes detectd
-		comparison := comparisons[fmt.Sprintf("SysctlParams[%s]", param.Key)]
-		valueToCheck := comparison.ExpectedValue.(string)
-
 		// initialise parameter entry
 		paramEntry := initChangedParams(param, noteID, "newchange")
 		// check for new parameter
@@ -54,7 +49,7 @@ func collectChangedParameterInfo(noteID, fileName string, comparisons map[string
 
 		// check, if parameter is in override file and
 		if override && ovCont != nil {
-			chkOverrideParameter(ovCont.KeyValue, paramEntry, changed, valueToCheck)
+			chkOverrideParameter(ovCont.KeyValue, paramEntry, changed)
 		}
 		// check, if parameter value has changed in Note and/or
 		// override file by checking against value in parameter file
@@ -175,10 +170,9 @@ func chkForNewOrChangedParams(sectCont *txtparser.INIFile, paramEntry map[string
 
 // chkOverrideParameter checks, if the parameter is available in the override
 // file and if the override file was changed
-// valueToCheck is the expected value from 'verify -> comparison'.
 // This is the value which is the expected value from the Note file OR the
 // override file.
-func chkOverrideParameter(ovKeyValues map[string]map[string]txtparser.INIEntry, paramEntry map[string]interface{}, changed bool, valueToCheck string) {
+func chkOverrideParameter(ovKeyValues map[string]map[string]txtparser.INIEntry, paramEntry map[string]interface{}, changed bool) {
 	section := paramEntry["section"].(string)
 	key := paramEntry["key"].(string)
 	if _, ok := ovKeyValues[section][key]; !ok {

@@ -55,15 +55,32 @@ type SecLimits struct {
 	Entries []*SecLimitsEntry
 }
 
+// systemLimitsConfFile reads the system limits.conf file
+// on SLE12 and SLE15
+func systemLimitsConfFile() ([]byte, error) {
+	var content []byte
+	var err error
+	if IsSLE12() || IsSLE15() {
+		limitsConfFile := "/etc/security/limits.conf"
+		DebugLog("Try '%s' instead.", limitsConfFile)
+		content, err = os.ReadFile(limitsConfFile)
+		if err != nil {
+			DebugLog("Failed to read system limits config file '%s': %v", limitsConfFile, err)
+		}
+	}
+	return content, err
+}
+
 // ParseSecLimitsFile read limits.conf and parse the file content into memory
 // structures.
 func ParseSecLimitsFile(fileName string) (*SecLimits, error) {
-	limitsConfFile := "/etc/security/limits.conf"
+	limits := &SecLimits{Entries: make([]*SecLimitsEntry, 0)}
 	content, err := os.ReadFile(fileName)
 	if err != nil {
-		content, err = os.ReadFile(limitsConfFile)
+		DebugLog("ParseSecLimitsFile - failed to read drop in file '%s': '%v'.", fileName, err)
+		content, err = systemLimitsConfFile()
 		if err != nil {
-			return nil, ErrorLog("failed to open limits config file: %v", err)
+			return limits, err
 		}
 	}
 	return ParseSecLimits(string(content)), nil

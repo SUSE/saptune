@@ -22,7 +22,20 @@ else
     upd_opt="$1"
 fi
 
-SAPTUNE_SYSCONFIG=/etc/sysconfig/saptune
+
+#### ANGI TODO
+#sle_vers=$(sed -n "s%.*baseversion>\(.*\)</base.*%\1%p" /etc/products.d/baseproduct)
+#[[ $sle_vers == 16 ]] && SAPTUNE_SYSCONFIG=/var/lib/saptune/config/saptune
+
+if [ -f /var/lib/saptune/config/saptune ]; then
+    # SLE16
+    SAPTUNE_SYSCONFIG=/var/lib/saptune/config/saptune
+    # ANGI TODO - or setting of new config file only in some functions?
+    # template - /usr/share/saptune/saptuneTemplate.conf
+else
+    SAPTUNE_SYSCONFIG=/etc/sysconfig/saptune
+fi
+
 CUSTOM_TUNED_CONF=/etc/tuned/saptune/tuned.conf
 
 OVERRIDEDIR=/etc/saptune/override
@@ -37,16 +50,31 @@ STAGINGAREA=/var/lib/saptune/staging
 PACKAGEAREA=/usr/share/saptune
 
 NOTEDIR=/usr/share/saptune/notes
+## ANGI TODO - update also from 12 to 16?
+## if yes - NOTES2DELETE_15 and NOTES2DELETE_16
+## sles16 installation note == 3565382
+## sles16 HANA DB os settings == 3577842
+NOTES2CHANGE_15to16="2578899,3565382 2684254,3577842"
+NOTES2CHANGE_12to16="1984787,3565382 2205917,3577842"
 NOTES2CHANGE_12to15="1984787,2578899 2205917,2684254"
+NOTES2DELETE_16="1680803 1805750"
 NOTES2DELETE_15="1557506 1275776"
+SOLS2DELETE_16="SAP-ASE.sol" ### ANGI TODO
 FORGOTTEN_NOTES_300="2993054 1656250"
+
+update_saptune_config() {
+    # SLE16 - update saptune config file
+    # add new entries, if not available, no other changes are needed
+    # # _STCV1_ is the starting point of SLE16 - for future use
+    :
+}
 
 set_sysconfig_version() {
     # add or change SAPTUNE_VERSION string in /etc/sysconfig/saptune to "1"
     if (grep "SAPTUNE_VERSION[[:space:]]*=" $SAPTUNE_SYSCONFIG >/dev/null 2>&1); then
         sed -i 's/SAPTUNE_VERSION="[23]"/SAPTUNE_VERSION="1"/' $SAPTUNE_SYSCONFIG
     else
-        echo "missing SAPTUNE_VERSION string in /etc/sysconfig/saptune. Appending ..."
+        echo "missing SAPTUNE_VERSION string in $SAPTUNE_SYSCONFIG. Appending ..."
         echo -e "## Type:    string\n## Default: \"3\"\n#\n# Version of saptune\nSAPTUNE_VERSION=\"1\"\n" >> $SAPTUNE_SYSCONFIG
     fi
 }
@@ -588,12 +616,26 @@ v1tov2pt)
     # update from saptune version 1 to version 2/3
     get_back_extra_ASE_BOBJ
     ;;
+sleto16pt)
+    # ANGI TODO - /var/lib/saptune/config/old_custom_saptune_config is old /etc/sysconfig/saptune from update 12/15 to 16, if available -> update 12/15 to 16 (special task needed once!)
+    # if not available update from 16 to 16 - important for note delete sol delet and note changes in sols - needs to run always
+
+    # called from the posttrans script of saptune, if installation was an
+    # update from saptune version 2/3 to version 2/3
+    #change_note_names 16
+    #delete_notes 16
+    #delete_sols 16
+    #staging=$(grep ^STAGING= $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    #if [ "$staging" == "true" ]; then
+    #    adjust_workingarea 16
+    #fi
+    ;;
 sle12to15pt)
     # called from the posttrans script of saptune, if installation was an
     # update from saptune version 2/3 to version 2/3
     change_note_names
     delete_notes
-    staging=$(grep ^STAGING= /etc/sysconfig/saptune | awk -F '"' '{ print $2 }')
+    staging=$(grep ^STAGING= $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
     if [ "$staging" == "true" ]; then
         adjust_workingarea
     fi
@@ -611,6 +653,11 @@ enabledSol)
     # called from the postinstall script of saptune to adjust the notes of an
     # enabled solution
     adjust_enabled_solution
+    ;;
+updateConf)
+    # SLE16 - update saptune config file
+    # add new entries, if not available
+    update_saptune_config
     ;;
 fix_300)
     # called from the postinstall script of saptune to fix a bug special in

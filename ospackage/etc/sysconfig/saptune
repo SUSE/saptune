@@ -1,6 +1,7 @@
 ## Path:           SAP/System Tuning/General
 ## Description:    Global settings for saptune - the comprehensive optimisation management utility for SAP solutions
 ## ServiceRestart: saptune
+# _STCV1_
 
 ## Type:    string
 ## Default: ""

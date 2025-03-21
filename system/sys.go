@@ -25,7 +25,7 @@ func getKeyStringFromPath(basePath string, parameter string, logFrom string) (st
 	srcFile := path.Join(basePath, strings.Replace(parameter, ".", "/", -1))
 	file, err := os.Open(srcFile)
 	if err != nil {
-		WarningLog("failed to open %s : %v", srcFile, err)
+		WarningLog("failed to read %v string key '%s': %v", logFrom, parameter, err)
 		return "PNA", err
 	}
 	defer file.Close()
