@@ -235,7 +235,7 @@ func TestGetINIFileDescriptiveName(t *testing.T) {
 	}
 	str = GetINIFileDescriptiveName(fileNotExist)
 	if str != "" {
-		t.Errorf(str)
+		t.Errorf("%s", str)
 	}
 }
 
@@ -259,7 +259,7 @@ func TestGetINIFileVersionSectionEntry(t *testing.T) {
 	}
 	str = GetINIFileVersionSectionEntry(fileNotExist, "reference")
 	if str != "" {
-		t.Errorf(str)
+		t.Errorf("%s", str)
 	}
 	str = GetINIFileVersionSectionEntry(fileName, "version")
 	if str != noteVersion {
@@ -271,7 +271,7 @@ func TestGetINIFileVersionSectionEntry(t *testing.T) {
 	}
 	str = GetINIFileVersionSectionEntry(fileNotExist, "version")
 	if str != "" {
-		t.Errorf(str)
+		t.Errorf("%s", str)
 	}
 	str = GetINIFileVersionSectionEntry(fileName, "date")
 	if str != noteDate {
@@ -283,7 +283,7 @@ func TestGetINIFileVersionSectionEntry(t *testing.T) {
 	}
 	str = GetINIFileVersionSectionEntry(fileNotExist, "date")
 	if str != "" {
-		t.Errorf(str)
+		t.Errorf("%s", str)
 	}
 	str = GetINIFileVersionSectionEntry(fileName, "name")
 	if str != noteTitle {
@@ -295,7 +295,7 @@ func TestGetINIFileVersionSectionEntry(t *testing.T) {
 	}
 	str = GetINIFileVersionSectionEntry(fileNotExist, "name")
 	if str != "" {
-		t.Errorf(str)
+		t.Errorf("%s", str)
 	}
 	str = GetINIFileVersionSectionEntry(fileNameNew, "category")
 	if str != oldNoteCategory {
