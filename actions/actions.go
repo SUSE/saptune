@@ -367,6 +367,6 @@ func PrintHelpAndExit(writer io.Writer, exitStatus int) {
 	if system.GetFlagVal("format") == "json" {
 		system.JInvalid(exitStatus)
 	}
-	fmt.Fprintf(writer, cmdLineSyntax())
+	fmt.Fprintf(writer, "%s", cmdLineSyntax())
 	system.ErrorExit("", exitStatus)
 }
