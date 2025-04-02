@@ -173,6 +173,7 @@ func ChkCliSyntax() bool {
 
 // chkGlobalSyntax checks some universal syntax and the global options
 func chkGlobalSyntax(cmdLinePos map[string]int) bool {
+	DebugLog("chkGlobalSyntax - cmdLinePos is '%+v'", cmdLinePos)
 	ret := true
 	// check minimum of arguments without flags (saptune + realm)
 	if (IsFlagSet("version") || IsFlagSet("help")) && len(saptArgs) > 1 {
@@ -214,6 +215,7 @@ func chkGlobalSyntax(cmdLinePos map[string]int) bool {
 // saptune --fun
 // saptune --version or saptune --help
 func chkGlobalOpts(cmdLinePos map[string]int) bool {
+	DebugLog("chkGlobalOpts - cmdLinePos is '%+v'", cmdLinePos)
 	globalFlags := []string{"format", "version", "help", "force-color", "fun"}
 	stArgs := os.Args
 	ret := true
@@ -249,7 +251,7 @@ func chkGlobalOpts(cmdLinePos map[string]int) bool {
 func chkGlobalFlag(globalFlags []string, result bool) (bool, bool, int) {
 	stArgs := os.Args
 	globOpt := false
-	posOffset := 1
+	posOffset := 0
 	setglobFlags := []string{}
 	for _, gflag := range globalFlags {
 		if IsFlagSet(gflag) {
@@ -270,7 +272,7 @@ func chkGlobalFlag(globalFlags []string, result bool) (bool, bool, int) {
 	for _, sflag := range setglobFlags {
 		fval := "-" + sflag
 		found := false
-		for i := 1; i < posOffset; i++ {
+		for i := 1; i < posOffset + 1; i++ {
 			if strings.Contains(stArgs[i], fval) {
 				found = true
 				globOpt = true
@@ -288,6 +290,7 @@ func chkGlobalFlag(globalFlags []string, result bool) (bool, bool, int) {
 // chkRealmOpts checks for realm options
 // at the moment only 'saptune status' has an option (--non-compliance-check)
 func chkRealmOpts(cmdLinePos map[string]int) bool {
+	DebugLog("chkRealmOpts - cmdLinePos is '%+v'", cmdLinePos)
 	stArgs := os.Args
 	ret := true
 	if IsFlagSet("non-compliance-check") {
@@ -318,6 +321,7 @@ func chkRealmOpts(cmdLinePos map[string]int) bool {
 
 // chkCmdOpts checks for command options
 func chkCmdOpts(cmdLinePos map[string]int) bool {
+	DebugLog("chkCmdOpts - cmdLinePos is '%+v'", cmdLinePos)
 	ret := true
 	// check minimum of arguments for command options
 	// saptune realm cmd
@@ -388,6 +392,7 @@ func checkFlag(cmdLinePos map[string]int, flagValue string) bool {
 	}
 
 	// os.Args = []string{"saptune", "staging", "release", "--force"}
+	// os.Args = []string{"saptune", "solution", "change", "--force"}
 	switch flagValue {
 	case "chkForceFlag":
 		// Checks the syntax of 'saptune solution change' and 'saptune staging release' regarding the 'force' flag
