@@ -86,6 +86,11 @@ func chkOsTags(tagField string, secFields []string) bool {
 	} else if osw[2] == "*" {
 		// wildcard
 		switch osw[1] {
+		case "16":
+			if !system.IsSLE16() {
+				system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
+				ret = false
+			}
 		case "15":
 			if !system.IsSLE15() {
 				system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
