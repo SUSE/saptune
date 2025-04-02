@@ -196,8 +196,9 @@ func TestAllSettings(t *testing.T) {
 		t.Error(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["UserTasksMax"] != "setinpostinstall" {
+		t.Logf("OS version is '%s'\n", system.GetOsVers())
 		switch system.GetOsVers() {
-		case "15", "15-SP1", "15-SP2", "15-SP3", "15-SP4", "15-SP5":
+		case "15", "15-SP1", "15-SP2", "15-SP3", "15-SP4", "15-SP5", "15-SP6", "15-SP7", "16.0":
 			t.Logf("UserTasksMax not set in SLE15 - OK\n")
 		default:
 			t.Error(optimisedINI.SysctlParams)
@@ -403,8 +404,9 @@ func TestOverrideAllSettings(t *testing.T) {
 		t.Error(optimisedINI.SysctlParams)
 	}
 	if optimisedINI.SysctlParams["UserTasksMax"] != "infinity" {
+		t.Logf("OS version is '%s'\n", system.GetOsVers())
 		switch system.GetOsVers() {
-		case "15", "15-SP1", "15-SP2", "15-SP3", "15-SP4", "15-SP5":
+		case "15", "15-SP1", "15-SP2", "15-SP3", "15-SP4", "15-SP5", "15-SP6", "15-SP7", "16.0":
 			t.Logf("UserTasksMax not set in SLE15 - OK\n")
 		default:
 			t.Error(optimisedINI.SysctlParams)

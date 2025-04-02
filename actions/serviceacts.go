@@ -585,7 +585,7 @@ func printNoteAndSols(writer io.Writer, tuneApp *app.App, jstat *system.JStatus)
 	fmt.Fprintf(writer, "additional enabled Notes: ")
 	if len(tuneApp.TuneForNotes) > 0 {
 		for _, noteID := range tuneApp.TuneForNotes {
-			fmt.Fprintf(writer, noteID+" ")
+			fmt.Fprintf(writer, "%s ", noteID)
 		}
 		notTuned = false
 	}
