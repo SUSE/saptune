@@ -242,7 +242,7 @@ func ParseINI(input string) *INIFile {
 			// Skip comments, empty, and irregular lines.
 			continue
 		}
-		// handle UserTaskMax on SLE15
+		// handle UserTaskMax on SLE15 or higher
 		next, loginCnt = handleUserTaskMax(loginCnt, kov)
 		if next {
 			continue
@@ -316,13 +316,12 @@ func blockDevCollect(sectFields, bDev []string, bCnt int) (int, []string) {
 	return bCnt, bDev
 }
 
-// handleUserTaskMax handles UserTasksMax settings on SLE15
+// handleUserTaskMax handles UserTasksMax settings on SLE15 or higher
 func handleUserTaskMax(lc int, kov []string) (bool, int) {
-	// ANGI TODO: needs rework with SLE16, ongoing discussion
 	next := false
-	if kov[1] == "UserTasksMax" && system.IsSLE15() {
+	if kov[1] == "UserTasksMax" && !system.IsSLE12() {
 		if lc == 0 {
-			system.InfoLog("UserTasksMax setting no longer supported on SLE15 releases. Leaving system's default unchanged.")
+			system.InfoLog("UserTasksMax setting no longer supported on SLE15 or higher. Leaving system's default unchanged.")
 		}
 		lc = lc + 1
 		next = true
@@ -379,6 +378,10 @@ func writeLimitSectionData(curSec string, kov []string, curEntriesArray []INIEnt
 	next := true
 	if curSec != "limits" {
 		return false, curEntriesArray, curEntriesMap
+	}
+	if system.IfdefVers() > 15 {
+		// skip limits section
+		return true, curEntriesArray, curEntriesMap
 	}
 	for _, limits := range strings.Split(kov[3], ",") {
 		limits = strings.TrimSpace(limits)
