@@ -24,6 +24,9 @@ func NoteAction(writer io.Writer, actionName, noteID, newNoteID string, tuneApp 
 	case "verify":
 		NoteActionVerify(writer, noteID, tuneApp)
 	case "simulate":
+		if system.IfdefVers() > 15 {
+			PrintHelpAndExit(writer, 1)
+		}
 		system.WarningLog("the action 'note simulate' is deprecated!.\nsaptune will still handle this action in the current version, but it will be removed in future versions of saptune.")
 		NoteActionSimulate(writer, noteID, tuneApp)
 	case "customise", "customize":
