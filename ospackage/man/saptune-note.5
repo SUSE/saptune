@@ -15,7 +15,7 @@
 .\" */
 .\" 
 
-.TH "saptune-note" "5" "February 2025" "" "saptune note file format description"
+.TH "saptune-note" "5" "April 2025" "" "saptune note file format description"
 .SH NAME
 saptune\-note \- Note definition files for saptune version \fB3\fP
 .SH DESCRIPTION
@@ -225,6 +225,7 @@ See detailed description below:
 .SH "[version]"
 This section is a mandatory section and is used to display version, description and last change date of the underlying Note during saptune action 'list'.
 
+\" _strm_3.2.0_start
 Old Syntax: \fBATTENTION: deprecated\fP
 .br
 .nf
@@ -255,17 +256,17 @@ Attention: The note description from the field NAME must be placed in double quo
 
 Only in the Solution definition files the old syntax is still valid. This may change with a next saptune version.
 
+\" _strm_3.2.0_end
 New Syntax:
 .br
 .nf
-.B
-VERSION=<versionNo>
+.B VERSION=<versionNo>
 .br
-DATE=<release date of used note and related values>
+.B DATE=<release date of used note and related values>
 .br
-DESCRIPTION=<description of the note>
+.B DESCRIPTION=<description of the note>
 .br
-REFERENCES=<list of URLs containing information regarding the Note separated by blank>
+.B REFERENCES=<list of URLs containing information regarding the Note separated by blank>
 
 Example:
 .br
@@ -433,8 +434,9 @@ Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl] as '
 .TP
 .BI transparent_hugepage=never
 Configure transparent hugepages - see THP in section [vm] as 'alternative' settings
+\" _strm_3.2.0_start
 \" section limits
-.SH "[limits]"
+.SH "[limits]" \fBATTENTION: deprecated\fP
 The section "[limits]" is dealing with ulimit settings for user login sessions in the pam_limits module. The settings will \fBNOT\fP be done in the central limits file \fI/etc/security/limits.conf\fP. Instead there will be a \fBdrop-in file\fP in \fI/etc/security/limits.d\fP for each domain-item-type combination used in the Note definition file.
 
 The drop-in file name syntax will be:
@@ -476,6 +478,7 @@ If set, the drop-in file \fI/etc/systemd/logind.conf.d/saptune-UserTasksMax.conf
 After creating the drop-in file the \fIsystemd-logind.service\fP will be reloaded.
 
 ATTENTION: With this setting your system is vulnerable to fork bomb attacks
+\" _strm_3.2.0_end
 \" section mem
 .SH "[mem]"
 The section "[mem]" manipulates the size of TMPFS (\fI/dev/shm\fP).
@@ -501,6 +504,7 @@ Depending on the size of the virtual memory (physical+swap) the value is calcula
 If VSZ_TMPFS_PERCENT is set to '\fB0\fP', the value is calculated by (RAM + SWAP) * 75/100, as the default is 75.
 
 As this parameter is only used to calculate the value of \fIShmFileSystemSizeMB\fP it will not be checked and compared during the saptune operation 'verify'. A footnote is pointing this out.
+\" _strm_3.2.0_start
 \" section pagecache
 .SH "[pagecache]"
 The section "[pagecache]" is dealing with the pagecache limit feature as described in SAP Note 1557506, which is only available on SLE12.
@@ -530,6 +534,7 @@ When pagecache limit feature is enabled, the limit value is usually automaticall
 However, the value can be overridden if you set this parameter to the desired limit value.
 .br
 To remove the override, set the parameter to empty string.
+\" _strm_3.2.0_end
 \" section reminder
 .SH "[reminder]"
 The section "[reminder]" contains important information and all settings of a SAP Note, which can not set by saptune. 
@@ -695,7 +700,10 @@ The directory contains overrides for Notes created by '\fBsaptune note customise
 
 .SH "SEE ALSO"
 .LP
-saptune-migrate(7) saptune-solution(5) saptune(8)
+saptune-solution(5) saptune(8)
+\" _strm_3.2.0_start
+saptune-migrate(7)
+\" _strm_3.2.0_end
 
 .SH AUTHOR
 .NF
