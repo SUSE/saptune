@@ -81,8 +81,14 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 			// fall back to the old style vendor file names
 			// support of old style vendor file names for compatibility reasons
 			system.InfoLog("GetTuningOptions: no header information found in file \"%s\"", fileName)
-			system.InfoLog("falling back to old style vendor file names")
-			system.WarningLog("old style vendor files are deprecated. For future support add header information to the file - %s", fileName)
+			if system.IfdefVers() > 15 {
+				system.InfoLog("skipping file \"%s\"", fileName)
+				system.WarningLog("old style vendor files are unsupported. For future support add header information. Skipping file \"%s\" for now.", fileName)
+				continue
+			} else {
+				system.InfoLog("falling back to old style vendor file names")
+				system.WarningLog("old style vendor files are deprecated. For future support add header information to the file - %s", fileName)
+			}
 			// By convention, the portion before dash makes up the ID.
 			idName := strings.SplitN(fileName, "-", 2)
 			if len(idName) != 2 {
