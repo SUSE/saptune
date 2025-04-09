@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# migrate saptune man pages to 16 during package build
+MP=ospackage/man/
+
+for mp in saptune.8 saptune-note.5; do
+    if [ "${mp}" == "saptune.8" ]; then
+        sed -i 's%| simulate |%|%g' "${MP}${mp}" >/dev/null 2>&1 || :
+        sed -i 's%|daemon|%|%g' "${MP}${mp}" >/dev/null 2>&1 || :
+        sed -i "s%, 'verify' and 'simulate'% and 'verify'%" "${MP}${mp}" >/dev/null 2>&1 || :
+    fi
+    sed "/_strm_3.2.0_start/,/_strm_3.2.0_end/d" "${MP}${mp}" > "${MP}${mp}".new.$$ || :
+    mv "${MP}${mp}".new.$$ "$MP${mp}" || :
+done
+

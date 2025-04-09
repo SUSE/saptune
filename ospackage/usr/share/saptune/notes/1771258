@@ -10,7 +10,7 @@ DESCRIPTION=Linux: User and system resource limits
 REFERENCES=https://me.sap.com/notes/1771258
 
 [limits]
-# /etc/security/limits.conf or drop-in file in /etc/securitty/limits.d
+# /etc/security/limits.conf or drop-in file in /etc/security/limits.d
 # Maximum number of open files for SAP application groups sapsys, sdba, and dba.
 #
 # LIMITS contains a comma separate list of valid limits.conf entries

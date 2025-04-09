@@ -114,7 +114,7 @@ func CmdIsAvailable(cmdName string) bool {
 func GetOsVers() string {
 	// VERSION="12", VERSION="15"
 	// VERSION="12-SP1", VERSION="12-SP2", VERSION="12-SP3"
-	var re = regexp.MustCompile(`VERSION="([\w-]+)"`)
+	var re = regexp.MustCompile(`VERSION="([\w-\.]+)\s*\w*"`)
 	val, err := os.ReadFile("/etc/os-release")
 	if err != nil {
 		return ""
@@ -139,6 +139,15 @@ func GetOsName() string {
 		return ""
 	}
 	return matches[1]
+}
+
+// IsSLE16 returns true, if System is running a SLE16 release
+func IsSLE16() bool {
+	var re = regexp.MustCompile(`16\.\d+`)
+	if GetOsName() == "SLES" && re.MatchString(GetOsVers()) {
+		return true
+	}
+	return false
 }
 
 // IsSLE15 returns true, if System is running a SLE15 release

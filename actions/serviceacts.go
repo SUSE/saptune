@@ -847,6 +847,7 @@ func preventReload() {
 // deleted.
 // create a list of orphaned override files for 'saptune status'
 func CheckOrphanedOverrides() {
+	orphanedOverrides = []string{}
 	dirCont, err := os.ReadDir(OverrideTuningSheets)
 	if err != nil {
 		system.ErrorExit("Problems reading override directory '%s' (%v). Please check your saptune installation\n", OverrideTuningSheets, err)

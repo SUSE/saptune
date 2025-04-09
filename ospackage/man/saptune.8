@@ -14,16 +14,18 @@
 .\" * GNU General Public License for more details.
 .\" */
 .\"
-.TH saptune "8" "March 2025" "" "System optimization For SAP"
+.TH saptune "8" "April 2025" "" "System optimization For SAP"
 .SH NAME
 saptune \- Comprehensive system optimization management for SAP solutions (\fBVersion 3\fP)
 
 ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate to saptune version \fB3\fP, so please refer to man page saptune-migrate(7).
 
 .SH SYNOPSIS
+\" _strm_3.2.0_start
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBdaemon\fP
 ( start | stop | status [--non-compliance-check] ) \fBATTENTION: deprecated\fP
 
+\" _strm_3.2.0_end
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBservice\fP
 ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
@@ -92,8 +94,10 @@ saptune is designed to automate the configuration recommendations from SAP and S
 saptune can apply settings for a single Note definition or can set all settings for a predefined solution, which is a collection of several SAP Notes. Additionally it can revert all these settings back to the previous system settings.
 
 It can verify, if the current system configuration is in sync with a specific Note definition or a defined solution and displays the differences.
+\" _strm_3.2.0_start
 Additionally, it can simulate the setting of a single SAP Note definition or a defined solution and will display the changes which will be done to the system.
 
+\" _strm_3.2.0_end
 saptune does not only set kernel values (like sysctl does), but also values like cpu governor, energy perf bias, force latency (dma latency) and the disk io scheduler. Additionally it will check/verify, if suitable rpm versions are installed and special kernel command line values are set, according to the relevant SAP Notes. So saptune checks and applies values in various locations during runtime like
 .PP
 /proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs, /sys/block/*/queue/scheduler and /sys/block/*/queue/nr_requests, /sys/devices/system/cpu/*/cpufreq/scaling_governor, /sys/devices/system/cpu/*/cpuidle/state*/latency, /sys/devices/system/cpu/*/cpuidle/state*/disable, /dev/shm, /etc/security/limits.d/, /etc/systemd/logind.conf.d/ and some others.
@@ -105,12 +109,15 @@ By default saptune is printing all results to stdout, Errors and Warnings are pr
 Supported formats are:
 .TP
 .B json
-Print all results in a machine readable json output format defined by the schemata delivered in \fI/usr/share/saptune/schemas/1.0\fP.
+Print all results in a machine readable json output format defined by the schemata delivered in \fI/usr/share/saptune/schemas/1.1\fP.
 
 saptune does no longer use tuned(8) to restart after a system reboot. It is using its own systemd service named "saptune.service".
+.br
+Starting with version 3.2 and operating system version 15SP4 we ship the saptune.service with enhanced security-related features like systemd hardening. But please keep in mind that all security measures only apply, if saptune is invoked by its systemd unit!
 
 We decided to have only ONE solution applied, but multiple Notes. Each Note is applied exactly once.
 
+\" _strm_3.2.0_start
 .SH DAEMON ACTIONS - ATTENTION: deprecated
 .SS
 .TP
@@ -123,6 +130,7 @@ As saptune no longer uses tuned, this action is internally linked to 'saptune se
 .B stop
 As saptune no longer uses tuned, this action is internally linked to 'saptune service disablestop'. See description below
 
+\" _strm_3.2.0_end
 .SH SERVICE ACTIONS
 .SS
 .TP
@@ -397,6 +405,7 @@ The default, if no \fBcolor scheme\fP is given, is \fBfull-red-noncmpl\fP. If an
 
 The 'final lines' with the overall result of the verify operation are colored green (compliant) or red (not compliant) independent from the chosen \fBcolor scheme\fP
 .SS
+\" _strm_3.2.0_start
 .TP
 .B simulate - ATTENTION: deprecated
 Show all changes that will be applied to the system if the specified Note is applied.
@@ -425,6 +434,7 @@ e.g.
 [5] expected value does not contain a supported scheduler
 
 If a Note definition contains a '\fB[reminder]\fP' section, this section will be printed below the table and the footnotes. It will be highlighted with red color.
+\" _strm_3.2.0_end
 .TP
 .B edit
 This allows to edit the values of the customer or vendor specific Note definitions in \fI/etc/saptune/extra\fP.
@@ -559,9 +569,11 @@ Print the currently enabled solution.
 Print the currently applied solution.
 .br
 If one or more notes of the solution are \fBreverted\fP, which is indicated by a '-' in the output of 'saptune note list', the string '\fB(partial)\fP is added to the solution name.
+\" _strm_3.2.0_start
 .TP
 .B simulate - ATTENTION: deprecated
 Show all notes that are associated with the specified solution, and all changes that will be applied once the solution is activated.
+\" _strm_3.2.0_end
 .TP
 .B verify
 If a solution name is specified, saptune verifies the running system against the recommended settings of this solution. If the solution name is not specified, saptune verifies all system parameters against all implemented solutions.
@@ -798,15 +810,18 @@ To support vendor or customer specific tuning values, saptune supports 'drop-in'
 We simplified the file name syntax for these vendor files.
 .br
 Related to this we add 'header' support (see description of section [version] in saptune-note(5)) for the vendor files as already available for the Note definition files in /usr/share/saptune/notes to get a proper description during saptune option 'list'
+\" _strm_3.2.0_start
 .br
 The old file names are still valid, but \fBdeprecated\fP. The support will be dropped in the near future. That means, files without a valid header information (see description of section [version] in saptune-note(5)) will be skipped in the future.
 
+\" _strm_3.2.0_end
 .SS
 .RS 0
 Syntax of the file names:
 <NoteID>.conf
 .br
 e.g. V4711.conf
+\" _strm_3.2.0_start
 
 old syntax of the file names:
 <NoteID>-<description>
@@ -814,6 +829,7 @@ old syntax of the file names:
 e.g. Vendor-Recommended_OS_Settings
 .br
 or   SAP4711-very_aromatic_tunings
+\" _strm_3.2.0_end
 .RE
 .SS
 .RS 0
@@ -969,9 +985,13 @@ So we now \fBdeprecated\fP all "DAEMON ACTIONS" like '\fIsaptune daemon start\fP
 With the update to saptune version 3.1 we \fBdeprecated\fP the actions '\fIsaptune note simulate\fP' and '\fIsaptune solution simulate\fP'.
 .TP
 .B version 3.2
-With the update to saptune version 3.2 we \fBdeprecated\fP the manual editing of the file \fI/etc/sysconfig/saptune\fP as the main configuration file will be (re)moved in future versions.
+With the update to saptune version 3.2 on SLES for SAP 12 and 15 we \fBdeprecated\fP the manual editing of the file \fI/etc/sysconfig/saptune\fP as the main configuration file will be (re)moved in future versions.
 .br
-Additional the Solution \fBSAP-ASE.sol\fP and the related Notes \fB1680803\fP and \fB1805750\fP are \fBdeprecated\fP.
+Additional the Solution \fBSAP-ASE.sol\fP and the related Notes \fB1680803\fP and \fB1805750\fP are \fBdeprecated\fP on SLES for SAP 12 and 15 and removed in SLE 16.
+.br
+SAP Note \fB1771258\fP not relevant/valid anymore on SLE 16, we \fBdeprecated\fP the Note and the support for setting PAM limits in SLES for SAP 12 and 15 and removed both in SLE 16
+.br
+The already deprecated actions 'daemon', 'note simulate' and 'solution simulate' are removed in SLE16
 
 .SH FILES
 .PP
@@ -1039,7 +1059,7 @@ the saptune SAP Note or solution definitions, which are present in the Package A
 the central saptune configuration file containing the information about the currently enabled notes and solutions, the order in which these notes are applied and the version of saptune currently used.
 .br
 ATTENTION:
-the manual editing of this file will be \fBdeprecated\fP as the main configuration file will be (re)moved in the near future.
+the manual editing of this file will be \fBdeprecated\fP on SLES for SAP 12 and 15 as the main configuration file will be (re)moved in SLE 16.
 .br
 Please use \fBsaptune configure\fP command instead of editing the file directly.
 .RE
@@ -1100,7 +1120,10 @@ saptune now sets the values read from the Note definition files irrespective of 
 
 .SH SEE ALSO
 .NF
-saptune-note(5) saptune-migrate(7) saptune(8)
+saptune-note(5) saptune-solution(5)
+\" _strm_3.2.0_start
+saptune-migrate(7)
+\" _strm_3.2.0_end
 
 .SH AUTHOR
 .NF
