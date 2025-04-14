@@ -35,7 +35,7 @@ func OptVMVal(key, cfgval string) string {
 			val = "never"
 		}
 	case "KSM":
-		if val != "1" && val != "0" {
+		if val != "1" && val != "0" && val != "2" {
 			system.WarningLog("wrong selection for KSM. Now set to default value '0'")
 			val = "0"
 		}
