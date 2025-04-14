@@ -730,7 +730,7 @@ func chkTuningResult(writer io.Writer, tuneApp *app.App, jstat *system.JStatus) 
 		tuningResult = "not tuned"
 	} else {
 		oldStdout, oldSdterr := system.SwitchOffOut()
-		unsatisfiedNotes, _, err := tuneApp.VerifyAll()
+		unsatisfiedNotes, _, err := tuneApp.VerifyAll(false)
 		system.SwitchOnOut(oldStdout, oldSdterr)
 		if err != nil {
 			system.WarningLog("Failed to verify the tuning state of the current system: %v", err)

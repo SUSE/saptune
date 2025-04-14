@@ -327,7 +327,10 @@ Print all currently enabled notes as a list separated by blanks without trailing
 Print all currently applied notes as a list separated by blanks without trailing line feed.
 .TP
 .B verify
-If a Note ID is specified, saptune verifies the currently running system against the recommendations specified in the Note. If Note ID is \fBnot\fP specified or the string \fIapplied\fP is specified, saptune verifies all system parameters against all applied Notes. As a result you will see a table containing the following columns
+If a Note ID is specified, saptune verifies the currently running system against the recommendations specified in this Note.
+.br If Note ID is \fBnot\fP specified, saptune verifies all system parameters against all enabled Notes.
+.br And if the string \fIapplied\fP is specified, saptune verifies all system parameters against all applied Notes.
+.br As a result you will see a table containing the following columns
 
 SAPNote, Version | Parameter | Expected | Override | Actual | Compliant
 
