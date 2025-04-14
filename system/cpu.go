@@ -289,23 +289,23 @@ func chkKernelCmdline() bool {
 	validCmdline := true
 	val := ParseCmdline("/proc/cmdline", "idle")
 	if val == "poll" || val == "halt" {
-		WarningLog("The entire CPUIdle subsystem is disabled, acpi_idle and intel_idle drivers are disabled altogether (idle=%s).", val)
+		InfoLog("The entire CPUIdle subsystem is disabled, acpi_idle and intel_idle drivers are disabled altogether (idle=%s).", val)
 		validCmdline = false
 	}
 	if val == "nomwait" {
-		WarningLog("intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (idle=%s).", val)
+		InfoLog("intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (idle=%s).", val)
 		validCmdline = false
 	}
 	if val := ParseCmdline("/proc/cmdline", "cpuidle.off"); val == "1" {
-		WarningLog("CPU idle time management entirely disabled (cpuidle.off=%s).", val)
+		InfoLog("CPU idle time management entirely disabled (cpuidle.off=%s).", val)
 		validCmdline = false
 	}
 	if val := ParseCmdline("/proc/cmdline", "intel_idle.max_cstate"); val == "0" {
-		WarningLog("intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_idle.max_cstate=%s).", val)
+		InfoLog("intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_idle.max_cstate=%s).", val)
 		validCmdline = false
 	}
 	if val := ParseCmdline("/proc/cmdline", "intel_pstate"); val == "disable" {
-		WarningLog("intel_pstate driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_pstate=%s).", val)
+		InfoLog("intel_pstate driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_pstate=%s).", val)
 		validCmdline = false
 	}
 	return validCmdline
@@ -317,22 +317,22 @@ func chkCPUDriver() bool {
 	validDriver := true
 	val, err := os.ReadFile(path.Join(cpuDir, "cpuidle/current_driver"))
 	if err != nil || !strings.Contains(string(val), "intel_idle") {
-		WarningLog("Unsupported CPUIdle driver '%s' used (%v)", val, err)
+		InfoLog("Unsupported CPUIdle driver '%s' used (%v)", strings.TrimSpace(string(val)), err)
 		validDriver = false
 	}
 	val, err = os.ReadFile(path.Join(cpuDir, "cpu0/cpufreq/scaling_driver"))
 	if err != nil || !strings.Contains(string(val), "intel_pstate") {
-		WarningLog("Unsupported CPU driver '%s' used (%v)", val, err)
+		InfoLog("Unsupported CPU driver '%s' used (%v)", strings.TrimSpace(string(val)), err)
 		validDriver = false
 	}
 	_, err = os.Stat(path.Join(cpuDir, "intel_pstate"))
 	if err != nil {
-		WarningLog("Missing directory '%s'", path.Join(cpuDir, "intel_pstate"))
+		InfoLog("Missing directory '%s'", path.Join(cpuDir, "intel_pstate"))
 		validDriver = false
 	} else {
 		val, err := os.ReadFile(path.Join(cpuDir, "intel_pstate/status"))
 		if err != nil || !strings.Contains(string(val), "active") {
-			WarningLog("Status of intel_pstate driver is '%s' (%v)", val, err)
+			InfoLog("Status of intel_pstate driver is '%s' (%v)", strings.TrimSpace(string(val)), err)
 			validDriver = false
 		}
 	}
@@ -550,7 +550,7 @@ func currentCPUDriver() string {
 	if val, err := os.ReadFile(cpuDriverFile); err != nil {
 		InfoLog("Problems reading file '%s' - %+v\n", cpuDriverFile, err)
 	} else {
-		cpuDriver = string(val)
+		cpuDriver = strings.TrimSpace(string(val))
 	}
 	return cpuDriver
 }
