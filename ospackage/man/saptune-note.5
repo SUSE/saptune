@@ -56,9 +56,13 @@ Supported tags are:
 .BI os= <os_version>
 to define a special \fIos version\fP
 .br
-Valid values for \fBos=\fP are the values from the \fBVERSION=\fP line of \fB/etc/os-release\fP, e.g. 12-SP5, 12, 15 or 15-SP1
+Valid values for \fBos=\fP are the values from the \fBVERSION=\fP line of \fB/etc/os-release\fP, e.g. 12-SP5, 12, 15, 15-SP5 or 16.0
 .br
-To mark an entire major release the string 12-* or 15-* can be used.
+To mark an entire major release the string 12-*, 15-* or 16.* can be used.
+.br
+Additional there is the possibility to use a list or a range of valid releases (service packs, dot releases)
+.br
+e.g 15-[2,4-5,6-,-7]
 .TP
 .BI arch= <hardware_architecture>
 to define a special \fIhardware architecture\fP:
@@ -547,6 +551,8 @@ Sometimes this section may include lines with parameter settings commented out a
 The section "[rpm]" is checking rpm versions on the system.
 The values from the Note definition files are only checked against the installed rpm versions on the system. No other action is supported.
 .br
+Only \fBlower\fP versions installed on the system are considered as non-compliant. A installed rpm version equal or higher is considered as compliant.
+.br
 Package dependencies - if needed - are handled by the saptune package installation.
 
 With the availability of tagged sections, we support 2 different types of rpm line syntax. The first one - our \fBOld\fP Syntax - only for compatibility reasons. The second one - our \fBNew\fP Syntax - is our preferred syntax in combination with tagged rpm sections.
@@ -569,13 +575,13 @@ systemd 12-SP2 228-142.1
 .br
 sapinit-systemd-compat 12 1.0-2.1
 .br
-sapinit-systemd-compat 12-SP1 1.0-2.1
-.br
-util-linux 12-SP1 2.25-22.1
+util-linux 16.0 2.40.4-160000.1.3
 .br
 bzip2 all 1.0.8
 
 Only the lines where the SLE version is matching the running system OS are checked and displayed during the 'verify' and 'simulate' option.
+.br
+Entries with non-matching SLE versions are reported in the saptune log file as INFO
 .br
 That means, if there is no matching SLE version for the running OS no rpm entries are listed during the 'verify' and 'simulate' operation.
 
