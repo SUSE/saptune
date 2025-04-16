@@ -579,7 +579,9 @@ Show all notes that are associated with the specified solution, and all changes 
 \" _strm_3.2.0_end
 .TP
 .B verify
-If a solution name is specified, saptune verifies the running system against the recommended settings of this solution. If the solution name is not specified, saptune verifies all system parameters against all implemented solutions.
+If a Solution name is specified, saptune verifies the running system against all Notes of that Solution regardless of their state.
+.br If no Solution name is specified, only for an enabled Solution all enabled Notes of that Solution gets verified.
+.br And if the string \fIapplied\fP is specified, only for an applied Solution all applied Notes of that Solution gets verified.
 .TP
 .B edit
 This allows to edit the note list of the customer or vendor specific solution definitions in \fI/etc/saptune/extra\fP.
