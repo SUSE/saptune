@@ -185,7 +185,7 @@ current order of enabled notes is: simpleNote
 [32m[1mThe running system is currently well-tuned according to all of the enabled notes.[22m[0m
 `
 		buffer := bytes.Buffer{}
-		VerifyAllParameters(&buffer, tApp)
+		VerifyAllParameters(&buffer, tApp, false)
 		txt := buffer.String()
 		checkOut(t, txt, verifyMatchText)
 	})

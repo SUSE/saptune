@@ -219,7 +219,7 @@ func TestVerifyNoteAndSolutions(t *testing.T) {
 	if err := tuneApp.TuneNote("1002"); err != nil {
 		t.Fatal(err)
 	}
-	if notes, comparisons, err := tuneApp.VerifySolution("sol1"); err != nil || len(notes) != 1 || len(comparisons) != 1 || notes[0] != "1001" {
+	if notes, comparisons, err := tuneApp.VerifySolution("sol1", "all"); err != nil || len(notes) != 1 || len(comparisons) != 1 || notes[0] != "1001" {
 		t.Fatal(notes, comparisons, err)
 	}
 	if conforming, comparisons, _, err := tuneApp.VerifyNote("1002"); err != nil || len(comparisons) == 0 || !conforming {
@@ -229,10 +229,10 @@ func TestVerifyNoteAndSolutions(t *testing.T) {
 	if conforming, comparisons, _, err := tuneApp.VerifyNote("1001"); err != nil || len(comparisons) == 0 || conforming {
 		t.Fatal(conforming, comparisons, err)
 	}
-	if notes, comparisons, err := tuneApp.VerifySolution("sol12"); err != nil || len(notes) != 1 || len(comparisons) != 2 || notes[0] != "1001" {
+	if notes, comparisons, err := tuneApp.VerifySolution("sol12", "all"); err != nil || len(notes) != 1 || len(comparisons) != 2 || notes[0] != "1001" {
 		t.Fatal(notes, comparisons, err)
 	}
-	if notes, comparisons, err := tuneApp.VerifyAll(); err != nil || len(notes) != 1 || len(comparisons) != 2 || notes[0] != "1001" {
+	if notes, comparisons, err := tuneApp.VerifyAll(false); err != nil || len(notes) != 1 || len(comparisons) != 2 || notes[0] != "1001" {
 		t.Fatal(notes, comparisons, err)
 	}
 }
