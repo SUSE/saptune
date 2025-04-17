@@ -228,7 +228,7 @@ Remember: if you wish to automatically activate the solution's tuning options af
 
 		errExitMatchText := `ERROR: Failed to test the current system against the specified note: solution name "" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
-and then please double check your input and /etc/sysconfig/saptune
+and then please double check your input
 `
 		simErrorMatchText := PrintHelpAndExitMatchText
 
@@ -258,7 +258,7 @@ and then please double check your input and /etc/sysconfig/saptune
 		errExitMatchText := `ERROR: There is already one solution applied. Applying another solution is NOT supported.
 ERROR: Failed to tune for solution : solution name "" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
-and then please double check your input and /etc/sysconfig/saptune
+and then please double check your input
 `
 		applyErrorMatchText := PrintHelpAndExitMatchText + `All tuning options for the SAP solution have been applied successfully.
 
@@ -290,7 +290,7 @@ Remember: if you wish to automatically activate the solution's tuning options af
 
 		errExitMatchText := `ERROR: Failed to revert tuning for solution : solution name "" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
-and then please double check your input and /etc/sysconfig/saptune
+and then please double check your input
 `
 		revertErrorMatchText := PrintHelpAndExitMatchText
 

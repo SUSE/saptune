@@ -118,7 +118,7 @@ Hints or values not yet handled by saptune. So please read carefully, check and 
 		tstRetErrorExit = -1
 		errMatchText := `ERROR: Failed to test the current system against the specified note: the Note ID "" is not recognised by saptune.
 Run "saptune note list" for a complete list of supported notes.
-and then please double check your input and /etc/sysconfig/saptune
+and then please double check your input
 `
 		errExitMatchText := PrintHelpAndExitMatchText
 
@@ -151,7 +151,7 @@ Remember: if you wish to automatically activate the solution's tuning options af
 		tstRetErrorExit = -1
 		errMatchText := `ERROR: Failed to tune for note : the Note ID "" is not recognised by saptune.
 Run "saptune note list" for a complete list of supported notes.
-and then please double check your input and /etc/sysconfig/saptune
+and then please double check your input
 `
 		errExitMatchText := PrintHelpAndExitMatchText + applyMatchText
 
@@ -310,7 +310,7 @@ net.ipv4.ip_local_port_range = 31768 61999
 		tstRetErrorExit = -1
 		errMatchText := `ERROR: the Note ID "" is not recognised by saptune.
 Run "saptune note list" for a complete list of supported notes.
-and then please double check your input and /etc/sysconfig/saptune
+and then please double check your input
 ERROR: Note  not found in  or /home/ci_tst/gopath/src/github.com/SUSE/saptune/testdata/extra/.
 ERROR: Failed to read file '' - open : no such file or directory
 `
@@ -579,7 +579,7 @@ func TestNoteActionCustomise(t *testing.T) {
 	// test with missing note id
 	errMatchText := `ERROR: the Note ID "" is not recognised by saptune.
 Run "saptune note list" for a complete list of supported notes.
-and then please double check your input and /etc/sysconfig/saptune
+and then please double check your input
 ERROR: Problems while editing note definition file '/home/ci_tst/gopath/src/github.com/SUSE/saptune/testdata/etc/saptune/override/' - write /tmp/.sttemp: copy_file_range: is a directory
 `
 	NoteActionCustomise(&custBuffer, "", cApp)
@@ -722,7 +722,7 @@ func TestNoteActionEdit(t *testing.T) {
 	// test with missing note id
 	errMatchText := `ERROR: the Note ID "" is not recognised by saptune.
 Run "saptune note list" for a complete list of supported notes.
-and then please double check your input and /etc/sysconfig/saptune
+and then please double check your input
 ERROR: The Note definition file you want to edit is a saptune internal (shipped) Note and can NOT be edited. Use 'saptune note customise' instead. Exiting ...
 ERROR: Problems while editing Note definition file '/home/ci_tst/gopath/src/github.com/SUSE/saptune/testdata/' - write /tmp/.sttemp: copy_file_range: is a directory
 `
