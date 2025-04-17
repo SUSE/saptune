@@ -66,7 +66,7 @@ func (app *App) GetSolutionByName(name string) (solution.Solution, error) {
 	}
 	return nil, fmt.Errorf(`solution name "%s" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
-and then please double check your input and /etc/sysconfig/saptune`, name)
+and then please double check your input`, name)
 }
 
 // TuneSolution apply tuning for a solution.

@@ -505,7 +505,7 @@ func mvStageToWork(stageName string) error {
 func getStagingFromConf() bool {
 	sconf, err := txtparser.ParseSysconfigFile(saptuneSysconfig, true)
 	if err != nil {
-		system.ErrorExit("Unable to read file '/etc/sysconfig/saptune': '%v'\n", err, 2)
+		system.ErrorExit("Unable to read file '%s': '%v'\n", saptuneSysconfig, err, 2)
 	}
 	if sconf.GetString("STAGING", "false") == "true" {
 		stagingSwitch = true
