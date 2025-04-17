@@ -157,11 +157,13 @@ func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 		NotesOrder:    []string{},
 	}
 	chkNotes := "all"
+	reportState := "enabled"
 	if solName == "" && len(tuneApp.TuneForSolutions) > 0 {
 		chkNotes = "enabled"
 		solName = tuneApp.TuneForSolutions[0]
 	}
 	if solName == "applied" {
+		reportState = solName
 		solName = ""
 		if len(tuneApp.TuneForSolutions) > 0 {
 			if _, ok := tuneApp.IsSolutionApplied(tuneApp.TuneForSolutions[0]); ok {
@@ -171,7 +173,7 @@ func SolutionActionVerify(writer io.Writer, solName string, tuneApp *app.App) {
 		}
 	}
 	if solName == "" {
-		fmt.Fprintf(writer, "No solutions enabled, nothing to verify.\n")
+		fmt.Fprintf(writer, "No solutions %s, nothing to verify.\n", reportState)
 	} else {
 		// Check system parameters against the specified solution, no matter the solution has been tuned for or not.
 		unsatisfiedNotes, comparisons, err := tuneApp.VerifySolution(solName, chkNotes)
