@@ -730,7 +730,7 @@ func chkTuningResult(writer io.Writer, tuneApp *app.App, jstat *system.JStatus) 
 		tuningResult = "not tuned"
 	} else {
 		oldStdout, oldSdterr := system.SwitchOffOut()
-		unsatisfiedNotes, _, err := tuneApp.VerifyAll()
+		unsatisfiedNotes, _, err := tuneApp.VerifyAll(false)
 		system.SwitchOnOut(oldStdout, oldSdterr)
 		if err != nil {
 			system.WarningLog("Failed to verify the tuning state of the current system: %v", err)
@@ -817,7 +817,7 @@ func ignoreServiceReload() bool {
 	ret := false
 	sconf, err := txtparser.ParseSysconfigFile(saptuneSysconfig, true)
 	if err != nil {
-		system.ErrorExit("Unable to read file '/etc/sysconfig/saptune': '%v'\n", err, 2)
+		system.ErrorExit("Unable to read file '%s': '%v'\n", saptuneSysconfig, err, 2)
 	}
 	if sconf.GetString("IGNORE_RELOAD", "no") == "yes" {
 		ret = true

@@ -263,7 +263,7 @@ func TestServiceActions(t *testing.T) {
 		}
 		if tstRetErrorExit != 0 {
 			t.Logf("error exit should be '0' and NOT '%v'\n", tstRetErrorExit)
-		 }
+		}
 		errExOut := errExitbuffer.String()
 		if errExOut != "" {
 			t.Logf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)

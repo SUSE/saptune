@@ -166,7 +166,7 @@ func (app *App) GetNoteByID(id string) (note.Note, error) {
 	}
 	return nil, fmt.Errorf(`the Note ID "%s" is not recognised by saptune.
 Run "saptune note list" for a complete list of supported notes.
-and then please double check your input and /etc/sysconfig/saptune`, id)
+and then please double check your input`, id)
 }
 
 // TuneNote apply tuning for a note.

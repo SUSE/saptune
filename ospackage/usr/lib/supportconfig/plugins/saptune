@@ -115,6 +115,7 @@ display_package_info saptune
 display_file /var/log/saptune/saptune.log
 display_file /etc/logrotate.d/saptune
 display_file /etc/sysconfig/saptune
+display_file /var/lib/saptune/config/saptune
 display_systemd_status saptune.service
 display_systemd_cat saptune.service
 display_cmd saptune status

@@ -177,23 +177,18 @@ func (app *App) RevertAll(permanent bool) error {
 // VerifyAll inspect the system and verify all parameters against all enabled
 // notes/solutions.
 // The note comparison results will always contain all fields from all notes.
-func (app *App) VerifyAll() (unsatisfiedNotes []string, comparisons map[string]map[string]note.FieldComparison, err error) {
+func (app *App) VerifyAll(chkApplied bool) (unsatisfiedNotes []string, comparisons map[string]map[string]note.FieldComparison, err error) {
 	unsatisfiedNotes = make([]string, 0)
 	comparisons = make(map[string]map[string]note.FieldComparison)
-	for _, solName := range app.TuneForSolutions {
-		// Collect field comparison results from solution notes
-		unsatisfiedSolNotes, noteComparisons, err := app.VerifySolution(solName)
-		if err != nil {
-			return nil, nil, err
-		} else if len(unsatisfiedSolNotes) > 0 {
-			unsatisfiedNotes = append(unsatisfiedNotes, unsatisfiedSolNotes...)
+	for _, noteID := range app.NoteApplyOrder {
+		// Collect field comparison results from all enabled notes
+		if chkApplied {
+			// Collect field comparison results from all applied (tuned) notes
+			if _, ok := app.IsNoteApplied(noteID); !ok {
+				// note not applied
+				continue
+			}
 		}
-		for noteName, noteComparisonResult := range noteComparisons {
-			comparisons[noteName] = noteComparisonResult
-		}
-	}
-	for _, noteID := range app.TuneForNotes {
-		// Collect field comparison results from additionally tuned notes
 		conforming, noteComparisons, _, err := app.VerifyNote(noteID)
 		if err != nil {
 			return nil, nil, err

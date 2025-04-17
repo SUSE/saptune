@@ -126,6 +126,22 @@ func GetOsVers() string {
 	return matches[1]
 }
 
+// GetOsRel returns the OS release
+func GetOsRel() string {
+	// VERSION="12", VERSION="15"
+	// VERSION="12-SP1", VERSION="12-SP2", VERSION="12-SP3"
+	var re = regexp.MustCompile(`VERSION="\d+[-\.]S?P?(\d+)\s*\w*"`)
+	val, err := os.ReadFile("/etc/os-release")
+	if err != nil {
+		return ""
+	}
+	matches := re.FindStringSubmatch(string(val))
+	if len(matches) == 0 {
+		return ""
+	}
+	return matches[1]
+}
+
 // GetOsName returns the OS name
 func GetOsName() string {
 	// NAME="SLES"
@@ -139,6 +155,21 @@ func GetOsName() string {
 		return ""
 	}
 	return matches[1]
+}
+
+// IsSLE returns true, if System is running a SLE version equal to the
+// given parameter
+func IsSLE(vers string) bool {
+	if vers == "16" && IsSLE16() {
+		return true
+	}
+	if vers == "15" && IsSLE15() {
+		return true
+	}
+	if vers == "12" && IsSLE12() {
+		return true
+	}
+	return false
 }
 
 // IsSLE16 returns true, if System is running a SLE16 release

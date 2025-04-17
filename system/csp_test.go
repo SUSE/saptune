@@ -13,65 +13,70 @@ func TestGetCSP(t *testing.T) {
 
 	// amazon-web-services
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{noCloud, map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_aws"), map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val := GetCSP()
 	if val != "aws" {
 		t.Errorf("Test failed, expected 'aws', but got '%s'", val)
 	}
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{noCloud, map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_aws"), map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "aws" {
 		t.Errorf("Test failed, expected 'aws', but got '%s'", val)
 	}
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{noCloud, map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_aws"), map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "aws" {
 		t.Errorf("Test failed, expected 'aws', but got '%s'", val)
 	}
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{noCloud, map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_aws"), map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "aws" {
 		t.Errorf("Test failed, expected 'aws', but got '%s'", val)
 	}
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{noCloud, map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_aws"), map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "aws" {
@@ -80,39 +85,42 @@ func TestGetCSP(t *testing.T) {
 
 	// GoogleCloud
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{noCloud, map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_google"), map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "google" {
 		t.Errorf("Test failed, expected 'google', but got '%s'", val)
 	}
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{noCloud, map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_google"), map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "google" {
 		t.Errorf("Test failed, expected 'google', but got '%s'", val)
 	}
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_google"), map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "google" {
@@ -121,13 +129,14 @@ func TestGetCSP(t *testing.T) {
 
 	// OracleCloud
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{noCloud, map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_ovm"), map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "ovm" {
@@ -136,13 +145,14 @@ func TestGetCSP(t *testing.T) {
 
 	// microsoft-azure
 	allManufacturerProviders = [...]manufacturerProviders{
-		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+		{noCloud, map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 		{path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/csp_azure"), map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS, isGoogle: CSPGoogle, isOVM: CSPOVM}},
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "azure" {
@@ -156,6 +166,7 @@ func TestGetCSP(t *testing.T) {
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "azure" {
@@ -169,6 +180,7 @@ func TestGetCSP(t *testing.T) {
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "" {
@@ -184,6 +196,7 @@ func TestGetCSP(t *testing.T) {
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 	val = GetCSP()
 	if val != "alibaba" {
@@ -197,6 +210,7 @@ func TestGetCSP(t *testing.T) {
 		{noCloud, map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		{noCloud, map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		{noCloud, map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 
 	// dmiDir does not exist
@@ -224,5 +238,7 @@ func TestGetCSP(t *testing.T) {
 		{"/sys/class/dmi/id/system_version", map[*regexp.Regexp]string{isAWS: CSPAWS}},
 		// /usr/sbin/dmidecode -s sys-vendor
 		{"/sys/class/dmi/id/sys_vendor", map[*regexp.Regexp]string{isAWS: CSPAWS}},
+		// /usr/sbin/dmidecode -s chassis-manufacturer
+		{"/sys/class/dmi/id/chassis_vendor", map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
 }

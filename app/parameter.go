@@ -136,13 +136,13 @@ func chkForNewOrChangedParams(sectCont *txtparser.INIFile, paramEntry map[string
 	section := paramEntry["section"].(string)
 	key := paramEntry["key"].(string)
 	/*
-	// ANGI TODO - do I need section handling or is it handled by
-	// the current checks?
-	if _, ok := sectCont.KeyValue[section]; !ok {
-		// new section
-		paramEntry["newParam"] = true
-		changed = true
-	} else if _, ok := sectCont.KeyValue[section][key]; !ok {
+		// ANGI TODO - do I need section handling or is it handled by
+		// the current checks?
+		if _, ok := sectCont.KeyValue[section]; !ok {
+			// new section
+			paramEntry["newParam"] = true
+			changed = true
+		} else if _, ok := sectCont.KeyValue[section][key]; !ok {
 	*/
 	if _, ok := sectCont.KeyValue[section][key]; !ok {
 		// not in stored section info - new parameter

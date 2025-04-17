@@ -108,7 +108,7 @@ func main() {
 	case "2", "3":
 		break
 	default:
-		system.ErrorExit("Wrong saptune version in file '/etc/sysconfig/saptune': %s", SaptuneVersion, 128)
+		system.ErrorExit("Wrong saptune version in file '%s': %s", system.SaptuneConfigFile(), SaptuneVersion, 128)
 	}
 
 	solutionSelector := system.GetSolutionSelector()
@@ -148,7 +148,7 @@ func checkUpdateLeftOvers() {
 
 	// check if old solution or notes are applied
 	if tuneApp != nil && (len(tuneApp.NoteApplyOrder) == 0 && (len(tuneApp.TuneForNotes) != 0 || len(tuneApp.TuneForSolutions) != 0)) {
-		system.ErrorExit("There are 'old' solutions or notes defined in file '/etc/sysconfig/saptune'. Seems there were some steps missed during the migration from saptune version 1 to version 3. Please check. Refer to saptune-migrate(7) for more information")
+		system.ErrorExit("There are 'old' solutions or notes defined in file '%s'. Seems there were some steps missed during the migration from saptune version 1 to version 3. Please check. Refer to saptune-migrate(7) for more information", system.SaptuneConfigFile())
 	}
 }
 
@@ -313,7 +313,7 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 	// set values read from the config file
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
 	if saptuneVers != "1" && saptuneVers != "2" && saptuneVers != "3" {
-		fmt.Fprintf(writer, "Error: Wrong saptune version in file '/etc/sysconfig/saptune': %s\n", saptuneVers)
+		fmt.Fprintf(writer, "Error: Wrong saptune version in file '%s': %s\n", saptuneConf, saptuneVers)
 		system.ErrorExit("", 128)
 	}
 
