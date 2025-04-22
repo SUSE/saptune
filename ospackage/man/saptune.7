@@ -1,0 +1,39 @@
+.\"/*
+.\" * Copyright (c) 2025 SUSE LLC. 
+.\" * All rights reserved 
+.\" * Authors: Soeren Schmidt, Angela Briel
+.\" *
+.\" * This program is free software; you can redistribute it and/or
+.\" * modify it under the terms of the GNU General Public License
+.\" * as published by the Free Software Foundation; either version 2
+.\" * of the License, or (at your option) any later version.
+.\" *
+.\" * This program is distributed in the hope that it will be useful, 
+.\" * but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" * GNU General Public License for more details.
+.\" */
+.\"
+.TH saptune "7" "April 2025" "" "saptune installation"
+.SH NAME
+saptune \- Installation behavior
+
+Starting with saptune version 3.2 on SLE 16 we change the behavior of saptune during package installation. The system now always get a default tuning.
+
+If the saptune package gets installed (by default SLES for SAP 16 installation, by selecting \fISAP Application Server Base\fP during the SLE 16 installation, by pattern or manually) an initial base tuning is done similar to \fIsapconf\fP in SLES 15.
+The saptune systemd service is \fBstarted\fP and the solution \fBSAP_Base\fP gets applied (\fIsaptune solution apply SAP_Base\fP). As the saptune.service is enabled by vendor presets the base tuning is persistent after reboot.
+
+The \fBSAP_Base\fP solution is based on the SAP Note \fI1275776 - Linux: Preparing SLES for SAP environments\fP (https://me.sap.com/notes/1275776) describing the new base tuning.
+
+The system tuning for SAP workloads can simply adapted by '\fIsaptune solution change <newSolutiuon>\fP' or the combination of '\fIsaptune revert all\fP' followed by '\fIsaptune solution apply <Solution>\fP' or '\fIsaptune note apply <Note>\fP'
+
+.SH ATTENTION
+In SLE 15 nothing changed regarding the saptune package installation and the base tuning. Per default \fBsapconf\fP is installed, active and provides the base tuning for SAP workloads. To switch to saptune for SAP workload tuning please use the command '\fIsaptune service takeover\fP' and '\fIsaptune solution apply <Solution>\fP'.
+
+.SH SEE ALSO
+.NF
+saptune-note(5) saptune-solution(5) saptune(8)
+
+.SH AUTHOR
+.NF
+Soeren Schmidt <soeren.schmidt@suse.com>, Angela Briel <abriel@suse.com>

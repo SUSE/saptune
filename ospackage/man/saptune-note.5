@@ -640,9 +640,11 @@ When parsing the section '[sysctl]' in the Note definition file saptune addition
 .br
 saptune will now check, if the parameters from the section '[sysctl]' in the Note definition file are additional defined in one or more of the (system) sysctl config files. If yes, a warning is displayed and logged and a footnote will be prepared for the 'saptune verify' output. The info shown is the filename, where the parameter is additionally defined with it's value in brackets.
 .br
-The central saptune configuration file \fI/etc/sysconfig/saptune\fP contains a parameter \fbSKIP_SYSCTL_FILES\fP, which contains a comma separated list of sysctl.conf files or directories containing sysctl.conf files, which should be excluded from this warning message and the footnote.
+The central saptune configuration file contains a parameter \fBSKIP_SYSCTL_FILES\fP, which contains a comma separated list of sysctl.conf files or directories containing sysctl.conf files, which should be excluded from this warning message and the footnote.
 .br
 Default is \fbSKIP_SYSCTL_FILES="/boot"\fP to skip the WARNINGS for \fI/boot/sysctl.conf-<kernelversion>\fP
+.br
+The parameter can be adapted by '\fIsaptune configure SKIP_SYSCTL_FILES <newValue>\fP'
 
 Hint: At the moment links are not recognized. So the linked files will be added both in the file list.
 
@@ -706,7 +708,7 @@ The directory contains overrides for Notes created by '\fBsaptune note customise
 
 .SH "SEE ALSO"
 .LP
-saptune-solution(5) saptune(8)
+saptune-solution(5) saptune(7) saptune(8)
 \" _strm_3.2.0_start
 saptune-migrate(7)
 \" _strm_3.2.0_end

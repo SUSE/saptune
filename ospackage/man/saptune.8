@@ -153,7 +153,7 @@ status of saptune.service (enabled/disabled, active/inactive/failed/...the other
 .IP \[bu]
 saptune package version
 .IP \[bu]
-configured saptune major version (from \fI/etc/sysconfig/saptune\fP)
+configured saptune major version (from the central saptune configuration file)
 .IP \[bu]
 enabled Solution
 .br
@@ -382,7 +382,7 @@ By using the command line argument '\fB--show-non-compliant\fP' it is possible t
 
 It is possible to use a \fBcolor scheme\fP for the verify output table.
 .br
-The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme SCHEME\fP' or as variable '\fBCOLOR_SCHEME SCHEME\fP' in the saptune configuration file \fI/etc/sysconfig/saptune\fP.
+The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme SCHEME\fP' or as parameter - value pair '\fBCOLOR_SCHEME SCHEME\fP' in the saptune command '\fIsaptune configure COLOR_SCHEME <SCHEME>\fP'
 .br
 Possible \fBcolor schemes\fP are:
 .RS 7
@@ -689,14 +689,14 @@ At the moment only the Notes from the last update are kept in \fB/var/lib/saptun
 .SS
 .TP
 .B status
-Displays the status of staging, basically the content of the variable STAGING in /etc/sysconfig/saptune.
+Displays the status of staging, basically the content of the variable STAGING in the central saptune configuration file.
 .TP
 .B is-enabled
-Returns the status of staging, basically the content of the variable STAGING in /etc/sysconfig/saptune, as exit code (0 == enabled, 1 == disabled).
+Returns the status of staging, basically the content of the variable STAGING in the central saptune configuration file, as exit code (0 == enabled, 1 == disabled).
 No output is generated as this is meant to be used in scripts.
 .TP
 .B enable|disable
-Enables or disables staging, by setting the variable STAGING in /etc/sysconfig/saptune. The result of the status change is displayed.
+Enables or disables staging, by setting the variable STAGING in the central saptune configuration file. The result of the status change is displayed.
 
 Altering the setting does not changes the content of the staging and working directory.
 .br
@@ -734,7 +734,7 @@ First the command will show an analysis of the objects going to be released to m
 Because the release is irreversible, the user has to confirm the action.
 
 .SH CONFIGURE ACTIONS
-Replaces the direct editing of the saptune configuration file /etc/sysconfig/saptune, which will be replaced by an intern configuration file and not be present in future versions.
+Replaces the direct editing of the saptune configuration file /etc/sysconfig/saptune in SLES for SAP 15, which will be replaced by an intern configuration file in SLE 16 and not be present in future versions.
 .br
 Not all of the former variables will be available as configure option, only those who should be changeable by the user.
 .br
@@ -1061,7 +1061,7 @@ the saptune SAP Note or solution definitions, which are present in the Package A
 .PP
 \fI/etc/sysconfig/saptune\fP
 .RS 4
-the central saptune configuration file containing the information about the currently enabled notes and solutions, the order in which these notes are applied and the version of saptune currently used.
+the central saptune configuration file in SLES for SAP \fB12 and 15\fP containing the information about the currently enabled notes and solutions, the order in which these notes are applied and the version of saptune currently used.
 .br
 ATTENTION:
 the manual editing of this file will be \fBdeprecated\fP on SLES for SAP 12 and 15 as the main configuration file will be (re)moved in SLE 16.
@@ -1125,7 +1125,7 @@ saptune now sets the values read from the Note definition files irrespective of 
 
 .SH SEE ALSO
 .NF
-saptune-note(5) saptune-solution(5)
+saptune-note(5) saptune-solution(5) saptune(7)
 \" _strm_3.2.0_start
 saptune-migrate(7)
 \" _strm_3.2.0_end
