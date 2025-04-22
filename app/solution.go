@@ -66,7 +66,7 @@ func (app *App) GetSolutionByName(name string) (solution.Solution, error) {
 	}
 	return nil, fmt.Errorf(`solution name "%s" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
-and then please double check your input and /etc/sysconfig/saptune`, name)
+and then please double check your input`, name)
 }
 
 // TuneSolution apply tuning for a solution.
@@ -175,7 +175,7 @@ func (app *App) RevertSolution(solName string) error {
 // VerifySolution inspect the system and verify that all parameters conform
 // to all of the notes associated to the solution.
 // The note comparison results will always contain all fields from all notes.
-func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, comparisons map[string]map[string]note.FieldComparison, err error) {
+func (app *App) VerifySolution(solName, chkNotes string) (unsatisfiedNotes []string, comparisons map[string]map[string]note.FieldComparison, err error) {
 	unsatisfiedNotes = make([]string, 0)
 	comparisons = make(map[string]map[string]note.FieldComparison)
 	sol, err := app.GetSolutionByName(solName)
@@ -183,6 +183,24 @@ func (app *App) VerifySolution(solName string) (unsatisfiedNotes []string, compa
 		return nil, nil, err
 	}
 	for _, noteID := range sol {
+		// Collect field comparison results from all enabled notes of
+		// the solution
+		if chkNotes == "applied" {
+			// Collect field comparison results from all applied
+			// (tuned) notes of the solution
+			if _, ok := app.IsNoteApplied(noteID); !ok {
+				// note not applied
+				continue
+			}
+		}
+		if chkNotes == "enabled" {
+			// Collect field comparison results from all enabled
+			// notes of the solution
+			if app.PositionInNoteApplyOrder(noteID) < 0 {
+				// noteID not yet available, not enabled
+				continue
+			}
+		}
 		conforming, noteComparisons, _, err := app.VerifyNote(noteID)
 		if err != nil {
 			return nil, nil, err

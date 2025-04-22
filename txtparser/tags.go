@@ -5,6 +5,7 @@ import (
 	"github.com/SUSE/saptune/system"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -75,35 +76,106 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 // chkOsTags checks if the os section tag is valid or not
 func chkOsTags(tagField string, secFields []string) bool {
 	ret := true
-	osWild := regexp.MustCompile(`(.*)-(\*)`)
+	osWild := regexp.MustCompile(`(.*)[-\.]S?P?(\*)`)
 	osw := osWild.FindStringSubmatch(tagField)
 	if len(osw) != 3 {
-		if tagField != system.GetOsVers() {
-			// os version does not match
+		// check for multiple os releases
+		return chkMultiRelease(tagField, secFields)
+	}
+	// len == 3
+	if osw[2] == "*" {
+		// wildcard 15-* or 15.*
+		// check for supported os version
+		if osw[1] != "12" && osw[1] != "15" && osw[1] != "16" {
+			system.InfoLog("unsupported os version '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", osw[1], secFields)
+			ret = false
+		}
+		// check runing os version
+		if !system.IsSLE(osw[1]) {
 			system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
 			ret = false
 		}
-	} else if osw[2] == "*" {
-		// wildcard
-		switch osw[1] {
-		case "16":
-			if !system.IsSLE16() {
-				system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
-				ret = false
+	} else {
+		// wrong syntax
+		system.InfoLog("wrong syntax for tag in section definition '%v'.  Skipping whole section with all lines till next valid section definition", secFields)
+		ret = false
+	}
+	return ret
+}
+
+// chkMultiRelease checks if the os section tag contains multiple os releases
+func chkMultiRelease(tagField string, secFields []string) bool {
+	// 15-[2,4-5,7-]
+	osMultiSPs := regexp.MustCompile(`(.*)[-\.]\[(.*)\]`)
+	osmsps := osMultiSPs.FindStringSubmatch(tagField)
+	if len(osmsps) > 1 {
+		// check for supported os version
+		if osmsps[1] != "12" && osmsps[1] != "15" && osmsps[1] != "16" {
+			system.InfoLog("unsupported os version '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", osmsps[1], secFields)
+			return false
+		}
+	}
+	if len(osmsps) != 3 {
+		// len == -> 15-SP6, 16.0
+		if tagField != system.GetOsVers() {
+			// os version does not match
+			system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
+			return false
+		}
+		return true
+	}
+	// len == 3 - check releases
+	return chkRelease(osmsps[2], secFields)
+}
+
+// chkRelease checks if the os section tag contains a release matching the
+// running system
+func chkRelease(relList string, secFields []string) bool {
+	ret := false
+	chkrel, _ := strconv.Atoi(system.GetOsRel())
+	// [2,4-5,7-]
+	for _, rel := range strings.Split(relList, ",") {
+		relrange := strings.Split(rel, "-")
+		if len(relrange) == 1 {
+			// [2]
+			if rel != system.GetOsRel() {
+				system.InfoLog("os release '%s' in section definition '%v' does not match running os release '%s'. Skipping whole section with all lines till next valid section definition", rel, secFields, system.GetOsRel())
+				continue
+			} else {
+				ret = true
+				break
 			}
-		case "15":
-			if !system.IsSLE15() {
-				system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
-				ret = false
+		}
+
+		if relrange[0] == "" && relrange[1] == "" {
+			// wrong syntax [-]
+			system.InfoLog("wrong syntax for tag in section definition '%v'.  Skipping whole section with all lines till next valid section definition", secFields)
+			continue
+		}
+		if relrange[0] == "" {
+			//[-4] --> SP0, SP1, SP2, SP3, SP4
+			chkrelrng, _ := strconv.Atoi(relrange[1])
+			if chkrelrng >= chkrel {
+				ret = true
+				break
 			}
-		case "12":
-			if !system.IsSLE12() {
-				system.InfoLog("os version '%s' in section definition '%v' does not match running os version '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, system.GetOsVers())
-				ret = false
+		}
+		if relrange[1] == "" {
+			// [5-] --> SP5, SP6, SP7
+			chkrelrng, _ := strconv.Atoi(relrange[0])
+			if chkrelrng <= chkrel {
+				ret = true
+				break
 			}
-		default:
-			system.InfoLog("unsupported os version '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", tagField, secFields)
-			ret = false
+		}
+		if relrange[0] != "" && relrange[1] != "" {
+			// [4-6] --> SP4, SP5, SP6
+			relstart, _ := strconv.Atoi(relrange[0])
+			relend, _ := strconv.Atoi(relrange[1])
+			if relstart <= chkrel && relend >= chkrel {
+				ret = true
+				break
+			}
 		}
 	}
 	return ret

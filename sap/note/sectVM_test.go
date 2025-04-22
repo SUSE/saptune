@@ -10,7 +10,7 @@ func TestGetVMVal(t *testing.T) {
 		t.Errorf("wrong value '%+v' for THP.\n", val)
 	}
 	val, _ = GetVMVal("KSM")
-	if val != "1" && val != "0" {
+	if val != "1" && val != "0" && val != "2" {
 		t.Errorf("wrong value '%+v' for KSM.\n", val)
 	}
 }
@@ -28,7 +28,7 @@ func TestOptVMVal(t *testing.T) {
 	if val != "1" {
 		t.Error(val)
 	}
-	val = OptVMVal("KSM", "2")
+	val = OptVMVal("KSM", "3")
 	if val != "0" {
 		t.Error(val)
 	}

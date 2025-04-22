@@ -141,8 +141,8 @@ func stagingActionList(writer io.Writer) {
 	fmt.Fprintf(writer, "\nRemember: To release from staging use the command 'saptune staging release ...'.\n          You can check the differences with 'saptune staging diff ...'.\n")
 }
 
-// stagingActionDiff shows the differences between the Note, the solution definition
-// or all objects in the staging area and the working area.
+// stagingActionDiff shows the differences between the Note, the solution
+// definition or all objects in the staging area and the working area.
 // For each Note in the staging area the output contains the values of all
 // parameter which differ.
 // This includes new or removed parameters as well as changes in the reminder
@@ -505,7 +505,7 @@ func mvStageToWork(stageName string) error {
 func getStagingFromConf() bool {
 	sconf, err := txtparser.ParseSysconfigFile(saptuneSysconfig, true)
 	if err != nil {
-		system.ErrorExit("Unable to read file '/etc/sysconfig/saptune': '%v'\n", err, 2)
+		system.ErrorExit("Unable to read file '%s': '%v'\n", saptuneSysconfig, err, 2)
 	}
 	if sconf.GetString("STAGING", "false") == "true" {
 		stagingSwitch = true
@@ -816,6 +816,7 @@ func compareStageFields(sName string, stage, work map[string]string) (allMatch b
 // and working area
 func PrintStageFields(writer io.Writer, stageName string, comparison map[string]stageComparison) {
 
+	fmtlen1StartVal := len(stageName)
 	workFile := stgFiles.StageAttributes[stageName]["wfilename"]
 	headWork := fmt.Sprintf("Version %s (%s) ", txtparser.GetINIFileVersionSectionEntry(workFile, "version"), txtparser.GetINIFileVersionSectionEntry(workFile, "date"))
 	headStage := fmt.Sprintf("Version %s (%s) ", stgFiles.StageAttributes[stageName]["version"], stgFiles.StageAttributes[stageName]["date"])
@@ -824,7 +825,7 @@ func PrintStageFields(writer io.Writer, stageName string, comparison map[string]
 	sortkeys := sortStageComparisonsOutput(comparison)
 
 	// setup table format values
-	fmtdash, fmtplus, format, colwidth := setupStageTableFormat(comparison)
+	fmtdash, fmtplus, format, colwidth := setupStageTableFormat(comparison, fmtlen1StartVal)
 
 	// print table header
 	fmt.Fprint(writer, fmtdash)
@@ -891,7 +892,7 @@ func sortStageComparisonsOutput(noteCompare map[string]stageComparison) []string
 }
 
 // setupStageTableFormat sets the format of the table columns dependent on the content
-func setupStageTableFormat(stageCompare map[string]stageComparison) (string, string, string, int) {
+func setupStageTableFormat(stageCompare map[string]stageComparison, len1Start int) (string, string, string, int) {
 	var fmtdash string
 	var fmtplus string
 	var format string
@@ -899,6 +900,11 @@ func setupStageTableFormat(stageCompare map[string]stageComparison) (string, str
 	fmtlen1 := 12
 	fmtlen2 := 26
 	fmtlen3 := 26
+	// check length of solution or note name in headline of column 1 to
+	// get a sufficient start value for column 1
+	if len1Start > fmtlen1 {
+		fmtlen1 = len1Start
+	}
 
 	for skey, comparison := range stageCompare {
 		// 1:parameter, 2:working, 3:staging

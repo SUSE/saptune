@@ -85,7 +85,7 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 
 	// check for test packages
 	if RPMDate != "undef" {
-		system.NoticeLog("ATTENTION: You are running a test version (%s for SLES4SAP %d from %s) of saptune which is not supported for production use", RPMVersion, system.IfdefVers(), RPMDate)
+		system.NoticeLog("ATTENTION: You are running a test version (%s for SLES %d from %s) of saptune which is not supported for production use", RPMVersion, system.IfdefVers(), RPMDate)
 	}
 
 	switch system.CliArg(1) {
@@ -133,7 +133,7 @@ func VerifyAction(writer io.Writer, actionName string, tuneApp *app.App) {
 	if actionName != "applied" {
 		PrintHelpAndExit(writer, 1)
 	}
-	VerifyAllParameters(writer, tuneApp)
+	VerifyAllParameters(writer, tuneApp, true)
 }
 
 // RevertAction Revert all notes and solutions
@@ -169,8 +169,8 @@ func rememberMessage(writer io.Writer) {
 	}
 }
 
-// VerifyAllParameters Verify that all system parameters do not deviate from any of the enabled solutions/notes.
-func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
+// VerifyAllParameters Verify that all system parameters do not deviate from any of the enabled or applied notes.
+func VerifyAllParameters(writer io.Writer, tuneApp *app.App, chkApplied bool) {
 	result := system.JPNotes{
 		Verifications: []system.JPNotesLine{},
 		Attentions:    []system.JPNotesRemind{},
@@ -180,7 +180,7 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App) {
 	if len(tuneApp.NoteApplyOrder) == 0 {
 		fmt.Fprintf(writer, "No notes or solutions enabled, nothing to verify.\n")
 	} else {
-		unsatisfiedNotes, comparisons, err := tuneApp.VerifyAll()
+		unsatisfiedNotes, comparisons, err := tuneApp.VerifyAll(chkApplied)
 		if err != nil {
 			system.Jcollect(result)
 			system.ErrorExit("Failed to inspect the current system: %v", err)

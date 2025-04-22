@@ -23,6 +23,9 @@ const (
 	// Alibaba Cloud
 	CSPAlibaba     = "alibaba"
 	CSPAlibabaLong = "Alibaba Cloud"
+	// IBM Cloud VPC (Not IBM Cloud Classic)
+	CSPIBMVPC     = "ibmVPC"
+	CSPIBMVPCLong = "IBM Cloud Virtual Server for VPC"
 )
 
 var dmiDir = "/sys/class/dmi"
@@ -34,6 +37,8 @@ var isAWS = regexp.MustCompile(`.*[aA]mazon.*`)
 var isGoogle = regexp.MustCompile(`.*[gG]oogle.*`)
 var isOVM = regexp.MustCompile(`.*OVM.*`)
 var isAlibaba = regexp.MustCompile(`.*[aA]libaba.*`)
+var isIBMVPCCat = regexp.MustCompile(`.*ibmcloud.*`)
+var isIBMVPC = regexp.MustCompile(`.*IBM:Cloud Compute Server 1.0:.*`)
 
 type manufacturerProviders struct {
 	Manufacturer string
@@ -43,7 +48,7 @@ type manufacturerProviders struct {
 var allManufacturerProviders = [...]manufacturerProviders{
 	// dmidecode key files
 	// /usr/sbin/dmidecode -s chassis-asset-tag
-	{"/sys/class/dmi/id/chassis_asset_tag", map[*regexp.Regexp]string{isAzureCat: CSPAzure}},
+	{"/sys/class/dmi/id/chassis_asset_tag", map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 	// /usr/sbin/dmidecode -s system-manufacturer
 	{"/sys/class/dmi/id/system-manufacturer", map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 	// /usr/sbin/dmidecode -s board-vendor
@@ -56,6 +61,8 @@ var allManufacturerProviders = [...]manufacturerProviders{
 	{"/sys/class/dmi/id/system_version", map[*regexp.Regexp]string{isAWS: CSPAWS}},
 	// /usr/sbin/dmidecode -s sys-vendor
 	{"/sys/class/dmi/id/sys_vendor", map[*regexp.Regexp]string{isAWS: CSPAWS}},
+	// /usr/sbin/dmidecode -s chassis-manufacturer
+	{"/sys/class/dmi/id/chassis_vendor", map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 }
 
 // GetDMIDecode

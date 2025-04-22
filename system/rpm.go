@@ -46,6 +46,7 @@ vers1 is '228-150.22.1', vers2 is '228-142.1'
 // Return true, if installed package version is equal or higher than expected
 // Return false, if installed package version is less than expected
 func CmpRpmVers(vers1, vers2 string) bool {
+	DebugLog("CmpRpmVers - vers1 is '%s', vers2 is '%s'", vers1, vers2)
 	if vers1 == "" {
 		// package not installed
 		return false
@@ -67,6 +68,11 @@ func CmpRpmVers(vers1, vers2 string) bool {
 		return false
 	}
 	// rpm version is equal, so check rpm release
+	if len(actV) < 2 || len(expV) < 2 {
+		// version string without '-' and 'release'
+		// check for version is sufficient
+		return true
+	}
 	ret = CheckRpmVers(actV[1], expV[1])
 	//lint:ignore S1008 we want to keep the comments
 	if ret < 0 {

@@ -153,7 +153,7 @@ status of saptune.service (enabled/disabled, active/inactive/failed/...the other
 .IP \[bu]
 saptune package version
 .IP \[bu]
-configured saptune major version (from \fI/etc/sysconfig/saptune\fP)
+configured saptune major version (from the central saptune configuration file)
 .IP \[bu]
 enabled Solution
 .br
@@ -327,7 +327,10 @@ Print all currently enabled notes as a list separated by blanks without trailing
 Print all currently applied notes as a list separated by blanks without trailing line feed.
 .TP
 .B verify
-If a Note ID is specified, saptune verifies the currently running system against the recommendations specified in the Note. If Note ID is \fBnot\fP specified or the string \fIapplied\fP is specified, saptune verifies all system parameters against all applied Notes. As a result you will see a table containing the following columns
+If a Note ID is specified, saptune verifies the currently running system against the recommendations specified in this Note.
+.br If Note ID is \fBnot\fP specified, saptune verifies all system parameters against all enabled Notes.
+.br And if the string \fIapplied\fP is specified, saptune verifies all system parameters against all applied Notes.
+.br As a result you will see a table containing the following columns
 
 SAPNote, Version | Parameter | Expected | Override | Actual | Compliant
 
@@ -379,7 +382,7 @@ By using the command line argument '\fB--show-non-compliant\fP' it is possible t
 
 It is possible to use a \fBcolor scheme\fP for the verify output table.
 .br
-The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme SCHEME\fP' or as variable '\fBCOLOR_SCHEME SCHEME\fP' in the saptune configuration file \fI/etc/sysconfig/saptune\fP.
+The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme SCHEME\fP' or as parameter - value pair '\fBCOLOR_SCHEME SCHEME\fP' in the saptune command '\fIsaptune configure COLOR_SCHEME <SCHEME>\fP'
 .br
 Possible \fBcolor schemes\fP are:
 .RS 7
@@ -576,7 +579,9 @@ Show all notes that are associated with the specified solution, and all changes 
 \" _strm_3.2.0_end
 .TP
 .B verify
-If a solution name is specified, saptune verifies the running system against the recommended settings of this solution. If the solution name is not specified, saptune verifies all system parameters against all implemented solutions.
+If a Solution name is specified, saptune verifies the running system against all Notes of that Solution regardless of their state.
+.br If no Solution name is specified, only for an enabled Solution all enabled Notes of that Solution gets verified.
+.br And if the string \fIapplied\fP is specified, only for an applied Solution all applied Notes of that Solution gets verified.
 .TP
 .B edit
 This allows to edit the note list of the customer or vendor specific solution definitions in \fI/etc/saptune/extra\fP.
@@ -684,14 +689,14 @@ At the moment only the Notes from the last update are kept in \fB/var/lib/saptun
 .SS
 .TP
 .B status
-Displays the status of staging, basically the content of the variable STAGING in /etc/sysconfig/saptune.
+Displays the status of staging, basically the content of the variable STAGING in the central saptune configuration file.
 .TP
 .B is-enabled
-Returns the status of staging, basically the content of the variable STAGING in /etc/sysconfig/saptune, as exit code (0 == enabled, 1 == disabled).
+Returns the status of staging, basically the content of the variable STAGING in the central saptune configuration file, as exit code (0 == enabled, 1 == disabled).
 No output is generated as this is meant to be used in scripts.
 .TP
 .B enable|disable
-Enables or disables staging, by setting the variable STAGING in /etc/sysconfig/saptune. The result of the status change is displayed.
+Enables or disables staging, by setting the variable STAGING in the central saptune configuration file. The result of the status change is displayed.
 
 Altering the setting does not changes the content of the staging and working directory.
 .br
@@ -729,7 +734,7 @@ First the command will show an analysis of the objects going to be released to m
 Because the release is irreversible, the user has to confirm the action.
 
 .SH CONFIGURE ACTIONS
-Replaces the direct editing of the saptune configuration file /etc/sysconfig/saptune, which will be replaced by an intern configuration file and not be present in future versions.
+Replaces the direct editing of the saptune configuration file /etc/sysconfig/saptune in SLES for SAP 15, which will be replaced by an intern configuration file in SLE 16 and not be present in future versions.
 .br
 Not all of the former variables will be available as configure option, only those who should be changeable by the user.
 .br
@@ -1056,7 +1061,7 @@ the saptune SAP Note or solution definitions, which are present in the Package A
 .PP
 \fI/etc/sysconfig/saptune\fP
 .RS 4
-the central saptune configuration file containing the information about the currently enabled notes and solutions, the order in which these notes are applied and the version of saptune currently used.
+the central saptune configuration file in SLES for SAP \fB12 and 15\fP containing the information about the currently enabled notes and solutions, the order in which these notes are applied and the version of saptune currently used.
 .br
 ATTENTION:
 the manual editing of this file will be \fBdeprecated\fP on SLES for SAP 12 and 15 as the main configuration file will be (re)moved in SLE 16.
@@ -1120,7 +1125,7 @@ saptune now sets the values read from the Note definition files irrespective of 
 
 .SH SEE ALSO
 .NF
-saptune-note(5) saptune-solution(5)
+saptune-note(5) saptune-solution(5) saptune(7)
 \" _strm_3.2.0_start
 saptune-migrate(7)
 \" _strm_3.2.0_end
