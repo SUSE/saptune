@@ -22,20 +22,6 @@ else
     upd_opt="$1"
 fi
 
-
-#### ANGI TODO
-#sle_vers=$(sed -n "s%.*baseversion>\(.*\)</base.*%\1%p" /etc/products.d/baseproduct)
-#[[ $sle_vers == 16 ]] && SAPTUNE_SYSCONFIG=/var/lib/saptune/config/saptune
-
-if [ -f /var/lib/saptune/config/saptune ]; then
-    # SLE16
-    SAPTUNE_SYSCONFIG=/var/lib/saptune/config/saptune
-    # ANGI TODO - or setting of new config file only in some functions?
-    # template - /usr/share/saptune/saptuneTemplate.conf
-else
-    SAPTUNE_SYSCONFIG=/etc/sysconfig/saptune
-fi
-
 CUSTOM_TUNED_CONF=/etc/tuned/saptune/tuned.conf
 
 OVERRIDEDIR=/etc/saptune/override
@@ -50,17 +36,34 @@ STAGINGAREA=/var/lib/saptune/staging
 PACKAGEAREA=/usr/share/saptune
 
 NOTEDIR=/usr/share/saptune/notes
-## ANGI TODO - update also from 12 to 16?
-## if yes - NOTES2DELETE_15 and NOTES2DELETE_16
+SOLDIR=/usr/share/saptune/sols
 ## sles16 installation note == 3565382
 ## sles16 HANA DB os settings == 3577842
 NOTES2CHANGE_15to16="2578899,3565382 2684254,3577842"
-NOTES2CHANGE_12to16="1984787,3565382 2205917,3577842"
+#NOTES2CHANGE_12to16="1984787,3565382 2205917,3577842"
 NOTES2CHANGE_12to15="1984787,2578899 2205917,2684254"
 NOTES2DELETE_16="1680803 1805750"
 NOTES2DELETE_15="1557506 1275776"
-SOLS2DELETE_16="SAP-ASE.sol" ### ANGI TODO
+SOLS2DELETE_16="SAP-ASE.sol"
 FORGOTTEN_NOTES_300="2993054 1656250"
+
+if [ -f /var/lib/saptune/config/saptune ]; then
+    # SLE16
+    SAPTUNE_CONFIG=/var/lib/saptune/config/saptune
+    # template - /usr/share/saptune/saptuneTemplate.conf
+    NOTES2DELETE=$NOTES2DELETE_16
+    NOTES2CHANGE=$NOTES2CHANGE_15to16
+    SOLS2DELETE=$SOLS2DELETE_16
+    oldVers=15
+    newVers=16
+else
+    SAPTUNE_CONFIG=/etc/sysconfig/saptune
+    NOTES2DELETE=$NOTES2DELETE_15
+    NOTES2CHANGE=$NOTES2CHANGE_12to15
+    SOLS2DELETE=""
+    oldVers=12
+    newVers=15
+fi
 
 update_saptune_config() {
     # SLE16 - update saptune config file
@@ -69,13 +72,33 @@ update_saptune_config() {
     :
 }
 
+update_config() {
+    # update 12/15 to 16 (special task needed only once!)
+    # /var/lib/saptune/config/old_custom_saptune_config is the old
+    # /etc/sysconfig/saptune from 12/15
+    OLD_SAPTUNE_CONFIG=/var/lib/saptune/config/old_custom_saptune_config
+    param2check="TUNE_FOR_SOLUTIONS TUNE_FOR_NOTES NOTE_APPLY_ORDER STAGING COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP"
+    for param in ${param2check}; do
+        paramLine=$(grep "^${param}[[:space:]]*=" $OLD_SAPTUNE_CONFIG)
+        if [ -n "$paramLine" ]; then
+            if grep "^${param}[[:space:]]*=" $SAPTUNE_CONFIG > /dev/null 2>&1; then
+                # change parameter
+                sed -i "s%^${param}[[:space:]]*=.*$%${paramLine}%" $SAPTUNE_CONFIG
+            else
+                # append parameter
+                echo -e "\n$paramLine" >> $SAPTUNE_CONFIG
+            fi
+        fi
+    done
+}
+
 set_sysconfig_version() {
     # add or change SAPTUNE_VERSION string in /etc/sysconfig/saptune to "1"
-    if (grep "SAPTUNE_VERSION[[:space:]]*=" $SAPTUNE_SYSCONFIG >/dev/null 2>&1); then
-        sed -i 's/SAPTUNE_VERSION="[23]"/SAPTUNE_VERSION="1"/' $SAPTUNE_SYSCONFIG
+    if (grep "SAPTUNE_VERSION[[:space:]]*=" $SAPTUNE_CONFIG >/dev/null 2>&1); then
+        sed -i 's/SAPTUNE_VERSION="[23]"/SAPTUNE_VERSION="1"/' $SAPTUNE_CONFIG
     else
-        echo "missing SAPTUNE_VERSION string in $SAPTUNE_SYSCONFIG. Appending ..."
-        echo -e "## Type:    string\n## Default: \"3\"\n#\n# Version of saptune\nSAPTUNE_VERSION=\"1\"\n" >> $SAPTUNE_SYSCONFIG
+        echo "missing SAPTUNE_VERSION string in $SAPTUNE_CONFIG. Appending ..."
+        echo -e "## Type:    string\n## Default: \"3\"\n#\n# Version of saptune\nSAPTUNE_VERSION=\"1\"\n" >> $SAPTUNE_CONFIG
     fi
 }
 
@@ -127,7 +150,8 @@ get_back_extra_ASE_BOBJ() {
 
 change_note_names() {
     OIFS=$IFS
-    for notepair in $NOTES2CHANGE_12to15; do
+    #for notepair in $NOTES2CHANGE_12to15; do
+    for notepair in $NOTES2CHANGE; do
         IFS=","
         # shellcheck disable=SC2086
         set -- $notepair
@@ -144,27 +168,27 @@ change_note_names() {
             # srch_pat="[ \"]${oldNote}[ \"]"
             srch_pat1="[ ]${oldNote}[ ]"
             new_pat1=" ${newNote} "
-            if grep "$srch_pat1" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
-                echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
-                sed -i "s/$srch_pat1/$new_pat1/g" $SAPTUNE_SYSCONFIG
+            if grep "$srch_pat1" $SAPTUNE_CONFIG >/dev/null 2>&1; then
+                echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote'"
+                sed -i "s/$srch_pat1/$new_pat1/g" $SAPTUNE_CONFIG
             fi
             srch_pat2=" ${oldNote}\""
             new_pat2=" ${newNote}\""
-            if grep "$srch_pat2" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
-                echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
-                sed -i "s/$srch_pat2/$new_pat2/g" $SAPTUNE_SYSCONFIG
+            if grep "$srch_pat2" $SAPTUNE_CONFIG >/dev/null 2>&1; then
+                echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote'"
+                sed -i "s/$srch_pat2/$new_pat2/g" $SAPTUNE_CONFIG
             fi
             srch_pat3="\"${oldNote} "
             new_pat3="\"${newNote} "
-            if grep "$srch_pat3" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
-                echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
-                sed -i "s/$srch_pat3/$new_pat3/g" $SAPTUNE_SYSCONFIG
+            if grep "$srch_pat3" $SAPTUNE_CONFIG >/dev/null 2>&1; then
+                echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote'"
+                sed -i "s/$srch_pat3/$new_pat3/g" $SAPTUNE_CONFIG
             fi
             srch_pat4="\"${oldNote}\""
             new_pat4="\"${newNote}\""
-            if grep "$srch_pat4" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
-                echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote'"
-                sed -i "s/$srch_pat4/$new_pat4/g" $SAPTUNE_SYSCONFIG
+            if grep "$srch_pat4" $SAPTUNE_CONFIG >/dev/null 2>&1; then
+                echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote'"
+                sed -i "s/$srch_pat4/$new_pat4/g" $SAPTUNE_CONFIG
             fi
 
             # 2. check existence of override file and change name
@@ -207,34 +231,34 @@ change_note_names() {
 }
 
 delete_notes() {
-    for delnote in $NOTES2DELETE_15; do
+    for delnote in $NOTES2DELETE; do
         if [ ! -f ${NOTEDIR}/"${delnote}" ]; then
             # 1. delete Note from variable TUNE_FOR_NOTES and NOTE_APPLY_ORDER in /etc/sysconfig/saptune
             # " ${delnote} " or " ${delnote}\"" or "\"${delnote}\""
             # srch_pat="[ \"]${delnote}[ \"]"
             srch_pat1="[ ]${delnote}[ ]"
             del_pat1=" "
-            if grep "$srch_pat1" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
-                echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
-                sed -i "s/$srch_pat1/$del_pat1/g" $SAPTUNE_SYSCONFIG
+            if grep "$srch_pat1" $SAPTUNE_CONFIG >/dev/null 2>&1; then
+                echo "### removing old, SLE${oldVers} specific Note name '$delnote' from $SAPTUNE_CONFIG"
+                sed -i "s/$srch_pat1/$del_pat1/g" $SAPTUNE_CONFIG
             fi
             srch_pat2=" ${delnote}\""
             del_pat2="\""
-            if grep "$srch_pat2" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
-                echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
-                sed -i "s/$srch_pat2/$del_pat2/g" $SAPTUNE_SYSCONFIG
+            if grep "$srch_pat2" $SAPTUNE_CONFIG >/dev/null 2>&1; then
+                echo "### removing old, SLE${oldVers} specific Note name '$delnote' from $SAPTUNE_CONFIG"
+                sed -i "s/$srch_pat2/$del_pat2/g" $SAPTUNE_CONFIG
             fi
             srch_pat3="\"${delnote} "
             del_pat3="\""
-            if grep "$srch_pat3" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
-                echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
-                sed -i "s/$srch_pat3/$del_pat3/g" $SAPTUNE_SYSCONFIG
+            if grep "$srch_pat3" $SAPTUNE_CONFIG >/dev/null 2>&1; then
+                echo "### removing old, SLE${oldVers} specific Note name '$delnote' from $SAPTUNE_CONFIG"
+                sed -i "s/$srch_pat3/$del_pat3/g" $SAPTUNE_CONFIG
             fi
             srch_pat4="\"${delnote}\""
             del_pat4="\"\""
-            if grep "$srch_pat4" $SAPTUNE_SYSCONFIG >/dev/null 2>&1; then
-                echo "### removing old, SLE12 specific Note name '$delnote' from $SAPTUNE_SYSCONFIG"
-                sed -i "s/$srch_pat4/$del_pat4/g" $SAPTUNE_SYSCONFIG
+            if grep "$srch_pat4" $SAPTUNE_CONFIG >/dev/null 2>&1; then
+                echo "### removing old, SLE${oldVers} specific Note name '$delnote' from $SAPTUNE_CONFIG"
+                sed -i "s/$srch_pat4/$del_pat4/g" $SAPTUNE_CONFIG
             fi
 
             # 2. check existence of override file and print a WARNING
@@ -269,7 +293,7 @@ adjust_enabled_solution() {
     # The staging is checked in the postinstall, so no need to do it again.
     # If an override file for the enabled solution exists, we will NOT change
     # anything. It is up to the customer to check and adjust after the update
-    esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
     if [ -n "$esol" ] && [ ! -f ${OVERRIDEDIR}/"${esol}".sol ]; then
         # enabled solution found, override does not exist
         # extract notes of enabled solution from the solution definition file
@@ -328,8 +352,8 @@ adjust_enabled_solution() {
 add_NOTE_APPLY_ORDER() {
     new_notes="$1"
     sol="$2"
-    apply_list=$(grep '^NOTE_APPLY_ORDER[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
-    notes_list=$(grep '^TUNE_FOR_NOTES[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    apply_list=$(grep '^NOTE_APPLY_ORDER[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
+    notes_list=$(grep '^TUNE_FOR_NOTES[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
 
     for fnote in $new_notes; do
         # check, if fnote is already available in NOTE_APPLY_ORDER
@@ -343,8 +367,8 @@ add_NOTE_APPLY_ORDER() {
         done
         if [ "$found" == "false" ]; then
             # append
-            echo "### appending the new Note '$fnote' from Solution '$sol' to 'NOTE_APPLY_ORDER' in '$SAPTUNE_SYSCONFIG'"
-            sed -i "/^NOTE_APPLY_ORDER[[:space:]]*=.*/s/\"$/ $fnote\"/" $SAPTUNE_SYSCONFIG
+            echo "### appending the new Note '$fnote' from Solution '$sol' to 'NOTE_APPLY_ORDER' in '$SAPTUNE_CONFIG'"
+            sed -i "/^NOTE_APPLY_ORDER[[:space:]]*=.*/s/\"$/ $fnote\"/" $SAPTUNE_CONFIG
         fi
 
         # delete Note from TUNE_FOR_NOTES, if available.
@@ -355,7 +379,7 @@ add_NOTE_APPLY_ORDER() {
 delete_NOTE_APPLY_ORDER() {
     del_notes="$1"
     sol="$2"
-    apply_list=$(grep '^NOTE_APPLY_ORDER[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    apply_list=$(grep '^NOTE_APPLY_ORDER[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
 
     for fnote in $del_notes; do
         # check, if fnote is already available in NOTE_APPLY_ORDER
@@ -376,7 +400,7 @@ add_TUNE_FOR_NOTES() {
     # append Note to TUNE_FOR_NOTES, if not yet available.
     notes="$1"
     sol="$2"
-    notes_list=$(grep '^TUNE_FOR_NOTES[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    notes_list=$(grep '^TUNE_FOR_NOTES[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
 
     for fnote in $notes; do
         found=false
@@ -388,8 +412,8 @@ add_TUNE_FOR_NOTES() {
         done
         if [ "$found" == "false" ]; then
             if [ -n "$sol" ]; then
-                echo "### appending the Note '$fnote' deleted from Solution '$sol' to 'TUNE_FOR_NOTES' in '$SAPTUNE_SYSCONFIG'"
-                sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*/s/\"$/ $fnote\"/" $SAPTUNE_SYSCONFIG
+                echo "### appending the Note '$fnote' deleted from Solution '$sol' to 'TUNE_FOR_NOTES' in '$SAPTUNE_CONFIG'"
+                sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*/s/\"$/ $fnote\"/" $SAPTUNE_CONFIG
             #else # for future use
             fi
         fi
@@ -405,22 +429,22 @@ delete_TUNE_FOR_NOTES() {
         changes=""
         srch_pat1="[ ]${fnote}[ ]"
         del_pat1=" "
-        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat1/$del_pat1/g w /dev/stdout" $SAPTUNE_SYSCONFIG)
+        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat1/$del_pat1/g w /dev/stdout" $SAPTUNE_CONFIG)
         srch_pat2=" ${fnote}\""
         del_pat2="\""
-        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat2/$del_pat2/g w /dev/stdout" $SAPTUNE_SYSCONFIG)
+        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat2/$del_pat2/g w /dev/stdout" $SAPTUNE_CONFIG)
         srch_pat3="\"${fnote} "
         del_pat3="\""
-        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat3/$del_pat3/g w /dev/stdout" $SAPTUNE_SYSCONFIG)
+        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat3/$del_pat3/g w /dev/stdout" $SAPTUNE_CONFIG)
         srch_pat4="\"${fnote}\""
         del_pat4="\"\""
-        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat4/$del_pat4/g w /dev/stdout" $SAPTUNE_SYSCONFIG)
+        changes+=$(sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*${fnote}.*/s/$srch_pat4/$del_pat4/g w /dev/stdout" $SAPTUNE_CONFIG)
         if [ -n "$changes" ]; then
             if [ -n "$sol" ]; then
-                echo "### removing Note '$fnote' from 'TUNE_FOR_NOTES' in '$SAPTUNE_SYSCONFIG' as it is now part of the enabled Solution '$sol'"
+                echo "### removing Note '$fnote' from 'TUNE_FOR_NOTES' in '$SAPTUNE_CONFIG' as it is now part of the enabled Solution '$sol'"
             else
                 # for future use, will need some 'fine tuning'
-                echo "### removing Note '$fnote' from 'TUNE_FOR_NOTES' in '$SAPTUNE_SYSCONFIG' as it is no longer shipped with saptune"
+                echo "### removing Note '$fnote' from 'TUNE_FOR_NOTES' in '$SAPTUNE_CONFIG' as it is no longer shipped with saptune"
             fi
         fi
     done
@@ -429,7 +453,7 @@ delete_TUNE_FOR_NOTES() {
 fix_300() {
     # called from the postinstall script of saptune to fix a bug special in
     # version 3.0.0
-    esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
     if [ -n "$esol" ]; then
         if [ "$esol" == "NETWEAVER" ] || [ "$esol" == "S4HANA-APPSERVER" ]; then
             FORGOTTEN_NOTES_300="$FORGOTTEN_NOTES_300 900929"
@@ -440,11 +464,9 @@ fix_300() {
 
 adjust_workingarea() {
     # called from the postinstall script of saptune to adjust the working area
-    # during a major release update (like 12 to 15)
-    # only needed, if staging is active. If not, postinstall of package is
-    # updating the working area
+    # during a update (like 12 to 15 or 15 to 15 package update)
     OIFS=$IFS
-    for notepair in $NOTES2CHANGE_12to15; do
+    for notepair in $NOTES2CHANGE; do
         IFS=","
         # shellcheck disable=SC2086
         set -- $notepair
@@ -453,13 +475,13 @@ adjust_workingarea() {
         IFS=$OIFS
         if [ ! -f ${NOTEDIR}/"${oldNote}" ] && [ -f ${NOTEDIR}/"${newNote}" ]; then
             # the old note definition name is NOT available, but the new one
-            # so update from SLE12 to SLE15
+            # so update from SLE12 to SLE15 or 15 to 16
             if [ -n "${oldNote}" ] && [ -f ${WORKINGAREA}/notes/"${oldNote}" ]; then
-                echo "### removing old sle12 note '${oldNote}' from working area"
+                echo "### removing old sle${oldVers} note '${oldNote}' from working area"
                 rm -rf ${WORKINGAREA}/notes/"${oldNote}"
             fi
             if [ -n "${newNote}" ] && [ ! -f ${WORKINGAREA}/notes/"${newNote}" ]; then
-                echo "### adding new sle15 note '${newNote}' from package area to working area"
+                echo "### adding new sle${newVers} note '${newNote}' from package area to working area"
                 cp ${NOTEDIR}/"${newNote}" ${WORKINGAREA}/notes
             fi
 
@@ -468,32 +490,41 @@ adjust_workingarea() {
                 srch_pat1="[[:space:]]${oldNote}[[:space:]]"
                 new_pat1=" ${newNote} "
                 if grep "$srch_pat1" "$wsol" >/dev/null 2>&1; then
-                    echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote' in solution '$wsol'"
+                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in solution '$wsol'"
                     sed -i "s/$srch_pat1/$new_pat1/g" "$wsol"
                 fi
                 srch_pat2="[[:space:]]${oldNote}$"
                 new_pat2=" ${newNote}"
                 if grep "$srch_pat2" "$wsol" >/dev/null 2>&1; then
-                    echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote' in solution '$wsol'"
+                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in solution '$wsol'"
                     sed -i "s/$srch_pat2/$new_pat2/g" "$wsol"
                 fi
                 srch_pat3="^${oldNote}[[:space:]]"
                 new_pat3="${newNote} "
                 if grep "$srch_pat3" "$wsol" >/dev/null 2>&1; then
-                    echo "### changing old, SLE12 specific Note name '$oldNote' to the new, SLE15 Note name '$newNote' in solution '$wsol'"
+                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in solution '$wsol'"
                     sed -i "s/$srch_pat3/$new_pat3/g" "$wsol"
                 fi
             done
         fi
     done
 
-    for delnote in $NOTES2DELETE_15; do
+    for delnote in $NOTES2DELETE; do
         if [ ! -f ${NOTEDIR}/"${delnote}" ]; then
             if [ -n "${delnote}" ] && [ -f ${WORKINGAREA}/notes/"${delnote}" ]; then
                 echo "### removing no longer supported note '${delnote}' from working area"
                 rm -rf ${WORKINGAREA}/notes/"${delnote}"
             fi
             # adjust solution files - not needed yet
+        fi
+    done
+
+    for delsol in $SOLS2DELETE; do
+        if [ ! -f ${SOLDIR}/"${delsol}" ]; then
+            if [ -n "${delsol}" ] && [ -f ${WORKINGAREA}/sols/"${delsol}" ]; then
+                echo "### removing no longer supported solution '${delsol}' from working area"
+                rm -rf ${WORKINGAREA}/sols/"${delsol}"
+            fi
         fi
     done
 }
@@ -617,25 +648,27 @@ v1tov2pt)
     get_back_extra_ASE_BOBJ
     ;;
 sleto16pt)
-    # ANGI TODO - /var/lib/saptune/config/old_custom_saptune_config is old /etc/sysconfig/saptune from update 12/15 to 16, if available -> update 12/15 to 16 (special task needed once!)
-    # if not available update from 16 to 16 - important for note delete sol delet and note changes in sols - needs to run always
-
-    # called from the posttrans script of saptune, if installation was an
-    # update from saptune version 2/3 to version 2/3
-    #change_note_names 16
-    #delete_notes 16
+    # called from the posttrans script of saptune
+    if [ -f /var/lib/saptune/config/old_custom_saptune_config ]; then
+        # update 12/15 to 16 (special task needed only once!)
+        update_config
+        rm -f /var/lib/saptune/config/old_custom_saptune_config
+    fi
+    # update 12/15 to 16 or update from 16 to 16
+    # important for note delete, sol delet and note changes in sols
+    # needs to run always
+    change_note_names
+    delete_notes
     #delete_sols 16
-    #staging=$(grep ^STAGING= $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
-    #if [ "$staging" == "true" ]; then
-    #    adjust_workingarea 16
-    #fi
+    # call adjust_workingarea always and not only with active staging
+    adjust_workingarea
     ;;
 sle12to15pt)
     # called from the posttrans script of saptune, if installation was an
     # update from saptune version 2/3 to version 2/3
     change_note_names
     delete_notes
-    staging=$(grep ^STAGING= $SAPTUNE_SYSCONFIG | awk -F '"' '{ print $2 }')
+    staging=$(grep ^STAGING= $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
     if [ "$staging" == "true" ]; then
         adjust_workingarea
     fi
