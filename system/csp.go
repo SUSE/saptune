@@ -50,7 +50,7 @@ var allManufacturerProviders = [...]manufacturerProviders{
 	// /usr/sbin/dmidecode -s chassis-asset-tag
 	{"/sys/class/dmi/id/chassis_asset_tag", map[*regexp.Regexp]string{isAzureCat: CSPAzure, isIBMVPCCat: CSPIBMVPC}},
 	// /usr/sbin/dmidecode -s system-manufacturer
-	{"/sys/class/dmi/id/system-manufacturer", map[*regexp.Regexp]string{isAzure: CSPAzure, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
+	{"/sys/class/dmi/id/sys_vendor", map[*regexp.Regexp]string{isAzure: CSPAzure, isAWS: CSPAWS, isGoogle: CSPGoogle, isAlibaba: CSPAlibaba}},
 	// /usr/sbin/dmidecode -s board-vendor
 	{"/sys/class/dmi/id/board_vendor", map[*regexp.Regexp]string{isAWS: CSPAWS}},
 	// /usr/sbin/dmidecode -s bios-version
@@ -58,9 +58,7 @@ var allManufacturerProviders = [...]manufacturerProviders{
 	// /usr/sbin/dmidecode -s bios-vendor
 	{"/sys/class/dmi/id/bios_vendor", map[*regexp.Regexp]string{isGoogle: CSPGoogle, isAWS: CSPAWS}},
 	// /usr/sbin/dmidecode -s system-version
-	{"/sys/class/dmi/id/system_version", map[*regexp.Regexp]string{isAWS: CSPAWS}},
-	// /usr/sbin/dmidecode -s sys-vendor
-	{"/sys/class/dmi/id/sys_vendor", map[*regexp.Regexp]string{isAWS: CSPAWS}},
+	{"/sys/class/dmi/id/product_version", map[*regexp.Regexp]string{isAWS: CSPAWS}},
 	// /usr/sbin/dmidecode -s chassis-manufacturer
 	{"/sys/class/dmi/id/chassis_vendor", map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 }
