@@ -111,7 +111,6 @@ func ConfigureActionSetSkipSysctlFiles(configVals []string) {
 		confVals = strings.Split(configVals[0], ",")
 	}
 	confVal := ""
-	//for _, file := range configVals {
 	for _, file := range confVals {
 		file = strings.TrimSuffix(file, ",")
 		if system.IsValidSysctlLocations(file) {
@@ -121,13 +120,11 @@ func ConfigureActionSetSkipSysctlFiles(configVals []string) {
 				confVal = confVal + ", " + file
 			}
 		} else {
-			system.ErrorLog("wrong value '%s' for config variable 'SKIP_SYSCTL_FILES'. sysctl command will not search in this locaction. Skipping.", file)
+			system.ErrorExit("wrong value '%s' for config variable 'SKIP_SYSCTL_FILES' provided. sysctl command will not search in this locaction. Exiting without changing saptune configuration. Please check.", file)
 		}
 	}
 	if confVal != "" {
 		writeConfigEntry("SKIP_SYSCTL_FILES", confVal)
-	} else {
-		system.ErrorExit("wrong value(s) '%+v' for config variable 'SKIP_SYSCTL_FILES' provided. sysctl command will not search in this locaction(s). Exiting without changing saptune configuration. Please check.", configVals)
 	}
 }
 
