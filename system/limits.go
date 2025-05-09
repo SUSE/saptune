@@ -65,7 +65,7 @@ func systemLimitsConfFile() ([]byte, error) {
 		DebugLog("Try '%s' instead.", limitsConfFile)
 		content, err = os.ReadFile(limitsConfFile)
 		if err != nil {
-			DebugLog("Failed to read system limits config file '%s': %v", limitsConfFile, err)
+			ErrorLog("Failed to read system limits config file '%s': %v\n ATTENTION: This is CRITICAL as it may prevent any login to your system. Please check and fix", limitsConfFile, err)
 		}
 	}
 	return content, err
