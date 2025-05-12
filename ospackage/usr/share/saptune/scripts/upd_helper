@@ -42,7 +42,7 @@ SOLDIR=/usr/share/saptune/sols
 NOTES2CHANGE_15to16="2578899,3565382 2684254,3577842"
 #NOTES2CHANGE_12to16="1984787,3565382 2205917,3577842"
 NOTES2CHANGE_12to15="1984787,2578899 2205917,2684254"
-NOTES2DELETE_16="1680803 1805750"
+NOTES2DELETE_16="1771258 1680803 1805750"
 NOTES2DELETE_15="1557506 1275776"
 SOLS2DELETE_16="SAP-ASE.sol"
 FORGOTTEN_NOTES_300="2993054 1656250"
@@ -160,7 +160,7 @@ change_note_names() {
         IFS=$OIFS
         if [ ! -f ${NOTEDIR}/"${oldNote}" ] && [ -f ${NOTEDIR}/"${newNote}" ]; then
             # the old note definition name is NOT available, but the new one
-            # so update from SLE12 to SLE15
+            # so update from SLE12 to SLE15/SLE15 to SLE16
             # change config
 
             # 1. change variable TUNE_FOR_NOTES and NOTE_APPLY_ORDER in /etc/sysconfig/saptune
@@ -220,6 +220,20 @@ change_note_names() {
             if [ -f ${SECTIONSTATEDIR}/"$oldNote".sections ]; then
                 echo "### mv old section state file to the new name"
                 mv ${SECTIONSTATEDIR}/"$oldNote".sections ${SECTIONSTATEDIR}/"$newNote".sections
+            fi
+
+            # 6. check existence of section state file of enabled solution and
+            # change the note names inside the file to allow restart/revert of
+            # solution
+            esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
+            if [ -f ${SECTIONSTATEDIR}/"${esol}".sol ]; then
+                enabledSol=${SECTIONSTATEDIR}/${esol}.sol
+                srch_pat="\"${oldNote}\""
+                new_pat="\"${newNote}\""
+                if grep "$srch_pat" "${enabledSol}" >/dev/null 2>&1; then
+                    echo "### changing note '${oldNote}' to '${newNote}' in solution section file"
+                    sed -i "s/$srch_pat/$new_pat/g" "${enabledSol}"
+                fi
             fi
         #else
             # if both note files are available - not possible, rpm should cover
@@ -314,6 +328,7 @@ adjust_enabled_solution() {
         # extract new notes of enabled solution from the note definition file
         # found in the package area
         NEW_NOTES=$(awk '/\[ArchX86\]/ {getline; print $0}' ${PACKAGEAREA}/sols/"${esol}".sol)
+        skip_list=${NOTES2CHANGE//,/ }
 
         # get the new added Notes
         for nnote in $NEW_NOTES; do
@@ -325,20 +340,38 @@ adjust_enabled_solution() {
                 fi
             done
             if [ "$found" == "false" ]; then
-                NOTES2ADD="$NOTES2ADD $nnote"
+                # check against skip_list, these notes will resolved later
+                for snote in $skip_list; do
+                    if [ "$snote" == "$nnote" ]; then
+                        found=true
+                        break
+                    fi
+                done
+                if [ "$found" == "false" ]; then
+                    NOTES2ADD="$NOTES2ADD $nnote"
+                fi
             fi
         done
         # get the removed Notes
         for onote in $OLD_NOTES; do
             found=false
             for nnote in $NEW_NOTES; do
-                if [ "$nnote" == "$onote" ]; then
+                if [ "$onote" == "$nnote" ]; then
                     found=true
                     break
                 fi
             done
             if [ "$found" == "false" ]; then
-                NOTES2REM="$NOTES2REM $nnote"
+                # check against skip_list, these notes will resolved later
+                for snote in $skip_list; do
+                    if [ "$snote" == "$onote" ]; then
+                        found=true
+                        break
+                    fi
+                done
+                if [ "$found" == "false" ]; then
+                    NOTES2REM="$NOTES2REM $onote"
+                fi
             fi
         done
         add_NOTE_APPLY_ORDER "$NOTES2ADD" "$esol"
@@ -360,10 +393,10 @@ add_NOTE_APPLY_ORDER() {
         # if not, append
         found=false
         for anote in $apply_list; do
-           if [ "$anote" == "$fnote" ]; then
-               found=true
-               break
-           fi
+            if [ "$anote" == "$fnote" ]; then
+                found=true
+                break
+            fi
         done
         if [ "$found" == "false" ]; then
             # append
@@ -649,19 +682,15 @@ v1tov2pt)
     ;;
 sleto16pt)
     # called from the posttrans script of saptune
-    if [ -f /var/lib/saptune/config/old_custom_saptune_config ]; then
-        # update 12/15 to 16 (special task needed only once!)
-        update_config
-        rm -f /var/lib/saptune/config/old_custom_saptune_config
-    fi
     # update 12/15 to 16 or update from 16 to 16
-    # important for note delete, sol delet and note changes in sols
+    # important for note delete, sol delete and note changes in sols
     # needs to run always
     change_note_names
     delete_notes
-    #delete_sols 16
-    # call adjust_workingarea always and not only with active staging
-    adjust_workingarea
+    staging=$(grep ^STAGING= $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
+    if [ "$staging" == "false" ]; then
+        adjust_workingarea
+    fi
     ;;
 sle12to15pt)
     # called from the posttrans script of saptune, if installation was an
@@ -669,7 +698,7 @@ sle12to15pt)
     change_note_names
     delete_notes
     staging=$(grep ^STAGING= $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
-    if [ "$staging" == "true" ]; then
+    if [ "$staging" == "false" ]; then
         adjust_workingarea
     fi
     ;;
@@ -689,6 +718,12 @@ enabledSol)
     ;;
 updateConf)
     # SLE16 - update saptune config file
+    # called from the posttrans script of saptune
+    if [ -f /var/lib/saptune/config/old_custom_saptune_config ]; then
+        # update 12/15 to 16 (special task needed only once!)
+        update_config
+        rm -f /var/lib/saptune/config/old_custom_saptune_config
+    fi
     # add new entries, if not available
     update_saptune_config
     ;;

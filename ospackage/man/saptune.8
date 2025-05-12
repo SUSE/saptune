@@ -384,6 +384,8 @@ It is possible to use a \fBcolor scheme\fP for the verify output table.
 .br
 The \fBcolor scheme\fP can be given as a command line argument '\fB--colorscheme SCHEME\fP' or as parameter - value pair '\fBCOLOR_SCHEME SCHEME\fP' in the saptune command '\fIsaptune configure COLOR_SCHEME <SCHEME>\fP'
 .br
+To reset the \fBcolor scheme\fP use the command '\fIsaptune configure COLOR_SCHEME '' \fP'
+.br
 Possible \fBcolor schemes\fP are:
 .RS 7
 .IP \[bu]
@@ -742,6 +744,8 @@ Not all of the former variables will be available as configure option, only thos
 .TP
 .B COLOR_SCHEME SCHEME
 Default color scheme. See 'saptune verify' in this man page for available color schemes.
+.br
+To reset the \fBcolor scheme\fP use an empty value as SCHEME like '\fIsaptune configure COLOR_SCHEME '' \fP'
 .TP
 .B SKIP_SYSCTL_FILES FILE[,FILE...]
 Comma-separated list of sysctl config files or directories which should be excluded when checking if parameters handled by saptune are handled by sysctl as well.
@@ -749,7 +753,11 @@ Input is checked, if the given files are in a location which is searched by sysc
 .TP
 .B IGNORE_RELOAD yes||no
 Controls behavior of systemctl reload saptune.service and the systemctl try-restart saptune.service during package installation.
-
+.TP
+.B DEBUG on||off
+Turns on or off the DebugLog output.
+.br
+ATTENTION: Active DebugLog will clutter the output of saptune commands and can render the output hard to read. Additional it is flooding the log file with debug information. So use this setting with caution. Only turn it on, if instructed by SUSE support to do so.
 .TP
 .B TrentoASDP <period>||off
 Sets the discovery period (saptune-discovery-period) of the Trento Agent in /etc/trento/agent.yaml for collecting \fIsaptune\fP information from the system.

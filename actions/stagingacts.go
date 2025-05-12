@@ -30,6 +30,7 @@ type writerDescriptor struct {
 	textApplied    string
 	textEnabled    string
 	textNotEnabled string
+	textHints      string
 }
 
 var stagingSwitch = false
@@ -80,7 +81,7 @@ func StagingAction(actionName string, stageName []string, tuneApp *app.App) {
 			stageName = []string{"all"}
 		}
 		chkStageExit(os.Stdout)
-		stagingActionRelease(os.Stdin, os.Stdout, stageName)
+		stagingActionRelease(os.Stdin, os.Stdout, stageName, tuneApp)
 	default:
 		PrintHelpAndExit(os.Stdout, 1)
 	}
@@ -206,7 +207,7 @@ func stagingActionAnalysis(writer io.Writer, stageObject []string) {
 // to make the user aware of further needed actions or potential problems
 // (for details see saptune staging analysis).
 // The customer has to confirm this, because the action is irreversible.
-func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) {
+func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string, tApp *app.App) {
 	for _, sName := range sObject {
 		stagingFile := stgFiles.StageAttributes[sName]["sfilename"]
 		stageVers := stgFiles.StageAttributes[sName]["version"]
@@ -242,7 +243,7 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 				}
 				stageVers = stgFiles.StageAttributes[stageName]["version"]
 				stageDate = stgFiles.StageAttributes[stageName]["date"]
-				err := mvStageToWork(stageName)
+				err := mvStageToWork(stageName, tApp)
 				if err != nil {
 					errs = append(errs, err)
 				} else {
@@ -269,7 +270,7 @@ func stagingActionRelease(reader io.Reader, writer io.Writer, sObject []string) 
 					system.ErrorExit("Staging action 'release' aborted by user interaction", 0)
 				}
 			}
-			if err := mvStageToWork(sName); err != nil {
+			if err := mvStageToWork(sName, tApp); err != nil {
 				system.ErrorExit("", 1)
 			}
 			system.NoticeLog("%s Version %s (%s) released", sName, stageVers, stageDate)
@@ -325,11 +326,13 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool
 	txtRequiredNote := txtPrefix + "Solution requires releasing of the new note '%s' or it breaks!\n"
 	txtMissingNote := txtPrefix + "Because of missing note '%s' the Solution will break after release!\n"
 	txtDeletedNote := txtPrefix + "Solution will break, if note '%s' will be released because this note will be deleted!\n"
+	txtDelSolNotes := ""
 
 	if flag == "deleted" {
 		txtOverrideExists = txtPrefix + "Override file exists and can be deleted.\n"
 		txtSolEnabled = txtPrefix + "Solution is enabled and must be reverted.\n"
 		txtSolApplied = txtPrefix + "Solution is applied and must be reverted.\n"
+		txtDelSolNotes = txtPrefix + "The related notes stay enabled in any case. If that's not wanted, please revert the solution before releasing it.\n"
 
 		fmt.Fprintf(writer, txtDeleteSol, stageName)
 	}
@@ -338,7 +341,7 @@ func printSolAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (bool
 		fmt.Fprint(writer, txtOverrideExists)
 	}
 
-	retVal = writeIfNotNew(flag, stageName, writerDescriptor{writer, txtSolApplied, txtSolEnabled, txtSolNotEnabled}, retVal)
+	retVal = writeIfNotNew(flag, stageName, writerDescriptor{writer, txtSolApplied, txtSolEnabled, txtSolNotEnabled, txtDelSolNotes}, retVal)
 
 	for _, note := range strings.Split(stgFiles.StageAttributes[stageName]["notes"], " ") {
 		if note == "" {
@@ -382,10 +385,12 @@ func writeIfNotNew(flag string, stageName string, toWrite writerDescriptor, retV
 	textApplied := toWrite.textApplied
 	textEnabled := toWrite.textEnabled
 	textNotEnabled := toWrite.textNotEnabled
+	textHints := toWrite.textHints
 
 	if flag != "new" {
 		if stgFiles.StageAttributes[stageName]["applied"] == "true" {
 			fmt.Fprint(writer, textApplied)
+			fmt.Fprint(writer, textHints)
 			retVal = system.MaxI(retVal, 1)
 		} else if stgFiles.StageAttributes[stageName]["enabled"] == "true" {
 			fmt.Fprint(writer, textEnabled)
@@ -414,6 +419,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (boo
 	txtSolNotEnabled := txtPrefix + "Note is part of the not-enabled solution(s) '%s'\n"
 	txtCustomSolEnabled := txtPrefix + "Note is part of the currently enabled custom solution '%s'.\n"
 	txtCustomSolNotEnabled := txtPrefix + "Note is part of the not-enabled custom solution '%s'.\n"
+	txtNoteHints := ""
 
 	if flag == "deleted" {
 		txtOverrideExists = txtPrefix + "Override file exists and can be deleted.\n"
@@ -430,7 +436,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (boo
 		fmt.Fprint(writer, txtOverrideExists)
 	}
 
-	retVal = writeIfNotNew(flag, stageName, writerDescriptor{writer, txtNoteApplied, txtNoteEnabled, txtNoteNotEnabled}, retVal)
+	retVal = writeIfNotNew(flag, stageName, writerDescriptor{writer, txtNoteApplied, txtNoteEnabled, txtNoteNotEnabled, txtNoteHints}, retVal)
 
 	if stgFiles.StageAttributes[stageName]["inSolution"] != "" {
 		for _, sol := range strings.Split(stgFiles.StageAttributes[stageName]["inSolution"], ",") {
@@ -465,7 +471,7 @@ func printNoteAnalysis(writer io.Writer, stageName, txtPrefix, flag string) (boo
 
 // mvStageToWork moves a file from the staging area to the working area
 // or removes deleted files from the working area
-func mvStageToWork(stageName string) error {
+func mvStageToWork(stageName string, tApp *app.App) error {
 	errs := make([]error, 0)
 	stagingFile := stgFiles.StageAttributes[stageName]["sfilename"]
 	workingFile := stgFiles.StageAttributes[stageName]["wfilename"]
@@ -474,6 +480,7 @@ func mvStageToWork(stageName string) error {
 	if _, err := os.Stat(workingFile); err == nil {
 		if _, perr := os.Stat(packageFile); os.IsNotExist(perr) {
 			// in working, but not in packaging, delete from working and staging
+			handleAppliedSolution(stageName, tApp)
 			if rerr := os.Remove(workingFile); rerr != nil {
 				system.ErrorLog("Problems during removal of '%s' from working area: %v", stageName, rerr)
 				errs = append(errs, rerr)
@@ -499,6 +506,48 @@ func mvStageToWork(stageName string) error {
 		return fmt.Errorf("Problems during releasing '%s' from staging to working area", stageName)
 	}
 	return nil
+}
+
+// handleAppliedSolution checks, if the object to be deleted is a solution,
+// is applied and take care of the related notes of this solution
+func handleAppliedSolution(stageName string, tApp *app.App) {
+	if !strings.HasSuffix(stageName, ".sol") {
+		// stage file is NOT a solution file, skip
+		return
+	}
+	changed := false
+	// stage file is a solution file
+	if stgFiles.StageAttributes[stageName]["applied"] == "true" {
+		// solution is applied, add notes to TUNE_FOR_NOTES
+		sol := strings.Split(stgFiles.StageAttributes[stageName]["notes"], " ")
+		for _, note := range sol {
+			// check, if in NoteApplyOrder
+			pos := tApp.PositionInNoteApplyOrder(note)
+		        if pos < 0 {
+				// note not available, skip
+				continue
+			}
+			// check, if NOT in TuneForNotes
+			inTFN := sort.SearchStrings(tApp.TuneForNotes, note)
+			if !(inTFN < len(tApp.TuneForNotes) && tApp.TuneForNotes[inTFN] == note) {
+				// add solutions's notes to additional notes list (TUNE_FOR_NOTES)
+				tApp.TuneForNotes = append(tApp.TuneForNotes, note)
+				changed = true
+			}
+		}
+		// remove solution name from TUNE_FOR_SOLUTIONS
+		solName := strings.TrimSuffix(stageName, ".sol")
+		if solName == stgFiles.StageAttributes[stageName]["enabledSol"] {
+			tApp.RemoveSolFromConfig(solName)
+		}
+
+		if changed {
+			sort.Strings(tApp.TuneForNotes)
+			if err := tApp.SaveConfig(); err != nil {
+				system.WarningLog("Problems saving TUNE_FOR_NOTES changes")
+			}
+		}
+	}
 }
 
 // getStagingFromConf reads STAGING setting from /etc/sysconfig/saptune
