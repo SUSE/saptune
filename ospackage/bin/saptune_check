@@ -1,6 +1,6 @@
 #!/bin/bash
 # ------------------------------------------------------------------------------
-# Copyright (c) 2019 SUSE LLC
+# Copyright (c) 2019-2025 SUSE LLC
 #
 # This program is free software; you can redistribute it and/or modify it under
 # the terms of version 3 of the GNU General Public License as published by the
@@ -39,8 +39,9 @@
 # 31.10.2024  v0.4.1    added --force-color to support forced colored output by saptune
 # 16.01.2025  v0.4.2    a failed sapconf.service causes just a warning an remediation is now correct
 # 21.03.2025  v0.4.3    fix missing warning increment if saptune.service is inactive
+# 04.06.2025  v0.5      adaption to SLE16 and the new config file location
 
-declare -r VERSION="0.4.3"
+declare -r VERSION="0.5"
 
 # We use these global arrays through out the program:
 #
@@ -53,6 +54,19 @@ declare -r VERSION="0.4.3"
 declare -A package_version os_version system_status unit_state_active unit_state_enabled tool_profile
 
 color=1     # we like it colorful
+
+function define_config_file() {
+    local VERSION_ID
+    eval $(grep ^VERSION_ID= /etc/os-release)
+    case ${VERSION_ID} in
+        12*|15*)
+            saptune_config=/etc/sysconfig/saptune
+            ;;
+        16*)
+            saptune_config=/var/lib/saptune/config/saptune
+            ;;
+    esac
+}
 
 function header() {
     [ ${DO_JSON} -ne 0 ] && return 
@@ -668,9 +682,9 @@ function get_tool_profiles() {
     [ -e /etc/tuned/active_profile ] && active_profile=$(< /etc/tuned/active_profile)
     tool_profile['tuned']="${active_profile:-missing}"
 
-    if [ -e /etc/sysconfig/saptune ] ; then
-        eval $(grep ^TUNE_FOR_NOTES= /etc/sysconfig/saptune)
-        eval $(grep ^TUNE_FOR_SOLUTIONS= /etc/sysconfig/saptune)
+    if [ -e ${saptune_config} ] ; then
+        eval $(grep ^TUNE_FOR_NOTES= ${saptune_config})
+        eval $(grep ^TUNE_FOR_SOLUTIONS= ${saptune_config})
         if [ -z "${TUNE_FOR_NOTES}" -a -z "${TUNE_FOR_SOLUTIONS}" ] ; then
             tool_profile['saptune']='missing'    
         else
@@ -694,7 +708,7 @@ function configured_saptune_version() {
     # Requires: -
 
     local SAPTUNE_VERSION
-    [ -e /etc/sysconfig/saptune ] && eval $(grep ^SAPTUNE_VERSION= /etc/sysconfig/saptune)
+    [ -e ${saptune_config} ] && eval $(grep ^SAPTUNE_VERSION= ${saptune_config})
     configured_saptune_version="${SAPTUNE_VERSION:-missing}"
 }
 
@@ -769,6 +783,14 @@ function file_check() {
                 saptune-3) 
                     mandatory_files=( '/etc/sysconfig/saptune' )
                     invalid_files=( '/etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf' '/etc/saptune/extra/SAP_BOBJ-SAP_Business_OBJects.conf' '/etc/sysconfig/saptune-note-1275776' '/etc/sysconfig/saptune-note-1557506' '/etc/sysconfig/saptune-note-SUSE-GUIDE-01' '/etc/sysconfig/saptune-note-SUSE-GUIDE-02' '/etc/tuned/saptune' )
+                    ;;
+            esac
+            ;;
+        16*)
+            case ${tag} in
+                saptune-3)
+                    mandatory_files=( '/var/lib/saptune/config/saptune' )
+                    invalid_files=( '/etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf' '/etc/saptune/extra/SAP_BOBJ-SAP_Business_OBJects.conf' '/etc/sysconfig/saptune-note-1275776' '/etc/sysconfig/saptune-note-1557506' '/etc/sysconfig/saptune-note-SUSE-GUIDE-01' '/etc/sysconfig/saptune-note-SUSE-GUIDE-02' '/etc/tuned/saptune' '/etc/sysconfig/saptune' )
                     ;;
             esac
             ;;
@@ -1117,6 +1139,9 @@ done
 # Determine if we are running a SLES.
 eval $(grep ^ID= /etc/os-release)
 [ "${ID}" != "sles" ] && { echo "Only SLES is supported! Your OS ID is ${ID}! Exiting." ; exit 2 ; }
+
+# Define main saptune configuration file
+define_config_file
 
 # Introduction.
 intro
