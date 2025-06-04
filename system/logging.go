@@ -125,3 +125,22 @@ func SwitchOffLogging() {
 	errorSwitch = "off"
 	log.SetOutput(io.Discard)
 }
+
+// PrintLog is a wrapper for the logger to switch on/off writing the
+// warning, error and info messages
+func PrintLog(cnt int, level, msg string, stuff ...interface{}) {
+	if cnt == 0 {
+		switch level {
+		case "warn":
+			WarningLog(msg, stuff...)
+		case "err":
+			ErrorLog(msg, stuff...)
+		case "info":
+			InfoLog(msg, stuff...)
+		case "notice":
+			NoticeLog(msg, stuff...)
+		default:
+			InfoLog(msg, stuff...)
+		}
+	}
+}
