@@ -244,6 +244,47 @@ change_note_names() {
     done
 }
 
+enabled_sol_to_be_deleted() {
+    esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
+    if [ -n "$esol" ]; then
+        # enabled solution found
+        for delsol in $SOLS2DELETE; do
+            if [ "${esol}.sol" == "$delsol" ]; then
+               # enabled solution will be deleted
+               return 0
+            fi
+        done
+    fi
+    return 1
+}
+
+delete_sols() {
+    esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
+    if enabled_sol_to_be_deleted; then
+        # enabled solution found, which will be deleted
+        echo "enabled Solution '$esol' will be deleted, adjust config"
+        # extract notes of enabled solution from the note definition
+        if [ -f ${OVERRIDEDIR}/"${esol}".sol ]; then
+            # file found in the override area
+            SOLNOTES=$(awk '/\[ArchX86\]/ {getline; print $0}' ${OVERRIDEDIR}/"${esol}".sol)
+            echo "WARNING: override file for enabled Solution '${esol}' detected. As this Solution will be no longer available, please remove your override file"
+        else
+            # file found in the working area
+            SOLNOTES=$(awk '/\[ArchX86\]/ {getline; print $0}' ${WORKINGAREA}/sols/"${esol}".sol)
+        fi
+        # for each note from the solution check, if note is in
+        # NOTE_APPLY_ORDER. If not, skip note (do nothing).
+        # Else add note to TUNE_FOR_NOTES, if not yet available
+        add_TUNE_FOR_NOTES "$SOLNOTES" "$esol" "from deleted"
+        # delete solution from TUNE_FOR_SOLUTIONS
+        echo "### removing solution '$esol' from TUNE_FOR_SOLUTIONS"
+        sed -i "s/$esol//g" $SAPTUNE_CONFIG
+    fi
+    # do nothing for not enabled solution (no need to adjust the config)
+    # remove of solution definition files will be done later in
+    # adjust_workingarea
+}
+
 delete_notes() {
     for delnote in $NOTES2DELETE; do
         if [ ! -f ${NOTEDIR}/"${delnote}" ]; then
@@ -304,10 +345,15 @@ adjust_enabled_solution() {
     # need to run before the working area is touched in the postinstall
     # only needed, if staging is NOT active and a solution is enabled and no
     # override file exists.
+    # no need to run, if the solution will be deleted
     # The staging is checked in the postinstall, so no need to do it again.
     # If an override file for the enabled solution exists, we will NOT change
     # anything. It is up to the customer to check and adjust after the update
     esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
+    if enabled_sol_to_be_deleted; then
+        echo "enabled Solution '$esol' detected, which will be deleted later. No need to adjust"
+        return 0
+    fi
     if [ -n "$esol" ] && [ ! -f ${OVERRIDEDIR}/"${esol}".sol ]; then
         # enabled solution found, override does not exist
         # extract notes of enabled solution from the solution definition file
@@ -375,7 +421,7 @@ adjust_enabled_solution() {
             fi
         done
         add_NOTE_APPLY_ORDER "$NOTES2ADD" "$esol"
-        delete_NOTE_APPLY_ORDER "$NOTES2REM" "$esol"
+        add_TUNE_FOR_NOTES "$NOTES2REM" "$esol" "deleted from"
     fi
     if [ -n "$esol" ] && [ -f ${OVERRIDEDIR}/"${esol}".sol ]; then
         echo "WARNING: override file for enabled Solution '${esol}' detected. As the content of this Solution changed, please check and adapt your override file"
@@ -409,9 +455,10 @@ add_NOTE_APPLY_ORDER() {
     done
 }
 
-delete_NOTE_APPLY_ORDER() {
+add_TUNE_FOR_NOTES() {
     del_notes="$1"
     sol="$2"
+    txt="$3"
     apply_list=$(grep '^NOTE_APPLY_ORDER[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
 
     for fnote in $del_notes; do
@@ -423,16 +470,17 @@ delete_NOTE_APPLY_ORDER() {
             if [ "$dnote" == "$fnote" ]; then
                 # don't touch NOTE_APPLY_ORDER, but
                 # append Note to TUNE_FOR_NOTES, if not yet available
-                add_TUNE_FOR_NOTES "$fnote" "$sol"
+                append_TUNE_FOR_NOTES "$fnote" "$sol" "$txt"
             fi
         done
     done
 }
 
-add_TUNE_FOR_NOTES() {
+append_TUNE_FOR_NOTES() {
     # append Note to TUNE_FOR_NOTES, if not yet available.
     notes="$1"
     sol="$2"
+    txt="$3"
     notes_list=$(grep '^TUNE_FOR_NOTES[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
 
     for fnote in $notes; do
@@ -445,7 +493,7 @@ add_TUNE_FOR_NOTES() {
         done
         if [ "$found" == "false" ]; then
             if [ -n "$sol" ]; then
-                echo "### appending the Note '$fnote' deleted from Solution '$sol' to 'TUNE_FOR_NOTES' in '$SAPTUNE_CONFIG'"
+                echo "### appending the Note '$fnote' $txt Solution '$sol' to 'TUNE_FOR_NOTES' in '$SAPTUNE_CONFIG'"
                 sed -i "/^TUNE_FOR_NOTES[[:space:]]*=.*/s/\"$/ $fnote\"/" $SAPTUNE_CONFIG
             #else # for future use
             fi
@@ -686,6 +734,7 @@ sleto16pt)
     # important for note delete, sol delete and note changes in sols
     # needs to run always
     change_note_names
+    delete_sols
     delete_notes
     staging=$(grep ^STAGING= $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
     if [ "$staging" == "false" ]; then
@@ -708,7 +757,7 @@ cleanup)
     cleanup_savestates
     ;;
 staging)
-    # called from the postinstall script of saptune to handle the staging area
+    # called from the posttrans script of saptune to handle the staging area
     copy_packednotes2staging
     ;;
 enabledSol)
