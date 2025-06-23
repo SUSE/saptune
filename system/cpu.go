@@ -26,6 +26,9 @@ var cpuDir = "/sys/devices/system/cpu"
 var cpupowerCmd = "/usr/bin/cpupower"
 var isCPU = regexp.MustCompile(`^cpu\d+$`)
 var isState = regexp.MustCompile(`^state\d+$`)
+var perfCnt = 0
+var govCnt = 0
+var latCnt = 0
 
 // GetPerfBias retrieve CPU performance configuration from the system
 func GetPerfBias() string {
@@ -105,10 +108,13 @@ func SetPerfBias(value string) error {
 func supportsPerfBiasSettings() bool {
 	setPerf := true
 	if GetCSP() == "azure" {
-		WarningLog("Perf Bias settings not supported on '%s'\n", CSPAzureLong)
+		PrintLog(perfCnt, "warn", "Perf Bias settings not supported on '%s'\n", CSPAzureLong)
 		setPerf = false
 	} else if !supportsPerfBias() {
 		setPerf = false
+	}
+	if perfCnt == 0 {
+		perfCnt += 1
 	}
 	return setPerf
 }
@@ -158,12 +164,13 @@ func supportsPerfBias() bool {
 		return false
 	}
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()
+	PrintLog(perfCnt, "info", "supportsPerfBias - command 'cpupower info -b' returned: %s - %v", string(cmdOut), err)
 	if err != nil || (err == nil && (strings.Contains(string(cmdOut), notSupportedX86) || strings.Contains(string(cmdOut), notSupportedIBM))) {
 		// does not support perf bias
 		if SecureBootEnabled() {
-			WarningLog("Cannot set Perf Bias when SecureBoot is enabled, skipping")
+			PrintLog(perfCnt, "warn", "Cannot set Perf Bias when SecureBoot is enabled, skipping")
 		} else {
-			WarningLog("Perf Bias settings not supported by the system")
+			PrintLog(perfCnt, "warn", "Perf Bias settings not supported by the system")
 		}
 		return false
 	}
@@ -185,7 +192,7 @@ func GetGovernor() map[string]string {
 
 	dirCont, err := os.ReadDir(cpuDir)
 	if err != nil {
-		WarningLog("Governor settings not supported by the system - %v", err)
+		PrintLog(govCnt, "warn", "Governor settings not supported by the system - %v", err)
 		gGov["all"] = "none"
 		return gGov
 	}
@@ -266,20 +273,24 @@ func SetGovernor(value string) error {
 func supportsGovernorSettings(value string) bool {
 	setGov := true
 	if GetCSP() == "azure" {
-		WarningLog("Governor settings not supported on '%s'\n", CSPAzureLong)
+		PrintLog(govCnt, "warn", "Governor settings not supported on '%s'\n", CSPAzureLong)
 		setGov = false
 	} else if value == "all:none" {
-		WarningLog("Governor settings not supported by the system")
+		PrintLog(govCnt, "warn", "Governor settings not supported by the system")
 		setGov = false
 	} else if !CmdIsAvailable(cpupowerCmd) {
-		WarningLog("command '%s' not found", cpupowerCmd)
+		PrintLog(govCnt, "warn", "command '%s' not found", cpupowerCmd)
 		setGov = false
 	} else if !chkKernelCmdline() || !chkCPUDriver() {
+		PrintLog(govCnt, "warn", "Governor settings not supported by the system - see log for details")
 		setGov = false
 	} else if _, err := os.Stat(path.Join(cpuDir, "cpu0/cpufreq/scaling_governor")); os.IsNotExist(err) {
 		// check only first cpu - cpu0, not all
-		WarningLog("Governor settings not supported by the system")
+		PrintLog(govCnt, "warn", "Governor settings not supported by the system. Missing scaling governor")
 		setGov = false
+	}
+	if govCnt == 0 {
+		govCnt += 1
 	}
 	return setGov
 }
@@ -289,23 +300,23 @@ func chkKernelCmdline() bool {
 	validCmdline := true
 	val := ParseCmdline("/proc/cmdline", "idle")
 	if val == "poll" || val == "halt" {
-		InfoLog("The entire CPUIdle subsystem is disabled, acpi_idle and intel_idle drivers are disabled altogether (idle=%s).", val)
+		PrintLog(govCnt, "info", "The entire CPUIdle subsystem is disabled, acpi_idle and intel_idle drivers are disabled altogether (idle=%s).", val)
 		validCmdline = false
 	}
 	if val == "nomwait" {
-		InfoLog("intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (idle=%s).", val)
+		PrintLog(govCnt, "info", "intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (idle=%s).", val)
 		validCmdline = false
 	}
 	if val := ParseCmdline("/proc/cmdline", "cpuidle.off"); val == "1" {
-		InfoLog("CPU idle time management entirely disabled (cpuidle.off=%s).", val)
+		PrintLog(govCnt, "info", "CPU idle time management entirely disabled (cpuidle.off=%s).", val)
 		validCmdline = false
 	}
 	if val := ParseCmdline("/proc/cmdline", "intel_idle.max_cstate"); val == "0" {
-		InfoLog("intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_idle.max_cstate=%s).", val)
+		PrintLog(govCnt, "info", "intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_idle.max_cstate=%s).", val)
 		validCmdline = false
 	}
 	if val := ParseCmdline("/proc/cmdline", "intel_pstate"); val == "disable" {
-		InfoLog("intel_pstate driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_pstate=%s).", val)
+		PrintLog(govCnt, "info", "intel_pstate driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_pstate=%s).", val)
 		validCmdline = false
 	}
 	return validCmdline
@@ -317,22 +328,22 @@ func chkCPUDriver() bool {
 	validDriver := true
 	val, err := os.ReadFile(path.Join(cpuDir, "cpuidle/current_driver"))
 	if err != nil || !strings.Contains(string(val), "intel_idle") {
-		InfoLog("Unsupported CPUIdle driver '%s' used (%v)", strings.TrimSpace(string(val)), err)
+		PrintLog(govCnt, "info", "Unsupported CPUIdle driver '%s' used (%v)", strings.TrimSpace(string(val)), err)
 		validDriver = false
 	}
 	val, err = os.ReadFile(path.Join(cpuDir, "cpu0/cpufreq/scaling_driver"))
 	if err != nil || !strings.Contains(string(val), "intel_pstate") {
-		InfoLog("Unsupported CPU driver '%s' used (%v)", strings.TrimSpace(string(val)), err)
+		PrintLog(govCnt, "info", "Unsupported CPU driver '%s' used (%v)", strings.TrimSpace(string(val)), err)
 		validDriver = false
 	}
 	_, err = os.Stat(path.Join(cpuDir, "intel_pstate"))
 	if err != nil {
-		InfoLog("Missing directory '%s'", path.Join(cpuDir, "intel_pstate"))
+		PrintLog(govCnt, "info", "Missing directory '%s'", path.Join(cpuDir, "intel_pstate"))
 		validDriver = false
 	} else {
 		val, err := os.ReadFile(path.Join(cpuDir, "intel_pstate/status"))
 		if err != nil || !strings.Contains(string(val), "active") {
-			InfoLog("Status of intel_pstate driver is '%s' (%v)", strings.TrimSpace(string(val)), err)
+			PrintLog(govCnt, "info", "Status of intel_pstate driver is '%s' (%v)", strings.TrimSpace(string(val)), err)
 			validDriver = false
 		}
 	}
@@ -518,22 +529,25 @@ func SetForceLatency(value, savedStates string, revert bool) error {
 func supportsForceLatencySettings(value string) bool {
 	setLatency := true
 	if GetCSP() == "azure" {
-		WarningLog("Latency settings are not supported on '%s'\n", CSPAzureLong)
+		PrintLog(latCnt, "warn", "Latency settings are not supported on '%s'\n", CSPAzureLong)
 		setLatency = false
 	} else if runtime.GOARCH == "ppc64le" {
 		// latency settings are only relevant for Intel-based systems
-		WarningLog("Latency settings not relevant for '%s' systems", runtime.GOARCH)
+		PrintLog(latCnt, "warn", "Latency settings not relevant for '%s' systems", runtime.GOARCH)
 		setLatency = false
 	} else if value == "all:none" {
-		WarningLog("Latency settings not supported by the system")
+		PrintLog(latCnt, "warn", "Latency settings not supported by the system")
 		setLatency = false
 	} else if _, err := os.Stat(path.Join(cpuDir, "cpu0")); os.IsNotExist(err) {
 		// check only first cpu - cpu0, not all
-		WarningLog("Latency settings not supported by the system")
+		PrintLog(latCnt, "warn", "Latency settings not supported by the system")
 		setLatency = false
 	} else if currentCPUDriver() == "none" {
-		WarningLog("Latency settings not supported by the system, no active cpuidle driver")
+		PrintLog(latCnt, "warn", "Latency settings not supported by the system, no active cpuidle driver")
 		setLatency = false
+	}
+	if latCnt == 0 {
+		latCnt += 1
 	}
 	return setLatency
 }
@@ -544,11 +558,11 @@ func currentCPUDriver() string {
 	cpuDriver := "none"
 	cpuDriverFile := path.Join(cpuDir, "/cpuidle/current_driver")
 	if _, err := os.Stat(cpuDriverFile); os.IsNotExist(err) {
-		InfoLog("File '%s' not found - %v", cpuDriverFile, err)
+		PrintLog(latCnt, "info", "File '%s' not found - %v", cpuDriverFile, err)
 		return cpuDriver
 	}
 	if val, err := os.ReadFile(cpuDriverFile); err != nil {
-		InfoLog("Problems reading file '%s' - %+v\n", cpuDriverFile, err)
+		PrintLog(latCnt, "info", "Problems reading file '%s' - %+v\n", cpuDriverFile, err)
 	} else {
 		cpuDriver = strings.TrimSpace(string(val))
 	}
