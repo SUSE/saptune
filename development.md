@@ -22,7 +22,7 @@ the sources should be available at $GOPATH/src/github.com/SUSE/saptune
 and run the unit tests (in a docker container)
 
 ## unit tests for saptune:
-after committing the changes to git travis is used for automatic testing
+after committing the changes to git github actions are used for automatic testing
 
 But before committing the sources, run the tests locally by using docker and the same workflow as with github actions
 

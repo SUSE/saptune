@@ -34,21 +34,23 @@ type loggerInfo struct {
 	where   *os.File
 	typeLog string
 	format  string
+	called  string
 }
 
 // Standard log handler
 func messageLogger(infoLogger loggerInfo, txt string, logSwitch string, stuff []interface{}) {
 	logger := infoLogger.logger
-	typeLog := infoLogger.typeLog
 	where := infoLogger.where
+	typeLog := infoLogger.typeLog
 	logFormat := infoLogger.format
+	calledFrom := infoLogger.called
 	if logger != nil {
 		logger.SetPrefix(logTimeFormat() + logFormat + logpidFormat)
-		logger.Printf(CalledFrom()+txt+"\n", stuff...)
-		jWriteMsg(typeLog, fmt.Sprintf(CalledFrom()+txt+"\n", stuff...))
-		if logSwitch == "on" && where != nil {
-			fmt.Fprintf(where, typeLog+": "+txt+"\n", stuff...)
-		}
+		logger.Printf(calledFrom+txt+"\n", stuff...)
+	}
+	jWriteMsg(typeLog, fmt.Sprintf(calledFrom+txt+"\n", stuff...))
+	if logSwitch == "on" && where != nil {
+		fmt.Fprintf(where, typeLog+": "+txt+"\n", stuff...)
 	}
 }
 
@@ -65,7 +67,7 @@ func DebugLog(txt string, stuff ...interface{}) {
 
 // NoticeLog sends text to the noticeLogger and stdout
 func NoticeLog(txt string, stuff ...interface{}) {
-	messageLogger(loggerInfo{noticeLogger, os.Stdout, "NOTICE", severNoticeFormat}, txt, verboseSwitch, stuff)
+	messageLogger(loggerInfo{noticeLogger, os.Stdout, "NOTICE", severNoticeFormat, CalledFrom()}, txt, verboseSwitch, stuff)
 }
 
 // InfoLog sends text only to the infoLogger
@@ -78,40 +80,43 @@ func InfoLog(txt string, stuff ...interface{}) {
 
 // WarningLog sends text to the warningLogger and stderr
 func WarningLog(txt string, stuff ...interface{}) {
-	messageLogger(loggerInfo{warningLogger, os.Stderr, "WARNING", severWarnFormat}, txt, verboseSwitch, stuff)
+	messageLogger(loggerInfo{warningLogger, os.Stderr, "WARNING", severWarnFormat, CalledFrom()}, txt, verboseSwitch, stuff)
 }
 
 // ErrorLogNoStdErr sends text only to the errorLogger
 func ErrorLogNoStdErr(txt string, stuff ...interface{}) {
-	messageLogger(loggerInfo{errorLogger, nil, "ERROR", severErrorFormat}, txt, "off", stuff)
+	messageLogger(loggerInfo{errorLogger, nil, "ERROR", severErrorFormat, CalledFrom()}, txt, "off", stuff)
 }
 
 // ErrorLog sends text to the errorLogger and stderr
 func ErrorLog(txt string, stuff ...interface{}) error {
-	messageLogger(loggerInfo{errorLogger, os.Stderr, "ERROR", severErrorFormat}, txt, errorSwitch, stuff)
+	messageLogger(loggerInfo{errorLogger, os.Stderr, "ERROR", severErrorFormat, CalledFrom()}, txt, errorSwitch, stuff)
 	return fmt.Errorf(txt+"\n", stuff...)
 }
 
 // LogInit initialise the different log writer saptune will use
 func LogInit(logFile string, logSwitch map[string]string) {
-	var saptuneLog io.Writer
+	if os.Geteuid() == 0 {
+		var saptuneLog io.Writer
 
-	if _, err := os.Stat(saptuneLogDir); err != nil {
-		if err = os.MkdirAll(saptuneLogDir, 0755); err != nil {
+		// setup logger and the log destination if called as root
+		if _, err := os.Stat(saptuneLogDir); err != nil {
+			if err = os.MkdirAll(saptuneLogDir, 0755); err != nil {
+				ErrorExit("", err)
+			}
+		}
+		//create log file with desired read/write permissions
+		saptuneLog, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
+		if err != nil {
 			ErrorExit("", err)
 		}
-	}
-	//create log file with desired read/write permissions
-	saptuneLog, err := os.OpenFile(logFile, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
-	if err != nil {
-		ErrorExit("", err)
-	}
 
-	debugLogger = log.New(saptuneLog, "", 0)
-	noticeLogger = log.New(saptuneLog, "", 0)
-	infoLogger = log.New(saptuneLog, "", 0)
-	warningLogger = log.New(saptuneLog, "", 0)
-	errorLogger = log.New(saptuneLog, "", 0)
+		debugLogger = log.New(saptuneLog, "", 0)
+		noticeLogger = log.New(saptuneLog, "", 0)
+		infoLogger = log.New(saptuneLog, "", 0)
+		warningLogger = log.New(saptuneLog, "", 0)
+		errorLogger = log.New(saptuneLog, "", 0)
+	}
 
 	debugSwitch = logSwitch["debug"]
 	verboseSwitch = logSwitch["verbose"]
