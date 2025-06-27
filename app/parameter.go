@@ -31,17 +31,9 @@ func collectChangedParameterInfo(noteID, fileName string, comparisons map[string
 	// to get the changes: diff between note in working area and info stored
 	// in sections file /run/saptune/sections/<noteid>.sections
 	for _, param := range content.AllValues {
-		switch param.Section {
-		case note.INISectionVersion, note.INISectionRpm, note.INISectionGrub, note.INISectionFS, note.INISectionReminder:
-			// These parameters are only checked, but not applied.
-			// So nothing to do during refresh
-			continue
-		case note.INISectionCPU, note.INISectionMEM, note.INISectionService, note.INISectionBlock, note.INISectionLimits, note.INISectionLogin, note.INISectionPagecache:
-			// currently not supported for 'refresh'
-			system.InfoLog("parameters from section '%s' currently not supported and not evaluated for 'refresh' operation", param.Section)
+		if !isSectionSupportedForRefresh(param.Key, param.Section) {
 			continue
 		}
-
 		// initialise parameter entry
 		paramEntry := initChangedParams(param, noteID, "newchange")
 		// check for new parameter
@@ -72,6 +64,22 @@ func collectChangedParameterInfo(noteID, fileName string, comparisons map[string
 	}
 	chkForDeletedParams(noteID, sectCont.AllValues, content.KeyValue, ovKeyValue, chgParams)
 	return chgParams
+}
+
+// isSectionSupportedForRefresh skips these sections which are currently not
+// supported for refresh
+func isSectionSupportedForRefresh(param, section string) bool {
+	switch section {
+	case note.INISectionVersion, note.INISectionRpm, note.INISectionGrub, note.INISectionFS, note.INISectionReminder:
+		// These parameters are only checked, but not applied.
+		// So nothing to do during refresh
+		return false
+	case note.INISectionCPU, note.INISectionMEM, note.INISectionService, note.INISectionBlock, note.INISectionLimits, note.INISectionLogin, note.INISectionPagecache:
+		// currently not supported for 'refresh'
+		system.InfoLog("parameters (%s) from section '%s' currently not supported and not evaluated for 'refresh' operation", param, section)
+		return false
+	}
+	return true
 }
 
 // initChangedParams initialises the parameter entry
@@ -279,8 +287,11 @@ func chkParameterValue(paramEntry map[string]interface{}, changed bool, app *App
 // available in the note definition file
 func chkForDeletedParams(noteID string, sectCont []txtparser.INIEntry, noteCont map[string]map[string]txtparser.INIEntry, ovCont map[string]map[string]txtparser.INIEntry, chgParams map[string]map[string]interface{}) {
 	system.DebugLog("chkForDeletedParams - chgParams is '%+v'", chgParams)
-	deleted := false
 	for _, sectParam := range sectCont {
+		if !isSectionSupportedForRefresh(sectParam.Key, sectParam.Section) {
+			continue
+		}
+		deleted := false
 		paramEntry := initChangedParams(sectParam, noteID, "del")
 		if _, ok := noteCont[sectParam.Section]; !ok {
 			// section no longer available in note definition file

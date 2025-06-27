@@ -225,8 +225,6 @@ func GetGovernor() map[string]string {
 			gGov[cpuName] = gov
 		}
 	}
-	fmt.Printf("setAll is '%+v'\n", setAll)
-	fmt.Printf("gGov is '%+v'\n", gGov)
 	if setAll {
 		gGov = make(map[string]string)
 		gGov["all"] = oldgov

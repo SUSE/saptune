@@ -11,7 +11,7 @@ the sources should be available at $GOPATH/src/github.com/SUSE/saptune
 	version="3.2.0-test"
 	bdate=$(date +"%Y/%m/%d")
 	bvers=15
-	go build -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion=$version' -X 'github.com/SUSE/saptune/actions.RPMDate=$bdate' -X 'github.com/SUSE/saptune/system.RPMBldVers=$bvers'"
+	go build -buildmode=pie -ldflags "-X 'github.com/SUSE/saptune/actions.RPMVersion=$version' -X 'github.com/SUSE/saptune/actions.RPMDate=$bdate' -X 'github.com/SUSE/saptune/system.RPMBldVers=$bvers'"
 
 ## lint and format checks for the sources before committing changes
 
@@ -22,7 +22,7 @@ the sources should be available at $GOPATH/src/github.com/SUSE/saptune
 and run the unit tests (in a docker container)
 
 ## unit tests for saptune:
-after committing the changes to git travis is used for automatic testing
+after committing the changes to git github actions are used for automatic testing
 
 But before committing the sources, run the tests locally by using docker and the same workflow as with github actions
 

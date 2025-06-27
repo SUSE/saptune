@@ -8,7 +8,6 @@ import (
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
-	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -30,13 +29,23 @@ var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debu
 var SaptuneVersion = ""
 
 func main() {
+	logSwitchFromConfig(system.SaptuneConfigFile(), logSwitch)
+	// special log switch settings for json
 	system.InitOut(logSwitch)
+
+	// activate logging
+	system.LogInit(logFile, logSwitch)
+	// now system.ErrorExit can write to log and os.Stderr. No longer extra
+	// care is needed.
+	system.InfoLog("saptune (%s) started with '%s'", actions.RPMVersion, strings.Join(os.Args, " "))
+	system.InfoLog("build for '%d'", system.IfdefVers())
+
 	if !system.ChkCliSyntax() {
 		actions.PrintHelpAndExit(os.Stdout, 1)
 	}
 
-	// get saptune version and log switches from saptune sysconfig file
-	SaptuneVersion = checkSaptuneConfigFile(os.Stderr, system.SaptuneConfigFile(), logSwitch)
+	// get saptune version from saptune config file and check file content
+	SaptuneVersion = checkSaptuneConfigFile(system.SaptuneConfigFile())
 
 	arg1 := system.CliArg(1)
 	if arg1 == "version" || system.IsFlagSet("version") {
@@ -54,16 +63,8 @@ func main() {
 
 	// All other actions require super user privilege
 	if os.Geteuid() != 0 {
-		fmt.Fprintf(os.Stderr, "Please run saptune with root privilege.\n")
-		system.ErrorExit("", 1)
+		system.ErrorExit("Please run saptune with root privilege.\n", 1)
 	}
-
-	// activate logging
-	system.LogInit(logFile, logSwitch)
-	// now system.ErrorExit can write to log and os.Stderr. No longer extra
-	// care is needed.
-	system.InfoLog("saptune (%s) started with '%s'", actions.RPMVersion, strings.Join(os.Args, " "))
-	system.InfoLog("build for '%d'", system.IfdefVers())
 
 	if arg1 == "lock" {
 		if arg2 := system.CliArg(2); arg2 == "remove" {
@@ -265,27 +266,17 @@ func checkWorkingArea() {
 // checkSaptuneConfigFile checks the config file /etc/sysconfig/saptune
 // if it exists, if it contains all needed variables and for some variables
 // checks, if the values is valid
-// returns the saptune version and changes some log switches
-func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[string]string) string {
+// returns the saptune version
+func checkSaptuneConfigFile(saptuneConf string) string {
 	if system.CliArg(1) == "configure" && system.CliArg(2) == "reset" {
-		if lswitch["debug"] == "" {
-			lswitch["debug"] = "off"
-		}
-		if lswitch["verbose"] == "" {
-			lswitch["verbose"] = "on"
-		}
-		if lswitch["error"] == "" {
-			lswitch["error"] = "on"
-		}
+		// skip check
 		return "3"
 	}
-
 	missingKey := []string{}
 	keyList := actions.MandKeyList()
 	sconf, err := txtparser.ParseSysconfigFile(saptuneConf, false)
 	if err != nil {
-		fmt.Fprintf(writer, "Error: Checking saptune configuration file - Unable to read file '%s': %v\n", saptuneConf, err)
-		system.ErrorExit("", 128)
+		system.ErrorExit("Checking saptune configuration file - Unable to read file '%s': %v", saptuneConf, err, 128)
 	}
 	// check, if all needed variables are available in the saptune
 	// config file
@@ -295,14 +286,12 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 		}
 	}
 	if len(missingKey) != 0 {
-		fmt.Fprintf(writer, "Error: File '%s' is broken. Missing variables '%s'\n", saptuneConf, strings.Join(missingKey, ", "))
-		system.ErrorExit("", 128)
+		system.ErrorExit("File '%s' is broken. Missing variables '%s'", saptuneConf, strings.Join(missingKey, ", "), 128)
 	}
 	txtparser.GetSysctlExcludes(sconf.GetString("SKIP_SYSCTL_FILES", ""))
 	stageVal := sconf.GetString("STAGING", "")
 	if stageVal != "true" && stageVal != "false" {
-		fmt.Fprintf(writer, "Error: Variable 'STAGING' from file '%s' contains a wrong value '%s'. Needs to be 'true' or 'false'\n", saptuneConf, stageVal)
-		system.ErrorExit("", 128)
+		system.ErrorExit("Variable 'STAGING' from file '%s' contains a wrong value '%s'. Needs to be 'true' or 'false'", saptuneConf, stageVal, 128)
 	}
 
 	// check saptune-discovery-period of the Trento Agent
@@ -313,10 +302,18 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 	// set values read from the config file
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
 	if saptuneVers != "1" && saptuneVers != "2" && saptuneVers != "3" {
-		fmt.Fprintf(writer, "Error: Wrong saptune version in file '%s': %s\n", saptuneConf, saptuneVers)
-		system.ErrorExit("", 128)
+		system.ErrorExit("Wrong saptune version in file '%s': %s", saptuneConf, saptuneVers, 128)
 	}
+	return saptuneVers
+}
 
+// logSwitchFromConfig reads log switch settings from the saptune
+// config file
+func logSwitchFromConfig(saptuneConf string, lswitch map[string]string) {
+	sconf, err := txtparser.ParseSysconfigFile(saptuneConf, false)
+	if err != nil {
+		system.ErrorExit("Checking saptune configuration file - Unable to read file '%s': %v", saptuneConf, err, 128)
+	}
 	// Switch Debug on ("on") or off ("off" - default)
 	// Switch verbose mode on ("on" - default) or off ("off")
 	// Switch error mode on ("on" - default) or off ("off")
@@ -330,5 +327,4 @@ func checkSaptuneConfigFile(writer io.Writer, saptuneConf string, lswitch map[st
 	if lswitch["error"] == "" {
 		lswitch["error"] = sconf.GetString("ERROR", "on")
 	}
-	return saptuneVers
 }
