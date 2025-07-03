@@ -1,40 +1,46 @@
 #!/bin/bash
 
-pass1='saptune.completion.compiled'
-pass2='saptune.completion'
 
-separator='^_saptune_completions()'
+for completion in saptune.completion saptune.completion_16 ; do
 
-docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/completely generate saptune-completion.yaml "${pass1}"
-sed -n "1,/${separator}/p" "${pass1}" > "${pass2}"
-cat <<'EOF' >> "${pass2}"
+  yaml="${completion//./-}.yaml"
+  pass1="${completion}.compiled"
+  pass2="${completion}"
 
-  if [[ "${COMP_WORDS[*]}" =~ (--format\ json|--force-color|--fun) ]] ; then
-    word_count=${#COMP_WORDS[@]}
-    for (( index=0; index<${word_count}; index++ )) ; do
-      case "${COMP_WORDS[index]}" in
-        --format)
-            if [ "${COMP_WORDS[index+1]}" == json ] ; then
-              unset COMP_WORDS[index]    # remove '--format'
-              unset COMP_WORDS[index+1]  # remove 'json'
-            fi
-            ;;
-        --force-color)
-            unset COMP_WORDS[index]    # remove '--force-color'
-            ;;
-        --fun)
-            unset COMP_WORDS[index]    # remove '--fun'
-            ;;
-      esac          
-    done
-    COMP_CWORD=$(( ${#COMP_WORDS[@]}-1 ))
-    COMP_WORDS=( ${COMP_WORDS[@]} )
-  fi
+  separator='^_saptune_completions()'
 
+  docker run --rm -it --user $(id -u):$(id -g) --volume "$PWD:/app" dannyben/completely generate "${yaml}" "${pass1}"
+  sed -n "1,/${separator}/p" "${pass1}" > "${pass2}"
+  cat <<'EOF' >> "${pass2}"
+
+    if [[ "${COMP_WORDS[*]}" =~ (--format\ json|--force-color|--fun) ]] ; then
+      word_count=${#COMP_WORDS[@]}
+      for (( index=0; index<${word_count}; index++ )) ; do
+        case "${COMP_WORDS[index]}" in
+          --format)
+              if [ "${COMP_WORDS[index+1]}" == json ] ; then
+                unset COMP_WORDS[index]    # remove '--format'
+                unset COMP_WORDS[index+1]  # remove 'json'
+              fi
+              ;;
+          --force-color)
+              unset COMP_WORDS[index]    # remove '--force-color'
+              ;;
+          --fun)
+              unset COMP_WORDS[index]    # remove '--fun'
+              ;;
+        esac          
+      done
+      COMP_CWORD=$(( ${#COMP_WORDS[@]}-1 ))
+      COMP_WORDS=( ${COMP_WORDS[@]} )
+    fi
 EOF
-sed -n "/${separator}/,\$p" "${pass1}" | tail -n +2 >> "${pass2}"
 
-echo -e "Compiled final completion script \033[0;35m${pass2}\033[0m"
+  sed -n "/${separator}/,\$p" "${pass1}" | tail -n +2 >> "${pass2}"
+
+  echo -e "Compiled final completion script \033[0;35m${pass2}\033[0m"
+
+done
 
 exit 0
 

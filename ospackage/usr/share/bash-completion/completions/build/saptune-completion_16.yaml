@@ -1,7 +1,7 @@
 # This is the input configuration for 'completely' (https://github.com/DannyBen/completely)
 # to generate the bash completion script.
 #
-# v3.2
+# v1.0
 #
 # Changelog:    29.09.2022  v2.0  - first release for saptune 3.1
 #               21.11.2022  v2.1  - Replace --output with --format in syntax description
@@ -19,20 +19,21 @@
 #                                 - Added `saptune configure`
 #                                 - Added `saptune note refresh` and `saptune refresh applied`
 #               03.01.2025  v3.1  - Changed `trento-agent-saptune-discovery-period` to `TrentoASDP` for `saptune configure`.
-#               02.07.2025  v3.2  - Fixed syntax comments for `saptune note refresh` and `saptune refresh applied`
+#               02.07.2025  v1.0  - Forked of saptune-completion.yaml v3.1 for SLE 16
+#                                 - Removed `daemon` and `simulate` 
+#                                 - Fixed syntax comments for `saptune note refresh` and `saptune refresh applied`
 
 #
 # Syntax:       saptune [--format FORMAT] [--fun] [--force-color] help
 #               saptune [--format FORMAT] [--fun] [--force-color] version  
 #               saptune [--format FORMAT] [--fun] [--force-color] status [--non-compliance-check] 
-#               saptune [--format FORMAT] [--fun] [--force-color] daemon ( start | stop | status [--non-compliance-check] )
 #               saptune [--format FORMAT] [--fun] [--force-color] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 #               saptune [--format FORMAT] [--fun] [--force-color] note ( list | revertall | refresh | enabled | applied | verify )
-#               saptune [--format FORMAT] [--fun] [--force-color] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+#               saptune [--format FORMAT] [--fun] [--force-color] note ( apply | customise | create | edit | revert | show | delete ) NOTEID
 #               saptune [--format FORMAT] [--fun] [--force-color] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
 #               saptune [--format FORMAT] [--fun] [--force-color] note rename NOTEID NEWNOTEID
 #               saptune [--format FORMAT] [--fun] [--force-color] solution ( list | verify | enabled | applied )
-#               saptune [--format FORMAT] [--fun] [--force-color] solution ( apply | simulate | customise | create | edit | revert | show | delete | change [--force] ) SOLUTIONNAME
+#               saptune [--format FORMAT] [--fun] [--force-color] solution ( apply | customise | create | edit | revert | show | delete | change [--force] ) SOLUTIONNAME
 #               saptune [--format FORMAT] [--fun] [--force-color] solution verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONID]
 #               saptune [--format FORMAT] [--fun] [--force-color] solution rename SOLUTIONNAME NEWSSOLUTIONNAME
 #               saptune [--format FORMAT] [--fun] [--force-color] staging ( status | enable | disable | is-enabled | list )
@@ -40,14 +41,13 @@
 #               saptune [--format FORMAT] [--fun] [--force-color] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 #               saptune [--format FORMAT] [--fun] [--force-color] configure OPTION VALUE
 #               saptune [--format FORMAT] [--fun] [--force-color] configure ( reset | show )
-#               saptune [--format FORMAT] [--fun] [--force-color] refresh [NOTEID|applied]
+#               saptune [--format FORMAT] [--fun] [--force-color] note refresh [NOTEID|applied]
 #               saptune [--format FORMAT] [--fun] [--force-color] revert all
 #               saptune [--format FORMAT] [--fun] [--force-color] lock remove
 #               saptune [--format FORMAT] [--fun] [--force-color] check
 #               saptune [--format FORMAT] [--fun] [--force-color] verify applied
 #               saptune [--format FORMAT] [--fun] [--force-color] refresh applied
-#
-#
+
 #
 # Caveats:      - It is not possible to use the '=' sign in options. Completion will stop at the '=' sign. The reason for this
 #                 is that the character is listed in `COMP_WORDBREAKS`. Removing it can break other completions, so this is not an option.
@@ -75,7 +75,6 @@ saptune:
   - help
   - version  
   - status
-  - daemon
   - service
   - note
   - solution
@@ -127,7 +126,6 @@ saptune --format *:
   - help
   - version  
   - status
-  - daemon
   - service
   - note
   - solution
@@ -158,23 +156,6 @@ saptune status:
 
 saptune status --non-compliance-check:
   - $()
-
-# --- saptune daemon ---
-saptune daemon:
-  - start
-  - stop
-  - status
-
-saptune daemon start: &stop
-  - $()
-
-saptune daemon stop: *stop
-
-saptune daemon status:
-  - --non-compliance-check
-  - $()
-
-saptune daemon status --non-compliance-check: *stop
 
 
 # --- saptune service ---
@@ -220,7 +201,6 @@ saptune note:
   - enabled
   - applied
   - apply
-  - simulate
   - customise
   - create
   - edit
@@ -245,10 +225,6 @@ saptune note apply: &list-all-notes
   - $(cd /etc/saptune/extra/; for f in *.conf ; do echo ${f%.conf} ; done)
 
 saptune note apply *: *stop
-
-saptune note simulate: *list-all-notes
-
-saptune note simulate *: *stop
 
 saptune note customise: *list-all-notes
 
@@ -344,7 +320,6 @@ saptune solution:
   - enabled
   - applied
   - apply
-  - simulate
   - customise
   - create
   - edit
@@ -367,10 +342,6 @@ saptune solution apply: &list-all-solutions
   - $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)
 
 saptune solution apply *: *stop
-
-saptune solution simulate: *list-all-solutions
-
-saptune solution simulate *: *stop
 
 saptune solution customise: *list-all-solutions
 
