@@ -22,8 +22,7 @@ const (
 )
 
 // sysctlDirs contains all locations sysctl is searching for parameter settings.
-// see comment in /etc/sysctl.conf and man page sysctl.conf(5)
-var sysctlDirs = []string{"/etc/sysctl.conf", "/run/sysctl.d/", "/etc/sysctl.d/", "/usr/local/lib/sysctl.d/", "/usr/lib/sysctl.d/", "/lib/sysctl.d/", "/boot/"}
+var sysctlDirs = sysctlSearchLocations()
 
 var sysctlParms = sysctlDefined{}
 var sysctlWarn = map[string]string{}
@@ -42,6 +41,18 @@ type sysctlConf []sysctlEntry
 // sysctlDefined contains all sysctl parameter, which are defined in the
 // sysctl config files of the system
 type sysctlDefined map[string]sysctlConf
+
+// sysctlSearchLocations returns all locations sysctl is searching for parameter
+// settings.
+// see comment in /etc/sysctl.conf and man page sysctl.conf(5)
+// adapted for SLE16, because /usr/lib and /lib are symlinks now
+func sysctlSearchLocations() []string {
+	sysctlDirs := []string{"/etc/sysctl.conf", "/run/sysctl.d/", "/etc/sysctl.d/", "/usr/local/lib/sysctl.d/", "/usr/lib/sysctl.d/", "/lib/sysctl.d/", "/boot/"}
+	if IfdefVers() > 15 {
+		sysctlDirs = []string{"/etc/sysctl.conf", "/run/sysctl.d/", "/etc/sysctl.d/", "/usr/local/lib/sysctl.d/", "/usr/lib/sysctl.d/", "/boot/"}
+	}
+	return sysctlDirs
+}
 
 // ChkForSysctlDoubles checks if the given sysctl parameter is additional set
 // in a sysctl system configuration file
