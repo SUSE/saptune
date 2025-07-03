@@ -131,7 +131,9 @@ Example:
 .BI virt= <virtualization type>
 to define a special \fIvirtualization\fP class or type
 .br
-Valid class values for \fBvirt=\fP are \fBvm\fP, \fBchroot\fP and \fBcontainer\fP. Valid type values for \fBvirt=\fP are the output reported by \fI/usr/bin/systemd-detect-virt\fP
+Valid class values for \fBvirt=\fP are \fBvm\fP, \fBchroot\fP, \fBcontainer\fP and \fBbare-metal\fP.
+.br
+Valid type values for \fBvirt=\fP are the output reported by \fI/usr/bin/systemd-detect-virt\fP. If no virtualization is detected it's concidered as \fBbare-metal\fP
 
 .RS 4
 Example:

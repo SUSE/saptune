@@ -25,7 +25,7 @@ THP=never
 #
 KSM=0
 
-[vm:os=15-SP5]
+[vm:os=15-[5-7]]
 # Configure transparent hugepages (THP)
 # changes /sys/kernel/mm/transparent_hugepage/enabled
 # 'never' to disable, 'always' to enable or 'madvise'
@@ -34,12 +34,8 @@ KSM=0
 # SAP Note 2131662, 2031375
 #
 THP=madvise
-[vm:os=15-SP6]
-THP=madvise
-[vm:os=15-SP7]
-THP=madvise
 
-[cpu:arch=x86_64]
+[cpu:arch=x86_64:virt=bare-metal]
 # Energy Performance Bias EPB (applies to Intel-based systems only)
 # energy_perf_bias: performance - 0, normal - 6, powersave - 15
 # cpupower set -b 0, if system supports Intel's performance bias setting
@@ -132,17 +128,10 @@ transparent_hugepage=never
 
 # Configure transparent hugepages (THP)
 # recommended for systems >=15SP5
-[grub:os=15-SP5:arch=x86_64]
-transparent_hugepage=madvise
-[grub:os=15-SP6:arch=x86_64]
-transparent_hugepage=madvise
-[grub:os=15-SP7:arch=x86_64]
+[grub:os=15-[5-7]:arch=x86_64]
 transparent_hugepage=madvise
 
-[filesystem:os=15-SP2]
-xfs_options= -nobarrier, -barrier
-
-[filesystem:os=15-SP3]
+[filesystem:os=15-[2-3]]
 xfs_options= -nobarrier, -barrier
 
 [reminder]
