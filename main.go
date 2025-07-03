@@ -288,6 +288,7 @@ func checkSaptuneConfigFile(saptuneConf string) string {
 	if len(missingKey) != 0 {
 		system.ErrorExit("File '%s' is broken. Missing variables '%s'", saptuneConf, strings.Join(missingKey, ", "), 128)
 	}
+	// set internal 'excludeDirs' for later use during parsing Notes
 	txtparser.GetSysctlExcludes(sconf.GetString("SKIP_SYSCTL_FILES", ""))
 	stageVal := sconf.GetString("STAGING", "")
 	if stageVal != "true" && stageVal != "false" {

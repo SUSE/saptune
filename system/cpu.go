@@ -114,7 +114,7 @@ func supportsPerfBiasSettings() bool {
 		setPerf = false
 	}
 	if perfCnt == 0 {
-		perfCnt += 1
+		perfCnt++
 	}
 	return setPerf
 }
@@ -288,7 +288,7 @@ func supportsGovernorSettings(value string) bool {
 		setGov = false
 	}
 	if govCnt == 0 {
-		govCnt += 1
+		govCnt++
 	}
 	return setGov
 }
@@ -545,7 +545,7 @@ func supportsForceLatencySettings(value string) bool {
 		setLatency = false
 	}
 	if latCnt == 0 {
-		latCnt += 1
+		latCnt++
 	}
 	return setLatency
 }
