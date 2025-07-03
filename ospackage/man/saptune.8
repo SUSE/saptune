@@ -30,13 +30,13 @@ ATTENTION: If you still use version \fB1\fP of saptune it's now time to migrate 
 ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
-( list | verify | refresh | revertall | enabled | applied )
+( list | verify | revertall | enabled | applied )
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
-refresh [NOTEID|applied]
+refresh [NOTEID|applied] \fBATTENTION: experimental\fP
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBnote\fP
 verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
@@ -76,6 +76,9 @@ release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBverify\fP
 applied
+
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBrefresh\fP
+applied \fBATTENTION: experimental\fP
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBrevert\fP
 all
@@ -474,11 +477,13 @@ This allows to create own Note definition files in \fI/etc/saptune/extra\fP. The
 The editor is defined by the \fBEDITOR\fP environment variable. If not set editor defaults to /usr/bin/vim.
 You need to choose an unique NoteID for this operation. Use '\fIsaptune note list\fP' to find the already used NoteIDs.
 .TP
-.B refresh
+.B refresh \fBATTENTION: experimental\fP
 Identifies and activates changed parameter settings of a Note definition. The changes get active without first reverting the 'old' settings, so the tuning of the system gets not interrupted.
 
 ATTENTION:
 .br
+This action is currently in the state \fBexperimental\fP!
+
 Currently only parameter of section "[sysctl]", "[sys]" and "[vm]" are supported by the \fIrefresh\fP action.
 
 Parameter of section "[version]", "[rpm]", "[grub]", "[fs]" and "[reminder]" are only checked by saptune, but not applied. So there is nothing to do during refresh of a note and these sections are skipped without notice.
@@ -787,7 +792,7 @@ Same as a \fIsaptune note verify\fP
 
 .SH REFRESH ACTIONS
 .TP
-.B refresh applied
+.B refresh applied \fBATTENTION: experimental\fP
 Refreshes all applied Notes.
 .br
 Same as a \fIsaptune note refresh\fP

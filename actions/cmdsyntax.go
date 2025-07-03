@@ -6,9 +6,9 @@ Daemon control:
   saptune [--format FORMAT] [--force-color] [--fun] daemon ( start | stop | status [--non-compliance-check] ) ATTENTION: deprecated
   saptune [--format FORMAT] [--force-color] [--fun] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 Tune system according to SAP and SUSE notes:
-  saptune [--format FORMAT] [--force-color] [--fun] note ( list | verify | refresh | revertall | enabled | applied )
+  saptune [--format FORMAT] [--force-color] [--fun] note ( list | verify | revertall | enabled | applied )
   saptune [--format FORMAT] [--force-color] [--fun] note ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
-  saptune [--format FORMAT] [--force-color] [--fun] note refresh [NOTEID|applied]
+  saptune [--format FORMAT] [--force-color] [--fun] note refresh [NOTEID|applied] ATTENTION: experimental
   saptune [--format FORMAT] [--force-color] [--fun] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
   saptune [--format FORMAT] [--force-color] [--fun] note rename NOTEID NEWNOTEID
 Tune system for all notes applicable to your SAP solution:
@@ -27,7 +27,7 @@ Config (re-)settings:
 Verify all applied Notes:
   saptune [--format FORMAT] [--force-color] [--fun] verify applied
 Refresh all applied Notes:
-  saptune [--format FORMAT] [--force-color] [--fun] refresh applied
+  saptune [--format FORMAT] [--force-color] [--fun] refresh applied ATTENTION: experimental
 Revert all parameters tuned by the SAP notes or solutions:
   saptune [--format FORMAT] [--force-color] [--fun] revert all
 Remove the pending lock file from a former saptune call
@@ -55,9 +55,9 @@ func cmdLineSyntax16() string {
 Daemon control:
   saptune [--format FORMAT] [--force-color] [--fun] service ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
 Tune system according to SAP and SUSE notes:
-  saptune [--format FORMAT] [--force-color] [--fun] note ( list | verify | refresh | revertall | enabled | applied )
+  saptune [--format FORMAT] [--force-color] [--fun] note ( list | verify | revertall | enabled | applied )
   saptune [--format FORMAT] [--force-color] [--fun] note ( apply | customise | create | edit | revert | show | delete ) NOTEID
-  saptune [--format FORMAT] [--force-color] [--fun] note refresh [NOTEID|applied]
+  saptune [--format FORMAT] [--force-color] [--fun] note refresh [NOTEID|applied] ATTENTION: experimental
   saptune [--format FORMAT] [--force-color] [--fun] note verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
   saptune [--format FORMAT] [--force-color] [--fun] note rename NOTEID NEWNOTEID
 Tune system for all notes applicable to your SAP solution:
@@ -76,7 +76,7 @@ Config (re-)settings:
 Verify all applied Notes:
   saptune [--format FORMAT] [--force-color] [--fun] verify applied
 Refresh all applied Notes:
-  saptune [--format FORMAT] [--force-color] [--fun] refresh applied
+  saptune [--format FORMAT] [--force-color] [--fun] refresh applied ATTENTION: experimental
 Revert all parameters tuned by the SAP notes or solutions:
   saptune [--format FORMAT] [--force-color] [--fun] revert all
 Remove the pending lock file from a former saptune call

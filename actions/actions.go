@@ -103,7 +103,7 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 	case "configure":
 		ConfigureAction(writer, system.CliArg(2), system.CliArgs(3), stApp)
 	case "refresh":
-		RefreshAction(writer, system.CliArg(2), stApp)
+		RefreshAction(os.Stdin, writer, system.CliArg(2), stApp)
 	case "revert":
 		RevertAction(writer, system.CliArg(2), stApp)
 	case "staging":
@@ -121,11 +121,11 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 }
 
 // RefreshAction refreshes all applied Notes
-func RefreshAction(writer io.Writer, actionName string, tuneApp *app.App) {
+func RefreshAction(reader io.Reader, writer io.Writer, actionName string, tuneApp *app.App) {
 	if actionName != "applied" {
 		PrintHelpAndExit(writer, 1)
 	}
-	NoteActionRefresh(writer, "", tuneApp)
+	NoteActionRefresh(reader, writer, "", tuneApp)
 }
 
 // VerifyAction verifies all applied Notes
