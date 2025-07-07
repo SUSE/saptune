@@ -56,13 +56,15 @@ Supported tags are:
 .BI os= <os_version>
 to define a special \fIos version\fP
 .br
-Valid values for \fBos=\fP are the values from the \fBVERSION=\fP line of \fB/etc/os-release\fP, e.g. 12-SP5, 12, 15, 15-SP5 or 16.0
+Valid values for \fBos=\fP must match the value from the \fBVERSION=\fP line of \fB/etc/os-release\fP, e.g. 12-SP5, 12, 15, 15-SP5 or 16.0
+
+If \fBVERSION=\fP contains spaces, only the string until the first space is used for comparison. This excludes any suffixes - like for beta versions - from the comparison.
+
+To mark an entire major release the wildcard \fB*\fP in combination with a separator \fB-\fP or \fB.\fP (regardless of the one present in \fBVERSION\fP) can be used. Valid patterns are: 12-*, 12.*, 15-*, 15.*, 16-* or 16.*
+
+Additional there is the possibility to use a list or a range of valid service packs or dot releases. Again the separator can be \fB-\fP or \fB.\fP (regardless of the one present in \fBVERSION\fP). And for service packs (in 12/15) the \fISP\fP prefix should be omitted.
 .br
-To mark an entire major release the string 12-*, 15-* or 16.* can be used.
-.br
-Additional there is the possibility to use a list or a range of valid releases (service packs, dot releases)
-.br
-e.g 15-[2,4-5,6-,-7]
+e.g 15-[2,4-5,6-,-7] or 15.[2,4-5,6-,-7]
 .TP
 .BI arch= <hardware_architecture>
 to define a special \fIhardware architecture\fP:
