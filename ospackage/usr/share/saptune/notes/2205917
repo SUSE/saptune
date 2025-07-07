@@ -134,15 +134,16 @@ kernel-default 4.12.14-122.17
 # some of these values are set by saptune during runtime, so changing the
 # grub configuration is possible but not needed
 #
-# Configure C-States for lower latency in Linux (applies to Intel-based systems
-# only) - see energy_perf_bias and governor in section [cpu]
-intel_idle.max_cstate=1
-processor.max_cstate=1
-
 # Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl]
 numa_balancing=disable
 # Disable transparent hugepages - see THP in section [vm]
 transparent_hugepage=never
+
+[grub:arch=x86_64:virt=bare-metal]
+# Configure C-States for lower latency in Linux (applies to Intel-based systems
+# only) - see energy_perf_bias and governor in section [cpu]
+intel_idle.max_cstate=1
+processor.max_cstate=1
 
 [reminder]
 # IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!

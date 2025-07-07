@@ -115,11 +115,6 @@ glibc 2.31-150300.46.1
 # some of these values are set by saptune during runtime, so changing the
 # grub configuration is possible but not needed
 #
-# Configure C-States for lower latency in Linux (applies to Intel-based systems
-# only) - see energy_perf_bias and governor in section [cpu]
-intel_idle.max_cstate=1
-processor.max_cstate=1
-
 # Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl]
 numa_balancing=disable
 # Disable transparent hugepages - see THP in section [vm]
@@ -130,6 +125,12 @@ transparent_hugepage=never
 # recommended for systems >=15SP5
 [grub:os=15-[5-7]:arch=x86_64]
 transparent_hugepage=madvise
+
+[grub:arch=x86_64:virt=bare-metal]
+# Configure C-States for lower latency in Linux (applies to Intel-based systems
+# only) - see energy_perf_bias and governor in section [cpu]
+intel_idle.max_cstate=1
+processor.max_cstate=1
 
 [filesystem:os=15-[2-3]]
 xfs_options= -nobarrier, -barrier
