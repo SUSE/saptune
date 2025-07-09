@@ -25,6 +25,7 @@ fi
 CUSTOM_TUNED_CONF=/etc/tuned/saptune/tuned.conf
 
 OVERRIDEDIR=/etc/saptune/override
+CUSTOMDIR=/etc/saptune/extra
 OLD_SAVEDSTATEDIR=/var/lib/saptune/saved_state
 SAVEDSTATEDIR=/run/saptune/saved_state
 OLD_PARAMETERSTATEDIR=/var/lib/saptune/parameter
@@ -140,11 +141,11 @@ get_back_extra_ASE_BOBJ() {
     # check for extra files needed for the v1tov2 migration
     # get back custom note definition files for BOBJ and/or ASE
     # needed for migration, if customer had applied these notes
-    if [ -f /etc/saptune/extra/SAP_BOBJ_n2c.conf ]; then
-        mv /etc/saptune/extra/SAP_BOBJ_n2c.conf /etc/saptune/extra/SAP_BOBJ-SAP_Business_OBJects.conf || :
+    if [ -f "${CUSTOMDIR}"/SAP_BOBJ_n2c.conf ]; then
+        mv "${CUSTOMDIR}"/SAP_BOBJ_n2c.conf "${CUSTOMDIR}"/SAP_BOBJ-SAP_Business_OBJects.conf || :
     fi
-    if [ -f /etc/saptune/extra/SAP_ASE_n2c.conf ]; then
-        mv /etc/saptune/extra/SAP_ASE_n2c.conf /etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf || :
+    if [ -f "${CUSTOMDIR}"/SAP_ASE_n2c.conf ]; then
+        mv "${CUSTOMDIR}"/SAP_ASE_n2c.conf "${CUSTOMDIR}"/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf || :
     fi
 }
 
@@ -235,6 +236,37 @@ change_note_names() {
                     sed -i "s/$srch_pat/$new_pat/g" "${enabledSol}"
                 fi
             fi
+
+            # 7. check custom solutions for using the old note names and change names
+            # " ${oldNote} " or " ${oldNote}$" or "^${oldNote} " or "^${oldNote}$"
+            # adjust solution files
+            for csol in "${CUSTOMDIR}"/*.sol; do
+                srch_pat1="[[:space:]]${oldNote}[[:space:]]"
+                new_pat1=" ${newNote} "
+                if grep "$srch_pat1" "$csol" >/dev/null 2>&1; then
+                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in custom solution '$csol'"
+                    sed -i "s/$srch_pat1/$new_pat1/g" "$csol"
+                fi
+                srch_pat2="[[:space:]]${oldNote}$"
+                new_pat2=" ${newNote}"
+                if grep "$srch_pat2" "$csol" >/dev/null 2>&1; then
+                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in custom solution '$csol'"
+                    sed -i "s/$srch_pat2/$new_pat2/g" "$csol"
+                fi
+                srch_pat3="^${oldNote}[[:space:]]"
+                new_pat3="${newNote} "
+                if grep "$srch_pat3" "$csol" >/dev/null 2>&1; then
+                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in custom solution '$csol'"
+                    sed -i "s/$srch_pat3/$new_pat3/g" "$csol"
+                fi
+                srch_pat4="^${oldNote}$"
+                new_pat4="${newNote}"
+                if grep "$srch_pat4" "$csol" >/dev/null 2>&1; then
+                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in custom solution '$csol'"
+                    sed -i "s/$srch_pat4/$new_pat4/g" "$csol"
+                fi
+            done
+
         #else
             # if both note files are available - not possible, rpm should cover
             # if both note files NOT available - not possible, rpm should cover

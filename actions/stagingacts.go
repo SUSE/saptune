@@ -523,7 +523,7 @@ func handleAppliedSolution(stageName string, tApp *app.App) {
 		for _, note := range sol {
 			// check, if in NoteApplyOrder
 			pos := tApp.PositionInNoteApplyOrder(note)
-		        if pos < 0 {
+			if pos < 0 {
 				// note not available, skip
 				continue
 			}

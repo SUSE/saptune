@@ -472,7 +472,7 @@ func GetVirtStatus() string {
 		}
 	}
 	if vtype == "" {
-		vtype = "none"
+		vtype = "bare-metal"
 	}
 	return vtype
 }

@@ -396,7 +396,7 @@ func TestGetVirtStatus(t *testing.T) {
 
 	// test: virtualization NOT available
 	systemddvCmd = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/systemdDVNOK")
-	exp = "none"
+	exp = "bare-metal"
 	vtype = GetVirtStatus()
 	if vtype != exp {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
