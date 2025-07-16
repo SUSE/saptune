@@ -2,8 +2,8 @@
 # Description:    You want to use SAP software on SUSE Linux Enterprise Server 12 (SLES 12) or SUSE Linux Enterprise Server for SAP Applications 12 (SLES for SAP 12).
 
 [version]
-VERSION=42
-DATE=07.10.2022
+VERSION=43
+DATE=12.11.2024
 DESCRIPTION=SUSE LINUX Enterprise Server 12: Installation notes
 REFERENCES=https://me.sap.com/notes/1984787
 
