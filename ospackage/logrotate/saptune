@@ -1,9 +1,0 @@
-/var/log/saptune/saptune.log {
-    compress
-    copytruncate
-    dateext
-    rotate 99
-    size +4096k
-    notifempty
-    missingok
-}
