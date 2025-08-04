@@ -1,1 +1,0 @@
-BOOT_IMAGE=/boot/vmlinuz-4.4.156-94.57-default root=/dev/mapper/system-root resume=/dev/system/swap splash=silent quiet showopts

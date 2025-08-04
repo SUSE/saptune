@@ -1,2 +1,0 @@
-#!/bin/bash
-/usr/bin/echo 'Hello from test editor' > $1
