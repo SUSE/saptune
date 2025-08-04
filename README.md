@@ -1,7 +1,7 @@
 
 [![Build Status](https://github.com/SUSE/saptune/actions/workflows/saptune-ut.yml/badge.svg)](https://github.com/SUSE/saptune/actions/workflows/saptune-ut.yml/badge.svg)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/5375e2ca293dd0e8b322/test_coverage)](https://codeclimate.com/github/SUSE/saptune/test_coverage)
-[![Maintainability](https://api.codeclimate.com/v1/badges/5375e2ca293dd0e8b322/maintainability)](https://codeclimate.com/github/SUSE/saptune/maintainability)
+[![Test Coverage](https://github.com/SUSE/saptune/blob/cover/badge_cov.svg?branch=cover)](https://github.com/SUSE/saptune/blob/cover/badge_cov.svg?branch=cover)
+[![Test Table](https://github.com/SUSE/saptune/blob/cover/coverage_table.svg?branch=cover)](https://github.com/SUSE/saptune/blob/cover/coverage_table.md?branch=cover)
 
 
 # saptune

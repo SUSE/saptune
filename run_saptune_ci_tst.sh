@@ -69,8 +69,12 @@ echo "vm.pagecache_limit_ignore_dirty = 1" > /etc/sysctl.d/saptune_test2.conf
 
 echo "run go tests"
 go test -v -coverprofile=c.out -cover ./...
+#go test -v -covermode=count -coverprofile=c.out -cover ./...
 exitErr=$?
+go tool cover -func=c.out -o cov.out
+go tool cover -html=c.out -o cov.html
 go build -buildmode=pie -ldflags "-X 'github.com/SUSE/saptune/system.RPMBldVers=15'"
 ps -ef
 pkill -P $$
+ls -l *out *html
 exit $exitErr

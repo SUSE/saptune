@@ -9,9 +9,9 @@ on:
     branches: [ master ]
 
 env:
-  CC_TEST_REPORTER_URL: https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64
   CC_TEST_REPORTER_ID: ${{ secrets.CC_TEST_REPORTER_ID }}
   CC_PREFIX: github.com/SUSE/saptune/
+  TARGET_BRANCH: 'cover'
 
 jobs:
   Check_secrets:
@@ -51,30 +51,8 @@ jobs:
       - id: commit_sha
         run: echo "GIT_COMMIT_SHA=${GIT_COMMIT_SHA}" >> "$GITHUB_OUTPUT"
 
-  Code_climate_report_before_build:
-    runs-on: ubuntu-latest
-    needs: Setup_Git_Env
-    steps:
-      - name: Download test coverage reporter
-        run: curl -L $CC_TEST_REPORTER_URL > ./cc-test-reporter
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: codeclimate-reporter
-          path: cc-test-reporter
-
-      - name: Grant execution permission to cc-test-reporter
-        run: chmod +x ./cc-test-reporter
-
-      - name: Run the test reporter before-build
-        env:
-          GIT_BRANCH: ${{needs.Setup_Git_Env.outputs.branch}}
-          GIT_COMMIT_SHA: ${{needs.Setup_Git_Env.outputs.commit_sha}}
-        run: ./cc-test-reporter before-build
-
   Saptune_unit_test:
     runs-on: ubuntu-latest
-    needs: Code_climate_report_before_build
     if: ${{ always() }}
     steps:
       - uses: actions/checkout@v4
@@ -90,6 +68,7 @@ jobs:
 
       - name: Run saptune unit tests
         run: docker exec -t saptune-ci /bin/sh -c "cd /app; ./run_saptune_ci_tst.sh;"
+        continue-on-error: true
 
       - uses: actions/upload-artifact@v4
         with:
@@ -97,12 +76,24 @@ jobs:
           path: c.out
         if: ${{ env.CC_TEST_REPORTER_ID != '' }}
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverfunctions
+          path: cov.out
+        if: ${{ env.CC_TEST_REPORTER_ID != '' }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverhtml
+          path: cov.html
+        if: ${{ env.CC_TEST_REPORTER_ID != '' }}
+
       - name: Stop and remove Container Image
         run: |
           docker stop saptune-ci
           docker rm saptune-ci
 
-  Code_climate_report_after_build:
+  Coverage_report_and_badge:
     needs: [Setup_Git_Env, Saptune_unit_test]
     runs-on: ubuntu-latest
     steps:
@@ -114,13 +105,75 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: codeclimate-reporter
+          name: coverfunctions
 
-      - name: Grant execution permission to cc-test-reporter
-        run: chmod +x ./cc-test-reporter
+      - uses: actions/download-artifact@v4
+        with:
+          name: coverhtml
 
-      - name: Code Climate report coverage
-        env:
-          GIT_BRANCH: ${{needs.Setup_Git_Env.outputs.branch}}
-          GIT_COMMIT_SHA: ${{needs.Setup_Git_Env.outputs.commit_sha}}
-        run: ./cc-test-reporter after-build --debug --prefix ${{ env.CC_PREFIX }} --exit-code $?
+      - name: create coverage list/table
+        run: .github/scripts/cover.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: covtable
+          path: coverage_table.md
+
+      - name: create badge
+        run: .github/scripts/badge.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: badge
+          path: badge_cov.svg
+
+  Store_reports_and_badge:
+    needs: [Setup_Git_Env, Saptune_unit_test, Coverage_report_and_badge]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: checkout branch cover
+        run: |
+          #  ${{ secrets.GITHUB_TOKEN }}
+          git fetch
+          git checkout ${{ env.TARGET_BRANCH }}
+          git status
+          echo "release ${{ github.event.release.tag_name }}"
+          echo "name ${{ github.event_name }}"
+          echo "action ${{ github.event_action }}"
+          echo "ref ${{ github.head_ref }} or ${{ github.ref_name }}"
+          echo "sha ${{ github.sha }}"
+          echo "repository ${{ github.repository }}"
+          echo "PR repo fork? ${{ github.event.pull_request.head.repo.full_name }}"
+          echo "feature branch ${{ github.event.pull_request.head.ref }}"
+          echo "PR nummer ${{ github.event.pull_request.number }}"
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: badge
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: covtable
+
+      - name: push new badge to branch cover, not on PR
+        #env:
+        #  GIT_BRANCH: ${{needs.Setup_Git_Env.outputs.branch}}
+        #  GIT_COMMIT_SHA: ${{needs.Setup_Git_Env.outputs.commit_sha}}
+        run: |
+          #  ${{ secrets.GITHUB_TOKEN }}
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          ## debug # git status
+          git add badge_cov.svg
+          git add coverage_table.md
+          ## debug # git status
+          if $(git diff --quiet && git diff --staged --quiet)
+          then
+            echo "nothing changed"
+          else
+            git commit -m "update coverage badge and table"
+            git push origin ${{ env.TARGET_BRANCH }}
+          fi
+
