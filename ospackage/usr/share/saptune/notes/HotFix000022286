@@ -1,0 +1,9 @@
+[version]
+VERSION=1
+DATE=19.01.2026
+DESCRIPTION=Disables defrag for THP
+REFERENCES=https://support.scc.suse.com/s/kb/SAP-HANA-swap-and-system-hangs-with-THP-on-multi-NUMA-node-systems
+
+[sys:os=15-[5-7]:arch=x86_64]
+kernel.mm.transparent_hugepage.defrag = never
+kernel.mm.transparent_hugepage.khugepaged.defrag = 0
