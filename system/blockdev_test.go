@@ -8,11 +8,15 @@ import (
 )
 
 func TestBlockDeviceIsDisk(t *testing.T) {
-	if !BlockDeviceIsDisk("sda") {
-		t.Error("'sda' is wrongly reported as 'NOT a disk'")
+	if _, err := os.Stat("/sys/block/sda"); err == nil {
+		if !BlockDeviceIsDisk("sda") {
+			t.Error("'sda' is wrongly reported as 'NOT a disk'")
+		}
 	}
-	if !BlockDeviceIsDisk("vda") {
-		t.Error("'vda' is wrongly reported as 'NOT a disk'")
+	if _, err := os.Stat("/sys/block/vda"); err == nil {
+		if !BlockDeviceIsDisk("vda") {
+			t.Error("'vda' is wrongly reported as 'NOT a disk'")
+		}
 	}
 	if BlockDeviceIsDisk("sr0") {
 		t.Error("'sr0' is wrongly reported as 'a disk'")
