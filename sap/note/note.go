@@ -101,7 +101,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		}
 		// Do not allow vendor to override built-in
 		if _, exists := ret[id]; exists {
-			system.InfoLog("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
+			system.WarningLog("extra note \"%s\" will not override built-in tuning implementation\n", fileName)
 			continue
 		}
 		ret[id] = INISettings{

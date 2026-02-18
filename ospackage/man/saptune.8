@@ -321,7 +321,11 @@ List all SAP Notes, vendor specific tuning definitions and SUSE recommendation a
 
 Currently implemented notes are marked with '\fB+\fP', if manually enabled, '\fB*\fP', if enabled by solutions or '\fB-\fP', if a note belonging to an enabled solution was reverted manually. In all cases the notes are highlighted with green color.
 .br
-If an \fBoverride\fP file exists for a NoteID, the note is marked with '\fBO\fP' and a customer or vendor specific note is marked with '\fBC\fP'..
+If an \fBoverride\fP file exists for a NoteID, the note is marked with '\fBO\fP' and a customer or vendor specific note is marked with '\fBC\fP'.
+.br
+If we detect a \fBconflict\fP with notes the related entry in the list is marked with a leading '\fB!\fP' and the line is highlighted with yellow color. Look at the log file for details like warning messages addressing the problem.
+.br
+Currently we report a conflict if a customer or vendor specific note has the \fBsame\fP name as a shipped note. In this case the shipped note will take precedence over the custom note.
 .TP
 .B enabled
 Print all currently enabled notes as a list separated by blanks without trailing line feed.
@@ -571,6 +575,10 @@ The currently implemented solution is marked with '\fB*\fP' and is highlighted w
 If an \fBoverride\fP file exists for a solution, the solution is marked with '\fBO\fP'. A custom specific solution is marked with '\fBC\fP'.
 .br
 If a note belonging to an enabled solution is reverted manually, the note is highlighted with red color (instead of green) and is crossed out.
+.br
+If we detect a \fBconflict\fP with solutions the related entry in the list is marked with a leading '\fB!\fP' and the line is highlighted with yellow color. Look at the log file for details like warning messages addressing the problem.
+.br
+Currently we report a conflict if a customer or vendor specific solution has the \fBsame\fP name as a shipped solution. In this case the shipped solution will take precedence over the custom solution.
 .TP
 .B enabled
 Print the currently enabled solution.
