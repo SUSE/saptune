@@ -1,9 +1,9 @@
 package note
 
 import (
-	"os"
 	"github.com/SUSE/saptune/sap/param"
 	"github.com/SUSE/saptune/system"
+	"os"
 	"testing"
 )
 
@@ -121,7 +121,6 @@ func TestSetBlkVal(t *testing.T) {
 	}
 	blckOK := make(map[string][]string)
 	tblck := param.BlockDeviceQueue{BlockDeviceSchedulers: param.BlockDeviceSchedulers{SchedulerChoice: make(map[string]string)}, BlockDeviceNrRequests: param.BlockDeviceNrRequests{NrRequests: make(map[string]int)}}
-	
 	val, info, err := GetBlkVal(tstScheduler, &tblck)
 	oval := val
 	if err != nil {

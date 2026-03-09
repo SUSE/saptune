@@ -17,7 +17,7 @@ var smileNo = '\U0001F61F'
 var smileDash = '\U0001F611'
 
 // define max column width
-var fmtmax = 30
+var fmtmax = 32
 
 // number of lines printed for 'verify'
 var lineCnt = 0
