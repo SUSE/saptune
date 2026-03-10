@@ -6,7 +6,7 @@ import (
 )
 
 var noteListMatchText = `
-All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note, D denotes deprecated notes):
+All notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, ! denotes a conflict reported in log file, O denotes override file exists for note, C denotes custom note, D denotes deprecated notes):
 	900929		Linux: STORAGE_PARAMETERS_WRONG_SET and 'mmap() failed'
 			Version 7 from 31.07.2017
 			https://me.sap.com/notes/900929
@@ -23,7 +23,7 @@ Remember: if you wish to automatically activate the solution's tuning options af
 `
 
 var solutionListMatchText = `
-All solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):
+All solutions (* denotes enabled solution, ! denotes a conflict reported in log file, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):
 	BWA                - SAP_BWA
 	HANA               - 941735 1771258 1980196 1984787 2205917 2382421 2534844
 	MAXDB              - 941735 1771258 1984787

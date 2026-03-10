@@ -29,12 +29,8 @@ var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debu
 var SaptuneVersion = ""
 
 func main() {
-	logSwitchFromConfig(system.SaptuneConfigFile(), logSwitch)
-	// special log switch settings for json
-	system.InitOut(logSwitch)
-
-	// activate logging
-	system.LogInit(logFile, logSwitch)
+	startLogging()
+	solution.InitSols()
 	// now system.ErrorExit can write to log and os.Stderr. No longer extra
 	// care is needed.
 	system.InfoLog("saptune (%s) started with '%s'", actions.RPMVersion, strings.Join(os.Args, " "))
@@ -131,6 +127,16 @@ func main() {
 	actions.CheckOrphanedOverrides()
 	actions.SelectAction(os.Stdout, tuneApp, SaptuneVersion)
 	system.ErrorExit("", 0)
+}
+
+// startLogging initialise and start logging
+func startLogging() {
+	logSwitchFromConfig(system.SaptuneConfigFile(), logSwitch)
+	// special log switch settings for json
+	system.InitOut(logSwitch)
+
+	// activate logging
+	system.LogInit(logFile, logSwitch)
 }
 
 // checkUpdateLeftOvers checks for left over files from the migration of
