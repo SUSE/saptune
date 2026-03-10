@@ -446,9 +446,7 @@ func GetFLInfo() (string, string, bool) {
 					}
 				}
 			}
-			if cslatTabCnt == 0 {
-				cslatTabCnt++
-			}
+			cslatTabCnt++
 		}
 	}
 	// check, if all cpus have the same state settings
