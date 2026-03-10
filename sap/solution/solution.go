@@ -31,23 +31,33 @@ const (
 // Solution is identified by set of note numbers.
 type Solution []string
 
+var shSolCnt = 0
+
 // Architecture VS solution ID VS note numbers
 // AllSolutions = map[string]map[string]Solution
 
 // OverrideSolutions contains a list of all available override solutions with
 // their related SAP Notes for all supported architectures
-var OverrideSolutions = GetOtherSolution(OverrideSolutionSheets, NoteTuningSheets, ExtraTuningSheets)
+var OverrideSolutions map[string]map[string]Solution
 
 // CustomSolutions contains a list of all available customer specific solutions
 // with their related SAP Notes for all supported architectures
-var CustomSolutions = GetOtherSolution(ExtraTuningSheets, NoteTuningSheets, ExtraTuningSheets)
+var CustomSolutions map[string]map[string]Solution
 
 // DeprecSolutions contains a list of all solutions witch are deprecated
-var DeprecSolutions = GetOtherSolution(DeprecSolutionSheets, "", "")
+var DeprecSolutions map[string]map[string]Solution
 
 // AllSolutions contains a list of all available solutions with their related
 // SAP Notes for all supported architectures
-var AllSolutions = GetSolutionDefintion(SolutionSheets, ExtraTuningSheets, NoteTuningSheets)
+var AllSolutions map[string]map[string]Solution
+
+// InitSols initialises all solution maps described above
+func InitSols() {
+	OverrideSolutions = GetOtherSolution(OverrideSolutionSheets, NoteTuningSheets, ExtraTuningSheets)
+	CustomSolutions = GetOtherSolution(ExtraTuningSheets, NoteTuningSheets, ExtraTuningSheets)
+	DeprecSolutions = GetOtherSolution(DeprecSolutionSheets, "", "")
+	AllSolutions = GetSolutionDefintion(SolutionSheets, ExtraTuningSheets, NoteTuningSheets)
+}
 
 // GetSolutionDefintion reads solution definition from file
 // build same structure for AllSolutions as before
@@ -68,11 +78,7 @@ func GetSolutionDefintion(solsDir, extraDir, noteDir string) map[string]map[stri
 			continue
 		}
 		if param.Section != "ArchX86" && param.Section != "ArchPPC64LE" {
-			// as the function most of the time is called
-			// before the logging is initialized use
-			// Fprintf instead to give customers a hint.
-			fmt.Fprintf(os.Stderr, "Warning: skip unsupported solution section '%s'\n", param.Section)
-			//system.WarningLog("skip unsupported solution section '%s'", param.Section)
+			system.WarningLog("skip unsupported solution section '%s'", param.Section)
 			continue
 		}
 		if param.Section != currentArch {
@@ -112,10 +118,6 @@ func GetOtherSolution(solsDir, noteFiles, extraFiles string) map[string]map[stri
 	currentArch := ""
 	arch := ""
 	pcarch := ""
-	extra := false
-	if solsDir == ExtraTuningSheets {
-		extra = true
-	}
 	// looking for override or extra solution file
 	solAllVals := getAllSolsFromDir(solsDir, noteFiles, extraFiles)
 
@@ -124,10 +126,7 @@ func GetOtherSolution(solsDir, noteFiles, extraFiles string) map[string]map[stri
 			continue
 		}
 		if param.Section != "ArchX86" && param.Section != "ArchPPC64LE" {
-			// as the function most of the time is called
-			// before the logging is initialized use
-			// Fprintf instead to give customers a hint.
-			fmt.Fprintf(os.Stderr, "Warning: skip unsupported solution section '%s'\n", param.Section)
+			system.WarningLog("skip unsupported solution section '%s'", param.Section)
 			continue
 		}
 
@@ -140,14 +139,6 @@ func GetOtherSolution(solsDir, noteFiles, extraFiles string) map[string]map[stri
 			currentArch = param.Section
 			sol = make(map[string]Solution)
 			arch, pcarch = setSolutionArch(currentArch)
-		}
-		// Do not allow customer/vendor to override built-in solutions
-		if extra && IsShippedSolution(param.Key) {
-			// as the function most of the time is called
-			// before the logging is initialized use
-			// Fprintf instead to give customers a hint.
-			fmt.Fprintf(os.Stderr, "Warning: extra solution '%s' will not override built-in solution implementation\n", param.Key)
-			continue
 		}
 		sol[param.Key] = strings.Split(param.Value, "\t")
 	}
@@ -174,20 +165,11 @@ func checkSolutionNotes(param txtparser.INIEntry, fileName, noteFiles, extraFile
 			if extraFiles != "" {
 				// check for custom note files
 				if _, err := os.Stat(fmt.Sprintf("%s%s.conf", extraFiles, noteID)); err != nil {
-					// as the function most of the time is
-					// called before the logging is
-					// initialized use Fprintf instead to
-					// give customers a hint.
-					fmt.Fprintf(os.Stderr, "Attention: Definition for note '%s' used for solution '%s' in file '%s' not found in '%s' or '%s'\n", noteID, param.Key, fileName, noteFiles, extraFiles)
-					//system.WarningLog("Definition for note '%s' used for solution '%s' in file '%s' not found in %s", noteID, param.Key, fileName, extraFiles)
+					system.WarningLog("Attention: Definition for note '%s' used for solution '%s' in file '%s' not found in '%s' or '%s'\n", noteID, param.Key, fileName, noteFiles, extraFiles)
 					noteState = false
 				}
 			} else {
-				// as the function most of the time is called
-				// before the logging is initialized use
-				// Fprintf instead to give customers a hint.
-				fmt.Fprintf(os.Stderr, "Attention: Definition for note '%s' used for solution '%s' in file '%s' not found in '%s'\n", noteID, param.Key, fileName, noteFiles)
-				//system.WarningLog("Definition for note '%s' used for solution '%s' in file '%s' not found in %s", noteID, param.Key, fileName, noteFiles)
+				system.WarningLog("Attention: Definition for note '%s' used for solution '%s' in file '%s' not found in '%s'\n", noteID, param.Key, fileName, noteFiles)
 				noteState = false
 			}
 		}
@@ -252,6 +234,10 @@ func GetSortedSolutionNames(archName string) (ret []string) {
 // getAllSolsFromDir retrieves all defined solutions from the solution files found in the given
 // directory
 func getAllSolsFromDir(solsDir, noteFiles, extraFiles string) []txtparser.INIEntry {
+	extra := false
+	if solsDir == ExtraTuningSheets {
+		extra = true
+	}
 	solAllVals := make([]txtparser.INIEntry, 0, 64)
 	_, files := system.ListDir(solsDir, "saptune solution definitions")
 	for _, fName := range files {
@@ -266,13 +252,18 @@ func getAllSolsFromDir(solsDir, noteFiles, extraFiles string) []txtparser.INIEnt
 			continue
 		}
 		solName := strings.TrimSuffix(fName, ".sol")
+		// Do not allow customer/vendor to override built-in solutions
+		if extra && IsShippedSolution(solName) {
+			if shSolCnt == 0 {
+				shSolCnt++
+				system.WarningLog("extra solution '%s' will not override built-in solution implementation", solName)
+			}
+			continue
+		}
 		fileName := fmt.Sprintf("%s%s", solsDir, fName)
 		content, err := txtparser.ParseINIFile(fileName, false)
 		if err != nil {
-			// as the function most of the time is called
-			// before the logging is initialized use
-			// Fprintf instead to give customers a hint.
-			fmt.Fprintf(os.Stderr, "Error: Failed to read solution definition from file '%s'\n", fileName)
+			system.ErrorLog("Failed to read solution definition from file '%s'\n", fileName)
 			continue
 		}
 

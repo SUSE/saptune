@@ -58,6 +58,7 @@ func TestGetSolutionDefintion(t *testing.T) {
 
 func TestAvailableShippedSolution(t *testing.T) {
 	// BWA, HANA, NETW, MAXDB
+	AllSolutions = GetSolutionDefintion(SolutionSheetsInGOPATH, "", "")
 	if !IsAvailableSolution("HANA", runtime.GOARCH) {
 		t.Error("solution 'HANA' not available")
 	}

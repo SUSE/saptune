@@ -81,7 +81,7 @@ func NoteActionApply(writer io.Writer, noteID string, tuneApp *app.App) {
 
 // NoteActionList lists all available Note definitions
 func NoteActionList(writer io.Writer, tuneApp *app.App) {
-	fmt.Fprintf(writer, "\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, O denotes override file exists for note, C denotes custom note, D denotes deprecated notes):\n")
+	fmt.Fprintf(writer, "\nAll notes (+ denotes manually enabled notes, * denotes notes enabled by solutions, - denotes notes enabled by solutions but reverted manually later, ! denotes a conflict reported in log file, O denotes override file exists for note, C denotes custom note, D denotes deprecated notes):\n")
 	format := ""
 	jnoteList := []system.JNoteListEntry{}
 	jnoteListEntry := system.JNoteListEntry{}
@@ -128,8 +128,13 @@ func setupNoteListFormat(noteID string, solutionNoteIDs []string, tuneApp *app.A
 	}
 	if _, err := os.Stat(fmt.Sprintf("%s%s.conf", ExtraTuningSheets, noteID)); err == nil {
 		// custom note
-		format = " C" + format
-		jnoteListEntry.CustomNote = true
+		if _, err := os.Stat(fmt.Sprintf("%s%s", NoteTuningSheets, noteID)); err == nil {
+			format = " " + setYellowText + "!" + format + resetTextColor
+			jnoteListEntry.CustomNote = false
+		} else {
+			format = " C" + format
+			jnoteListEntry.CustomNote = true
+		}
 	}
 	if _, err := os.Stat(fmt.Sprintf("%s%s", DeprecationSheets, noteID)); err == nil {
 		// deprecated note

@@ -22,10 +22,11 @@ func TestSolutionActions(t *testing.T) {
 	t.Run("SolutionActionListCustomOVerride", func(t *testing.T) {
 		// prepare custom solution and override
 		setUpSol(t)
+		setUpShipped(t)
 
 		var listMatchText = `
-All solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):
- C	BWA                - SAP_BWA
+All solutions (* denotes enabled solution, ! denotes a conflict reported in log file, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):
+ [33m!	BWA                - [31m[9mSAP_BWA[0m[0m
  O	HANA               - HANA1 NEWNOTE HANA2
  D	MAXDB              - 941735 1771258 1984787
 	NETW               - 941735 1771258 1980196 1984787 2534844
@@ -36,10 +37,18 @@ Remember: if you wish to automatically activate the solution's tuning options af
     saptune service enablestart
 `
 
+		oldExtraTuningSheets := ExtraTuningSheets
+		defer func() { ExtraTuningSheets = oldExtraTuningSheets }()
+		ExtraTuningSheets = ExtraFilesInGOPATH
+		oldNoteTuningSheets := NoteTuningSheets
+		defer func() { NoteTuningSheets = oldNoteTuningSheets }()
+		NoteTuningSheets = TstFilesInGOPATH
+
 		buffer := bytes.Buffer{}
 		SolutionActionList(&buffer, tApp)
 		txt := buffer.String()
 		checkOut(t, txt, listMatchText)
+		tearDownShipped(t)
 		tearDownSol(t)
 	})
 
@@ -159,6 +168,9 @@ SOL1NOTE1 NEWSOL1NOTE SOL1NOTE2
 		oldExtraTuningSheets := ExtraTuningSheets
 		defer func() { ExtraTuningSheets = oldExtraTuningSheets }()
 		ExtraTuningSheets = ExtraFilesInGOPATH
+		oldNoteTuningSheets := NoteTuningSheets
+		defer func() { NoteTuningSheets = oldNoteTuningSheets }()
+		NoteTuningSheets = TstFilesInGOPATH
 
 		buffer := bytes.Buffer{}
 		sName := "NEWSOL1"
