@@ -37,7 +37,11 @@ sysctl-logger.service=start
 IO_SCHEDULER=noop, none
 
 [rpm]
+patterns-base-selinux 20241218-160000.2.2
+patterns-cockpit 16.0-160000.2.2
+patterns-base-enhanced_base 20241218-160000.2.2
 patterns-sap-minimal_sap 16.0-160000.2.2
+
 bpftool 7.5.0-160000.2.2
 libatomic1 15.1.1+git9973-160000.2.2
 libltdl7 2.4.7-160000.2.2
