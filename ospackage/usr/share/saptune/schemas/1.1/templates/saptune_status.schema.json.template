@@ -37,7 +37,7 @@
                 },
                 "virtualization": {
                     "description":  "The virtualization technology of the system (see `systemd-detect-virt --list`).",
-                    "enum": [ "none","kvm","amazon","qemu","bochs","xen","uml","vmware","oracle","microsoft","zvm","parallels","bhyve","qnx","acrn","powervm","vm-other","systemd-nspawn","lxc-libvirt","lxc","openvz","docker","podman","rkt","wsl","proot","container-other" ]
+                    "enum": [ "none","kvm","amazon","qemu","bochs","xen","uml","vmware","oracle","microsoft","zvm","parallels","bhyve","qnx","google","acrn","powervm","vm-other","systemd-nspawn","lxc-libvirt","lxc","openvz","docker","podman","rkt","wsl","proot","container-other" ]
                 },
                 "configured version": {
                     "description":  "The saptune major version as configured in `SAPTUNE_VERSION` of `/etc/sysconfig/saptune`.",
