@@ -137,3 +137,14 @@ func TestGlobalSysctls(t *testing.T) {
 		t.Errorf("got '%s' instead of expected text '%s'\n", info, expTxt)
 	}
 }
+
+func TestIsValidSysctlLocations(t *testing.T) {
+	file := "/etc/sysctl.d/saptune_test.conf"
+	if !IsValidSysctlLocations(file) {
+		t.Errorf("file '%s' reported as invalid sysctl file location, but should be valid", file)
+	}
+	file = "/home/angi/sysctl_test.conf"
+	if IsValidSysctlLocations(file) {
+		t.Errorf("file '%s' reported as valid sysctl file location, but is invalid", file)
+	}
+}

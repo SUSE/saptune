@@ -234,7 +234,7 @@ func chkVirtTags(tagField string, secFields []string) bool {
 	}
 	// order of vopt and err check is by intention
 	if err != nil {
-		system.InfoLog("No virtualization detected - bare metal system or error with systemd-detect-virt. Skipping whole section '%v' with all lines till next valid section definition", secFields)
+		system.InfoLog("No virtualization detected - error with systemd-detect-virt. Skipping whole section '%v' with all lines till next valid section definition", secFields)
 		return false
 	}
 	if tagField != chkVirt {

@@ -108,6 +108,11 @@ func TestEditFile(t *testing.T) {
 	if err == nil {
 		t.Errorf("copied to non existing file")
 	}
+	os.Setenv("EDITOR", "/usr/bin/angi")
+	err = EditFile(src, dst)
+	if err == nil {
+		t.Errorf("expected error, but got success")
+	}
 	os.Remove(dst)
 }
 
@@ -130,6 +135,22 @@ func TestEditAndCheckFile(t *testing.T) {
 	if err == nil {
 		t.Errorf("copied from non existing file")
 	}
+	os.Remove(dst)
+
+	os.Setenv("EDITOR", path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/angi-editor"))
+	changed, err = EditAndCheckFile(src, dst, "ANGI", "note")
+	if err != nil {
+		t.Error(err)
+	}
+	if !changed {
+		t.Error("got 'false', but expected 'true'")
+	}
+	err = changeEntry(dst, "saptune-parameter", "value", "saptune comment")
+	if err != nil {
+		t.Errorf("unexpected error changing file")
+	}
+	_ = CopyFile(dst, "/tmp/ANGI-changeEntry")
+	os.Setenv("EDITOR", oldEditor)
 	os.Remove(dst)
 }
 
@@ -253,5 +274,20 @@ func TestAddGap(t *testing.T) {
 	txt3 := buffer3.String()
 	if txt3 != "\n" {
 		t.Errorf("got: %s, expected: '\n'\n", txt3)
+	}
+}
+
+func TestTriggerErrors(t *testing.T) {
+	val := readConfValue("/tmp/file_not_avail", "saptune-parameter")
+	if val != "" {
+		t.Errorf("got: %s, expected: ''", val)
+	}
+	err := appendEntry("/tmp/file_not_avail", "saptune-parameter", "saptune comment")
+	if err == nil {
+		t.Errorf("expected error, but got OK")
+	}
+	err = changeEntry("/tmp/file_not_avail", "saptune-parameter", "value", "saptune comment")
+	if err == nil {
+		t.Errorf("expected error, but got OK")
 	}
 }

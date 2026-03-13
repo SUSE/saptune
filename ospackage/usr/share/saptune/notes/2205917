@@ -36,7 +36,7 @@ THP=never
 #
 KSM=0
 
-[cpu:arch=x86_64]
+[cpu:arch=x86_64:virt=bare-metal]
 # Energy Performance Bias EPB (applies to Intel-based systems only)
 # energy_perf_bias: performance - 0, normal - 6, powersave - 15
 # cpupower set -b 0, if system supports Intel's performance bias setting
@@ -69,6 +69,16 @@ governor=performance
 # power consumption and life of the CPUs is less severe.
 # But don't forget: The deeper the idle state, the larger is the exit latency.
 #
+force_latency=70
+
+[cpu:csp=aws]
+energy_perf_bias=performance
+governor=performance
+force_latency=70
+
+[cpu:csp=google]
+energy_perf_bias=performance
+governor=performance
 force_latency=70
 
 [sysctl]
@@ -134,15 +144,24 @@ kernel-default 4.12.14-122.17
 # some of these values are set by saptune during runtime, so changing the
 # grub configuration is possible but not needed
 #
+# Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl]
+numa_balancing=disable
+# Disable transparent hugepages - see THP in section [vm]
+transparent_hugepage=never
+
+[grub:arch=x86_64:virt=bare-metal]
 # Configure C-States for lower latency in Linux (applies to Intel-based systems
 # only) - see energy_perf_bias and governor in section [cpu]
 intel_idle.max_cstate=1
 processor.max_cstate=1
 
-# Turn off autoNUMA balancing - see kernel.numa_balancing in section [sysctl]
-numa_balancing=disable
-# Disable transparent hugepages - see THP in section [vm]
-transparent_hugepage=never
+[grub:csp=aws]
+intel_idle.max_cstate=1
+processor.max_cstate=1
+
+[grub:csp=google]
+intel_idle.max_cstate=1
+processor.max_cstate=1
 
 [reminder]
 # IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!

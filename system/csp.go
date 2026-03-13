@@ -28,6 +28,8 @@ const (
 	CSPIBMVPCLong = "IBM Cloud Virtual Server for VPC"
 )
 
+// TCSP used to skip CSP tests
+var TCSP = "skip"
 var dmiDir = "/sys/class/dmi"
 
 // CSP identifier
@@ -72,6 +74,9 @@ var allManufacturerProviders = [...]manufacturerProviders{
 // running system or an empty string, if the system does not belong to a CSP
 // use files in /sys/class/dmi/id/ instead of dmidecode command
 func GetCSP() string {
+	if TCSP != "skip" {
+		return TCSP
+	}
 	cloudServiceProvider := ""
 	getCloudServiceProvider := func(manufacturer string, providers map[*regexp.Regexp]string) string {
 		if content, err := os.ReadFile(manufacturer); err == nil {

@@ -8,6 +8,7 @@ import (
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -25,7 +26,7 @@ var tuningOptions note.TuningOptions // Collection of tuning options from SAP no
 // Switch to control log reaction
 var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debug": os.Getenv("SAPTUNE_DEBUG"), "error": os.Getenv("SAPTUNE_ERROR")}
 
-// SaptuneVersion is the saptune version from /etc/sysconfig/saptune
+// SaptuneVersion is the saptune version from the main configuration file
 var SaptuneVersion = ""
 
 func main() {
@@ -47,36 +48,8 @@ func main() {
 	// get saptune version from saptune config file and check file content
 	SaptuneVersion = checkSaptuneConfigFile(system.SaptuneConfigFile())
 
-	arg1 := system.CliArg(1)
-	if arg1 == "version" || system.IsFlagSet("version") {
-		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
-		system.Jcollect(SaptuneVersion)
-		system.ErrorExit("", 0)
-	}
-	if arg1 == "help" || system.IsFlagSet("help") {
-		system.JnotSupportedYet()
-		actions.PrintHelpAndExit(os.Stdout, 0)
-	}
-	if arg1 == "" {
-		actions.PrintHelpAndExit(os.Stdout, 1)
-	}
-
-	// All other actions require super user privilege
-	if os.Geteuid() != 0 {
-		system.ErrorExit("Please run saptune with root privilege.\n", 1)
-	}
-
-	if arg1 == "lock" {
-		if arg2 := system.CliArg(2); arg2 == "remove" {
-			system.JnotSupportedYet()
-			system.ReleaseSaptuneLock()
-			system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
-			system.ErrorExit("", 0)
-		} else {
-			actions.PrintHelpAndExit(os.Stdout, 1)
-		}
-	}
-	callSaptuneCheckScript(arg1)
+	// check and process command line arguments
+	ctrlClArgs(os.Stdout)
 
 	// only one instance of saptune should run
 	// check and set saptune lock file
@@ -94,23 +67,8 @@ func main() {
 	//check, running config exists
 	checkWorkingArea()
 
-	switch SaptuneVersion {
-	case "1":
-		cmd := exec.Command(saptuneV1, os.Args[1:]...)
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		err := cmd.Run()
-		if err != nil {
-			system.ErrorExit("command '%+s %+v' failed with error '%v'\n", saptuneV1, os.Args, err)
-		} else {
-			system.ErrorExit("", 0)
-		}
-	case "2", "3":
-		break
-	default:
-		system.ErrorExit("Wrong saptune version in file '%s': %s", system.SaptuneConfigFile(), SaptuneVersion, 128)
-	}
+	// check saptune version
+	checkVersion()
 
 	solutionSelector := system.GetSolutionSelector()
 	archSolutions, exist := solution.AllSolutions[solutionSelector]
@@ -129,8 +87,67 @@ func main() {
 	}
 	checkForTuned()
 	actions.CheckOrphanedOverrides()
+
+	// Execute the selected action
 	actions.SelectAction(os.Stdout, tuneApp, SaptuneVersion)
 	system.ErrorExit("", 0)
+}
+
+// ctrlClArgs check and process command line arguments
+func ctrlClArgs(writer io.Writer) {
+	arg1 := system.CliArg(1)
+	if arg1 == "version" || system.IsFlagSet("version") {
+		fmt.Printf("current active saptune version is '%s'\n", SaptuneVersion)
+		system.Jcollect(SaptuneVersion)
+		system.ErrorExit("", 0)
+	}
+	if arg1 == "help" || system.IsFlagSet("help") {
+		system.JnotSupportedYet()
+		actions.PrintHelpAndExit(writer, 0)
+	}
+	if arg1 == "" {
+		actions.PrintHelpAndExit(writer, 1)
+	}
+
+	// All other actions require super user privilege
+	if os.Geteuid() != 0 {
+		system.ErrorExit("Please run saptune with root privilege.\n", 1)
+	}
+
+	if arg1 == "lock" {
+		if arg2 := system.CliArg(2); arg2 == "remove" {
+			system.JnotSupportedYet()
+			system.ReleaseSaptuneLock()
+			system.InfoLog("command line triggered remove of lock file '/run/.saptune.lock'\n")
+			system.ErrorExit("", 0)
+		} else {
+			actions.PrintHelpAndExit(writer, 1)
+		}
+	}
+	callSaptuneCheckScript(arg1)
+}
+
+// checkVersion checks the saptune version
+// needed for former version 1 support
+// may be removed in future saptune versions as no longer needed.
+func checkVersion() {
+	switch SaptuneVersion {
+	case "1":
+		cmd := exec.Command(saptuneV1, os.Args[1:]...)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		err := cmd.Run()
+		if err != nil {
+			system.ErrorExit("command '%+s %+v' failed with error '%v'\n", saptuneV1, os.Args, err)
+		} else {
+			system.ErrorExit("", 0)
+		}
+	case "2", "3":
+		break
+	default:
+		system.ErrorExit("Wrong saptune version in file '%s': %s", system.SaptuneConfigFile(), SaptuneVersion, 128)
+	}
 }
 
 // checkUpdateLeftOvers checks for left over files from the migration of
@@ -288,6 +305,7 @@ func checkSaptuneConfigFile(saptuneConf string) string {
 	if len(missingKey) != 0 {
 		system.ErrorExit("File '%s' is broken. Missing variables '%s'", saptuneConf, strings.Join(missingKey, ", "), 128)
 	}
+	// set internal 'excludeDirs' for later use during parsing Notes
 	txtparser.GetSysctlExcludes(sconf.GetString("SKIP_SYSCTL_FILES", ""))
 	stageVal := sconf.GetString("STAGING", "")
 	if stageVal != "true" && stageVal != "false" {

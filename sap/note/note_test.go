@@ -2,6 +2,7 @@ package note
 
 import (
 	"encoding/json"
+	"github.com/SUSE/saptune/system"
 	"os"
 	"path"
 	"reflect"
@@ -279,16 +280,22 @@ func TestChkGrubCompliance(t *testing.T) {
 func TestGetTuningOptions(t *testing.T) {
 	allOpts := GetTuningOptions(OSNotesInGOPATH, "")
 	if sorted := allOpts.GetSortedIDs(); len(allOpts) != len(sorted) {
-		t.Fatal(sorted, allOpts)
+		t.Error(sorted, allOpts)
 	}
 	allOpts = GetTuningOptions("", TstFilesInGOPATH)
 	if sorted := allOpts.GetSortedIDs(); len(allOpts) != len(sorted) {
-		t.Fatal(sorted, allOpts)
+		t.Error(sorted, allOpts)
 	}
 	allOpts = GetTuningOptions(OSNotesInGOPATH, TstFilesInGOPATH)
 	if sorted := allOpts.GetSortedIDs(); len(allOpts) != len(sorted) {
-		t.Fatal(sorted, allOpts)
+		t.Error(sorted, allOpts)
 	}
+	system.RPMBldVers = "16"
+	allOpts = GetTuningOptions(OSNotesInGOPATH, TstFilesInGOPATH)
+	if sorted := allOpts.GetSortedIDs(); len(allOpts) != len(sorted) {
+		t.Error(sorted, allOpts)
+	}
+	system.RPMBldVers = "15"
 }
 
 func TestGetNoteHeadData(t *testing.T) {

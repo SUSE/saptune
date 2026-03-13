@@ -8,14 +8,20 @@ import (
 )
 
 func TestBlockDeviceIsDisk(t *testing.T) {
-	if !BlockDeviceIsDisk("sda") {
-		t.Error("'sda' is wrongly reported as 'NOT a disk'")
+	_, bdevs := ListDir("/sys/block", "the available block devices of the system")
+	for _, bdev := range bdevs {
+		if bdev == "sr0" {
+			if BlockDeviceIsDisk("sr0") {
+				t.Error("'sr0' is wrongly reported as 'a disk'")
+			}
+			continue
+		}
+		if !BlockDeviceIsDisk(bdev) {
+			t.Errorf("'%s' is wrongly reported as 'NOT a disk'", bdev)
+		}
 	}
-	if !BlockDeviceIsDisk("vda") {
-		t.Error("'vda' is wrongly reported as 'NOT a disk'")
-	}
-	if BlockDeviceIsDisk("sr0") {
-		t.Error("'sr0' is wrongly reported as 'a disk'")
+	if BlockDeviceIsDisk("angi") {
+		t.Error("'angi' is wrongly reported as 'a disk'")
 	}
 	//devs := []string{"sda", "vda", "sr0"}
 }

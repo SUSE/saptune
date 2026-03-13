@@ -2,8 +2,8 @@
 # Description:    You want to use SAP software on SUSE Linux Enterprise Server 15 (SLES 15) or SUSE Linux Enterprise Server 15 for SAP Applications  (SLES for SAP 15).
 
 [version]
-VERSION=50
-DATE=07.10.2024
+VERSION=53
+DATE=07.02.2025
 DESCRIPTION=SUSE Linux Enterprise Server 15: Installation Note
 REFERENCES=https://me.sap.com/notes/2578899
 

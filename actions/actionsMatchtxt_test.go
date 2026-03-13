@@ -110,3 +110,4 @@ Your system has not yet been tuned. Please visit `+"`"+`saptune note`+"`"+` and 
 `, system.GetTunedAdmProfile(), system.GetVirtStatus())
 
 var PrintHelpAndExitMatchText = cmdLineSyntax()
+var PrintHelpAndExitMatchText16 = cmdLineSyntax16()

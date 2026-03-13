@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+var trentoAgentFile = "/etc/trento/agent.yaml"
+
 // CheckAndSetTrento checks parameter and value of Trento Agent config
 // and sets a new value in the Trento Agent config if requested
 func CheckAndSetTrento(entry, val string, change bool) error {
@@ -66,10 +68,9 @@ func checkForValidValue(value string) error {
 
 // detectTrentoConfig returns the name of the Trento Agent config file
 func detectTrentoConfig() (string, error) {
-	trentoFile := "/etc/trento/agent.yaml"
-	_, err := os.Stat(trentoFile)
+	_, err := os.Stat(trentoAgentFile)
 	if err != nil {
-		ErrorLog("Trento config file '%s' not found, exiting.", trentoFile)
+		ErrorLog("Trento config file '%s' not found, exiting.", trentoAgentFile)
 	}
-	return trentoFile, err
+	return trentoAgentFile, err
 }

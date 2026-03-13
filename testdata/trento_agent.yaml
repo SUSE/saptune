@@ -1,0 +1,97 @@
+################################################################################
+##                                                                            ##
+##                    $ Trento: Agent configuration $                         ##
+##                                                                            ##
+## This is the configuration for trento when running the agent.               ##
+##                                                                            ##
+## Launching ./trento agent start                                             ##
+##                                                                            ##
+## Looks for the configuration file in one of the following locations.        ##
+##                                                                            ##
+## /etc/trento/       <-- first location looked                               ##
+## /usr/etc/trento/   <-- fallback here if no file in previous location       ##
+## ~/.config/trento/  <-- fallback here if no file in previous location       ##
+##                                                                            ##
+## Priority goes from top to bottom.                                          ##
+## First found file is used, others, if any, are ignored.                     ##
+##                                                                            ##
+## Note: in this case the file must be named agent.yaml                       ##
+##                                                                            ##
+## Otherwise the config file can be explicitly provided via the command line  ##
+##                                                                            ##
+## ./trento agent start --config=/path/to/trento/agent-config.yaml            ##
+##                                                                            ##
+## Note: in this case there is no file name constraint.                       ##
+##                                                                            ##
+################################################################################
+
+## Cloud discovery period configures the tick interval for the cloud discovery
+## loop.
+## Time unit is seconds
+## Defaults to 10.
+
+# cloud-discovery-period: 10s
+
+###############################################################################
+
+## Cluster discovery period configures the tick interval for the cluster
+##  discovery loop.
+## Time unit is seconds
+## Defaults to 10.
+
+# cluster-discovery-period: 10s
+
+###############################################################################
+
+## Host discovery period configures the tick interval for the host discovery
+## loop.
+## Time unit is seconds
+## Defaults to 10.
+
+# host-discovery-period: 10s
+
+###############################################################################
+
+## SAP system discovery period configures the tick interval for the SAP system
+## discovery loop.
+## Time unit is seconds
+## Defaults to 10.
+
+# sapsystem-discovery-period: 10s
+
+###############################################################################
+
+## Saptune discovery period configures the tick interval for the saptune
+## discovery loop.
+## Time unit is seconds
+## Defaults to 900.
+
+# saptune-discovery-period: 900s
+
+###############################################################################
+
+## Application log level
+## Allowed values: error, warn, info, debug
+## defaults to info
+
+# log-level: info
+
+###############################################################################
+
+## Trento server URL
+
+# server-url: http://localhost
+
+###############################################################################
+
+## Configure the api-key for trento agent to use in the communication with Trento control plane
+## Required.
+## Find the api key at <your-trento-installation-url>/settings 
+
+# api-key: <the-api-key-generated-by-trento>
+
+###############################################################################
+
+## Facts gathering service URL
+
+# facts-service-url: amqp://guest:guest@localhost:5672

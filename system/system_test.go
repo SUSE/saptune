@@ -73,12 +73,56 @@ func TestGetOsName(t *testing.T) {
 	_ = CopyFile("/etc/os-release_OrG", "/etc/os-release")
 }
 
+func TestGetOsRel(t *testing.T) {
+	actualVal := GetOsRel()
+	// ANGI TODO - better relate to GetOsVers to check the related/possible releases
+	switch actualVal {
+	case "0", "1", "2", "3", "4", "5", "6", "7":
+		t.Logf("expected OS release '%s' found\n", actualVal)
+	default:
+		t.Errorf("unexpected OS release '%s'\n", actualVal)
+	}
+	_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr16"), "/etc/os-release")
+	actualVal = GetOsRel()
+	if actualVal != "0" {
+		t.Errorf("expected OS relese '0', but got '%s'\n", actualVal)
+	}
+	_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr15"), "/etc/os-release")
+	actualVal = GetOsRel()
+	if actualVal != "2" {
+		t.Errorf("expected OS release '2', but got '%s'\n", actualVal)
+	}
+	_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr12"), "/etc/os-release")
+	actualVal = GetOsRel()
+	if actualVal != "5" {
+		t.Errorf("expected OS release '5', but got '%s'\n", actualVal)
+	}
+	_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr99"), "/etc/os-release")
+	actualVal = GetOsRel()
+	if actualVal != "" {
+		t.Errorf("expected OS release '', but got '%s'\n", actualVal)
+	}
+
+	// test with non existing file
+	os.Remove("/etc/os-release")
+	actualVal = GetOsRel()
+	if actualVal != "" {
+		t.Errorf("/etc/os-release should not exist, but returns value '%v'\n", actualVal)
+	}
+	_ = CopyFile("/etc/os-release_OrG", "/etc/os-release")
+}
+
 func TestGetOsVers(t *testing.T) {
 	actualVal := GetOsVers()
 	switch actualVal {
 	case "12", "12-SP1", "12-SP2", "12-SP3", "12-SP4", "12-SP5", "15", "15-SP1", "15-SP2", "15-SP3", "15-SP4", "15-SP5", "15-SP6", "15-SP7", "16.0":
 		t.Logf("expected OS version '%s' found\n", actualVal)
 	default:
+		t.Errorf("unexpected OS version '%s'\n", actualVal)
+	}
+	_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr16"), "/etc/os-release")
+	actualVal = GetOsVers()
+	if actualVal != "16.0" {
 		t.Errorf("unexpected OS version '%s'\n", actualVal)
 	}
 	_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr15"), "/etc/os-release")
@@ -90,6 +134,11 @@ func TestGetOsVers(t *testing.T) {
 	actualVal = GetOsVers()
 	if actualVal != "12-SP5" {
 		t.Errorf("unexpected OS version '%s'\n", actualVal)
+	}
+	_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr99"), "/etc/os-release")
+	actualVal = GetOsVers()
+	if actualVal != "" {
+		t.Errorf("expected OS version '', but got '%s'\n", actualVal)
 	}
 
 	// test with non existing file
@@ -104,9 +153,15 @@ func TestGetOsVers(t *testing.T) {
 func TestIsSLE15(t *testing.T) {
 	if IsSLE15() {
 		t.Logf("found SLE15 OS version\n")
+		if !IsSLE("15") {
+			t.Errorf("expected SLE15 os version, but isn't")
+		}
 		_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr12"), "/etc/os-release")
 		if IsSLE15() {
 			t.Errorf("expected a non SLE15 os version, but OS version is '%s'\n", GetOsVers())
+		}
+		if IsSLE("15") {
+			t.Errorf("expected a non SLE15 os version, but isn't")
 		}
 	} else {
 		t.Errorf("expected SLE15 os version, but OS version is '%s'\n", GetOsVers())
@@ -114,13 +169,42 @@ func TestIsSLE15(t *testing.T) {
 	_ = CopyFile("/etc/os-release_OrG", "/etc/os-release")
 }
 
+func TestIsSLE16(t *testing.T) {
+	_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr16"), "/etc/os-release")
+	if IsSLE16() {
+		t.Logf("found SLE16 OS version\n")
+		if !IsSLE("16") {
+			t.Errorf("expected SLE16 os version, but isn't")
+		}
+		_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr15"), "/etc/os-release")
+		if IsSLE16() {
+			t.Errorf("expected a non SLE16 os version, but OS version is '%s'\n", GetOsVers())
+		}
+		if IsSLE("16") {
+			t.Errorf("expected a non SLE16 os version, but isn't")
+		}
+	} else {
+		t.Errorf("expected SLE16 os version, but OS version is '%s'\n", GetOsVers())
+	}
+	_ = CopyFile("/etc/os-release_OrG", "/etc/os-release")
+	if IsSLE("11") {
+		t.Errorf("expected SLE15 os version, but got SLE11 as valid")
+	}
+}
+
 func TestIsSLE12(t *testing.T) {
 	_ = CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr12"), "/etc/os-release")
 	if IsSLE12() {
 		t.Logf("found SLE12 OS version\n")
+		if !IsSLE("12") {
+			t.Errorf("expected SLE12 os version, but isn't")
+		}
 		_ = CopyFile("/etc/os-release_OrG", "/etc/os-release")
 		if IsSLE12() {
 			t.Errorf("expected a non SLE12 os version, but OS version is '%s'\n", GetOsVers())
+		}
+		if IsSLE("12") {
+			t.Errorf("expected a non SLE12 os version, but isn't")
 		}
 	} else {
 		t.Errorf("expected '12-SP5', but OS version is '%s'\n", GetOsVers())
@@ -396,10 +480,97 @@ func TestGetVirtStatus(t *testing.T) {
 
 	// test: virtualization NOT available
 	systemddvCmd = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/systemdDVNOK")
-	exp = "none"
+	exp = "bare-metal"
 	vtype = GetVirtStatus()
 	if vtype != exp {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
 	}
 	systemddvCmd = oldSystemddvCmd
+}
+
+func TestSaptuneConfigFiles(t *testing.T) {
+	RPMBldVers = "15"
+	saptuneConfig := SaptuneConfigFile()
+	if saptuneConfig != "/etc/sysconfig/saptune" {
+		t.Errorf("wrong saptune configuration file - expected '/etc/sysconfig/saptune', but got '%s'", saptuneConfig)
+	}
+	saptuneTemplate := SaptuneConfigTemplate()
+	if saptuneTemplate != "/usr/share/fillup-templates/sysconfig.saptune" {
+		t.Errorf("wrong saptune configuration file - expected '/usr/share/fillup-templates/sysconfig.saptune', but got '%s'", saptuneTemplate)
+	}
+	src := path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/etc/sysconfig/saptune")
+	dest := "/var/adm/fillup-templates/sysconfig.saptune"
+	err := os.MkdirAll(path.Dir(dest), 0755)
+	if err != nil {
+		t.Error(err)
+	}
+	err = CopyFile(src, dest)
+	if err != nil {
+		t.Error(err)
+	}
+	defer os.Remove(dest)
+	saptuneTemplate = SaptuneConfigTemplate()
+	if saptuneTemplate != "/var/adm/fillup-templates/sysconfig.saptune" {
+		t.Errorf("wrong saptune configuration file - expected '/var/adm/fillup-templates/sysconfig.saptune', but got '%s'", saptuneTemplate)
+	}
+	os.Remove(dest)
+
+	RPMBldVers = "16"
+	saptuneConfig = SaptuneConfigFile()
+	if saptuneConfig != "/var/lib/saptune/config/saptune" {
+		t.Errorf("wrong saptune configuration file - expected '/var/lib/saptune/config/saptune', but got '%s'", saptuneConfig)
+	}
+	saptuneTemplate = SaptuneConfigTemplate()
+	if saptuneTemplate != "/usr/share/saptune/saptuneTemplate.conf" {
+		t.Errorf("wrong saptune configuration file - expected '/usr/share/saptune/saptuneTemplate.conf', but got '%s'", saptuneTemplate)
+	}
+}
+
+func TestSwitchOffAndOn(t *testing.T) {
+	orgStdout := os.Stdout
+	orgStderr := os.Stderr
+	oldStdout, oldStderr := SwitchOffOut()
+	if oldStdout != orgStdout {
+		t.Errorf("wrong saved stdout reported")
+	}
+	if oldStderr != orgStderr {
+		t.Errorf("wrong saved stderr reported")
+	}
+	if os.Stdout == orgStdout {
+		t.Errorf("switch off stdout didn't work")
+	}
+	if os.Stderr == orgStderr {
+		t.Errorf("switch off stderr didn't work")
+	}
+	SwitchOnOut(orgStdout, orgStderr)
+	if os.Stdout != orgStdout {
+		t.Errorf("switch on stdout didn't work")
+		os.Stdout = orgStdout
+	}
+	if os.Stderr != orgStderr {
+		t.Errorf("switch on stderr didn't work")
+		os.Stderr = orgStderr
+	}
+}
+
+func TestInitOut(t *testing.T) {
+	angiLogSwitch := map[string]string{"verbose": "on", "debug": "off", "error": "on"}
+	orgStdout := os.Stdout
+	orgArgs := os.Args
+	os.Args = []string{"saptune", "--format", "json", "check"}
+	RereadArgs()
+	InitOut(angiLogSwitch)
+	if os.Stdout == orgStdout {
+		t.Errorf("error switching stdout for json")
+	}
+	if angiLogSwitch["verbose"] == "on" {
+		t.Errorf("error switching off verbose log")
+	}
+	if angiLogSwitch["error"] == "on" {
+		t.Errorf("error switching off error log")
+	}
+	// cleanup
+	os.Args = orgArgs
+	os.Stdout = orgStdout
+	RereadArgs()
 }

@@ -280,4 +280,65 @@ func TestPrintHelpAndExit(t *testing.T) {
 	if errExOut != "" {
 		t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
 	}
+
+	// initialise next test
+	buffer.Reset()
+	errExitbuffer.Reset()
+	tstRetErrorExit = -1
+
+	system.RPMBldVers = "16"
+	errExitMatchText = PrintHelpAndExitMatchText16
+	PrintHelpAndExit(&buffer, 8)
+	txt = buffer.String()
+	checkOut(t, txt, errExitMatchText)
+	if tstRetErrorExit != 8 {
+		t.Errorf("error exit should be '8' and NOT '%v'\n", tstRetErrorExit)
+	}
+	errExOut = errExitbuffer.String()
+	if errExOut != "" {
+		t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+	}
+
+	// initialise next test
+	buffer.Reset()
+	errExitbuffer.Reset()
+	tstRetErrorExit = -1
+
+	orgArgs := os.Args
+	os.Args = []string{"saptune", "--format", "json", "check"}
+	system.RereadArgs()
+	PrintHelpAndExit(&buffer, 7)
+	txt = buffer.String()
+	checkOut(t, txt, errExitMatchText)
+	if tstRetErrorExit != 7 {
+		t.Errorf("error exit should be '7' and NOT '%v'\n", tstRetErrorExit)
+	}
+	errExOut = errExitbuffer.String()
+	if errExOut != "" {
+		t.Errorf("wrong text returned by ErrorExit: '%v' instead of ''\n", errExOut)
+	}
+
+	// cleanup
+	system.RPMBldVers = "15"
+	os.Args = orgArgs
+	system.RereadArgs()
+}
+
+func TestSwitchOffColor(t *testing.T) {
+	switchOffColor()
+	if setGreenText != "" {
+		t.Errorf("switch color off does not work as expected")
+	}
+	// cleanup
+	switchOnColor(t)
+	if setGreenText == "" {
+		t.Errorf("switch color on does not work as expected")
+	}
+}
+
+func TestTcmdLineSyntax(t *testing.T) {
+	cls := TcmdLineSyntax("16")
+	checkOut(t, cls, cmdLineSyntax16())
+	cls = TcmdLineSyntax("15")
+	checkOut(t, cls, cmdLineSyntax())
 }

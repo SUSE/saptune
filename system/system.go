@@ -294,10 +294,10 @@ func InitOut(logSwitch map[string]string) {
 // SwitchOffOut disables stdout and stderr
 func SwitchOffOut() (*os.File, *os.File) {
 	oldStdout := os.Stdout
-	oldSdterr := os.Stderr
+	oldStderr := os.Stderr
 	os.Stdout, _ = os.Open(os.DevNull)
 	os.Stderr, _ = os.Open(os.DevNull)
-	return oldStdout, oldSdterr
+	return oldStdout, oldStderr
 }
 
 // SwitchOnOut restores stdout and stderr to the settings before SwitchOffOut
@@ -472,7 +472,7 @@ func GetVirtStatus() string {
 		}
 	}
 	if vtype == "" {
-		vtype = "none"
+		vtype = "bare-metal"
 	}
 	return vtype
 }

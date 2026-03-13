@@ -21,6 +21,7 @@ const (
 	cpuDirSys       = "devices/system/cpu"
 )
 
+var cpuPlatformFile = "/sys/devices/cpu/caps/pmu_name"
 var efiVarsDir = "/sys/firmware/efi/efivars"
 var cpuDir = "/sys/devices/system/cpu"
 var cpupowerCmd = "/usr/bin/cpupower"
@@ -114,7 +115,7 @@ func supportsPerfBiasSettings() bool {
 		setPerf = false
 	}
 	if perfCnt == 0 {
-		perfCnt += 1
+		perfCnt++
 	}
 	return setPerf
 }
@@ -288,7 +289,7 @@ func supportsGovernorSettings(value string) bool {
 		setGov = false
 	}
 	if govCnt == 0 {
-		govCnt += 1
+		govCnt++
 	}
 	return setGov
 }
@@ -296,7 +297,7 @@ func supportsGovernorSettings(value string) bool {
 // chkKernelCmdline
 func chkKernelCmdline() bool {
 	validCmdline := true
-	val := ParseCmdline("/proc/cmdline", "idle")
+	val := ParseCmdline(ProcCmdLine, "idle")
 	if val == "poll" || val == "halt" {
 		PrintLog(govCnt, "info", "The entire CPUIdle subsystem is disabled, acpi_idle and intel_idle drivers are disabled altogether (idle=%s).", val)
 		validCmdline = false
@@ -305,15 +306,15 @@ func chkKernelCmdline() bool {
 		PrintLog(govCnt, "info", "intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (idle=%s).", val)
 		validCmdline = false
 	}
-	if val := ParseCmdline("/proc/cmdline", "cpuidle.off"); val == "1" {
+	if val := ParseCmdline(ProcCmdLine, "cpuidle.off"); val == "1" {
 		PrintLog(govCnt, "info", "CPU idle time management entirely disabled (cpuidle.off=%s).", val)
 		validCmdline = false
 	}
-	if val := ParseCmdline("/proc/cmdline", "intel_idle.max_cstate"); val == "0" {
+	if val := ParseCmdline(ProcCmdLine, "intel_idle.max_cstate"); val == "0" {
 		PrintLog(govCnt, "info", "intel_idle driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_idle.max_cstate=%s).", val)
 		validCmdline = false
 	}
-	if val := ParseCmdline("/proc/cmdline", "intel_pstate"); val == "disable" {
+	if val := ParseCmdline(ProcCmdLine, "intel_pstate"); val == "disable" {
 		PrintLog(govCnt, "info", "intel_pstate driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_pstate=%s).", val)
 		validCmdline = false
 	}
@@ -545,7 +546,7 @@ func supportsForceLatencySettings(value string) bool {
 		setLatency = false
 	}
 	if latCnt == 0 {
-		latCnt += 1
+		latCnt++
 	}
 	return setLatency
 }
@@ -570,7 +571,6 @@ func currentCPUDriver() string {
 // CPUPlatform returns the CPU platform
 // read /sys/devices/cpu/caps/pmu_name
 func CPUPlatform() string {
-	cpuPlatformFile := "/sys/devices/cpu/caps/pmu_name"
 	cpuPlatform, err := os.ReadFile(cpuPlatformFile)
 	if err != nil {
 		InfoLog("Problems reading file '%s' - %+v\n", cpuPlatformFile, err)

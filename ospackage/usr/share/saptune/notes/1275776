@@ -24,3 +24,9 @@ sysctl-logger.service=start
 #
 vm.max_map_count=2147483647
 
+# kernel.shmmni
+# The value is the maximum number of shared memory identifies available in the
+# system.
+# kernel.shmmni should be set to 32768
+#
+kernel.shmmni=32768

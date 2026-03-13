@@ -34,6 +34,18 @@ func TestLog(t *testing.T) {
 	if !CheckForPattern(logFile, "TestMessage6_Error") {
 		t.Error("Error message not found in log file")
 	}
+	PrintLog(0, "notice", "TestMessage7_Notice")
+	if !CheckForPattern(logFile, "TestMessage7_Notice") {
+		t.Error("Error message not found in log file")
+	}
+	PrintLog(0, "err", "TestMessage8_Error")
+	if !CheckForPattern(logFile, "TestMessage8_Error") {
+		t.Error("Error message not found in log file")
+	}
+	PrintLog(0, "angi", "TestMessage9_Notice")
+	if !CheckForPattern(logFile, "TestMessage9_Notice") {
+		t.Error("Error message not found in log file")
+	}
 	SwitchOffLogging()
 	os.Remove(logFile)
 }

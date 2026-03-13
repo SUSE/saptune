@@ -48,7 +48,9 @@ func messageLogger(infoLogger loggerInfo, txt string, logSwitch string, stuff []
 		logger.SetPrefix(logTimeFormat() + logFormat + logpidFormat)
 		logger.Printf(calledFrom+txt+"\n", stuff...)
 	}
-	jWriteMsg(typeLog, fmt.Sprintf(calledFrom+txt+"\n", stuff...))
+	if where != nil {
+		jWriteMsg(typeLog, fmt.Sprintf(calledFrom+txt+"\n", stuff...))
+	}
 	if logSwitch == "on" && where != nil {
 		fmt.Fprintf(where, typeLog+": "+txt+"\n", stuff...)
 	}
@@ -72,10 +74,7 @@ func NoticeLog(txt string, stuff ...interface{}) {
 
 // InfoLog sends text only to the infoLogger
 func InfoLog(txt string, stuff ...interface{}) {
-	if infoLogger != nil {
-		infoLogger.SetPrefix(logTimeFormat() + severInfoFormat + logpidFormat)
-		infoLogger.Printf(CalledFrom()+txt+"\n", stuff...)
-	}
+	messageLogger(loggerInfo{infoLogger, nil, "INFO", severInfoFormat, CalledFrom()}, txt, "off", stuff)
 }
 
 // WarningLog sends text to the warningLogger and stderr
@@ -133,19 +132,20 @@ func SwitchOffLogging() {
 
 // PrintLog is a wrapper for the logger to switch on/off writing the
 // warning, error and info messages
+// not usable, if we need the error return from ErrorLog function
 func PrintLog(cnt int, level, msg string, stuff ...interface{}) {
 	if cnt == 0 {
 		switch level {
 		case "warn":
-			WarningLog(msg, stuff...)
+			messageLogger(loggerInfo{warningLogger, os.Stderr, "WARNING", severWarnFormat, CalledFrom()}, msg, verboseSwitch, stuff)
 		case "err":
-			ErrorLog(msg, stuff...)
+			messageLogger(loggerInfo{errorLogger, os.Stderr, "ERROR", severErrorFormat, CalledFrom()}, msg, errorSwitch, stuff)
 		case "info":
-			InfoLog(msg, stuff...)
+			messageLogger(loggerInfo{infoLogger, nil, "INFO", severInfoFormat, CalledFrom()}, msg, "off", stuff)
 		case "notice":
-			NoticeLog(msg, stuff...)
+			messageLogger(loggerInfo{noticeLogger, os.Stdout, "NOTICE", severNoticeFormat, CalledFrom()}, msg, verboseSwitch, stuff)
 		default:
-			InfoLog(msg, stuff...)
+			messageLogger(loggerInfo{infoLogger, nil, "INFO", severInfoFormat, CalledFrom()}, msg, "off", stuff)
 		}
 	}
 }

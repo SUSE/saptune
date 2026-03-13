@@ -73,7 +73,7 @@ func TestCliArg(t *testing.T) {
 }
 
 func TestCliFlags(t *testing.T) {
-	os.Args = []string{"saptune", "note", "list", "--format", "json", "--force", "--dryrun", "--help", "--version", "--colorscheme", "full-green-zebra", "--show-non-compliant", "--wrongflag", "--unknownflag=none", "--force-color"}
+	os.Args = []string{"saptune", "note", "list", "--format", "json", "--force", "--dryrun", "--help", "--version", "--colorscheme", "full-green-zebra", "--show-non-compliant", "--non-compliance-check", "--wrongflag", "--unknownflag=none", "--force-color", "--fun"}
 	// parse command line, to get the test parameters
 	saptArgs, saptFlags = ParseCliArgs()
 
@@ -98,11 +98,17 @@ func TestCliFlags(t *testing.T) {
 	if !IsFlagSet("show-non-compliant") {
 		t.Errorf("Test failed, expected 'show-non-compliant' flag as 'true', but got 'false'")
 	}
+	if !IsFlagSet("non-compliance-check") {
+		t.Errorf("Test failed, expected 'non-compliance-check' flag as 'true', but got 'false'")
+	}
 	if !IsFlagSet("notSupported") {
 		t.Errorf("Test failed, expected 'notSupported' flag as 'true', but got 'false'")
 	}
 	if !IsFlagSet("force-color") {
 		t.Errorf("Test failed, expected 'force-color' flag as 'true', but got 'false'")
+	}
+	if !IsFlagSet("fun") {
+		t.Errorf("Test failed, expected 'fun' flag as 'true', but got 'false'")
 	}
 
 	expected := "json"
@@ -361,7 +367,49 @@ func TestChkCliSyntax(t *testing.T) {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
 	}
 
+	// {"saptune", "status", "--non-compliance-check"} -> ok
+	os.Args = []string{"saptune", "status", "--non-compliance-check"}
+	saptArgs, saptFlags = ParseCliArgs()
+	if !ChkCliSyntax() {
+		t.Errorf("Test failed, expected good syntax, but got 'wrong'")
+	}
+
+	// {"saptune", "--non-compliance-check", "status"} -> wrong
+	os.Args = []string{"saptune", "--non-compliance-check", "status"}
+	saptArgs, saptFlags = ParseCliArgs()
+	if ChkCliSyntax() {
+		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
+	}
+
+	// {"saptune", "status", "list", "--non-compliance-check"} -> wrong
+	os.Args = []string{"saptune", "status", "list", "--non-compliance-check"}
+	saptArgs, saptFlags = ParseCliArgs()
+	if ChkCliSyntax() {
+		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
+	}
+
+	// {"saptune", "service", "--non-compliance-check"} -> ok
+	os.Args = []string{"saptune", "service", "--non-compliance-check"}
+	saptArgs, saptFlags = ParseCliArgs()
+	if !ChkCliSyntax() {
+		t.Errorf("Test failed, expected good syntax, but got 'wrong'")
+	}
+
+	// {"saptune", "note", "--non-compliance-check"} -> wrong
+	os.Args = []string{"saptune", "note", "--non-compliance-check"}
+	saptArgs, saptFlags = ParseCliArgs()
+	if ChkCliSyntax() {
+		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
+	}
+
 	// saptune note verify [--colorscheme <color scheme>] [--show-non-compliant] [NOTEID]
+	// {"saptune", "verify", "--colorscheme full-green-zebra"} -> wrong
+	os.Args = []string{"saptune", "verify", "--colorscheme", "full-green-zebra"}
+	saptArgs, saptFlags = ParseCliArgs()
+	if ChkCliSyntax() {
+		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
+	}
+
 	// {"saptune", "note", "list", "--colorscheme full-green-zebra"} -> wrong
 	os.Args = []string{"saptune", "note", "list", "--colorscheme", "full-green-zebra"}
 	saptArgs, saptFlags = ParseCliArgs()
@@ -444,6 +492,20 @@ func TestChkCliSyntax(t *testing.T) {
 	saptArgs, saptFlags = ParseCliArgs()
 	if ChkCliSyntax() {
 		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
+	}
+
+	// {"saptune", "--version", "--help"} -> wrong
+	os.Args = []string{"saptune", "--version", "--help"}
+	saptArgs, saptFlags = ParseCliArgs()
+	if ChkCliSyntax() {
+		t.Errorf("Test failed, expected wrong syntax, but got 'good'")
+	}
+
+	// {"saptune", "--fun", "note", "verify"} -> ok
+	os.Args = []string{"saptune", "--fun", "note", "verify"}
+	saptArgs, saptFlags = ParseCliArgs()
+	if !ChkCliSyntax() {
+		t.Errorf("Test failed, expected good syntax, but got 'wrong'")
 	}
 
 	// reset CLI flags and args

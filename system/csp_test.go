@@ -225,4 +225,11 @@ func TestGetCSP(t *testing.T) {
 		// /usr/sbin/dmidecode -s chassis-manufacturer
 		{"/sys/class/dmi/id/chassis_vendor", map[*regexp.Regexp]string{isIBMVPC: CSPIBMVPC}},
 	}
+
+	// TCSP
+	TCSP = "angi"
+	val = GetCSP()
+	if val != "angi" {
+		t.Errorf("Test failed, expected 'angi', but got '%s'", val)
+	}
 }

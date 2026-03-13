@@ -40,4 +40,6 @@ SAPTUNE_VERSION="5"
 # Disabled by default. To enable use 'saptune staging enable'
 STAGING="false"
 
+TrentoASDP="off"
+
 DEBUG="on"

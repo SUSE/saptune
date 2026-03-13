@@ -2,7 +2,7 @@
 
 echo "zypper in ..."
 #zypper -n --gpg-auto-import-keys ref && zypper -n --gpg-auto-import-keys in go1.10 go rpcbind cpupower uuidd polkit tuned sysstat
-zypper -n --gpg-auto-import-keys ref && zypper -n --gpg-auto-import-keys in go procps
+zypper -n --gpg-auto-import-keys ref && zypper -n --gpg-auto-import-keys in go procps expect
 
 systemctl --no-pager status
 # try to resolve systemd status 'degraded'
@@ -69,8 +69,12 @@ echo "vm.pagecache_limit_ignore_dirty = 1" > /etc/sysctl.d/saptune_test2.conf
 
 echo "run go tests"
 go test -v -coverprofile=c.out -cover ./...
+#go test -v -covermode=count -coverprofile=c.out -cover ./...
 exitErr=$?
+go tool cover -func=c.out -o cov.out
+go tool cover -html=c.out -o cov.html
 go build -buildmode=pie -ldflags "-X 'github.com/SUSE/saptune/system.RPMBldVers=15'"
 ps -ef
 pkill -P $$
+ls -l *out *html
 exit $exitErr

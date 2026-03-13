@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"testing"
 )
@@ -192,6 +193,70 @@ func TestSetForceLatency(t *testing.T) {
 	}
 }
 
+func TestChkKernelCmdline(t *testing.T) {
+	ProcCmdLine = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cmdline3")
+	if chkKernelCmdline() {
+		t.Error("Test failed, expected 'false', but got 'true'")
+	}
+
+	ProcCmdLine = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cmdline4")
+	if chkKernelCmdline() {
+		t.Error("Test failed, expected 'false', but got 'true'")
+	}
+	ProcCmdLine = "/proc/cmdline"
+}
+
+func TestCPUPlatform(t *testing.T) {
+	cpup := CPUPlatform()
+	if cpup != "" {
+		t.Errorf("Test failed, expected '', but got '%s'", cpup)
+	}
+	oldCPUPlatformFile := cpuPlatformFile
+	cpuPlatformFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpuPlatform")
+	cpup = CPUPlatform()
+	if cpup != "skylake" {
+		t.Errorf("Test failed, expected 'skylake', but got '%s'", cpup)
+	}
+	cpuPlatformFile = oldCPUPlatformFile
+}
+
+func TestIsCPUonline(t *testing.T) {
+	if !isCPUonline("cpu0") {
+		t.Errorf("reports cpu as offline, but should be online")
+	}
+	if isCPUonline("cpu37") {
+		t.Errorf("reports cpu as online, but should be offline - not available")
+	}
+	oldCPUDir := cpuDir
+	defer func() { cpuDir = oldCPUDir }()
+	cpuDir = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpu")
+	if !isCPUonline("cpu1") {
+		t.Errorf("reports cpu as offline, but should be online")
+	}
+	cpuDir = oldCPUDir
+}
+
+func TestSecureBootEnabled(t *testing.T) {
+	oldEfiDir := efiVarsDir
+	defer func() { efiVarsDir = oldEfiDir }()
+	efiVarsDir = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/efivars")
+	if SecureBootEnabled() {
+		t.Errorf("reports secure boot enabled, but should be disabled")
+	}
+	efiVarsDir = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/efivars/disabled")
+	if SecureBootEnabled() {
+		t.Errorf("reports secure boot enabled, but should be disabled")
+	}
+	efiVarsDir = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/efivars/enabled")
+	if !SecureBootEnabled() {
+		t.Errorf("reports secure boot disabled, but should be enabled")
+	}
+	if supportsPerfBias() {
+		t.Errorf("reports supported, but shouldn't")
+	}
+	efiVarsDir = oldEfiDir
+}
+
 // test with missing cpupower command
 func TestMissingCmd(t *testing.T) {
 	cmdName := "/usr/bin/cpupower"
@@ -207,6 +272,9 @@ func TestMissingCmd(t *testing.T) {
 		t.Error(err)
 	}
 	if supportsPerfBias() {
+		t.Errorf("reports supported, but shouldn't")
+	}
+	if supportsGovernorSettings(value) {
 		t.Errorf("reports supported, but shouldn't")
 	}
 	if err := SetGovernor("all:performance"); err != nil {
@@ -258,6 +326,27 @@ func TestCPUErrorCases(t *testing.T) {
 		if err := SetForceLatency("70", "cpu1:state0:0 cpu1:state1:0", false); err == nil {
 			t.Error("should return an error and not 'nil'")
 		}
+	}
+
+	t.Log("ohne testdata")
+	if supportsGovernorSettings("") {
+		t.Errorf("reports supported, but shouldn't")
+	}
+	cpuDir = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpu")
+	t.Log("testdata/cpu")
+	if supportsForceLatencySettings("") {
+		t.Errorf("reports supported, but shouldn't")
+	}
+	if !isValidGovernor("cpu0", "performance") {
+		t.Errorf("reports invalif, but shouldn't")
+	}
+	if supportsGovernorSettings("") {
+		t.Errorf("reports supported, but shouldn't")
+	}
+	cpuDir = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpu-true")
+	t.Log("testdata/cpu-true")
+	if supportsGovernorSettings("") {
+		t.Errorf("reports supported, but shouldn't")
 	}
 	cpuDir = oldCPUDir
 }

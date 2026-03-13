@@ -27,7 +27,7 @@ THP=madvise
 #
 KSM=0
 
-[cpu:arch=x86_64]
+[cpu:arch=x86_64:virt=bare-metal]
 # Energy Performance Bias EPB (applies to Intel-based systems only)
 # energy_perf_bias: performance - 0, normal - 6, powersave - 15
 # cpupower set -b 0, if system supports Intel's performance bias setting
@@ -62,6 +62,15 @@ governor=performance
 #
 force_latency=70
 
+[cpu:csp=aws]
+energy_perf_bias=performance
+governor=performance
+force_latency=70
+
+[cpu:csp=google]
+energy_perf_bias=performance
+governor=performance
+force_latency=70
 
 [sysctl]
 # /proc/sys/kernel/numa_balancing

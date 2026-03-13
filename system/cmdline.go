@@ -7,6 +7,9 @@ import (
 	"strings"
 )
 
+// ProcCmdLine is the default kernel cmdline
+var ProcCmdLine = "/proc/cmdline"
+
 // ParseCmdline parse /proc/cmdline into key(string) - value(string) pairs.
 // return value for given boot option or 'NA', if not available
 func ParseCmdline(fileName, option string) string {

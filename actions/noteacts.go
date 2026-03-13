@@ -40,7 +40,7 @@ func NoteAction(writer io.Writer, actionName, noteID, newNoteID string, tuneApp 
 	case "delete":
 		NoteActionDelete(os.Stdin, writer, noteID, tuneApp)
 	case "refresh":
-		NoteActionRefresh(writer, noteID, tuneApp)
+		NoteActionRefresh(os.Stdin, writer, noteID, tuneApp)
 	case "rename":
 		NoteActionRename(os.Stdin, writer, noteID, newNoteID, tuneApp)
 	case "revert":
@@ -491,7 +491,14 @@ func NoteActionApplied(writer io.Writer, tuneApp *app.App) {
 
 // NoteActionRefresh re-applies Note parameter settings to the system
 // if an already applied Note got changed.
-func NoteActionRefresh(writer io.Writer, noteID string, tuneApp *app.App) {
+func NoteActionRefresh(reader io.Reader, writer io.Writer, noteID string, tuneApp *app.App) {
+	system.NoticeLog("ATTENTION: the action 'note refresh' is experimental!")
+	txtConfirm := fmt.Sprintf("Do you really want to continue to test this experimental action?")
+	if !readYesNo(txtConfirm, reader, writer) {
+		system.NoticeLog("Note action 'refresh' aborted by user interaction")
+		system.ErrorExit("", 0)
+	}
+
 	errCount := 0
 	noteList := make([]string, 0)
 	if noteID == "" || noteID == "applied" {

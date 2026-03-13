@@ -20,6 +20,79 @@ func TestChkOsTags(t *testing.T) {
 	if ret {
 		t.Error("matching os version, but shouldn't")
 	}
+	_ = system.CopyFile(path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/osr16.2"), "/etc/os-release")
+	tag = "16.2"
+	secFields = []string{"rpm", "os=16.2", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if !ret {
+		t.Error("not matching os version")
+	}
+	tag = "19.0"
+	secFields = []string{"rpm", "os=19.0", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if ret {
+		t.Error("matching os version, but shouldn't")
+	}
+	tag = "16.[0,2,4-5,7-]"
+	secFields = []string{"rpm", "os=16.[0,2,4-5,7-]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if !ret {
+		t.Error("not matching os version")
+	}
+	tag = "16.[-2,4-5,7-]"
+	secFields = []string{"rpm", "os=16.[-2,4-5,7-]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if !ret {
+		t.Error("not matching os version")
+	}
+	tag = "16.[0-1,2-]"
+	secFields = []string{"rpm", "os=16.[0-1,2-]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if !ret {
+		t.Error("not matching os version")
+	}
+	tag = "16.[0-2,4-5,7-]"
+	secFields = []string{"rpm", "os=16.[0-2,4-5,7-]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if !ret {
+		t.Error("not matching os version")
+	}
+	tag = "16.[-6]"
+	secFields = []string{"rpm", "os=16.[-6]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if !ret {
+		t.Error("not matching os version")
+	}
+	tag = "16.[02]"
+	secFields = []string{"rpm", "os=16.[02]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if ret {
+		t.Error("matching os version, but shouldn't")
+	}
+	tag = "19.[2]"
+	secFields = []string{"rpm", "os=19.[2]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if ret {
+		t.Error("matching os version, but shouldn't")
+	}
+	tag = "16.[-]"
+	secFields = []string{"rpm", "os=16.[-]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if ret {
+		t.Error("matching os version, but shouldn't")
+	}
+	tag = "16.[4-]"
+	secFields = []string{"rpm", "os=16.[4-]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if ret {
+		t.Error("matching os version, but shouldn't")
+	}
+	tag = "16.[0+2]"
+	secFields = []string{"rpm", "os=16.[0+2]", "arch=amd64"}
+	ret = chkOsTags(tag, secFields)
+	if ret {
+		t.Error("matching os version, but shouldn't")
+	}
 	_ = system.CopyFile("/etc/os-release_OrG", "/etc/os-release")
 }
 

@@ -143,6 +143,11 @@ func TestSystemctl(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
+
+	err = SystemctlDaemonReload()
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestIsSapconfActive(t *testing.T) {
@@ -496,7 +501,7 @@ func TestSystemdDetectVirt(t *testing.T) {
 		t.Errorf("Test failed, returned error should be 'nil', but got: '%v'", err)
 	}
 
-	exp = "none"
+	exp = "bare-metal"
 	virt, vtype, err = SystemdDetectVirt(opt)
 	if !virt {
 		t.Error("virtualization should be true, but is false")
@@ -510,7 +515,7 @@ func TestSystemdDetectVirt(t *testing.T) {
 
 	// test: virtualization NOT available
 	systemddvCmd = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/systemdDVNOK")
-	exp = "none"
+	exp = "bare-metal"
 	virt, vtype, err = SystemdDetectVirt("-v")
 	if virt {
 		t.Error("virtualization should be false, but is true")
@@ -518,8 +523,8 @@ func TestSystemdDetectVirt(t *testing.T) {
 	if vtype != exp {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
 	}
-	if err == nil {
-		t.Errorf("Test failed, returned error should be NOT 'nil', but got: '%v'", err)
+	if err != nil {
+		t.Errorf("Test failed, returned error should be 'nil', but got: '%v'", err)
 	}
 	virt, vtype, err = SystemdDetectVirt("-c")
 	if virt {
@@ -528,8 +533,8 @@ func TestSystemdDetectVirt(t *testing.T) {
 	if vtype != exp {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
 	}
-	if err == nil {
-		t.Errorf("Test failed, returned error should be NOT 'nil', but got: '%v'", err)
+	if err != nil {
+		t.Errorf("Test failed, returned error should be 'nil', but got: '%v'", err)
 	}
 	virt, vtype, err = SystemdDetectVirt(opt)
 	if virt {
@@ -538,8 +543,8 @@ func TestSystemdDetectVirt(t *testing.T) {
 	if vtype != exp {
 		t.Errorf("Test failed, expected: '%s', got: '%s'", exp, vtype)
 	}
-	if err == nil {
-		t.Errorf("Test failed, returned error should be NOT 'nil', but got: '%v'", err)
+	if err != nil {
+		t.Errorf("Test failed, returned error should be 'nil', but got: '%v'", err)
 	}
 	exp = ""
 	virt, vtype, err = SystemdDetectVirt("-r")

@@ -2,8 +2,8 @@
 # See TR-4290 (FAS) or TR-4435 (AFF).
 
 [version]
-VERSION=12
-DATE=20.09.2024
+VERSION=14
+DATE=08.07.2025
 DESCRIPTION=Linux Kernel Settings for NetApp NFS
 REFERENCES=https://me.sap.com/notes/3024346 https://docs.netapp.com/us-en/netapp-solutions-sap/bp/saphana-fas-nfs_introduction.html https://docs.netapp.com/us-en/netapp-solutions-sap/bp/saphana_aff_nfs_introduction.html
 

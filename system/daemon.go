@@ -66,6 +66,10 @@ func SystemdDetectVirt(opt string) (bool, string, error) {
 		return virt, vtype, ErrorLog("%v - Failed to call systemd-detect-virt %s - %s", err, opt, strings.TrimSpace(string(out)))
 	}
 	vtype = strings.TrimSpace(string(out))
+	if vtype == "none" {
+		vtype = "bare-metal"
+		err = nil
+	}
 	return virt, vtype, err
 }
 

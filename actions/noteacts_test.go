@@ -829,4 +829,10 @@ ERROR: Problems while editing Note definition file '/home/ci_tst/gopath/src/gith
 	txt = buffer.String()
 	checkOut(t, txt, errMatchText)
 
+	// cleanup
+	if _, err := os.Stat("/var/log/saptune"); os.IsNotExist(err) {
+		t.Logf("All good - /var/log/saptune does not exist.")
+	} else {
+		os.RemoveAll("/var/log/saptune")
+	}
 }

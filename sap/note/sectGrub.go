@@ -10,7 +10,7 @@ import (
 // GetGrubVal initialise the grub structure with the current system settings
 func GetGrubVal(key string) string {
 	keyFields := strings.Split(key, ":")
-	val := system.ParseCmdline("/proc/cmdline", keyFields[1])
+	val := system.ParseCmdline(system.ProcCmdLine, keyFields[1])
 	return val
 }
 

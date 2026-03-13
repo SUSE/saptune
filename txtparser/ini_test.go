@@ -3,6 +3,7 @@ package txtparser
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/SUSE/saptune/system"
 	"os"
 	"path"
 	"reflect"
@@ -16,6 +17,7 @@ var fileNameOld = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/t
 var fileNameNew = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_new_test.ini")
 var fileNameWrong = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_wrong_test.ini")
 var fileNameMissing = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_missing_test.ini")
+var fileNameNewMissing = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/ini_new_missing_test.ini")
 var fileName = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/ospackage/usr/share/saptune/notes/1557506")
 var descName = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s\n\t\t\t%s", "Linux paging improvements", "", "16", "06.02.2020", "https://me.sap.com/notes/1557506")
 var descNameNew = fmt.Sprintf("%s\n\t\t\t%sVersion %s from %s", "Linux paging improvements", "", "16", "06.02.2020")
@@ -164,6 +166,23 @@ var iniWrongJSON = `
 	}
 }`
 
+var storeBlockDeviceInfo = func(t *testing.T, obj system.BlockDev) {
+	t.Helper()
+	overwriteExisting := true
+	bdevFileName := fmt.Sprintf("%s/blockdev.run", system.SaptuneSectionDir)
+
+	content, err := json.Marshal(obj)
+	if err != nil {
+		t.Log(err)
+	}
+	if err = os.MkdirAll(system.SaptuneSectionDir, 0755); err != nil {
+		t.Log(err)
+	}
+	if _, err := os.Stat(bdevFileName); os.IsNotExist(err) || overwriteExisting {
+		os.WriteFile(bdevFileName, content, 0644)
+	}
+}
+
 func TestParseINIFile(t *testing.T) {
 	content, err := ParseINIFile(fileName, false)
 	if err != nil {
@@ -218,6 +237,33 @@ func TestParseINI(t *testing.T) {
 	if !reflect.DeepEqual(*newINI, wrongINI) {
 		t.Errorf("\n%+v\n%+v\n", *newINI, wrongINI)
 	}
+
+	system.RPMBldVers = "16"
+	content, err = os.ReadFile(tstFile)
+	if err != nil {
+		t.Error(err)
+	}
+	_ = ParseINI(string(content))
+	system.RPMBldVers = "15"
+
+	bdevConf := system.BlockDev{
+		AllBlockDevs:    make([]string, 0, 6),
+		BlockAttributes: make(map[string]map[string]string),
+	}
+	bdevConf.AllBlockDevs = []string{"sda", "sdb", "sdc"}
+	bdevConf.BlockAttributes["sda"] = map[string]string{"IO_SCHEDULER": "mq-deadline", "NRREQ": "32", "READ_AHEAD_KB": "512", "VALID_SCHEDS": "[none] mq-deadline kyber bfq", "MODEL": "QEMU HARDDISK", "VENDOR": "QEMU"}
+	bdevConf.BlockAttributes["sdb"] = map[string]string{"IO_SCHEDULER": "bfq", "NRREQ": "64", "READ_AHEAD_KB": "1024", "VALID_SCHEDS": "[none] mq-deadline kyber bfq", "MODEL": "QEMU HARDDISK", "VENDOR": "ATA"}
+	bdevConf.BlockAttributes["sdc"] = map[string]string{"IO_SCHEDULER": "none", "NRREQ": "4", "READ_AHEAD_KB": "128", "VALID_SCHEDS": "[none] mq-deadline kyber bfq", "MODEL": "TSTMOD", "VENDOR": "TESTER"}
+
+	storeBlockDeviceInfo(t, bdevConf)
+
+	content, err = os.ReadFile(tstFile)
+	if err != nil {
+		t.Error(err)
+	}
+	_ = ParseINI(string(content))
+	devFileName := fmt.Sprintf("%s/blockdev.run", system.SaptuneSectionDir)
+	os.Remove(devFileName)
 }
 
 func TestGetINIFileDescriptiveName(t *testing.T) {
@@ -317,6 +363,16 @@ func TestGetINIFileVersionSectionEntry(t *testing.T) {
 	if str != "" {
 		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, "")
 	}
+	str = GetINIFileVersionSectionEntry(fileNameNewMissing, "category")
+	if str != oldNoteCategory {
+		t.Errorf("\n'%+v'\nis not\n'%+v'\n", str, oldNoteCategory)
+	}
+	t.Log(oldStyleCnt)
+	t.Log(missVersionCnt)
+	if missVersionCnt[fileNameNewMissing] != 1 {
+		t.Errorf("errcnt should be '1' but is '%+v'", missVersionCnt[fileNameNewMissing])
+	}
+	ResetVersionSectCnts("/testdata/")
 }
 
 func TestBlkInfoNeeded(t *testing.T) {
@@ -328,4 +384,15 @@ func TestBlkInfoNeeded(t *testing.T) {
 	if blkInfoNeeded(sectFields) {
 		t.Error("should be 'false', but returns 'true'")
 	}
+}
+
+func TestGetSysctlExcludes(t *testing.T) {
+	excludeDirsOrg := excludeDirs
+	skipFiles := "/boot, /tmp, /angi"
+	GetSysctlExcludes(skipFiles)
+	if len(excludeDirs) == len(excludeDirsOrg) {
+		t.Errorf("expected '3' elements, but got '%v' elements", len(excludeDirs))
+	}
+	t.Log(excludeDirs)
+	excludeDirs = excludeDirsOrg
 }

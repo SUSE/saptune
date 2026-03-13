@@ -2,8 +2,8 @@
 # Description:    Azure settings
 
 [version]
-VERSION=3
-DATE=06.08.2024
+VERSION=4
+DATE=28.08.2025
 DESCRIPTION=Recommended settings for SAP systems on Linux running in Azure virtual machines
 REFERENCES=https://me.sap.com/notes/2993054
 
@@ -12,9 +12,18 @@ net.ipv4.tcp_keepalive_time = 300
 net.ipv4.tcp_keepalive_intvl = 75
 net.ipv4.tcp_keepalive_probes = 9
 
+# As agreed with the Microsoft Azure team at the SAP LinuxLab, the setting of
+# tcp_retries2 can safely be done on none-HA setups as well as none-application
+# server setups (e.g. HANA systems).
+net.ipv4.tcp_retries2=8
+
 [reminder:csp=azure]
 # Settings from SAP Note 1410736 are integrated in this SAP Note.
 #
 # Parameters energy_perf_bias, governor and force_latency, which are mentioned
 # in the recommended OS settings for the SAP HANA databases, are not supported
 # on Azure virtual machines. A footnote will show up during verify operation.
+#
+# As agreed with the Microsoft Azure team at the SAP LinuxLab, the setting of
+# tcp_retries2 can safely be done on none-HA setups as well as none-application
+# server setups (e.g. HANA systems).

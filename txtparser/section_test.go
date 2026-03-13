@@ -63,3 +63,7 @@ func TestStoreSectionInfo(t *testing.T) {
 
 	defer os.RemoveAll(saptuneSectionDir)
 }
+
+func TestResetVersionSectCnts(t *testing.T) {
+	ResetVersionSectCnts("/staging/")
+}

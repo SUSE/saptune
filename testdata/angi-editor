@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "simulate editor" >> /tmp/ANGI.sttemp
