@@ -25,8 +25,8 @@
 | github.com/SUSE/saptune/system/login.go | 95.6 | :sunny: |
 | github.com/SUSE/saptune/sap/note/sectLimits.go | 95.5 | :sunny: |
 | github.com/SUSE/saptune/system/argsAndFlags.go | 93.9 | :sunny: |
-| github.com/SUSE/saptune/sap/param/io.go | 93.3 | :sunny: |
 | github.com/SUSE/saptune/system/rpm.go | 93.0 | :sunny: |
+| github.com/SUSE/saptune/sap/param/io.go | 92.5 | :sunny: |
 | github.com/SUSE/saptune/system/system.go | 92.3 | :sunny: |
 | github.com/SUSE/saptune/sap/note/sectBlock.go | 92.2 | :sunny: |
 | github.com/SUSE/saptune/txtparser/misc.go | 92.0 | :sunny: |
@@ -56,7 +56,7 @@
 | github.com/SUSE/saptune/app/note.go | 68.0 | :cloud: |
 | github.com/SUSE/saptune/main.go | 65.8 | :cloud: |
 | github.com/SUSE/saptune/actions/serviceacts.go | 50.9 | :cloud: |
-| github.com/SUSE/saptune/system/cpu.go | 39.8 | :fire: |
+| github.com/SUSE/saptune/system/cpu.go | 39.2 | :fire: |
 | github.com/SUSE/saptune/actions/solutionacts.go | 32.0 | :fire: |
 | github.com/SUSE/saptune/system/json.go | 23.4 | :fire: |
 | github.com/SUSE/saptune/actions/stagingacts.go | 1.9 | :fire: |
