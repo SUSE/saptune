@@ -290,6 +290,7 @@
                         "parallels",
                         "bhyve",
                         "qnx",
+                        "google",
                         "acrn",
                         "powervm",
                         "vm-other",
