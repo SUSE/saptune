@@ -1,14 +1,15 @@
 # 1275776 - Linux: Preparing SLES for SAP environments
-# Description:   You want to apply SAP recommended operating system settings on SLES or SLES for SAP Applications.
+# Description:   You want to apply SAP recommended operating system settings on SLES or SLES for SAP applications.
 
 [version]
-VERSION=42
-DATE=15.04.2025
+VERSION=47
+DATE=27.01.2026
 DESCRIPTION=Linux: Preparing SLES for SAP environments
 REFERENCES=https://me.sap.com/notes/1275776
 
 [service]
 # start the related services
+# SAP Note 3565382
 uuidd.socket=start
 sysstat.service=start
 sysctl-logger.service=start
@@ -28,5 +29,6 @@ vm.max_map_count=2147483647
 # The value is the maximum number of shared memory identifies available in the
 # system.
 # kernel.shmmni should be set to 32768
+# SAP Note 2534844
 #
 kernel.shmmni=32768

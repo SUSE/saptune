@@ -3,7 +3,7 @@
 
 [version]
 VERSION=1
-DATE=29.01.2025
+DATE=06.03.2026
 DESCRIPTION=SAP HANA DB: Recommended OS settings for SLES 16 / SLES for SAP Applications 16
 REFERENCES=https://me.sap.com/notes/3577842
 
@@ -95,3 +95,7 @@ force_latency=70
 # 0 to disable, 1 to enable
 kernel.numa_balancing=0
 
+[grub:arch=x86_64]
+# Enable Transactional Synchronization Extensions
+# (TSX, applies to Intel-based systems only)
+tsx=auto

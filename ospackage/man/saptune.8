@@ -321,7 +321,11 @@ List all SAP Notes, vendor specific tuning definitions and SUSE recommendation a
 
 Currently implemented notes are marked with '\fB+\fP', if manually enabled, '\fB*\fP', if enabled by solutions or '\fB-\fP', if a note belonging to an enabled solution was reverted manually. In all cases the notes are highlighted with green color.
 .br
-If an \fBoverride\fP file exists for a NoteID, the note is marked with '\fBO\fP' and a customer or vendor specific note is marked with '\fBC\fP'..
+If an \fBoverride\fP file exists for a NoteID, the note is marked with '\fBO\fP' and a customer or vendor specific note is marked with '\fBC\fP'.
+.br
+If we detect a \fBconflict\fP with notes the related entry in the list is marked with a leading '\fB!\fP' and the line is highlighted with yellow color. Look at the log file for details like warning messages addressing the problem.
+.br
+Currently we report a conflict if a customer or vendor specific note has the \fBsame\fP name as a shipped note. In this case the shipped note will take precedence over the custom note.
 .TP
 .B enabled
 Print all currently enabled notes as a list separated by blanks without trailing line feed.
@@ -571,6 +575,10 @@ The currently implemented solution is marked with '\fB*\fP' and is highlighted w
 If an \fBoverride\fP file exists for a solution, the solution is marked with '\fBO\fP'. A custom specific solution is marked with '\fBC\fP'.
 .br
 If a note belonging to an enabled solution is reverted manually, the note is highlighted with red color (instead of green) and is crossed out.
+.br
+If we detect a \fBconflict\fP with solutions the related entry in the list is marked with a leading '\fB!\fP' and the line is highlighted with yellow color. Look at the log file for details like warning messages addressing the problem.
+.br
+Currently we report a conflict if a customer or vendor specific solution has the \fBsame\fP name as a shipped solution. In this case the shipped solution will take precedence over the custom solution.
 .TP
 .B enabled
 Print the currently enabled solution.
@@ -984,6 +992,38 @@ wrong parameters has been given to the tool (should never happen, if called by s
 5
 unexpected errors in regards of JSON output occurred
 .RE
+
+.SH HOTFIX
+A HotFix is a new way to react fast to \fBcritical bugs\fP, that can harm SAP installations.
+.br
+It is meant to bridge the time with a \fBtemporary mitigation\fP until the \fBpermanent fix\fP is available.
+As soon as the fix is released, the next released saptune version will contain an \fBupdate\fP to the HotFix to be applied only when necessary. \fBOne year\fP after the fix is available, we will \fBremove\fP the HotFix from saptune.
+
+We hope to provide an comfortable way to address such issues.
+
+The HotFix will be added as individual Note with the name
+.br
+\fBHotFix<TID_NUMBER>\fP and can be part of a Solution.
+.br
+A HotFix release will contain only configuration changes and no new features.
+
+To activate the HotFix you can simply apply the Note by
+
+\fIsaptune note apply HotFix<TID_NUMBER>\fP
+.br
+which will not interrupt your current tuning but add the needed parameter settings. The change will take effect immediately and is reboot persistent.
+
+Or you \fIrestart the saptune.service\fP, which will lead to a short gap in your tuning because of the 'revert'/'apply' workflow of the service restart. Your SAP workload should be stopped for this operation.
+
+Or you reboot your server.
+
+As soon as the permanent fix is available and installed on the system, the Hotfix can be reverted with
+.br
+\fIsaptune note revert HotFix<TID_NUMBER>\fP
+
+The next released saptune version will contain an update of the HotFix with a condition (\fBtag\fP) to apply this HotFix only under the condition the permanent fix is not installed on the systems.
+.br
+The HotFix will be removed from saptune one year after the permanent fix is available, giving customers enough time to update their systems.
 
 .SH CHANGES
 .TP

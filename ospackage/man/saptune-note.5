@@ -77,6 +77,19 @@ Example:
 [sysctl:os=15-SP1:arch=ppc64le]
 .RE
 .TP
+.BI kernel= <kernel_release>
+to define a special \fIkernel release\fP of the running kernel:
+.br
+Valid values for \fBkernel=\fP are regular expressions (RE2) that match the output from \fBuname -r\fP
+
+.RS 4
+Example:
+.br
+[grub:os=15-SP7:kernel=^6.4.0-150700.5(1|3.[36])-default$]
+.br
+[grub:kernel=^6.4.0-150600.23.(42|47|50|53|60|78)-default$]
+.RE
+.TP
 .BI pmu_name= <CPU platform>
 to select a special \fICPU platform\fP:
 .br
@@ -387,6 +400,12 @@ The command '\fBcpupower -c all frequency-set -g <value>\fP' or '\fBcpupower -c 
 .BI force_latency= STRING
 force latency - configure C-States for lower latency (applies to Intel-based systems only)
 .br
+Input is a valid C-State name supported by the system, see \fI/sys/devices/system/cpu/cpu0/cpuidle/state*/name\fP for valid values.
+.br
+This C-State name is internally mapped into an interger value representing the related latency value, see \fI/sys/devices/system/cpu/cpu0/cpuidle/state*/latency\fP
+.br
+OR
+.br
 Input is a string, which is internally treated as a decimal (not a hexadecimal) integer number representing a maximum response time in microseconds.
 .br
 It is used to establish a latency upper limit by limiting the use of C-States (CPU idle or CPU latency states) to only those with an exit latency smaller than the value set here. That means only those states that require less than the requested number of microseconds to wake up are enabled, all the other C-States are disabled.
@@ -559,6 +578,16 @@ Only \fBlower\fP versions installed on the system are considered as non-complian
 .br
 Package dependencies - if needed - are handled by the saptune package installation.
 
+Additional to the check for mandatory packages we now (starting with version 3.2.2) support the check of \fIoptional\fP packages.
+.br
+A \fB?\fP prefix as the first character of the package name indicates an \fIoptional\fP package. \fIOptional\fP packages have to follow the \fBNew\fP Syntax described below.
+.br
+The version compliance check will only be done if the package is installed. In this case it must follow the version restriction described above.
+.br
+Additional it is possible to omit the version for \fIoptional\fP packages. In this case each installed version is compliant. It's a way to list if an optional package is at least available on the system.
+.br
+During the 'verify' and 'simulate' operation an \fIoptional\fP package is only listed if the package is installed. The \fB?\fP prefix is displayed in the parameter output as \fBrpm:?PACKAGENAME\fP.
+
 With the availability of tagged sections, we support 2 different types of rpm line syntax. The first one - our \fBOld\fP Syntax - only for compatibility reasons. The second one - our \fBNew\fP Syntax - is our preferred syntax in combination with tagged rpm sections.
 
 \fBOld\fP Syntax:
@@ -595,18 +624,21 @@ That means, if there is no matching SLE version for the running OS no rpm entrie
 .br
 this syntax is the preferred syntax when using a 'tagged' rpm section, where the targeted operating system and/or system architecture is defined by using the tags \fBos=\fP and/or \fBarch=\fP
 .br
-Add one line for each package and package version to be checked.
+Add one line for each package and package version to be checked. Only \fIoptional\fP packages are allowed to omit the package version.
 
 e.g
 .br
 systemd 228-142.1
 .br
 util-linux 2.25-22.1
+.br
+?sssd 2.9.3-150600.3.25.1
+.br
+?polkit
 
 Only the lines where the tags of the section match the running system OS and/or the system architecture are checked and displayed during the 'verify' and 'simulate' option.
 .br
 That means, if there is no matching SLE version for the running OS and/or no matching system architecture in the tags of the rpm section no rpm entries are listed during the 'verify' and 'simulate' operation.
-
 
 \" section service
 .SH "[service]"

@@ -42,7 +42,7 @@ var OverrideTuningSheets = "/etc/saptune/override/"
 // ExtraTuningSheets is a directory located on file system for external parties to place their tuning option files.
 var ExtraTuningSheets = "/etc/saptune/extra/"
 
-// DeprecationSheets s the directory for the deprecated Notes and Solutions
+// DeprecationSheets is the directory for the deprecated Notes and Solutions
 var DeprecationSheets = "/usr/share/saptune/deprecated/"
 
 // SolutionSheets is the working directory of available sap solutions

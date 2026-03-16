@@ -63,6 +63,8 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			ret = chkHWTags(tagField[0], tagField[1], secFields)
 		case "pmu_name":
 			ret = chkCPUTags(tagField[1], secFields)
+		case "kernel":
+			ret = chkKernelTags(tagField[1], secFields)
 		default:
 			ret = chkOtherTags(tagField[0], tagField[1], secFields)
 		}
@@ -192,6 +194,19 @@ func chkArchTags(tagField string, secFields []string) bool {
 	if tagField != chkArch {
 		// arch does not match
 		system.InfoLog("system architecture '%s' in section definition '%v' does not match the architecture of the running system '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, chkArch)
+		ret = false
+	}
+	return ret
+}
+
+// chkKernelTags checks if the kernel section tag is valid or not
+func chkKernelTags(tagField string, secFields []string) bool {
+	ret := true
+	var re = regexp.MustCompile(tagField)
+	chkKernel := system.KernelRelease()
+	if !re.MatchString(chkKernel) {
+		// running kernel does not match
+		system.InfoLog("kernel release '%s' in section definition '%v' does not match the running kernel '%s'. Skipping whole section with all lines till next valid section definition", tagField, secFields, chkKernel)
 		ret = false
 	}
 	return ret

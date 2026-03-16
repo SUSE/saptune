@@ -199,6 +199,17 @@ func IsSLE12() bool {
 	return false
 }
 
+// KernelRelease returns the release of the running kernel
+// using 'uname -r'
+func KernelRelease() string {
+	sysInfoCmd := "/usr/bin/uname"
+	out, err := exec.Command(sysInfoCmd, "-r").CombinedOutput()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(out))
+}
+
 // CheckForPattern returns true, if the file is available and
 // contains the expected string
 func CheckForPattern(file, pattern string) bool {

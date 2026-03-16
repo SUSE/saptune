@@ -15,9 +15,10 @@ var alphanumPattern = regexp.MustCompile("([a-zA-Z]+)|([0-9]+)|(~)")
 // GetRpmVers return the version of an installed RPM
 func GetRpmVers(rpm string) string {
 	// rpm -q --qf '%{VERSION}-%{RELEASE}\n' glibc
-	notInstalled := fmt.Sprintf("package %s is not installed", rpm)
 	rpmVers := ""
 	cmdName := "/bin/rpm"
+	rpm = strings.TrimPrefix(rpm, "?")
+	notInstalled := fmt.Sprintf("package %s is not installed", rpm)
 	cmdArgs := []string{"-q", "--qf", "%{VERSION}-%{RELEASE}\n", rpm}
 
 	cmdOut, err := exec.Command(cmdName, cmdArgs...).CombinedOutput()

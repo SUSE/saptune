@@ -4,15 +4,17 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"regexp"
 	"testing"
 )
 
 func TestBlockDeviceIsDisk(t *testing.T) {
+	var isLoopDev = regexp.MustCompile(`^loop\d*$`)
 	_, bdevs := ListDir("/sys/block", "the available block devices of the system")
 	for _, bdev := range bdevs {
-		if bdev == "sr0" {
-			if BlockDeviceIsDisk("sr0") {
-				t.Error("'sr0' is wrongly reported as 'a disk'")
+		if bdev == "sr0" || isLoopDev.MatchString(bdev) {
+			if BlockDeviceIsDisk(bdev) {
+				t.Errorf("'%s' is wrongly reported as 'a disk'", bdev)
 			}
 			continue
 		}

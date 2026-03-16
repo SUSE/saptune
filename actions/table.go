@@ -17,7 +17,7 @@ var smileNo = '\U0001F61F'
 var smileDash = '\U0001F611'
 
 // define max column width
-var fmtmax = 30
+var fmtmax = 32
 
 // number of lines printed for 'verify'
 var lineCnt = 0
@@ -81,8 +81,14 @@ func PrintNoteFields(writer io.Writer, header string, noteComparisons map[string
 		if comparison.ActualValueJS == "PNA" {
 			pAct = "NA"
 		}
-		noteLine.ActValue = &pAct
 		pExp = strings.Replace(comparison.ExpectedValueJS, "\t", " ", -1)
+		// rewrite the force_latency values for a better representation
+		// in the table
+		if comparison.ReflectMapKey == "force_latency" {
+			pAct, pExp = system.FlTblEntry(pAct, pExp)
+		}
+		noteLine.ActValue = &pAct
+
 		tableColumns := make(map[string]string)
 		if printComparison {
 			// verify

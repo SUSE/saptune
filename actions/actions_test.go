@@ -65,6 +65,27 @@ var checkOut = func(t *testing.T, got, want string) {
 	}
 }
 
+var setUpShipped = func(t *testing.T) {
+	t.Helper()
+	// prepare shipped solutions
+	src := SolutionSheetsInGOPATH + "BWA.sol"
+	dst := solution.ShippedSolSheets + "BWA.sol"
+	if err := os.MkdirAll(solution.ShippedSolSheets, 0755); err != nil {
+		t.Error(err)
+	}
+	err := system.CopyFile(src, dst)
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+var tearDownShipped = func(t *testing.T) {
+	t.Helper()
+	dst := solution.ShippedSolSheets + "BWA.sol"
+	os.Remove(dst)
+	os.RemoveAll(solution.ShippedSolSheets)
+}
+
 var setUpSol = func(t *testing.T) {
 	t.Helper()
 	// prepare deprecated solution, custom solution and override
@@ -73,7 +94,6 @@ var setUpSol = func(t *testing.T) {
 	solution.CustomSolutions = solution.GetOtherSolution(ExtraFilesInGOPATH, noteFiles, extraNoteFiles)
 	solution.OverrideSolutions = solution.GetOtherSolution(OverTstFilesInGOPATH, noteFiles, "")
 	solution.DeprecSolutions = solution.GetOtherSolution(DeprecFilesInGOPATH, "", "")
-	//solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
 	solution.AllSolutions = solution.GetSolutionDefintion(SolutionSheetsInGOPATH, extraNoteFiles, noteFiles)
 }
 
@@ -82,13 +102,13 @@ var tearDownSol = func(t *testing.T) {
 	solution.CustomSolutions = solution.GetOtherSolution("", "", "")
 	solution.OverrideSolutions = solution.GetOtherSolution("", "", "")
 	solution.DeprecSolutions = solution.GetOtherSolution("", "", "")
-	//solution.AllSolutions = solution.GetSolutionDefintion(solution.SolutionSheets)
 	solution.AllSolutions = solution.GetSolutionDefintion(SolutionSheetsInGOPATH, ExtraTuningSheets, NoteTuningSheets)
 }
 
 var setUp = func(t *testing.T) {
 	t.Helper()
 	// setup code
+	solution.AllSolutions = solution.GetSolutionDefintion(SolutionSheetsInGOPATH, "", "")
 	// clear note settings in test file
 	tApp.TuneForSolutions = []string{}
 	tApp.TuneForNotes = []string{}

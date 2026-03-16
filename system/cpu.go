@@ -10,6 +10,7 @@ import (
 	"path"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -30,6 +31,10 @@ var isState = regexp.MustCompile(`^state\d+$`)
 var perfCnt = 0
 var govCnt = 0
 var latCnt = 0
+
+// C-state latency table
+var cslatTable = map[string]int{}
+var cslatTabCnt = 0
 
 // GetPerfBias retrieve CPU performance configuration from the system
 func GetPerfBias() string {
@@ -425,6 +430,12 @@ func GetFLInfo() (string, string, bool) {
 					cpuStateMap[cpuName] = cpuStateMap[cpuName] + " " + state
 					// read /sys/devices/system/cpu/cpu*/cpuidle/state*/latency
 					lattmp, _ := GetSysInt(path.Join(cpuDirSys, cpuName, "cpuidle", stateName, "latency"))
+					nametmp, _ := GetSysString(path.Join(cpuDirSys, cpuName, "cpuidle", stateName, "name"))
+					// set up C-state latency table
+					// only once, for the first cpu (cpu0)
+					if cslatTabCnt == 0 {
+						cslatTable[nametmp] = lattmp
+					}
 					if lattmp > maxlat {
 						maxlat = lattmp
 					}
@@ -435,6 +446,7 @@ func GetFLInfo() (string, string, bool) {
 					}
 				}
 			}
+			cslatTabCnt++
 		}
 	}
 	// check, if all cpus have the same state settings
@@ -461,7 +473,10 @@ func SetForceLatency(value, savedStates string, revert bool) error {
 		return nil
 	}
 
-	flval, _ := strconv.Atoi(value) // decimal value for force latency
+	flval, err := fetchLatency(value)
+	if err != nil {
+		return err
+	}
 
 	dirCont, err := os.ReadDir(cpuDir)
 	if err != nil {
@@ -522,6 +537,113 @@ func SetForceLatency(value, savedStates string, revert bool) error {
 	}
 
 	return err
+}
+
+// FlTblEntry returns the represenation of the force_latency value to be
+// shown in the verify table
+// print the latency number and the related C state name
+// order of string output depends on the type of the expected value (eval)
+// 33(C2) or C2(33)
+func FlTblEntry(aval, eval string) (string, string) {
+	if aval == "all:none" {
+		return aval, eval
+	}
+	// actual value of force_latency is always a latency number
+	actval, _ := strconv.Atoi(aval)
+	actcsname := ""
+	latmax := -1
+	for key, lat := range cslatTable {
+		if lat <= actval && latmax <= lat {
+			latmax = lat
+			actcsname = key
+		}
+	}
+
+	if isLatencyVal(eval) {
+		expval, _ := strconv.Atoi(eval)
+		expcsname := ""
+		latmax := -1
+		for key, lat := range cslatTable {
+			if lat <= expval && latmax <= lat {
+				latmax = lat
+				expcsname = key
+			}
+		}
+		return aval + "(" + actcsname + ")", eval + "(" + expcsname + ")"
+	}
+	if isCStateName(eval) {
+		return actcsname + "(" + aval + ")", eval + "(" + strconv.Itoa(cslatTable[eval]) + ")"
+	}
+	return aval, eval
+}
+
+// TranslateCtoL translates C state name to latency value
+// needed for comparison
+func TranslateCtoL(value interface{}) int {
+	if isLatencyVal(value.(string)) {
+		val, _ := strconv.Atoi(value.(string))
+		return val
+	}
+	if isCStateName(value.(string)) {
+		return cslatTable[value.(string)]
+	}
+	return -1
+}
+
+// fetchLatency checks if given value is a C state name or a latency value
+// If C state name - translate to latency value
+func fetchLatency(value string) (int, error) {
+	if isLatencyVal(value) {
+		val, err := strconv.Atoi(value)
+		return val, err
+	}
+	if isCStateName(value) {
+		return cslatTable[value], nil
+	}
+	return -1, fmt.Errorf("Error: invalid c state")
+}
+
+// isLatencyVal returns true, if the given value looks like a latency value
+func isLatencyVal(value string) bool {
+	latency := regexp.MustCompile(`^[0-9]+$`)
+	if latency.MatchString(value) {
+		return true
+	}
+	return false
+}
+
+// IsValidFL returns true, if the given value is a valid C state name or a
+// latency value, else false
+func IsValidFL(value string) bool {
+	if isLatencyVal(value) || isCStateName(value) {
+		return true
+	}
+	ErrorLog("Wrong C state name used in Note definition - '%+v'", value)
+	ErrorLog("Not found on the system. Valid names are: %+v", strings.Join(cstateNames(), ","))
+	return false
+}
+
+// isCStateName returns true, if the given value looks like a C state name
+// and matches a state available on the system
+func isCStateName(value string) bool {
+	cstate := regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9]+$`)
+	if cstate.MatchString(value) {
+		if _, ok := cslatTable[value]; ok {
+			return true
+		}
+	}
+	return false
+}
+
+// cstateNames gives all possible C state names as an alphanumeric sorted
+// list of strings
+func cstateNames() []string {
+	cstates := []string{}
+	for key := range cslatTable {
+		cstates = append(cstates, key)
+	}
+	sort.Strings(cstates)
+	return cstates
 }
 
 // supportsForceLatencySettings checks, if Force Latency can be set

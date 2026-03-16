@@ -75,7 +75,8 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 	jsolutionList := []system.JSolListEntry{}
 	jsolutionListEntry := system.JSolListEntry{}
 	setColor := false
-	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):\n")
+	colorToSet := setGreenText
+	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, ! denotes a conflict reported in log file, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):\n")
 	for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 		jsolutionListEntry = system.JSolListEntry{
 			SolName:     "",
@@ -91,10 +92,17 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 			format = " O" + format
 			jsolutionListEntry.SolOverride = true
 		}
-		if len(solution.CustomSolutions[solutionSelector][solName]) != 0 {
+		if _, err := os.Stat(fmt.Sprintf("%s%s.sol", ExtraTuningSheets, solName)); err == nil {
 			// custom solution
-			format = " C" + format
-			jsolutionListEntry.CustomSol = true
+			if solution.IsShippedSolution(solName) {
+				format = " " + setYellowText + "!" + format
+				jsolutionListEntry.CustomSol = false
+				setColor = true
+				colorToSet = setYellowText
+			} else {
+				format = " C" + format
+				jsolutionListEntry.CustomSol = true
+			}
 		}
 		if _, ok := solution.DeprecSolutions[solutionSelector][solName]; ok {
 			// deprecated solution
@@ -118,7 +126,7 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 					// noteID was reverted manually
 					solNotes = solNotes + " " + setRedText + setStrikeText + noteString + resetTextColor
 				} else {
-					solNotes = solNotes + " " + setGreenText + noteString
+					solNotes = solNotes + " " + colorToSet + noteString
 				}
 			} else {
 				solNotes = solNotes + " " + noteString
@@ -404,7 +412,6 @@ func SolutionActionCreate(writer io.Writer, customSol string) {
 	} else {
 		fileName = fmt.Sprintf("%s%s", ExtraTuningSheets, customSol)
 		customSol = strings.TrimSuffix(customSol, ".sol")
-
 	}
 	if solution.IsShippedSolution(customSol) {
 		system.ErrorExit("Solution name '%s' already in use for a solution definition shipped by saptune. Please use another name for your solution definition.", customSol)

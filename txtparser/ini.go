@@ -113,6 +113,9 @@ func splitRPM(line string) []string {
 		// kov needs 3 fields (parameter, operator, value)
 		// to not get confused let operator empty, it's not needed for rpm check
 		kov = []string{"rpm", "rpm:" + fields[0], "", fields[1]}
+	} else if len(fields) == 1 && strings.HasPrefix(fields[0], "?") {
+		// optional packages are allowed without a given version
+		kov = []string{"rpm", "rpm:" + fields[0], "", ""}
 	} else {
 		// wrong syntax
 		system.WarningLog("[rpm] section contains a line with wrong syntax - '%v', skipping entry. Please check", fields)

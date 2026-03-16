@@ -101,7 +101,7 @@ func GetTuningOptions(saptuneTuningDir, thirdPartyTuningDir string) TuningOption
 		}
 		// Do not allow vendor to override built-in
 		if _, exists := ret[id]; exists {
-			system.InfoLog("GetTuningOptions: vendor's \"%s\" will not override built-in tuning implementation", fileName)
+			system.WarningLog("extra note \"%s\" will not override built-in tuning implementation", fileName)
 			continue
 		}
 		ret[id] = INISettings{
@@ -207,6 +207,10 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 				actualValue := actualMap.MapIndex(key).Interface()
 				expectedValue := expectedMap.MapIndex(key).Interface()
 				ckey := fmt.Sprintf("%s[%s]", fieldName, key.String())
+				if strings.Contains(key.String(), "rpm:?") && actualValue == "" {
+					// skip a not installed, optional rpm package
+					continue
+				}
 				comparisons[ckey] = cmpMapValue(fieldName, key, actualValue, expectedValue)
 				if !comparisons[ckey].MatchExpectation && comparisons[ckey].ReflectFieldName == "SysctlParams" {
 					valApplyList = append(valApplyList, comparisons[ckey].ReflectMapKey)
@@ -225,8 +229,8 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					// normal parameters
 					// if this should change in the future use
 					// !strings.Contains(key.String(), "grub")
-					// instead of !isInternalGrub(key.String())
-					if actualValue.(string) != "all:none" && !isInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && actualValue.(string) != "PNA" && key.String() != "VSZ_TMPFS_PERCENT" {
+					// instead of !system.IsInternalGrub(key.String())
+					if actualValue.(string) != "all:none" && !system.IsInternalGrub(key.String()) && !(system.IsXFSOption.MatchString(key.String()) && actualValue.(string) == "NA") && actualValue.(string) != "PNA" && key.String() != "VSZ_TMPFS_PERCENT" {
 						allMatch = false
 					}
 				}
@@ -244,20 +248,6 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 		allMatch = chkGrubCompliance(comparisons, allMatch)
 	}
 	return
-}
-
-// isInternalGrub - checks, if a grub setting found in the note definition
-// is a saptune integrated grub parameter or a customer specific parameter
-func isInternalGrub(val string) bool {
-	// define saptune integrated grub parameter
-	internalGrub := []string{"grub:numa_balancing", "grub:transparent_hugepage", "grub:intel_idle.max_cstate", "grub:processor.max_cstate"}
-
-	for _, item := range internalGrub {
-		if item == val {
-			return true
-		}
-	}
-	return false
 }
 
 // chkGrubCompliance grub special - check compliance of alternative settings
@@ -296,10 +286,17 @@ func chkGrubCompliance(comparisons map[string]FieldComparison, allMatch bool) bo
 // cmpMapValue compares map values
 func cmpMapValue(fieldName string, key reflect.Value, actVal, expVal interface{}) FieldComparison {
 	op := ""
+	orgExpVal := ""
 	if key.String() == "force_latency" && actVal.(string) != "all:none" {
+		orgExpVal = expVal.(string)
+		expVal = system.TranslateCtoL(expVal)
 		op = "<="
 	}
 	actualValueJS, expectedValueJS, match := CompareJSValue(actVal, expVal, op)
+	if key.String() == "force_latency" && actVal.(string) != "all:none" {
+		expectedValueJS = orgExpVal
+		expVal = orgExpVal
+	}
 	if strings.Split(key.String(), ":")[0] == "rpm" {
 		match = system.CmpRpmVers(actVal.(string), expVal.(string))
 	}

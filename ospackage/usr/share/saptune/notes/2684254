@@ -2,8 +2,8 @@
 # Description:    HANA DB settings
 
 [version]
-VERSION=24
-DATE=06.11.2024
+VERSION=27
+DATE=26.11.2025
 DESCRIPTION=SAP HANA DB: Recommended OS settings for SLES 15 / SLES for SAP Applications 15
 REFERENCES=https://me.sap.com/notes/2684254
 
@@ -136,6 +136,15 @@ transparent_hugepage=never
 [grub:os=15-[5-7]:arch=x86_64]
 transparent_hugepage=madvise
 
+# Enable Transactional Synchronization Extensions
+# (TSX, applies to Intel-based systems only)
+# only for some 15SP6/SP7 kernel needed
+[grub:os=15-SP6:arch=x86_64:kernel=^6\.4\.0-150600\.23\.(42|47|50|53|60)-default$]
+tsx=auto
+
+[grub:os=15-SP7:arch=x86_64:kernel=^6\.4\.0-150700\.5(1|3\.[36])-default$]
+tsx=auto
+
 [grub:arch=x86_64:virt=bare-metal]
 # Configure C-States for lower latency in Linux (applies to Intel-based systems
 # only) - see energy_perf_bias and governor in section [cpu]
@@ -156,4 +165,4 @@ xfs_options= -nobarrier, -barrier
 [reminder]
 # IBM EnergyScale for POWER8 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!
 # IBM EnergyScale for POWER9 Processor-Based Systems (applies to IBM Power systems only) - not handled by saptune!
-# HANA is not supported neither on Intel Cluster-On-Die (COD) technology nor on sub-NUMA clustering technology.
+# SAP HANA does not support use of Intel Cluster-On-Die (COD) technology (Intel platform only)

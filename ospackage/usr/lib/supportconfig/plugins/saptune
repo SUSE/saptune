@@ -169,6 +169,8 @@ display_cmd sysctl -A
 # zypper history
 display_file_stat /var/log/zypp
 display_log /var/log/zypp/history
+# migration log
+display_file /var/log/distro_migration.log
 
 # Bye.
 exit 0

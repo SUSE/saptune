@@ -50,7 +50,10 @@ func OptCPUVal(key, actval, cfgval string) string {
 	val := "0"
 	switch key {
 	case "force_latency":
-		rval = sval
+		// use original value from Note definition file without any
+		// conversion
+		rval = cfgval
+		system.IsValidFL(cfgval)
 	case "energy_perf_bias":
 		//performance - 0, normal - 6, powersave - 15
 		switch sval {

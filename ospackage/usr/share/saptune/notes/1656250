@@ -1,8 +1,8 @@
 # 1656250 - SAP on AWS: Support prerequisites - only Linux Operating System IO Recommendations
 
 [version]
-VERSION=69
-DATE=10.10.2024
+VERSION=71
+DATE=29.10.2025
 DESCRIPTION=SAP on AWS: Support prerequisites - only Linux Operating System IO Recommendations
 REFERENCES=https://me.sap.com/notes/1656250
 
@@ -21,3 +21,13 @@ module.nvme_core.parameters.io_timeout=4294967295
 # on AWS it should be set to "none".
 # /sys/block/nvme*n1/queue/scheduler
 IO_SCHEDULER=none
+
+# Processor state control for Amazon EC2 Linux instances
+# check only
+[grub:csp=aws]
+intel_idle.max_cstate=1
+processor.max_cstate=1
+
+# disable C-states higher than C1
+[cpu:csp=aws]
+force_latency=C1
