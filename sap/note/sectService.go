@@ -10,8 +10,9 @@ import (
 
 // GetServiceVal initialise the systemd service structure with the current
 // system settings
-func GetServiceVal(key string) string {
-	var val string
+func GetServiceVal(key, cfgval string) string {
+	val := ""
+	sen := ""
 	serviceKey := key
 	keyFields := strings.Split(key, ":")
 	if len(keyFields) == 2 {
@@ -22,17 +23,31 @@ func GetServiceVal(key string) string {
 	if service == "" {
 		return "NA"
 	}
-	active, _ := system.SystemctlIsRunning(service)
-	if active {
-		val = "start"
-	} else {
-		val = "stop"
+	for _, state := range strings.Split(cfgval, ",") {
+		sval := strings.ToLower(strings.TrimSpace(state))
+		if sval == "start" || sval == "stop" {
+			active, _ := system.SystemctlIsRunning(service)
+			if active {
+				val = "start"
+			} else {
+				val = "stop"
+			}
+		}
+		if sval == "enable" || sval == "disable" {
+			enabled, _ := system.SystemctlIsEnabled(service)
+			if enabled {
+				sen = "enable"
+			} else {
+				sen = "disable"
+			}
+		}
 	}
-	enabled, _ := system.SystemctlIsEnabled(service)
-	if enabled {
-		val = fmt.Sprintf("%s, enable", val)
-	} else {
-		val = fmt.Sprintf("%s, disable", val)
+	if sen != "" {
+		if val != "" {
+			val = fmt.Sprintf("%s, %s", val, sen)
+		} else {
+			val = sen
+		}
 	}
 	return val
 }
