@@ -619,8 +619,12 @@ func IsValidFL(value string) bool {
 	if isLatencyVal(value) || isCStateName(value) {
 		return true
 	}
-	ErrorLog("Wrong C state name used in Note definition - '%+v'", value)
-	ErrorLog("Not found on the system. Valid names are: %+v", strings.Join(cstateNames(), ","))
+	if supportsForceLatencySettings("") {
+		// only report error, if system supports latency settings
+		// otherwise it may confuse the admin
+		ErrorLog("Wrong C state name used in Note definition - '%+v'", value)
+		ErrorLog("Not found on the system. Valid names are: %+v", strings.Join(cstateNames(), ","))
+	}
 	return false
 }
 
