@@ -255,8 +255,7 @@ func getAllSolsFromDir(solsDir, noteFiles, extraFiles string) []txtparser.INIEnt
 		// Do not allow customer/vendor to override built-in solutions
 		if extra && IsShippedSolution(solName) {
 			if shSolCnt == 0 {
-				shSolCnt++
-				system.WarningLog("extra solution '%s' will not override built-in solution implementation", solName)
+				system.WarningLog("extra solution \"%s\" will not override built-in solution implementation", solName)
 			}
 			continue
 		}
@@ -285,6 +284,9 @@ func getAllSolsFromDir(solsDir, noteFiles, extraFiles string) []txtparser.INIEnt
 			solAllVals = append(solAllVals, param)
 			//solAllVals = append(solAllVals, content.AllValues...)
 		}
+	}
+	if extra {
+		shSolCnt++
 	}
 	return solAllVals
 }

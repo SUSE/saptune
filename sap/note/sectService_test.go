@@ -30,11 +30,11 @@ func TestGetServiceName(t *testing.T) {
 func TestGetServiceVal(t *testing.T) {
 	wrong := false
 	state := ""
-	val := GetServiceVal("UnkownService")
+	val := GetServiceVal("UnkownService", "start")
 	if val != "NA" {
 		t.Error(val)
 	}
-	val = GetServiceVal("uuidd.socket")
+	val = GetServiceVal("uuidd.socket", "start, enable")
 	for _, st := range strings.Split(val, ",") {
 		state = strings.TrimSpace(st)
 		if state != "start" && state != "stop" && state != "NA" && state != "enable" && state != "disable" {
@@ -42,6 +42,14 @@ func TestGetServiceVal(t *testing.T) {
 		}
 	}
 	if wrong {
+		t.Error(val)
+	}
+	val = GetServiceVal("uuidd.socket", "start")
+	if val != "start" && val != "stop" {
+		t.Error(val)
+	}
+	val = GetServiceVal("uuidd.socket", "enable")
+	if val != "enable" && val != "disable" {
 		t.Error(val)
 	}
 }
