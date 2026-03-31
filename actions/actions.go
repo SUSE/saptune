@@ -179,6 +179,8 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App, chkApplied bool) {
 	}
 	if len(tuneApp.NoteApplyOrder) == 0 {
 		fmt.Fprintf(writer, "No notes or solutions enabled, nothing to verify.\n")
+	} else if chkApplied && len(tuneApp.AppliedNotes()) == 0 {
+		fmt.Fprintf(writer, "No notes or solutions applied, nothing to verify.\n")
 	} else {
 		unsatisfiedNotes, comparisons, err := tuneApp.VerifyAll(chkApplied)
 		if err != nil {
@@ -191,7 +193,11 @@ func VerifyAllParameters(writer io.Writer, tuneApp *app.App, chkApplied bool) {
 		sysComp := len(unsatisfiedNotes) == 0
 		result.SysCompliance = &sysComp
 		if len(unsatisfiedNotes) == 0 {
-			fmt.Fprintf(writer, "%s%sThe running system is currently well-tuned according to all of the enabled notes.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
+			if chkApplied {
+				fmt.Fprintf(writer, "%s%sThe running system is currently well-tuned according to all of the applied notes.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
+			} else {
+				fmt.Fprintf(writer, "%s%sThe running system is currently well-tuned according to all of the enabled notes.%s%s\n", setGreenText, setBoldText, resetBoldText, resetTextColor)
+			}
 		} else {
 			system.Jcollect(result)
 			system.ErrorExit("The parameters listed above have deviated from SAP/SUSE recommendations.", "colorPrint", setRedText, setBoldText, resetBoldText, resetTextColor)
