@@ -203,33 +203,26 @@ func callSaptuneCheckScript(arg string) {
 
 // checkSaptuneServiceDropIn checks on Azure cloud if saptune service drop-in
 // is available
-// if not, create the needed directories, the file and make it visible
+// if yes, remove the file and the directory
 func checkSaptuneServiceDropIn() {
 	if system.GetCSP() != "azure" {
-		// not on azure cloude, nothing to do
+		// not on azure cloud, nothing to do
 		return
 	}
 	saptuneServiceDir := "/etc/systemd/system/saptune.service.d"
 	saptuneServiceDropIn := fmt.Sprintf("%s/%s", saptuneServiceDir, "10-after_cloud-init.conf")
-	if _, err := os.Stat(saptuneServiceDropIn); err == nil {
-		// file exists, nothing to do
+	if _, err := os.Stat(saptuneServiceDropIn); err != nil {
+		// file does not exist, nothing to do
 		return
 	}
-	system.NoticeLog("creating saptune service drop-in file...")
-	if err := os.MkdirAll(saptuneServiceDir, 0755); err != nil {
-		system.ErrorLog("can not create directory '%s', so writing saptune service drop-in file '%s' will not work!", saptuneServiceDir, saptuneServiceDropIn)
+	system.NoticeLog("saptune service drop-in file still exists, removing now...")
+	if err := os.Remove(saptuneServiceDropIn); err != nil {
+		system.ErrorLog("can not remove saptune service drop-in file '%s' - %v", saptuneServiceDropIn, err)
 		return
 	}
-	dropInContent := fmt.Sprintf("[Unit]\nAfter=cloud-final.service\n")
-	if err := os.WriteFile(saptuneServiceDropIn, []byte(dropInContent), 0644); err == nil {
-		system.NoticeLog("file '%s' successfully created!", saptuneServiceDropIn)
-		// make drop-in visible for systemd
-		// errors are reported by the function, no need to react here
-		// is handled during next reboot
-		_ = system.SystemctlDaemonReload()
-	} else {
-		system.ErrorLog("can not write saptune service drop-in file '%s' - %v", saptuneServiceDropIn, err)
-	}
+	system.NoticeLog("file '%s' successfully removed! Inform systemd about the change", saptuneServiceDropIn)
+	// remove drop-in from systemd
+	_ = system.SystemctlDaemonReload()
 }
 
 // checkWorkingArea checks, if solution and note configs exist in the working
