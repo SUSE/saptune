@@ -531,6 +531,20 @@ Depending on the size of the virtual memory (physical+swap) the value is calcula
 If VSZ_TMPFS_PERCENT is set to '\fB0\fP', the value is calculated by (RAM + SWAP) * 75/100, as the default is 75.
 
 As this parameter is only used to calculate the value of \fIShmFileSystemSizeMB\fP it will not be checked and compared during the saptune operation 'verify'. A footnote is pointing this out.
+
+.TP
+.B Note:
+.br
+Newer \fIcloud-init\fP versions have a dependency of \fIcloud-final.service\fP to \fImulti-user.target\fP which prevents saptune to run on boot on Azure systems if the systemd service drop-in file '\fI/etc/systemd/system/saptune.service.d/10-after_cloud-init.conf\fP' is created by saptune.
+.br
+With 3.2.3 on each execution saptune will \fBnot\fP create this file anymore, but remove it if present!
+.br
+Additionally SAP Note \fB941735\fP contains a [mem:csp=azure] section with \fBdisabled\fP ShmFileSystemSizeMB and VSZ_TMPFS_PERCENT parameters because calculating the size of /dev/shm is not reliable possible anymore if swap is configured by \fIcloud-init\fP. This can lead to sporadic non-compliant verify reports.
+.br
+If you really still need to change the size of TMPFS for you SAP workload, please do it by \fBother\fP means.
+.br
+If you nevertheless prefer to use saptune to set the size of TMPFS \fBand\fP if you have a \fBpersistent\fP swap size during boot you can use an override file for Note \fB941735\fP to set your desired TMPFS parameter settings.
+
 \" _strm_3.2.0_start
 \" section pagecache
 .SH "[pagecache]"

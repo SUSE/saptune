@@ -282,10 +282,6 @@ Success is reported on stdout, errors including systemd error messages are print
 If the action was successfully the exit code is 0, otherwise 1.
 
 .TP
-.B Note:
-On Azure cloud we create a saptune service drop-in file to start saptune.service after cloud-final.service to tune the system after the swap space was added by cloud-init.
-
-.TP
 .B ATTENTION:
 .br
 saptune is able to start/stop/enable/disable systemd units, but on boot the outcome depends on the order of execution.
@@ -1050,6 +1046,9 @@ Additional the Solution \fBSAP-ASE.sol\fP and the related Notes \fB1680803\fP an
 SAP Note \fB1771258\fP not relevant/valid anymore on SLE 16, we \fBdeprecated\fP the Note and the support for setting PAM limits in SLES for SAP 12 and 15 and removed both in SLE 16
 .br
 The already deprecated actions 'daemon', 'note simulate' and 'solution simulate' are removed in SLE16
+.TP
+.B version 3.2.3
+SAP Note \fB941735\fP not relevant/valid anymore, we \fBdeprecated\fP the Note with the update to saptune version 3.2.3 on SLES for SAP 12, 15 and 16 and on plain SLES 16.
 
 .SH FILES
 .PP

@@ -33,6 +33,17 @@ ShmFileSystemSizeMB=0
 #
 VSZ_TMPFS_PERCENT=75
 
+[mem:csp=azure]
+# Bug 1260498
+# see man page saptune-note.5 section 'mem' for more information about the
+# cloud-init impact for this change.
+# If you prefer to use saptune to set the size of TMPFS and you have a
+# persistent swap size during boot you can use an override file for this Note
+# to set your desired TMPFS parameter settings.
+#
+ShmFileSystemSizeMB=
+VSZ_TMPFS_PERCENT=
+
 [sysctl]
 # kernel.shmmax
 # This value can be set the run time limit on the maximum shared memory
