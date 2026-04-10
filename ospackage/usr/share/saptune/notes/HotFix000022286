@@ -4,14 +4,14 @@ DATE=13.02.2026
 DESCRIPTION=Disables defrag for THP
 REFERENCES=https://support.scc.suse.com/s/kb/SAP-HANA-swap-and-system-hangs-with-THP-on-multi-NUMA-node-systems
 
-[sys:os=15-SP5:arch=x86_64:kernel=^5\.14\.21-150500\.5(3|5\.(.|..|1[012].|13[0-3]))\..-default$]
+[sys:os=15-SP5:arch=x86_64:kernel=^5\.14\.21-150500\.5(3|5\.(.|..|1[012].|13[0-3]))-default$]
 kernel.mm.transparent_hugepage.defrag = never
 kernel.mm.transparent_hugepage.khugepaged.defrag = 0
 
-[sys:os=15-SP6:arch=x86_64:kernel=^6\.4\.0-150600\.2(1|3\.(.|[1-7].|8[0-4]))\..-default$]
+[sys:os=15-SP6:arch=x86_64:kernel=^6\.4\.0-150600\.2(1|3\.(.|[1-7].|8[0-4]))-default$]
 kernel.mm.transparent_hugepage.defrag = never
 kernel.mm.transparent_hugepage.khugepaged.defrag = 0
 
-[sys:os=15-SP7:arch=x86_64:kernel=^6\.4\.0-150700\.5(1|3\.(.|1.|2[1-8]))\..-default$]
+[sys:os=15-SP7:arch=x86_64:kernel=^6\.4\.0-150700\.5(1|3\.(.|1.|2[1-8]))-default$]
 kernel.mm.transparent_hugepage.defrag = never
 kernel.mm.transparent_hugepage.khugepaged.defrag = 0
