@@ -38,7 +38,7 @@ IO_SCHEDULER=noop, none
 
 [rpm]
 patterns-base-selinux 20241218-160000.2.2
-patterns-cockpit 16.0-160000.2.2
+?patterns-cockpit 16.0-160000.2.2
 patterns-base-enhanced_base 20241218-160000.2.2
 patterns-sap-minimal_sap 16.0-160000.2.2
 
@@ -55,7 +55,7 @@ tcsh 6.24.15-160000.2.2
 util-linux-systemd 2.41.1-160000.2.2
 uuidd 2.41.1-160000.2.2
 polkit 123-160000.2.2
-?openldap-sap-compat
+?libldap2-sap-compat
 
 [sysctl]
 # vm.dirty_bytes (indirect vm.dirty_ratio)
