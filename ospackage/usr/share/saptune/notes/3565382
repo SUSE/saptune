@@ -2,8 +2,8 @@
 # Description:    You want to use SAP software on SUSE Linux Enterprise Server 16 (SLES 16) or SUSE Linux Enterprise Server 16 for SAP Applications  (SLES for SAP 16).
 
 [version]
-VERSION=1
-DATE=06.03.2026
+VERSION=2
+DATE=20.07.2026
 DESCRIPTION=SUSE Linux Enterprise Server 16: Installation Note
 REFERENCES=https://me.sap.com/notes/3565382
 
