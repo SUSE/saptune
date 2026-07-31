@@ -22,7 +22,10 @@ else
     upd_opt="$1"
 fi
 
+OLD_SAPTUNE_CONFIG=/var/lib/saptune/config/old_custom_saptune_config
 CUSTOM_TUNED_CONF=/etc/tuned/saptune/tuned.conf
+SAPTUNE_CONFIG_16=/var/lib/saptune/config/saptune
+SAPTUNE_CONFIG_15=/etc/sysconfig/saptune
 
 OVERRIDEDIR=/etc/saptune/override
 CUSTOMDIR=/etc/saptune/extra
@@ -37,7 +40,7 @@ STAGINGAREA=/var/lib/saptune/staging
 PACKAGEAREA=/usr/share/saptune
 
 NOTEDIR=/usr/share/saptune/notes
-SOLDIR=/usr/share/saptune/sols
+#SOLDIR=/usr/share/saptune/sols
 ## sles16 installation note == 3565382
 ## sles16 HANA DB os settings == 3577842
 NOTES2CHANGE_15to16="2578899,3565382 2684254,3577842"
@@ -48,7 +51,7 @@ NOTES2DELETE_15="1557506 1275776"
 SOLS2DELETE_16="SAP-ASE.sol"
 FORGOTTEN_NOTES_300="2993054 1656250"
 
-if [ -f /var/lib/saptune/config/saptune ]; then
+if grep sles:16 /etc/os-release > /dev/null; then
     # SLE16
     SAPTUNE_CONFIG=/var/lib/saptune/config/saptune
     # template - /usr/share/saptune/saptuneTemplate.conf
@@ -74,23 +77,49 @@ update_saptune_config() {
 }
 
 update_config() {
-    # update 12/15 to 16 (special task needed only once!)
+    # SLE16 - update saptune config file with new entries, if needed.
+    # Do not change existing ones
+    # called from the posttrans script of saptune in standard installations
+    # or from saptune-helper.service in transactional-updates
+    if ! modify; then
+        echo "Skip updateConf, will be done later"
+        exit 0
+    fi
+    if [ ! -f $SAPTUNE_CONFIG_16 ]; then
+        # saptune config file missing - copy from template
+        cp /usr/share/saptune/saptuneTemplate.conf $SAPTUNE_CONFIG_16
+    fi
+    # update config 12/15 to 16 (special task needed only once!)
     # /var/lib/saptune/config/old_custom_saptune_config is the old
     # /etc/sysconfig/saptune from 12/15
-    OLD_SAPTUNE_CONFIG=/var/lib/saptune/config/old_custom_saptune_config
-    param2check="TUNE_FOR_SOLUTIONS TUNE_FOR_NOTES NOTE_APPLY_ORDER STAGING COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP"
-    for param in ${param2check}; do
-        paramLine=$(grep "^${param}[[:space:]]*=" $OLD_SAPTUNE_CONFIG)
-        if [ -n "$paramLine" ]; then
-            if grep "^${param}[[:space:]]*=" $SAPTUNE_CONFIG > /dev/null 2>&1; then
-                # change parameter
-                sed -i "s%^${param}[[:space:]]*=.*$%${paramLine}%" $SAPTUNE_CONFIG
-            else
-                # append parameter
-                echo -e "\n$paramLine" >> $SAPTUNE_CONFIG
+    update_1215_to_16_running_once
+    # add new entries, if not available
+    update_saptune_config
+}
+
+# update config 12/15 to 16 (special task needed only once!)
+# /var/lib/saptune/config/old_custom_saptune_config is the old
+# /etc/sysconfig/saptune from 12/15
+update_1215_to_16_running_once() {
+    if [ -f $SAPTUNE_CONFIG_15 ]; then
+        # update from 12/15 to 16
+        # move old config file away
+        mv $SAPTUNE_CONFIG_15 $OLD_SAPTUNE_CONFIG
+        param2check="TUNE_FOR_SOLUTIONS TUNE_FOR_NOTES NOTE_APPLY_ORDER STAGING COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP"
+        for param in ${param2check}; do
+            paramLine=$(grep "^${param}[[:space:]]*=" $OLD_SAPTUNE_CONFIG)
+            if [ -n "$paramLine" ]; then
+                if grep "^${param}[[:space:]]*=" $SAPTUNE_CONFIG > /dev/null 2>&1; then
+                    # change parameter
+                    sed -i "s%^${param}[[:space:]]*=.*$%${paramLine}%" $SAPTUNE_CONFIG
+                else
+                    # append parameter
+                    echo -e "\n$paramLine" >> $SAPTUNE_CONFIG
+                fi
             fi
-        fi
-    done
+        done
+        rm -f $OLD_SAPTUNE_CONFIG
+    fi
 }
 
 set_sysconfig_version() {
@@ -111,8 +140,8 @@ create_tuned_conf() {
         echo "see man saptune(8) and saptune-migrate(7) for more information"
         mkdir -p /etc/tuned/saptune
         cp /usr/lib/tuned/saptune/tuned.conf $CUSTOM_TUNED_CONF
-	# add description
-	sed -i '/^\[main\]/i\
+        # add description
+        sed -i '/^\[main\]/i\
 #\
 # for compatibility support of saptune version 1 the tuned config script\
 # /usr/lib/tuned/saptune/tuned.conf is copied to /etc/tuned/saptune/tuned.conf\
@@ -276,13 +305,13 @@ change_note_names() {
     done
 }
 
-enabled_sol_to_be_deleted() {
+enabled_sol_deleted() {
     esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
     if [ -n "$esol" ]; then
         # enabled solution found
         for delsol in $SOLS2DELETE; do
             if [ "${esol}.sol" == "$delsol" ]; then
-               # enabled solution will be deleted
+               # enabled solution is deleted
                return 0
             fi
         done
@@ -290,31 +319,27 @@ enabled_sol_to_be_deleted() {
     return 1
 }
 
-delete_sols() {
-    esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
-    if enabled_sol_to_be_deleted; then
-        # enabled solution found, which will be deleted
-        echo "enabled Solution '$esol' will be deleted, adjust config"
-        # extract notes of enabled solution from the note definition
-        if [ -f ${OVERRIDEDIR}/"${esol}".sol ]; then
-            # file found in the override area
-            SOLNOTES=$(awk '/\[ArchX86\]/ {getline; print $0}' ${OVERRIDEDIR}/"${esol}".sol)
-            echo "WARNING: override file for enabled Solution '${esol}' detected. As this Solution will be no longer available, please remove your override file"
-        else
-            # file found in the working area
-            SOLNOTES=$(awk '/\[ArchX86\]/ {getline; print $0}' ${WORKINGAREA}/sols/"${esol}".sol)
-        fi
-        # for each note from the solution check, if note is in
-        # NOTE_APPLY_ORDER. If not, skip note (do nothing).
-        # Else add note to TUNE_FOR_NOTES, if not yet available
-        add_TUNE_FOR_NOTES "$SOLNOTES" "$esol" "from deleted"
-        # delete solution from TUNE_FOR_SOLUTIONS
-        echo "### removing solution '$esol' from TUNE_FOR_SOLUTIONS"
-        sed -i "s/$esol//g" $SAPTUNE_CONFIG
+delete_sol() {
+    esol=$1
+    # enabled solution found, which will be deleted
+    echo "enabled Solution '$esol' detected, which will be deleted. Adjust config"
+    # extract notes of enabled solution from the note definition
+    if [ -f ${OVERRIDEDIR}/"${esol}".sol ]; then
+        # file found in the override area
+        SOLNOTES=$(awk '/\[ArchX86\]/ {getline; print $0}' ${OVERRIDEDIR}/"${esol}".sol)
+        echo "WARNING: override file for enabled Solution '${esol}' detected. As this Solution will be no longer available, please remove your override file"
+    else
+        # file found in the working area
+        SOLNOTES=$(awk '/\[ArchX86\]/ {getline; print $0}' ${WORKINGAREA}/sols/"${esol}".sol)
     fi
+    # for each note from the solution check, if note is in
+    # NOTE_APPLY_ORDER. If not, skip note (do nothing).
+    # Else add note to TUNE_FOR_NOTES, if not yet available
+    add_TUNE_FOR_NOTES "$SOLNOTES" "$esol" "from deleted"
+    # delete solution from TUNE_FOR_SOLUTIONS
+    echo "### removing solution '$esol' from TUNE_FOR_SOLUTIONS"
+    sed -i "s/$esol//g" $SAPTUNE_CONFIG
     # do nothing for not enabled solution (no need to adjust the config)
-    # remove of solution definition files will be done later in
-    # adjust_workingarea
 }
 
 delete_notes() {
@@ -377,13 +402,13 @@ adjust_enabled_solution() {
     # need to run before the working area is touched in the postinstall
     # only needed, if staging is NOT active and a solution is enabled and no
     # override file exists.
-    # no need to run, if the solution will be deleted
     # The staging is checked in the postinstall, so no need to do it again.
     # If an override file for the enabled solution exists, we will NOT change
     # anything. It is up to the customer to check and adjust after the update
     esol=$(grep '^TUNE_FOR_SOLUTIONS[[:space:]]*=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
-    if enabled_sol_to_be_deleted; then
-        echo "enabled Solution '$esol' detected, which will be deleted later. No need to adjust"
+    if enabled_sol_deleted; then
+        # enabled solution found, which will be deleted. Adjust config
+        delete_sol "$esol"
         return 0
     fi
     if [ -n "$esol" ] && [ ! -f ${OVERRIDEDIR}/"${esol}".sol ]; then
@@ -394,7 +419,7 @@ adjust_enabled_solution() {
         # Power or Intel for one solution in the future
         echo "detected enabled Solution '$esol', checking for new or deleted Notes"
         if [ -f /var/lib/saptune/.v2_solutions ]; then
-	    # starting from v2
+            # starting from v2
             # extract old notes of enabled solution from the 'old' solutions file
             OLD_NOTES=$(sed -n "0,/^${esol} = / s///p" /var/lib/saptune/.v2_solutions)
         else
@@ -575,71 +600,42 @@ fix_300() {
     fi
 }
 
-adjust_workingarea() {
-    # called from the postinstall script of saptune to adjust the working area
-    # during a update (like 12 to 15 or 15 to 15 package update)
-    OIFS=$IFS
-    for notepair in $NOTES2CHANGE; do
-        IFS=","
-        # shellcheck disable=SC2086
-        set -- $notepair
-        oldNote=$1
-        newNote=$2
-        IFS=$OIFS
-        if [ ! -f ${NOTEDIR}/"${oldNote}" ] && [ -f ${NOTEDIR}/"${newNote}" ]; then
-            # the old note definition name is NOT available, but the new one
-            # so update from SLE12 to SLE15 or 15 to 16
-            if [ -n "${oldNote}" ] && [ -f ${WORKINGAREA}/notes/"${oldNote}" ]; then
-                echo "### removing old sle${oldVers} note '${oldNote}' from working area"
-                rm -rf ${WORKINGAREA}/notes/"${oldNote}"
-            fi
-            if [ -n "${newNote}" ] && [ ! -f ${WORKINGAREA}/notes/"${newNote}" ]; then
-                echo "### adding new sle${newVers} note '${newNote}' from package area to working area"
-                cp ${NOTEDIR}/"${newNote}" ${WORKINGAREA}/notes
-            fi
+setup_workingarea() {
+    # handling of working area is the same for initial install or update
+    # initial install or update from v1 or v2 - STAGING is 'false' by default
+    # the entire content of package area gets copied directly to the working
+    # area which is empty at that state.
+    # update from v3 or later - STAGING may be 'true'
+    if ! modify; then
+        echo "Skip setup_workingarea, will be done later"
+        exit 0
+    fi
+    staging=$(grep '^STAGING=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
+    if [ "$staging" == "true" ]; then
+        # handle staging area and DON'T touch the working area
+        # done later with 'upd_helper staging'
+        exit 0
+    fi
+    # staging is NOT active, same behavior as with v2
+    # adjust the notes of an enabled solution, if needed
+    adjust_enabled_solution
+    if [ -f /var/lib/saptune/.v2_solutions ]; then
+        # remove no longer needed old solution definition file
+        rm -f /var/lib/saptune/.v2_solutions
+    fi
 
-            # adjust solution files
-            for wsol in "${WORKINGAREA}"/sols/*; do
-                srch_pat1="[[:space:]]${oldNote}[[:space:]]"
-                new_pat1=" ${newNote} "
-                if grep "$srch_pat1" "$wsol" >/dev/null 2>&1; then
-                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in solution '$wsol'"
-                    sed -i "s/$srch_pat1/$new_pat1/g" "$wsol"
-                fi
-                srch_pat2="[[:space:]]${oldNote}$"
-                new_pat2=" ${newNote}"
-                if grep "$srch_pat2" "$wsol" >/dev/null 2>&1; then
-                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in solution '$wsol'"
-                    sed -i "s/$srch_pat2/$new_pat2/g" "$wsol"
-                fi
-                srch_pat3="^${oldNote}[[:space:]]"
-                new_pat3="${newNote} "
-                if grep "$srch_pat3" "$wsol" >/dev/null 2>&1; then
-                    echo "### changing old, SLE${oldVers} specific Note name '$oldNote' to the new, SLE${newVers} Note name '$newNote' in solution '$wsol'"
-                    sed -i "s/$srch_pat3/$new_pat3/g" "$wsol"
-                fi
-            done
-        fi
-    done
-
-    for delnote in $NOTES2DELETE; do
-        if [ ! -f ${NOTEDIR}/"${delnote}" ]; then
-            if [ -n "${delnote}" ] && [ -f ${WORKINGAREA}/notes/"${delnote}" ]; then
-                echo "### removing no longer supported note '${delnote}' from working area"
-                rm -rf ${WORKINGAREA}/notes/"${delnote}"
-            fi
-            # adjust solution files - not needed yet
-        fi
-    done
-
-    for delsol in $SOLS2DELETE; do
-        if [ ! -f ${SOLDIR}/"${delsol}" ]; then
-            if [ -n "${delsol}" ] && [ -f ${WORKINGAREA}/sols/"${delsol}" ]; then
-                echo "### removing no longer supported solution '${delsol}' from working area"
-                rm -rf ${WORKINGAREA}/sols/"${delsol}"
-            fi
-        fi
-    done
+    # set up working area
+    if [ -d /var/lib/saptune/working/notes ] || [ -d /var/lib/saptune/working/sols ]; then
+        rm -rf /var/lib/saptune/working/*
+    fi
+    mkdir -p /var/lib/saptune/working/notes
+    cp /usr/share/saptune/notes/* /var/lib/saptune/working/notes
+    mkdir -p /var/lib/saptune/working/sols
+    cp /usr/share/saptune/sols/* /var/lib/saptune/working/sols
+    # clean up of working area no longer needed, because function was
+    # moved from postinstall to posttrans, which means package area
+    # only contains notes/solutions from the new package version
+    # files from old package version are already removed
 }
 
 cleanup_savestates() {
@@ -664,9 +660,17 @@ cleanup_savestates() {
     fi
 }
 
-copy_packednotes2staging() {
-    # called from the postinstall script of saptune to handle the staging area
+update_stagingarea() {
+    # called from the posttrans script of saptune to handle the staging area
     # check for changed or new notes
+    if ! modify; then
+        echo "Skip update_stagingarea, will be done later"
+        exit 0
+    fi
+    staging=$(grep '^STAGING=' $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
+    if [ "$staging" != "true" ]; then
+        exit 0
+    fi
     for pnote in "${PACKAGEAREA}"/notes/*; do
         note=${pnote##*/}
         if [ -f ${WORKINGAREA}/notes/"${note}" ]; then
@@ -748,68 +752,144 @@ copy_packednotes2staging() {
     done
 }
 
+create_dirs() {
+    if ! modify; then
+        echo "Skip createDirs, will be done later"
+        exit 0
+    fi
+    # saptune config location
+    mkdir -p /var/lib/saptune/config
+    # working and staging location
+    mkdir -p /var/lib/saptune/working
+    mkdir -p /var/lib/saptune/staging/latest
+    # logdir
+    mkdir -p /var/log/saptune
+}
+
+# SLE16 base tuning
+set_base_tuning() {
+    if ! modify; then
+        echo "Skip baseTuning, will be done later"
+        exit 0
+    fi
+    if immutable; then
+        if [ -f /etc/saptune/.baseTuning ]; then
+            echo "enable saptune base tuning - enable SAP_Base solution"
+            sed -i 's/TUNE_FOR_SOLUTIONS=".*$/TUNE_FOR_SOLUTIONS="SAP_Base"/' $SAPTUNE_CONFIG
+            sed -i 's/TUNE_FOR_NOTES=".*$/TUNE_FOR_NOTES=""/' $SAPTUNE_CONFIG
+            sed -i 's/NOTE_APPLY_ORDER=".*$/NOTE_APPLY_ORDER="1275776"/' $SAPTUNE_CONFIG
+        fi
+    else
+        if /usr/bin/systemd-detect-virt -q -r >/dev/null 2>&1; then
+            # systemctl and saptune will not work in chroot env
+            echo "enable saptune base tuning - enable SAP_Base solution"
+            sed -i 's/TUNE_FOR_SOLUTIONS=".*$/TUNE_FOR_SOLUTIONS="SAP_Base"/' $SAPTUNE_CONFIG
+            sed -i 's/TUNE_FOR_NOTES=".*$/TUNE_FOR_NOTES=""/' $SAPTUNE_CONFIG
+            sed -i 's/NOTE_APPLY_ORDER=".*$/NOTE_APPLY_ORDER="1275776"/' $SAPTUNE_CONFIG
+        else
+            echo "activate saptune base tuning - apply SAP_Base solution"
+            /usr/bin/systemctl start saptune.service
+            /usr/sbin/saptune solution apply SAP_Base >/dev/null 2>&1
+        fi
+    fi
+    rm -f /etc/saptune/.baseTuning
+}
+
+immutable() {
+    if [ -x /usr/sbin/transactional-update ]; then
+        return 0
+    fi
+    return 1
+}
+
+roRoot() {
+    if (grep ".*[[:space:]]/[[:space:]].*[[:space:]]ro[[:space:],]" /proc/mounts >/dev/null 2>&1); then
+        return 0
+    fi
+    return 1
+}
+
+modify() {
+    if immutable && ! roRoot; then
+        # immutable system in transactional update
+        # do NOT write to /var, postpone to systemd service file during boot
+        return 1
+    fi
+    return 0
+}
+
 case "$upd_opt" in
 v1tov2pi)
     # called from the postinstall script of saptune, if installation was an
-    # update from saptune version 1 to version 2/3
+    # update from saptune version 1 to version 2/3. For SLE12/15 only
     set_sysconfig_version
     create_tuned_conf
     ;;
 v1tov2pt)
     # called from the posttrans script of saptune, if installation was an
-    # update from saptune version 1 to version 2/3
+    # update from saptune version 1 to version 2/3. For SLE12/15 only
     get_back_extra_ASE_BOBJ
+    ;;
+cleanup)
+    # called from the postinstall script of saptune to clean up some leftover
+    # files from older saptune operations. For SLE12/15 only
+    cleanup_savestates
+    ;;
+fix_300)
+    # called from the postinstall script of saptune to fix a bug special in
+    # version 3.0.0. For SLE12/15 only
+    fix_300
+    ;;
+sle12to15pt)
+    # called from the posttrans script of saptune, if installation was an
+    # update from saptune version 2/3 to version 2/3. For SLE12/15 only
+    change_note_names
+    delete_notes
     ;;
 sleto16pt)
     # called from the posttrans script of saptune
     # update 12/15 to 16 or update from 16 to 16
     # important for note delete, sol delete and note changes in sols
     # needs to run always
-    change_note_names
-    delete_sols
-    delete_notes
-    staging=$(grep ^STAGING= $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
-    if [ "$staging" == "false" ]; then
-        adjust_workingarea
+    if ! modify; then
+        echo "Skip sleto16pt, will be done later"
+        exit 0
     fi
-    ;;
-sle12to15pt)
-    # called from the posttrans script of saptune, if installation was an
-    # update from saptune version 2/3 to version 2/3
     change_note_names
     delete_notes
-    staging=$(grep ^STAGING= $SAPTUNE_CONFIG | awk -F '"' '{ print $2 }')
-    if [ "$staging" == "false" ]; then
-        adjust_workingarea
-    fi
     ;;
-cleanup)
-    # called from the postinstall script of saptune to clean up some leftover
-    # files from older saptune operations
-    cleanup_savestates
+baseTuning)
+    # SLE16 base tuning
+    # called from posttrans script of saptune
+    set_base_tuning
+    ;;
+setup_workingarea)
+    # called from the posttrans script of saptune to handle the working area
+    setup_workingarea
     ;;
 staging)
     # called from the posttrans script of saptune to handle the staging area
-    copy_packednotes2staging
-    ;;
-enabledSol)
-    # called from the postinstall script of saptune to adjust the notes of an
-    # enabled solution
-    adjust_enabled_solution
+    update_stagingarea
     ;;
 updateConf)
-    # SLE16 - update saptune config file
-    # called from the posttrans script of saptune
-    if [ -f /var/lib/saptune/config/old_custom_saptune_config ]; then
-        # update 12/15 to 16 (special task needed only once!)
-        update_config
-        rm -f /var/lib/saptune/config/old_custom_saptune_config
-    fi
-    # add new entries, if not available
-    update_saptune_config
+    # SLE16 - update saptune config file with new entries, if needed.
+    # Do not change existing ones
+    # update config 12/15 to 16 (special task needed only once!)
+    # called from the postinstall script of saptune in standard installations
+    # or from saptune-helper.service in transactional-updates
+    update_config
     ;;
-fix_300)
-    # called from the postinstall script of saptune to fix a bug special in
-    # version 3.0.0
-    fix_300
+dropHelperSvc)
+    # if in tu cp /usr/share/saptune/scripts/upd_helper_svc /etc/saptune
+    # called in postinstall script of saptune
+    if immutable; then
+        cp /usr/share/saptune/scripts/upd_helper_svc /etc/saptune
+        #ln -s /usr/lib/systemd/system/saptune_helper.service /etc/systemd/system/sysinit.target.wants
+    fi
+    ;;
+createDirs)
+    # create directories in /var
+    # called in postinstall script of saptune
+    create_dirs
+    ;;
 esac

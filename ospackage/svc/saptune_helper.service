@@ -1,0 +1,25 @@
+[Unit]
+Description=Helper service for saptune tu
+After=local-fs.target
+Before=sysinit.target
+DefaultDependencies=no
+
+[Service]
+ProtectSystem=full
+ReadWritePaths=/etc/saptune/
+ProtectHome=true
+PrivateDevices=true
+ProtectHostname=true
+ProtectClock=true
+ProtectKernelTunables=false
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=false
+MountAPIVFS=no
+RestrictRealtime=true
+
+Type=oneshot
+ExecStart=/bin/sh -c 'if [ -f /etc/saptune/upd_helper_svc ]; then /etc/saptune/upd_helper_svc; rm -rf /etc/saptune/upd_helper_svc; fi'
+
+[Install]
+WantedBy=multi-user.target
