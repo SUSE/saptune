@@ -1136,6 +1136,8 @@ the saptune Note and solution definition override location.
 
 If you need to customize the Note or solution definitions found in \fI/usr/share/saptune/notes\fP or \fI/usr/share/saptune/sols\fP or in \fI/etc/saptune/extra\fP, you can copy them to \fI/etc/saptune/override\fP and modify them as you need. Please stay with the original name of the Note or solution definition (the NoteID or solution name) and do \fBNOT\fP rename it.
 
+If the shipped Note or Solution does \fBNOT\fP contain an untagged section an override will not work.
+
 Or use '\fBsaptune note customize NoteID\fP' or '\fBsaptune solution customize solutionName\fP' to do the job for you.
 .RE
 .PP

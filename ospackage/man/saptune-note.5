@@ -32,6 +32,8 @@ Inline comments are possible and start with a blank followed by a # followed by 
 If you need to add a character sequenze of ' #anything' to your description, please write it as ' ##anything' (double the #) to give saptune the chance to distinguish this text from an inline comment. saptune will strip the second # from the output result, so that the resulting text will appear as ' #anything'.
 .br
 Lines starting with '[' indicate the begin of a new section.
+.br
+Hint: Key-value assignments outside any section are bound to an unnamed section and will not be recognized.
 .SH SECTIONS
 A section starts with a '[section_name]' keyword in the first line, followed by lines with options and comments.
 

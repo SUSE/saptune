@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# saptune-helper.service
+# only available on SLE16 immutable systems
+# mainly to update /var/lib/saptune files
+# Attention: only /etc and /var writable
+echo "saptune config and staging update on systems in transactional mode"
+
+# create needed directories in /var, if not available
+/usr/share/saptune/scripts/upd_helper createDirs
+
+# update saptune config file with new entries, if needed.
+# Do not change existing ones
+# update config 12/15 to 16 (special task needed only once!)
+/usr/share/saptune/scripts/upd_helper updateConf
+
+# handling of working area is the same for initial install or update
+# initial install or update from v1 or v2 - STAGING is 'false' by default
+# the entire content of package area gets copied directly to the working area
+# which is empty at that state.
+# update from v3 or later - STAGING may be 'true'
+/usr/share/saptune/scripts/upd_helper setup_workingarea 
+
+# handle staging area and DON'T touch the working area
+/usr/share/saptune/scripts/upd_helper staging
+
+# check for SAP Note name changes between SLE12/15 and SLE16
+/usr/share/saptune/scripts/upd_helper sleto16pt
+
+# saptune base tuning
+/usr/share/saptune/scripts/upd_helper baseTuning
