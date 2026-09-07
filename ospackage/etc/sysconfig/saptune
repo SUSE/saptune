@@ -1,7 +1,6 @@
 ## Path:           SAP/System Tuning/General
 ## Description:    Global settings for saptune - the comprehensive optimisation management utility for SAP solutions
 ## ServiceRestart: saptune
-# _STCV1_
 
 ## Type:    string
 ## Default: ""
@@ -68,3 +67,13 @@ SKIP_SYSCTL_FILES="/boot"
 # Default is 'no'. If set to 'yes' a 'systemctl reload' will do nothing.
 # same reason as for sapconf bsc#1209408
 IGNORE_RELOAD="no"
+
+# _STCV2_
+# CSP_TIMEOUT is the timeout for the cloud Metadata Server query
+CSP_TIMEOUT="5"
+
+# CSP_RETRIES is the number of retries for the cloud Metadata Server query
+CSP_RETRIES="3"
+
+# DETECTION_ON_BOOT defines when the cloud instance detection should run
+DETECTION_ON_BOOT="first"

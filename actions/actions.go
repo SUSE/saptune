@@ -102,6 +102,8 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 		SolutionAction(writer, system.CliArg(2), system.CliArg(3), system.CliArg(4), stApp)
 	case "configure":
 		ConfigureAction(writer, system.CliArg(2), system.CliArgs(3), stApp)
+	case "cloud":
+		CloudAction(writer, system.CliArg(2), system.CliArg(3), system.CliArg(4))
 	case "refresh":
 		RefreshAction(os.Stdin, writer, system.CliArg(2), stApp)
 	case "revert":

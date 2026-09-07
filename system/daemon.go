@@ -171,19 +171,6 @@ func SystemctlIsRunning(thing string) (bool, error) {
 	return checkSystemctlState(thing, "is-active")
 }
 
-// SystemctlIsStarting return true only if systemctl suggests that the system is
-// starting.
-func SystemctlIsStarting() bool {
-	match := false
-	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
-	DebugLog("SystemctlIsStarting - /usr/bin/systemctl is-system-running : '%+v %s'", err, strings.TrimSpace(string(out)))
-	if strings.TrimSpace(string(out)) == "starting" {
-		DebugLog("SystemctlIsStarting - system is in state 'starting'")
-		match = true
-	}
-	return match
-}
-
 // SystemctlIsActive returns the output of 'systemctl is-active'
 func SystemctlIsActive(thing string) (string, error) {
 	out, err := exec.Command(systemctlCmd, "is-active", thing).CombinedOutput()
@@ -204,15 +191,45 @@ func SystemctlDaemonReload() error {
 	return err
 }
 
+// detectSystemState detects the systemctl system state
+func detectSystemState() ([]byte, error) {
+	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
+	DebugLog("detectSystemRunning - /usr/bin/systemctl is-system-running : '%+v %s'", err, strings.TrimSpace(string(out)))
+	return out, err
+}
+
 // GetSystemState returns the output of 'systemctl is-system-running'
 func GetSystemState() (string, error) {
 	retval := ""
-	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
-	DebugLog("GetSystemState - /usr/bin/systemctl is-system-running : '%+v %s'", err, strings.TrimSpace(string(out)))
+	out, err := detectSystemState()
 	if len(out) != 0 {
 		retval = strings.TrimSpace(string(out))
 	}
 	return retval, err
+}
+
+// SystemIsStarting return true only if systemctl suggests that the system is
+// starting.
+func SystemIsStarting() bool {
+	match := false
+	out, _ := detectSystemState()
+	if strings.TrimSpace(string(out)) == "starting" {
+		DebugLog("SystemIsStarting - system is in state 'starting'")
+		match = true
+	}
+	return match
+}
+
+// SystemIsRunning return true only if systemctl reports 'running' or
+// 'degraded'
+func SystemIsRunning() bool {
+	match := false
+	out, _ := detectSystemState()
+	if strings.TrimSpace(string(out)) == "running" || strings.TrimSpace(string(out)) == "degraded" {
+		DebugLog("SystemIsRunning - system is starting/running, match true")
+		match = true
+	}
+	return match
 }
 
 // IsSystemRunning returns true, if 'is-system-running' reports 'running'
@@ -221,8 +238,7 @@ func GetSystemState() (string, error) {
 // messages
 func IsSystemRunning() (bool, error) {
 	match := false
-	out, err := exec.Command(systemctlCmd, "is-system-running").CombinedOutput()
-	DebugLog("IsSystemRunning - /usr/bin/systemctl is-system-running : '%+v %s'", err, strings.TrimSpace(string(out)))
+	out, err := detectSystemState()
 	for _, line := range strings.Split(string(out), "\n") {
 		if strings.TrimSpace(line) == "starting" || strings.TrimSpace(line) == "running" || strings.TrimSpace(line) == "degraded" {
 			DebugLog("IsSystemRunning - system is degraded/starting/running, match true")

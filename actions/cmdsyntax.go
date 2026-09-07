@@ -30,8 +30,11 @@ Staging control:
    saptune [--format FORMAT] [--force-color] [--fun] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
    saptune [--format FORMAT] [--force-color] [--fun] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Config (re-)settings:
-  saptune [--format FORMAT] [--force-color] [--fun] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP ) Value
+  saptune [--format FORMAT] [--force-color] [--fun] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP | CSP_TIMEOUT | CSP_RETRIES ) Value
   saptune [--format FORMAT] [--force-color] [--fun] configure ( reset | show )
+Cloud information:
+  saptune [--format FORMAT] [--force-color] [--fun] cloud set ( instance_type | cloud_detection_on_boot ) Value
+  saptune [--format FORMAT] [--force-color] [--fun] cloud ( get | clear | detect ) instance_type
 Verify all applied Notes:
   saptune [--format FORMAT] [--force-color] [--fun] verify applied
 Refresh all applied Notes:
@@ -80,8 +83,12 @@ Staging control:
    saptune [--format FORMAT] [--force-color] [--fun] staging ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
    saptune [--format FORMAT] [--force-color] [--fun] staging release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 Config (re-)settings:
-  saptune [--format FORMAT] [--force-color] [--fun] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP ) Value
+  saptune [--format FORMAT] [--force-color] [--fun] configure ( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP | CSP_TIMEOUT | CSP_RETRIES ) Value
   saptune [--format FORMAT] [--force-color] [--fun] configure ( reset | show )
+Cloud information:
+  saptune [--format FORMAT] [--force-color] [--fun] cloud set instance_type CLOUD_VENDOR%INSTANCE_TYPE
+  saptune [--format FORMAT] [--force-color] [--fun] cloud set cloud_detection_on_boot ( always | once | first )
+  saptune [--format FORMAT] [--force-color] [--fun] cloud ( get | clear | detect ) instance_type
 Verify all applied Notes:
   saptune [--format FORMAT] [--force-color] [--fun] verify applied
 Refresh all applied Notes:

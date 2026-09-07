@@ -9,6 +9,10 @@ echo "saptune config and staging update on systems in transactional mode"
 # create needed directories in /var, if not available
 /usr/share/saptune/scripts/upd_helper createDirs
 
+# setup config files
+# saptune.config on SLE16, covers cloud.json too
+/usr/share/saptune/scripts/upd_helper setupConf
+
 # update saptune config file with new entries, if needed.
 # Do not change existing ones
 # update config 12/15 to 16 (special task needed only once!)
