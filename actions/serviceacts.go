@@ -227,6 +227,9 @@ func ServiceActionStatus(writer io.Writer, tuneApp *app.App, saptuneVersion stri
 	// check for virtualization environment
 	printVirtStatus(writer, &jstatus)
 
+	// print cloud instance type
+	printCloudInfo(writer, &jstatus)
+
 	// check tuning result
 	infoTrigger["notCompliant"] = chkTuningResult(writer, tuneApp, &jstatus)
 
@@ -755,6 +758,25 @@ func printVirtStatus(writer io.Writer, jstat *system.JStatus) {
 	system.InfoLog("Following virtualized environment was detected: %s", vtype)
 	fmt.Fprintf(writer, "virtualization:           %s\n", vtype)
 	jstat.VirtEnv = vtype
+}
+
+// printCloudInfo prints the cloud information
+func printCloudInfo(writer io.Writer, jstat *system.JStatus) {
+	cloudInfo := ""
+	csp := system.GetCSP()
+	if csp == "" {
+		cloudInfo = "not on cloud"
+	} else {
+		cloud, _ := system.GetCSPInstanceInfo(csp)
+		if cloud.InstanceType == "" {
+			cloudInfo = csp
+		} else {
+			cloudInfo = csp + "%" + cloud.InstanceType
+		}
+	}
+	system.InfoLog("Following cloud information was detected: %s", cloudInfo)
+	fmt.Fprintf(writer, "cloud info:               %s\n", cloudInfo)
+	jstat.CloudInfo = cloudInfo
 }
 
 // printInfoBlock prints additional info for the status

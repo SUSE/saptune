@@ -170,6 +170,7 @@ type JStatus struct {
 	SystemdSysState string         `json:"systemd system state"`
 	TuningState     string         `json:"tuning state"`
 	VirtEnv         string         `json:"virtualization"`
+	CloudInfo       string         `json:"cloud info"`
 	SaptuneVersion  string         `json:"configured version"`
 	RPMVersion      string         `json:"package version"`
 	ConfiguredSol   []string       `json:"Solution enabled"`
