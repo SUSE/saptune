@@ -121,7 +121,7 @@ func TestSystemctl(t *testing.T) {
 		t.Error(err)
 	}
 
-	if SystemctlIsStarting() {
+	if SystemIsStarting() {
 		t.Error("systemctl reports system is in state 'starting'")
 	}
 	sysState, err := GetSystemState()

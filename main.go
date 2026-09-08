@@ -57,6 +57,9 @@ func main() {
 	// additional clear ignore flag for the sapconf/saptune service deadlock
 	os.Remove("/run/.saptune.ignore")
 
+	// check for cloud instance type
+	detectCSPInstance()
+
 	// check saptune service drop-in (azure only)
 	checkSaptuneServiceDropIn()
 
@@ -317,6 +320,9 @@ func checkSaptuneConfigFile(saptuneConf string) string {
 	}
 
 	// set values read from the config file
+	system.CSPTimeout = sconf.GetInt("CSP_TIMEOUT", 1)
+	system.CSPRetries = sconf.GetInt("CSP_RETRIES", 1)
+	system.CSPDetectOnBoot = sconf.GetString("DETECTION_ON_BOOT", "first")
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
 	if saptuneVers != "1" && saptuneVers != "2" && saptuneVers != "3" {
 		system.ErrorExit("Wrong saptune version in file '%s': %s", saptuneConf, saptuneVers, 128)
@@ -343,5 +349,22 @@ func logSwitchFromConfig(saptuneConf string, lswitch map[string]string) {
 	}
 	if lswitch["error"] == "" {
 		lswitch["error"] = sconf.GetString("ERROR", "on")
+	}
+}
+
+// check for cloud instance detetction
+func detectCSPInstance() {
+	csp := system.GetCSP()
+	if csp != "" {
+		err := system.DetectCSPInstance(csp)
+		if os.IsNotExist(err) {
+			system.ErrorLog("Failed to retrieve cloud information from file '%s': '%v'", system.CSPInstanceConfig, err)
+			system.ErrorExit("", 128)
+		}
+		if err != nil {
+			system.ErrorExit("Cloud instance type detection failed. Exiting.")
+		}
+	} else {
+		system.InfoLog("not on public cloud, no instance type detection needed")
 	}
 }

@@ -22,10 +22,12 @@ else
     upd_opt="$1"
 fi
 
+CLOUD_INSTANCE_JSON=/var/lib/saptune/config/cloud.json
 OLD_SAPTUNE_CONFIG=/var/lib/saptune/config/old_custom_saptune_config
 CUSTOM_TUNED_CONF=/etc/tuned/saptune/tuned.conf
 SAPTUNE_CONFIG_16=/var/lib/saptune/config/saptune
 SAPTUNE_CONFIG_15=/etc/sysconfig/saptune
+SAPTUNE_16_TEMPLATE=/usr/share/saptune/saptuneTemplate.conf
 
 OVERRIDEDIR=/etc/saptune/override
 CUSTOMDIR=/etc/saptune/extra
@@ -72,8 +74,33 @@ fi
 update_saptune_config() {
     # SLE16 - update saptune config file
     # add new entries, if not available, no other changes are needed
-    # # _STCV1_ is the starting point of SLE16 - for future use
-    :
+    # # _STCV1_ is the starting point of SLE16
+    # # _STCV2_ is 3.3.0
+    if grep "^# _STCV1_$" $SAPTUNE_CONFIG_16 >/dev/null 2>&1; then
+        sed -n '/^# _STCV2_$/,$p' $SAPTUNE_16_TEMPLATE >> $SAPTUNE_CONFIG_16
+	sed -i '/^# _STCV1_$/d' $SAPTUNE_CONFIG_16
+    fi
+}
+
+setup_config() {
+    # on SLE12/15 and 16
+    # needs to run after createDirs, but before updateConf on SLE16
+    # covers cloud.json too
+    if ! modify; then
+        echo "Skip setupConf, will be done later"
+        exit 0
+    fi
+    if [ ! -f $CLOUD_INSTANCE_JSON ]; then
+	# cloud instance definition file missing - copy from template
+        cp /usr/share/saptune/cloudTemplate.json $CLOUD_INSTANCE_JSON
+    fi
+    if [ -f /usr/share/saptune/saptuneTemplate.conf ]; then
+        # on SLE16, check for saptune config file
+        if [ ! -f $SAPTUNE_CONFIG_16 ]; then
+            # saptune config file missing - copy from template
+            cp /usr/share/saptune/saptuneTemplate.conf $SAPTUNE_CONFIG_16
+        fi
+    fi
 }
 
 update_config() {
@@ -84,10 +111,6 @@ update_config() {
     if ! modify; then
         echo "Skip updateConf, will be done later"
         exit 0
-    fi
-    if [ ! -f $SAPTUNE_CONFIG_16 ]; then
-        # saptune config file missing - copy from template
-        cp /usr/share/saptune/saptuneTemplate.conf $SAPTUNE_CONFIG_16
     fi
     # update config 12/15 to 16 (special task needed only once!)
     # /var/lib/saptune/config/old_custom_saptune_config is the old
@@ -105,7 +128,7 @@ update_1215_to_16_running_once() {
         # update from 12/15 to 16
         # move old config file away
         mv $SAPTUNE_CONFIG_15 $OLD_SAPTUNE_CONFIG
-        param2check="TUNE_FOR_SOLUTIONS TUNE_FOR_NOTES NOTE_APPLY_ORDER STAGING COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP"
+        param2check="TUNE_FOR_SOLUTIONS TUNE_FOR_NOTES NOTE_APPLY_ORDER STAGING COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP CSP_TIMEOUT CSP_RETRIES DETECTION_ON_BOOT"
         for param in ${param2check}; do
             paramLine=$(grep "^${param}[[:space:]]*=" $OLD_SAPTUNE_CONFIG)
             if [ -n "$paramLine" ]; then
@@ -870,6 +893,12 @@ setup_workingarea)
 staging)
     # called from the posttrans script of saptune to handle the staging area
     update_stagingarea
+    ;;
+setupConf)
+    # SLE12/15/16
+    # creates saptune config file (SLE16), if needed
+    # covers cloud.json too
+    setup_config
     ;;
 updateConf)
     # SLE16 - update saptune config file with new entries, if needed.

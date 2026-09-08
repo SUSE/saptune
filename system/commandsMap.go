@@ -59,8 +59,15 @@ var defaultCommand = map[string]bool{
 	"configure IGNORE_RELOAD":     false,
 	"configure DEBUG":             false,
 	"configure TrentoASDP":        false,
+	"configure CSP_TIMEOUT":       false,
+	"configure CSP_RETRIES":       false,
+	"configure DETECTION_ON_BOOT": false,
 	"configure reset":             false,
 	"configure show":              false,
+	"cloud set":                   false,
+	"cloud get":                   false,
+	"cloud clear":                 false,
+	"cloud detect":                false,
 	"refresh applied":             false,
 	"verify applied":              false,
 	"revert all":                  false,
@@ -146,6 +153,9 @@ func lockCommandsMap() map[string]bool {
 	lockCommand["staging release"] = true
 	lockCommand["configure reset"] = true
 	lockCommand["configure TrentoASDP"] = true
+	lockCommand["cloud set"] = true
+	lockCommand["cloud clear"] = true
+	lockCommand["cloud detect"] = true
 	lockCommand["refresh applied"] = true
 	lockCommand["revert all"] = true
 

@@ -92,7 +92,7 @@ Example:
 [grub:kernel=^6.4.0-150600.23.(42|47|50|53|60|78)-default$]
 .RE
 .TP
-.BI pmu_name= <CPU platform>
+.BI pmu_name= <CPU\ platform>
 to select a special \fICPU platform\fP:
 .br
 Valid values for \fBpmu_name=\fP are the content from \fB/sys/devices/cpu/caps/pmu_name\fP. So this tag is an Intel CPU only feature for now.
@@ -109,7 +109,7 @@ or
 [grub:pmu_name=haswell]
 .RE
 .TP
-.BI vendor= <hardware vendor>
+.BI vendor= <hardware\ vendor>
 to define a special \fIsystem hardware vendor\fP
 .br
 Valid values for \fBvendor=\fP are the values found in \fB/sys/class/dmi/id/board_vendor\fP or parts of the string available in this file.
@@ -119,7 +119,7 @@ The value of the vendor tag is used as a regular expression '\fB.*<value>.*\fP' 
 For IBM Power platform (hardware architecture 'ppc64le') the value is set to 'IBM'.
 
 .TP
-.BI model= <hardware model>
+.BI model= <hardware\ model>
 to define a special \fIsystem hardware model\fP
 .br
 Valid values for \fBmodel=\fP are the values found in \fB/sys/class/dmi/id/product_name\fP or parts of the string available in this file.
@@ -134,18 +134,24 @@ Example:
 [sysctl:vendor=FUJITSU:model=RX4770 M*]
 .RE
 .TP
-.BI csp= <cloud service provider>
-to define a special \fIcloud service provider\fP
+.BI csp= <cloud\ service\ provider%instance\ type>
+to define a special \fIcloud service provider\fP and (optional) a special instance type (separated by '%')
 .br
-Valid values for \fBcsp=\fP are \fBazure\fP, \fBaws\fP, \fBgoogle\fP and \fBibmVPC\fP
+Valid values for the cloud service provider in \fBcsp=\fP are \fBazure\fP, \fBaws\fP, \fBgoogle\fP and \fBibmVPC\fP
+.br
+For the valid instance types please refer to the documentation of the related cloud service provider.
 
 .RS 4
 Example:
 .br
 [sysctl:csp=azure]
+.br
+or
+.br
+[sysctl:csp=gcp%e2-micro]
 .RE
 .TP
-.BI virt= <virtualization type>
+.BI virt= <virtualization\ type>
 to define a special \fIvirtualization\fP class or type
 .br
 Valid class values for \fBvirt=\fP are \fBvm\fP, \fBchroot\fP, \fBcontainer\fP and \fBbare-metal\fP.
@@ -158,7 +164,7 @@ Example:
 [sysctl:virt=vm]
 .RE
 .TP
-.BI DMI interface tag: <filename>= <file content>
+.BI DMI\ interface\ tag: <filename>=<file\ content>
 .br
 Additional every filename from \fI/sys/class/dmi/id/\fP can be used as a tag.
 .br
@@ -182,14 +188,14 @@ This tags have different effects regarding the section they are used. In all sec
 .br
 But used in the \fB[block]\fP section they mean that all the settings available in this section will \fBonly\fP apply to block devices, which match the tag value. So you can restrict the settings to dedicated block devices.
 .TP
-.BI blkvendor= <block device hardware vendor>
+.BI blkvendor= <block\ device\ hardware\ vendor>
 to define a \fIhardware vendor\fP to match a special block device
 .br
 Valid values for \fBblkvendor=\fP are the values found in \fB/sys/block/<dev>/device/vendor\fP or parts of the string available in this file.
 .br
 The value of the blkvendor tag is used as a regular expression '\fB.*<value>.*\fP' to match the content of the vendor file.
 .TP
-.BI blkmodel= <block device hardware model>
+.BI blkmodel= <block\ device\ hardware\ model>
 to define a \fIhardware model\fP to match a special block device
 .br
 Valid values for \fBblkmodel=\fP are the values found in \fB/sys/block/<dev>/device/model\fP or parts of the string available in this file.

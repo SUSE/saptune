@@ -7,11 +7,12 @@ import (
 	"github.com/SUSE/saptune/txtparser"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 )
 
-var mandatoryConfigKeys = []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD"}
-var changeableConfigKeys = []string{"COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD", "DEBUG", "TrentoASDP"}
+var mandatoryConfigKeys = []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD", "CSP_TIMEOUT", "CSP_RETRIES", "DETECTION_ON_BOOT"}
+var changeableConfigKeys = []string{"COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD", "DEBUG", "TrentoASDP", "CSP_TIMEOUT", "CSP_RETRIES", "DETECTION_ON_BOOT"}
 
 // MandKeyList returns a list of mandatory configuration parameter, which need
 // to be available in the saptune configuration file
@@ -45,6 +46,10 @@ func ConfigureAction(writer io.Writer, configEntry string, configVals []string, 
 		ConfigureActionSetDebug(configVals[0])
 	case "TrentoASDP":
 		ConfigureActionSetTrentoASDP(configVals[0])
+	case "CSP_TIMEOUT":
+		ConfigureActionSetCSPTimeout(configVals[0])
+	case "CSP_RETRIES":
+		ConfigureActionSetCSPRetries(configVals[0])
 	case "reset":
 		ConfigureActionReset(os.Stdin, writer, tuneApp)
 	case "show":
@@ -96,6 +101,35 @@ func ConfigureActionSetTrentoASDP(configVal string) {
 		writeConfigEntry("TrentoASDP", configVal)
 	default:
 		system.ErrorExit("wrong value '%s' for the Trento Agent saptune-discovery-period. Supported values are '300', '600', '900', '1800', '3600'. Please check.", configVal)
+	}
+}
+
+// ConfigureActionSetCSPTimeout sets the timeout for the cloud instance
+// detection (seconds)
+func ConfigureActionSetCSPTimeout(configVal string) {
+	if _, err := strconv.Atoi(configVal); err != nil {
+		system.ErrorExit("wrong value '%s' for config variable 'CSP_TIMEOUT'. Must be an integer value (seconds). Please check.", configVal)
+	}
+	writeConfigEntry("CSP_TIMEOUT", configVal)
+}
+
+// ConfigureActionSetCSPRetries sets the number of retries for the cloud
+// instance detection
+func ConfigureActionSetCSPRetries(configVal string) {
+	if _, err := strconv.Atoi(configVal); err != nil {
+		system.ErrorExit("wrong value '%s' for config variable 'CSP_RETRIES'. Must be an integer value. Please check.", configVal)
+	}
+	writeConfigEntry("CSP_RETRIES", configVal)
+}
+
+// configureActionSetDetectionOnBoot sets the variable DETECTION_ON_BOOT
+// used in CloudActionSet for 'saptune cloud set cloud_detection_on_boot'
+func configureActionSetDetectionOnBoot(configVal string) {
+	switch configVal {
+	case "always", "once", "first":
+		writeConfigEntry("DETECTION_ON_BOOT", configVal)
+	default:
+		system.ErrorExit("wrong value '%s' for config variable 'DETECTION_ON_BOOT'. Only 'always', 'once' or 'first' supported. Please check.", configVal)
 	}
 }
 

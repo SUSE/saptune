@@ -215,14 +215,28 @@ func chkKernelTags(tagField string, secFields []string) bool {
 // chkCsp checks if the csp section tag is valid or not
 func chkCspTags(tagField string, secFields []string) bool {
 	ret := true
+	cProvider := tagField
+	cInstType := ""
+	cldFields := strings.Split(tagField, "%")
+	if len(cldFields) > 1 {
+		cProvider = cldFields[0]
+		cInstType = cldFields[1]
+	}
 	chkCsp := system.GetCSP()
-	if tagField != chkCsp {
+	if cProvider != chkCsp {
 		// csp does not match
 		if chkCsp == "" {
 			chkCsp = "not a cloud"
 		}
-		system.InfoLog("cloud service provider '%s' in section definition '%v' does not match the cloud service provider of the running system ('%s'). Skipping whole section with all lines till next valid section definition", tagField, secFields, chkCsp)
+		system.InfoLog("cloud service provider '%s' in section definition '%v' does not match the cloud service provider of the running system ('%s'). Skipping whole section with all lines till next valid section definition", cProvider, secFields, chkCsp)
 		ret = false
+	}
+	if ret && cInstType != "" {
+		chkInst, _ := system.GetCSPInstanceInfo(chkCsp)
+		if cInstType != chkInst.InstanceType {
+			system.InfoLog("cloud instance type '%s' in section definition '%v' does not match the detected cloud instance type of the running system ('%s'). Skipping whole section with all lines till next valid section definition", cInstType, secFields, chkInst.InstanceType)
+			ret = false
+		}
 	}
 	return ret
 }

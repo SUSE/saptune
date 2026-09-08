@@ -69,10 +69,16 @@ rename SOLUTIONNAME NEWSOLUTIONNAME
 release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBconfigure\fP
-( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP ) Value
+( COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP | CSP_TIMEOUT | CSP_RETRIES ) Value
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBconfigure\fP
 ( reset | show )
+
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBcloud\fP
+set ( instance_type | cloud_detection_on_boot ) Value
+
+\fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBcloud\fP
+( get | clear | detect ) instance_type
 
 \fBsaptune\fP [--format FORMAT] [--force-color] [--fun] \fBverify\fP
 applied
@@ -781,11 +787,58 @@ If the variable is set saptune will check during start if the value of the varia
 .br
 Setting TrentoASDP to "off" will disable the check during start of saptune. The setting of 'saptune-discovery-period' in the Trento Agent config is not affected by this setting.
 .TP
+.B CSP_TIMEOUT <int>
+Integer value representing the connection timeout for the cloud Metadata Server query used for the cloud instance detection. 
+Default is 5 seconds.
+.TP
+.B CSP_RETRIES <int>
+Number of retries for the cloud Metadata Server query used for the cloud instance detection. 
+Default is 3 retries.
+.TP
 .B reset
 Reverts the tuning and reset the content of the saptune configuration file to the installation default. Asks for confirmation.
 .TP
 .B show
 Shows the content of the saptune configuration file
+
+.SH CLOUD ACTIONS
+.TP
+.B get instance_type
+Returns the stored instance type and if the information was set manually or has been determined by detection.
+.TP
+.B clear instance_type
+Clears the stored instance type as well as the manual set flag.
+.TP
+.B detect instance_type
+Runs the instance detection, stores the instance type and flags the setting as detected by saptune. The result of the detection will be printed to stdout too.
+.TP
+.B set instance_type CLOUD_VENDOR%INSTANCE_TYPE
+Sets the cloud vendor and the instance type and flags the setting as manually set. An empty value will not be accepted.
+.br
+There is no check, if the system is currently running on the given cloud vendor and instance type. This allows to change the cloud configuration for further use in a different instance type than currently used.
+.TP
+.B set cloud_detection_on_boot always|once|first
+Configures the frequency of cloud and instance detection. When the variable is set, a cloud and instance detection is triggered immediately.
+.br
+If the instance type and cloud vendor have been set manually, the variable gets ignored! 
+.br
+The default is first.
+.br
+Possible values are:
+.RS 5
+.IP \[bu] 2
+always
+.br
+Detection is done at each saptune invocation. 
+.IP \[bu]
+once
+.br
+Detection is done only once when the configuration is empty.
+.IP \[bu]
+first
+.br
+Detection is done the first time saptune is called on a running system  (\fIsystemctl is-system-running\fP reports the system as \fBrunning\fP or \fBdegraded\fP) after every boot.
+.SS
 
 .SH VERIFY ACTIONS
 .TP
@@ -1111,6 +1164,13 @@ part of the \fBStaging Area\fP
 the saptune SAP Note or solution definitions, which are present in the Package Area but differ from the files in the Working Area.
 .RE
 .PP
+\fI/var/lib/saptune/config/cloud.json\fP
+.RS 4
+the file where saptune stores the detected cloud instance.
+.br
+Please use '\fBsaptune cloud\fP' command instead of editing the file directly.
+.RE
+.PP
 \fI/etc/sysconfig/saptune\fP
 .RS 4
 the central saptune configuration file in SLES for SAP \fB12 and 15\fP containing the information about the currently enabled notes and solutions, the order in which these notes are applied and the version of saptune currently used.
@@ -1118,7 +1178,7 @@ the central saptune configuration file in SLES for SAP \fB12 and 15\fP containin
 ATTENTION:
 the manual editing of this file will be \fBdeprecated\fP on SLES for SAP 12 and 15 as the main configuration file will be (re)moved in SLE 16.
 .br
-Please use \fBsaptune configure\fP command instead of editing the file directly.
+Please use '\fBsaptune configure\fP' command instead of editing the file directly.
 .RE
 .PP
 \fI/etc/saptune/extra\fP
