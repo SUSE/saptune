@@ -116,7 +116,6 @@ func (vend INISettings) Initialise() (Note, error) {
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetVMVal(param.Key)
 		case INISectionFS:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = GetFSVal(param.Key, param.Value)
-			continue
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key], _ = GetBlkVal(param.Key, &blck)
 		case INISectionLimits:
@@ -131,10 +130,8 @@ func (vend INISettings) Initialise() (Note, error) {
 			vend.SysctlParams[param.Key], flstates, vend.Inform[param.Key] = GetCPUVal(param.Key)
 		case INISectionRpm:
 			vend.SysctlParams[param.Key] = GetRpmVal(param.Key)
-			continue
 		case INISectionGrub:
 			vend.SysctlParams[param.Key] = GetGrubVal(param.Key)
-			continue
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
 			continue
@@ -205,7 +202,6 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = OptVMVal(param.Key, param.Value)
 		case INISectionFS:
 			vend.SysctlParams[param.Key] = OptFSVal(param.Key, param.Value)
-			continue
 		case INISectionBlock:
 			vend.SysctlParams[param.Key], vend.Inform[param.Key] = OptBlkVal(param.Key, param.Value, &blck, blckOK)
 			vend.Inform[param.Key] = vend.chkDoubles(param.Key, vend.Inform[param.Key])
@@ -228,10 +224,8 @@ func (vend INISettings) Optimise() (Note, error) {
 			vend.SysctlParams[param.Key] = OptCPUVal(param.Key, vend.SysctlParams[param.Key], param.Value)
 		case INISectionRpm:
 			vend.SysctlParams[param.Key] = OptRpmVal(param.Key, param.Value)
-			continue
 		case INISectionGrub:
 			vend.SysctlParams[param.Key] = OptGrubVal(param.Key, param.Value)
-			continue
 		case INISectionReminder:
 			vend.SysctlParams[param.Key] = param.Value
 			continue
@@ -305,7 +299,18 @@ func (vend INISettings) Apply() error {
 		// handle note 1805750
 		param.Key, param.Value = vend.handleID1805750(param.Key, param.Value)
 		switch param.Section {
-		case INISectionVersion, INISectionRpm, INISectionGrub, INISectionFS, INISectionReminder:
+		case INISectionRpm, INISectionGrub, INISectionFS:
+			// These parameters are only checked, but not applied.
+			// But they have parameter state files to support the
+			// conflicting parameter detection in 'verify' so we
+			// need to revert the content of these parameter state
+			// files
+			if revertValues {
+				// revert parameter value
+				_, _ = vend.setRevertParamValues(param.Key)
+			}
+			continue
+		case INISectionVersion, INISectionReminder:
 			// These parameters are only checked, but not applied.
 			// So nothing to do during apply and no need for revert
 			continue

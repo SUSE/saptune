@@ -196,6 +196,21 @@ func (pent ParameterNotes) PositionInParameterList(noteID string) int {
 	return 0
 }
 
+// ParameterLastNote returns the name of the last note stored in
+// the parameter state file of the given parameter
+func ParameterLastNote(param string) string {
+	system.DebugLog("ParameterLastNote - param is '%s'", param)
+	lastNote := ""
+	// read values from the parameter state file
+	pEntries := GetSavedParameterNotes(param)
+	if len(pEntries.AllNotes) == 0 {
+		return lastNote
+	}
+	lastNote = pEntries.AllNotes[len(pEntries.AllNotes)-1].NoteID
+	system.DebugLog("ParameterLastNote - return lastNote as '%s'", lastNote)
+	return lastNote
+}
+
 // RevertParameter reverts parameter values and removes noteID reference
 // from the parameter file
 // return value of parameter and related noteID
@@ -260,4 +275,22 @@ func IsLastNoteOfParameter(param string) bool {
 		return true
 	}
 	return false
+}
+
+// ChkConflictingParams checks for conflicting parameter settings in other
+// Notes. Rewrite compliance state to true, if a successor Note for the
+// parameter setting exists and the 'verify' is NOT used within 'Apply'
+func ChkConflictingParams(noteID, param, task string, match bool) bool {
+	system.DebugLog("ChkConflictingParams - noteID is '%s', param is '%s', task is '%s', match is '%+v'", noteID, param, task, match)
+	if task == "forApply" {
+		return match
+	}
+	lastNote := ParameterLastNote(param)
+	if noteID == lastNote || lastNote == "" || lastNote == "start" {
+		system.DebugLog("note '%s' is the last note touching the parameter '%s'. No change of compliant state needed", lastNote, param)
+		return match
+	}
+	match = true
+	system.DebugLog("ChkConflictingParams - return match as '%+v'", match)
+	return match
 }

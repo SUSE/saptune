@@ -235,6 +235,26 @@ func CalledFrom() string {
 	return ret
 }
 
+// CallingFunc returns the name of the calling function
+func CallingFunc() string {
+	DebugLog("CallingFunc")
+	calfunc := ""
+	pc := make([]uintptr, 15)
+	n := runtime.Callers(2, pc)
+	if n < 2 {
+		return calfunc
+	}
+	frames := runtime.CallersFrames(pc[:n])
+	frame, more := frames.Next()
+	if !more {
+		return calfunc
+	}
+	frame, _ = frames.Next()
+	_, calfunc = filepath.Split(frame.Function)
+	DebugLog("CallingFunc - return calfunc as '%s'", calfunc)
+	return calfunc
+}
+
 func errExitOut(writer io.Writer, template string, stuff ...interface{}) {
 	// stuff is: color, bold, text/template, reset bold, reset color
 	stuff = stuff[1:]

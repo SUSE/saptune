@@ -185,7 +185,7 @@ func CompareJSValue(v1, v2 interface{}, op string) (v1JS, v2JS string, match boo
 
 // CompareNoteFields compares the content of two notes and return differences
 // in their fields in a human-readable text.
-func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparisons map[string]FieldComparison, valApplyList []string) {
+func CompareNoteFields(actualNote, expectedNote Note, noteID, task string) (allMatch bool, comparisons map[string]FieldComparison, valApplyList []string) {
 	comparisons = make(map[string]FieldComparison)
 	allMatch = true
 	grubAvail := false
@@ -216,6 +216,12 @@ func CompareNoteFields(actualNote, expectedNote Note) (allMatch bool, comparison
 					valApplyList = append(valApplyList, comparisons[ckey].ReflectMapKey)
 				} else if key.String() == "force_latency" && comparisons[ckey].ReflectFieldName == "SysctlParams" {
 					valApplyList = append(valApplyList, comparisons[ckey].ReflectMapKey)
+				}
+				if !comparisons[ckey].MatchExpectation && fieldName == "SysctlParams" {
+					// check for conflicting parameter settings
+					comp := comparisons[ckey]
+					comp.MatchExpectation = ChkConflictingParams(noteID, key.String(), task, comp.MatchExpectation)
+					comparisons[ckey] = comp
 				}
 				if !comparisons[ckey].MatchExpectation && fieldName == "SysctlParams" {
 					// a parameter, which is not supported
