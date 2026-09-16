@@ -30,6 +30,7 @@ const (
 	footnote14   = "[14] the parameter value exceeds the maximum possible number of open files. Check and increase fs.nr_open if really needed."
 	footnote15   = "[15] the parameter is only used to calculate the size of tmpfs (/dev/shm)"
 	footnote16   = "[16] parameter not available on the system, setting not possible"
+	footnote17   = "[17] value has been set later by Note LASTNOTEID"
 )
 
 // set 'unsupported' footnote regarding the architecture
@@ -293,6 +294,32 @@ func setMem(mapKey, compliant, comment string, footnote []string) (string, strin
 			footnote[14] = footnote15
 		}
 	}
+	return compliant, comment, footnote
+}
+
+// check for parameter conflicts
+func chkForConflicts(comparison note.FieldComparison, compliant, comment, noteID, override string, footnote []string) (string, string, []string) {
+	system.DebugLog("chkForConflicts - comparison is '%+v', compliant is '%s', comment is '%s', noteID is '%s', override is '%s', footnote is '%+v'", comparison, compliant, comment, noteID, override, footnote)
+	param := comparison.ReflectMapKey
+	lastNote := note.ParameterLastNote(param)
+	if noteID == lastNote || lastNote == "" || lastNote == "start" {
+		system.DebugLog("note '%s' is the last note touching the parameter '%s'. No change of compliant state and no footnote needed", noteID, param)
+		return compliant, comment, footnote
+	}
+	if comparison.ExpectedValue.(string) == "" || override == "untouched" {
+		system.DebugLog("note '%s' does not touch the parameter '%s' (untouched). No change of compliant state and no footnote needed", noteID, param)
+		return compliant, comment, footnote
+	}
+
+	compliant = compliant + " [17]"
+	if strings.Contains(compliant, "yes") {
+		compliant = strings.Replace(compliant, "yes ", " -  ", 1)
+	} else if strings.Contains(compliant, "no") {
+		compliant = strings.Replace(compliant, "no ", " - ", 1)
+	}
+	comment = comment + " [17]"
+	footnote[16] = writeFN(footnote[16], footnote17, lastNote, "LASTNOTEID")
+	system.DebugLog("chkForConflicts - return compliant as '%s', comment as '%s', footnote as '%+v'", compliant, comment, footnote)
 	return compliant, comment, footnote
 }
 

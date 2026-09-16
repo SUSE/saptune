@@ -26,34 +26,34 @@ func TestNoteSerialisation(t *testing.T) {
 	paging := LinuxPagingImprovements{VMPagecacheLimitMB: 1000, VMPagecacheLimitIgnoreDirty: 2, UseAlgorithmForHANA: true}
 	newPaging := LinuxPagingImprovements{}
 	jsonMarshalAndBack(paging, &newPaging, t)
-	if eq, diff, valapply := CompareNoteFields(paging, newPaging); !eq {
+	if eq, diff, valapply := CompareNoteFields(paging, newPaging, "paging", "forApply"); !eq {
 		t.Fatal(diff, valapply)
 	}
 
 	sysctl := INISettings{ConfFilePath: path.Join(OSNotesInGOPATH, "1410736"), ID: "1410736", DescriptiveName: "", SysctlParams: map[string]string{"net.ipv4.tcp_keepalive_time": "300", "net.ipv4.tcp_keepalive_intvl": "75", "reminder": ""}, ValuesToApply: map[string]string{"": ""}}
 	newSysctl := INISettings{}
 	jsonMarshalAndBack(sysctl, &newSysctl, t)
-	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl); !eq {
+	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl, "1410736", "forApply"); !eq {
 		t.Fatal(diff, valapply)
 	}
 
 	sysctl = INISettings{ConfFilePath: path.Join(OSNotesInGOPATH, "1410736"), ID: "1410736", DescriptiveName: "", SysctlParams: map[string]string{"net.ipv4.tcp_keepalive_time": "300", "net.ipv4.tcp_keepalive_intvl": "75", "reminder": ""}, ValuesToApply: map[string]string{"": ""}}
 	newSysctl = INISettings{ConfFilePath: path.Join(OSNotesInGOPATH, "1410736"), ID: "1410736", DescriptiveName: "", SysctlParams: map[string]string{"net.ipv4.tcp_keepalive_time": "150", "net.ipv4.tcp_keepalive_intvl": "175", "reminder": ""}, ValuesToApply: map[string]string{"": ""}}
-	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl); eq {
+	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl, "1410736", "forApply"); eq {
 		t.Fatal(diff, valapply)
 	}
 
 	sysctl = INISettings{ConfFilePath: path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/fl_test.ini"), SysctlParams: map[string]string{"force_latency": "70", "reminder": ""}, ValuesToApply: map[string]string{"": ""}}
 	newSysctl = INISettings{}
 	jsonMarshalAndBack(sysctl, &newSysctl, t)
-	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl); !eq {
+	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl, "fl_test", "forApply"); !eq {
 		t.Fatal(diff, valapply)
 	}
 
 	sysctl = INISettings{ConfFilePath: path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/grub_test.ini"), SysctlParams: map[string]string{"grub:transparent_hugepage": "never", "grub:quiet": "", "systemd:uuidd.socket": "start", "systemd:sysstat.service": "start", "reminder": ""}, ValuesToApply: map[string]string{"": ""}}
 	newSysctl = INISettings{}
 	jsonMarshalAndBack(sysctl, &newSysctl, t)
-	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl); !eq {
+	if eq, diff, valapply := CompareNoteFields(sysctl, newSysctl, "grub_test", "forApply"); !eq {
 		t.Fatal(diff, valapply)
 	}
 }

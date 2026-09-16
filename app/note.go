@@ -291,6 +291,14 @@ func (app *App) RevertNote(noteID string, permanent bool) error {
 // The note comparison results will always contain all fields, no matter
 // the note is currently conforming or not.
 func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[string]note.FieldComparison, valApplyList []string, err error) {
+	system.DebugLog("VerifyNote - noteID is '%s', app is '%+v'", noteID, app)
+	callingFunc := system.CallingFunc()
+	task := "forApply"
+	if !strings.Contains(callingFunc, "TuneNote") {
+		task = "forVerify"
+	}
+	system.DebugLog("task is '%s'", task)
+
 	theNote, err := app.GetNoteByID(noteID)
 	if err != nil {
 		return
@@ -324,7 +332,8 @@ func (app *App) VerifyNote(noteID string) (conforming bool, comparisons map[stri
 		inspectedNote = inspectedNote.(note.INISettings).SetValuesToApply(make([]string, 0))
 		optimisedNote = optimisedNote.(note.INISettings).SetValuesToApply(make([]string, 0))
 	}
-	conforming, comparisons, valApplyList = note.CompareNoteFields(inspectedNote, optimisedNote)
+	conforming, comparisons, valApplyList = note.CompareNoteFields(inspectedNote, optimisedNote, noteID, task)
+	system.DebugLog("VerifyNote - return conforming as '%+v', comparisons as '%+v', valApplyList as '%+v', err as '%+v'", conforming, comparisons, valApplyList, err)
 	return
 }
 

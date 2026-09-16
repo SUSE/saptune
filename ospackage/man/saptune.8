@@ -317,6 +317,11 @@ The last comes, the last wins, it's all about 'order'.
 So be careful when applying solutions or notes or when reverting notes, especially if these notes are part of an already applied solution. You can re-apply such a note, but the order - and may be the resulting parameter settings - will be unlike before.
 .br
 Special attention is needed, if customer or vendor specific notes from \fI/etc/saptune/extra\fP are used.
+
+But saptune will detect such conflicting settings during \fIsaptune note verify\fP or \fIsaptune verify applied\fP and will print a footnote with a pointer to the 'winning' note.
+.br
+This conflict detection will not work if the verify command is used on non-applied notes.
+
 .TP
 .B list
 List all SAP Notes, vendor specific tuning definitions and SUSE recommendation articles that saptune is capable of implementing.
