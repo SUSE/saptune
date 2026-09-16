@@ -77,8 +77,9 @@ update_saptune_config() {
     # # _STCV1_ is the starting point of SLE16
     # # _STCV2_ is 3.3.0
     if grep "^# _STCV1_$" $SAPTUNE_CONFIG_16 >/dev/null 2>&1; then
+	echo >> $SAPTUNE_CONFIG_16
         sed -n '/^# _STCV2_$/,$p' $SAPTUNE_16_TEMPLATE >> $SAPTUNE_CONFIG_16
-	sed -i '/^# _STCV1_$/d' $SAPTUNE_CONFIG_16
+        sed -i '/^# _STCV1_$/d' $SAPTUNE_CONFIG_16
     fi
 }
 
@@ -128,7 +129,7 @@ update_1215_to_16_running_once() {
         # update from 12/15 to 16
         # move old config file away
         mv $SAPTUNE_CONFIG_15 $OLD_SAPTUNE_CONFIG
-        param2check="TUNE_FOR_SOLUTIONS TUNE_FOR_NOTES NOTE_APPLY_ORDER STAGING COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP CSP_TIMEOUT CSP_RETRIES DETECTION_ON_BOOT"
+        param2check="TUNE_FOR_SOLUTIONS TUNE_FOR_NOTES NOTE_APPLY_ORDER STAGING COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP CSP_TIMEOUT CSP_RETRIES CLOUD_DETECTION"
         for param in ${param2check}; do
             paramLine=$(grep "^${param}[[:space:]]*=" $OLD_SAPTUNE_CONFIG)
             if [ -n "$paramLine" ]; then

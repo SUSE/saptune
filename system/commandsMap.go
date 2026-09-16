@@ -61,7 +61,7 @@ var defaultCommand = map[string]bool{
 	"configure TrentoASDP":        false,
 	"configure CSP_TIMEOUT":       false,
 	"configure CSP_RETRIES":       false,
-	"configure DETECTION_ON_BOOT": false,
+	"configure CLOUD_DETECTION":   false,
 	"configure reset":             false,
 	"configure show":              false,
 	"cloud set":                   false,

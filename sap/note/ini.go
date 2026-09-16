@@ -438,7 +438,7 @@ func (vend INISettings) createParamSavedStates(key, flstates string) {
 	if _, ok := vend.ValuesToApply["verify"]; !ok && vend.SysctlParams[key] != "PNA" {
 		start := vend.SysctlParams[key]
 		if key == "UserTasksMax" {
-			if system.SystemIsStarting() {
+			if system.SysIsStarting() {
 				start = system.GetBackupValue("/var/lib/saptune/working/.tmbackup")
 			} else {
 				start = system.GetTasksMax("0")

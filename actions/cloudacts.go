@@ -18,11 +18,6 @@ func CloudAction(writer io.Writer, actionName, actionType, typeValue string) {
 	case "get":
 		CloudActionGet(writer, actionType)
 	case "set":
-		if actionType == "cloud_detection_on_boot" {
-			configureActionSetDetectionOnBoot(typeValue)
-			_ = detectAction()
-			system.ErrorExit("", 0)
-		}
 		CloudActionSet(writer, actionType, typeValue)
 	case "clear":
 		CloudActionClear(writer, actionType)

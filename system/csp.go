@@ -31,7 +31,7 @@ const (
 	CSPIBMVPCLong = "IBM Cloud Virtual Server for VPC"
 )
 
-// Configuration file for cloud instance type definition
+// CSPInstanceConfig is the configuration file for cloud instance type definition
 var CSPInstanceConfig = "/var/lib/saptune/config/cloud.json"
 
 // CSPInstance defines the structure of the cloud instance configuration
@@ -53,9 +53,9 @@ var CSPTimeout = 2
 // Set in the saptune main configuration file and changeable by customer
 var CSPRetries = 1
 
-// CSPDetectOnBoot defines when the cloud instance detection should run
+// CSPDetection defines when the cloud instance detection should run
 // Set in the saptune main configuration file and changeable by customer
-var CSPDetectOnBoot = "first"
+var CSPDetection = "first"
 
 // cloudDetectMarker is a marker file that the cloud detection had already run
 var cloudDetectMarker = "/run/.saptune.cloud_detected"
@@ -335,12 +335,12 @@ func DetectCSPInstance(csp string) error {
 		return err
 	}
 
-	switch CSPDetectOnBoot {
+	switch CSPDetection {
 	case "always":
 		err = updateCloudInstanceInfo(csp, cspInstance)
 	case "first":
 		_, err = os.Stat(cloudDetectMarker)
-		if os.IsNotExist(err) && SystemIsRunning() {
+		if os.IsNotExist(err) && SysIsRunning() {
 			err = updateCloudInstanceInfo(csp, cspInstance)
 			if err != nil {
 				ErrorLog("Problems during update of cloud instance information - '%v'", err)
