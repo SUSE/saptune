@@ -395,3 +395,23 @@ func updateCloudInstanceInfo(csp string, cspInstance CSPInstance) error {
 	DebugLog("updateCloudInstanceInfo - returns err as '%v'", err)
 	return err
 }
+
+// GetCSPInstanceStatusInfo prepares the cloud instance information for
+// the saptune status output
+func GetCSPInstanceStatusInfo() string {
+	DebugLog("GetCSPInstanceStatusInfo")
+	cloudInfo := ""
+	csp := GetCSP()
+	if csp == "" {
+		cloudInfo = "not on cloud"
+	} else {
+		cloud, _ := GetCSPInstanceInfo(csp)
+		if cloud.InstanceType == "" {
+			cloudInfo = csp
+		} else {
+			cloudInfo = csp + "%" + cloud.InstanceType
+		}
+	}
+	DebugLog("GetCSPInstanceStatusInfo - returns cloudInfo as '%s'", cloudInfo)
+	return cloudInfo
+}

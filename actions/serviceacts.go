@@ -762,18 +762,7 @@ func printVirtStatus(writer io.Writer, jstat *system.JStatus) {
 
 // printCloudInfo prints the cloud information
 func printCloudInfo(writer io.Writer, jstat *system.JStatus) {
-	cloudInfo := ""
-	csp := system.GetCSP()
-	if csp == "" {
-		cloudInfo = "not on cloud"
-	} else {
-		cloud, _ := system.GetCSPInstanceInfo(csp)
-		if cloud.InstanceType == "" {
-			cloudInfo = csp
-		} else {
-			cloudInfo = csp + "%" + cloud.InstanceType
-		}
-	}
+	cloudInfo := system.GetCSPInstanceStatusInfo()
 	system.InfoLog("Following cloud information was detected: %s", cloudInfo)
 	fmt.Fprintf(writer, "cloud info:               %s\n", cloudInfo)
 	jstat.CloudInfo = cloudInfo
