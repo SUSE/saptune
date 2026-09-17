@@ -53,6 +53,7 @@ sapconf.service:          not available
 tuned.service:            disabled/active (profile: 'balanced')
 systemd system state:     running
 virtualization:           %s
+cloud info:               not on cloud
 tuning:                   not tuned
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
@@ -78,6 +79,7 @@ sapconf.service:          not available
 tuned.service:            disabled/active (profile: '')
 systemd system state:     running
 virtualization:           %s
+cloud info:               not on cloud
 tuning:                   not tuned
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
@@ -103,6 +105,7 @@ sapconf.service:          not available
 tuned.service:            disabled/active (profile: '%s')
 systemd system state:     running
 virtualization:           %s
+cloud info:               not on cloud
 tuning:                   not tuned
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:

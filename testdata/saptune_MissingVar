@@ -67,3 +67,13 @@ SKIP_SYSCTL_FILES="/boot"
 # Default is 'no'. If set to 'yes' a 'systemctl reload' will do nothing.
 # same reason as for sapconf bsc#1209408
 IGNORE_RELOAD="no"
+
+# _STCV2_
+# CSP_TIMEOUT is the timeout for the cloud Metadata Server query
+CSP_TIMEOUT="5"
+
+# CSP_RETRIES is the number of retries for the cloud Metadata Server query
+CSP_RETRIES="3"
+
+# CLOUD_DETECTION defines when the cloud instance detection should run
+CLOUD_DETECTION="first"
