@@ -320,14 +320,15 @@ func chkKernelCmdline() bool {
 		validCmdline = false
 	}
 	if val := ParseCmdline(ProcCmdLine, "intel_pstate"); val == "disable" {
-		PrintLog(govCnt, "info", "intel_pstate driver is disabled, C-states handled by acpi_idle driver and the BIOS ACPI tables (intel_pstate=%s).", val)
+		PrintLog(govCnt, "info", "intel_pstate driver is disabled, CPU frequencies handled by fall back to generic acpi-cpufreq driver and predefined BIOS ACPI tables (intel_pstate=%s).", val)
 		validCmdline = false
 	}
 	return validCmdline
 }
 
-// chkCPUDriver checks, which CPUIdle driver is used
-// currently only intel_idle and intel_pstate are supported
+// chkCPUDriver checks, which CPUIdle and scaling driver is used
+// currently only intel_idle (for sleep states) and
+// intel_pstate (for CPU frequencies) are supported
 func chkCPUDriver() bool {
 	validDriver := true
 	val, err := os.ReadFile(path.Join(cpuDir, "cpuidle/current_driver"))
@@ -337,7 +338,7 @@ func chkCPUDriver() bool {
 	}
 	val, err = os.ReadFile(path.Join(cpuDir, "cpu0/cpufreq/scaling_driver"))
 	if err != nil || !strings.Contains(string(val), "intel_pstate") {
-		PrintLog(govCnt, "info", "Unsupported CPU driver '%s' used (%v)", strings.TrimSpace(string(val)), err)
+		PrintLog(govCnt, "info", "Unsupported CPU scaling driver '%s' used (%v)", strings.TrimSpace(string(val)), err)
 		validDriver = false
 	}
 	_, err = os.Stat(path.Join(cpuDir, "intel_pstate"))
