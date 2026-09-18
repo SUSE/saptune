@@ -11,8 +11,8 @@ import (
 	"strings"
 )
 
-var mandatoryConfigKeys = []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD", "CSP_TIMEOUT", "CSP_RETRIES", "DETECTION_ON_BOOT"}
-var changeableConfigKeys = []string{"COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD", "DEBUG", "TrentoASDP", "CSP_TIMEOUT", "CSP_RETRIES", "DETECTION_ON_BOOT"}
+var mandatoryConfigKeys = []string{app.TuneForSolutionsKey, app.TuneForNotesKey, app.NoteApplyOrderKey, "SAPTUNE_VERSION", "STAGING", "COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD", "CSP_TIMEOUT", "CSP_RETRIES", "CLOUD_DETECTION"}
+var changeableConfigKeys = []string{"COLOR_SCHEME", "SKIP_SYSCTL_FILES", "IGNORE_RELOAD", "DEBUG", "TrentoASDP", "CSP_TIMEOUT", "CSP_RETRIES", "CLOUD_DETECTION"}
 
 // MandKeyList returns a list of mandatory configuration parameter, which need
 // to be available in the saptune configuration file
@@ -50,6 +50,8 @@ func ConfigureAction(writer io.Writer, configEntry string, configVals []string, 
 		ConfigureActionSetCSPTimeout(configVals[0])
 	case "CSP_RETRIES":
 		ConfigureActionSetCSPRetries(configVals[0])
+	case "CLOUD_DETECTION":
+		ConfigureActionSetCloudDetection(configVals[0])
 	case "reset":
 		ConfigureActionReset(os.Stdin, writer, tuneApp)
 	case "show":
@@ -122,14 +124,14 @@ func ConfigureActionSetCSPRetries(configVal string) {
 	writeConfigEntry("CSP_RETRIES", configVal)
 }
 
-// configureActionSetDetectionOnBoot sets the variable DETECTION_ON_BOOT
-// used in CloudActionSet for 'saptune cloud set cloud_detection_on_boot'
-func configureActionSetDetectionOnBoot(configVal string) {
+// ConfigureActionSetCloudDetection sets the variable
+// CLOUD_DETECTION
+func ConfigureActionSetCloudDetection(configVal string) {
 	switch configVal {
 	case "always", "once", "first":
-		writeConfigEntry("DETECTION_ON_BOOT", configVal)
+		writeConfigEntry("CLOUD_DETECTION", configVal)
 	default:
-		system.ErrorExit("wrong value '%s' for config variable 'DETECTION_ON_BOOT'. Only 'always', 'once' or 'first' supported. Please check.", configVal)
+		system.ErrorExit("wrong value '%s' for config variable 'CLOUD_DETECTION'. Only 'always', 'once' or 'first' supported. Please check.", configVal)
 	}
 }
 

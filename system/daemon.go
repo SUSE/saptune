@@ -208,25 +208,25 @@ func GetSystemState() (string, error) {
 	return retval, err
 }
 
-// SystemIsStarting return true only if systemctl suggests that the system is
+// SysIsStarting return true only if systemctl suggests that the system is
 // starting.
-func SystemIsStarting() bool {
+func SysIsStarting() bool {
 	match := false
 	out, _ := detectSystemState()
 	if strings.TrimSpace(string(out)) == "starting" {
-		DebugLog("SystemIsStarting - system is in state 'starting'")
+		DebugLog("SysIsStarting - system is in state 'starting'")
 		match = true
 	}
 	return match
 }
 
-// SystemIsRunning return true only if systemctl reports 'running' or
+// SysIsRunning return true only if systemctl reports 'running' or
 // 'degraded'
-func SystemIsRunning() bool {
+func SysIsRunning() bool {
 	match := false
 	out, _ := detectSystemState()
 	if strings.TrimSpace(string(out)) == "running" || strings.TrimSpace(string(out)) == "degraded" {
-		DebugLog("SystemIsRunning - system is starting/running, match true")
+		DebugLog("SysIsRunning - system is starting/running, match true")
 		match = true
 	}
 	return match

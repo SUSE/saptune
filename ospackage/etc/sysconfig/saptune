@@ -75,5 +75,5 @@ CSP_TIMEOUT="5"
 # CSP_RETRIES is the number of retries for the cloud Metadata Server query
 CSP_RETRIES="3"
 
-# DETECTION_ON_BOOT defines when the cloud instance detection should run
-DETECTION_ON_BOOT="first"
+# CLOUD_DETECTION defines when the cloud instance detection should run
+CLOUD_DETECTION="first"

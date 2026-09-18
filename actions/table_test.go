@@ -245,6 +245,10 @@ func TestPrintNoteFields(t *testing.T) {
 	map941735 := map[string]note.FieldComparison{"ConfFilePath": fcomp1, "ID": fcomp2, "DescriptiveName": fcomp3, "SysctlParams[ShmFileSystemSizeMB]": fcomp4, "SysctlParams[kernel.shmmax]": fcomp5, "SysctlParams[IO_SCHEDULER_vda]": fcomp6, "SysctlParams[grub:intel_idle.max_cstate]": fcomp7, "SysctlParams[force_latency]": fcomp8, "Inform[force_latency]": fcomp9, "Inform[IO_SCHEDULER_vda]": fcomp10, "SysctlParams[IO_SCHEDULER_sdb]": fcomp11, "Inform[IO_SCHEDULER_sdb]": fcomp12, "SysctlParams[IO_SCHEDULER_sdc]": fcomp13, "Inform[IO_SCHEDULER_sdc]": fcomp14, "SysctlParams[IO_SCHEDULER_sdd]": fcomp15, "Inform[IO_SCHEDULER_sdd]": fcomp16, "SysctlParams[kernel.shmmni]": fcomp17}
 	noteComp := map[string]map[string]note.FieldComparison{"941735": map941735}
 
+	val, tsterr := note.ListParams()
+	if tsterr == nil && len(val) > 0 {
+		t.Logf("TestPrintNoteFields: there are parameter files stored: '%+v'\n", val)
+	}
 	t.Run("verify with header", func(t *testing.T) {
 		buffer := bytes.Buffer{}
 		PrintNoteFields(&buffer, "HEAD", noteComp, true, nil)

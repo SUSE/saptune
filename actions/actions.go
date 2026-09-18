@@ -312,7 +312,7 @@ func deleteDefFile(fileName string) {
 func switchOffColor() {
 	// switch off color and highlighting, if Stdout is not a terminal
 	// command line option --force-color will override the 'switch off'
-	if !system.OutIsTerm(os.Stdout) && !system.IsFlagSet("force-color") {
+	if (!system.OutIsTerm(os.Stdout) && !system.IsFlagSet("force-color")) || system.GetFlagVal("format") == "json" {
 		setGreenText = ""
 		setRedText = ""
 		setYellowText = ""

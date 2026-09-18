@@ -317,6 +317,7 @@ func InitOut(logSwitch map[string]string) {
 		// switch off stdout
 		if os.Getenv("SAPTUNE_JDEBUG") != "on" {
 			os.Stdout, _ = os.Open(os.DevNull)
+			os.Stderr, _ = os.Open(os.DevNull)
 		}
 		jInit()
 	}

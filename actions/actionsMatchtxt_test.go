@@ -53,12 +53,13 @@ sapconf.service:          not available
 tuned.service:            disabled/active (profile: 'balanced')
 systemd system state:     running
 virtualization:           %s
+cloud info:               %s
 tuning:                   not tuned
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
-`, system.GetVirtStatus())
+`, system.GetVirtStatus(), system.GetCSPInstanceStatusInfo())
 
 var saptuneStatMatchText = fmt.Sprintf(`
 saptune.service:          disabled/active
@@ -78,12 +79,13 @@ sapconf.service:          not available
 tuned.service:            disabled/active (profile: '')
 systemd system state:     running
 virtualization:           %s
+cloud info:               %s
 tuning:                   not tuned
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enable'.
 
-`, system.GetVirtStatus())
+`, system.GetVirtStatus(), system.GetCSPInstanceStatusInfo())
 
 var saptuneStat2MatchText = fmt.Sprintf(`
 saptune.service:          disabled/inactive
@@ -103,13 +105,14 @@ sapconf.service:          not available
 tuned.service:            disabled/active (profile: '%s')
 systemd system state:     running
 virtualization:           %s
+cloud info:               %s
 tuning:                   not tuned
 
 Remember: if you wish to automatically activate the note's and solution's tuning options after a reboot, you must enable saptune.service by running:
  'saptune service enablestart'.
 Your system has not yet been tuned. Please visit `+"`"+`saptune note`+"`"+` and `+"`"+`saptune solution`+"`"+` to start tuning.
 
-`, system.GetTunedAdmProfile(), system.GetVirtStatus())
+`, system.GetTunedAdmProfile(), system.GetVirtStatus(), system.GetCSPInstanceStatusInfo())
 
 var PrintHelpAndExitMatchText = cmdLineSyntax()
 var PrintHelpAndExitMatchText16 = cmdLineSyntax16()

@@ -320,9 +320,9 @@ func checkSaptuneConfigFile(saptuneConf string) string {
 	}
 
 	// set values read from the config file
-	system.CSPTimeout = sconf.GetInt("CSP_TIMEOUT", 1)
-	system.CSPRetries = sconf.GetInt("CSP_RETRIES", 1)
-	system.CSPDetectOnBoot = sconf.GetString("DETECTION_ON_BOOT", "first")
+	system.CSPTimeout = sconf.GetInt("CSP_TIMEOUT", 5)
+	system.CSPRetries = sconf.GetInt("CSP_RETRIES", 3)
+	system.CSPDetection = sconf.GetString("CLOUD_DETECTION", "first")
 	saptuneVers := sconf.GetString("SAPTUNE_VERSION", "")
 	if saptuneVers != "1" && saptuneVers != "2" && saptuneVers != "3" {
 		system.ErrorExit("Wrong saptune version in file '%s': %s", saptuneConf, saptuneVers, 128)
