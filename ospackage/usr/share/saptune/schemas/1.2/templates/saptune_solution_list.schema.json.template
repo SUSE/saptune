@@ -1,0 +1,40 @@
+{% extends "common.schema.json.template" %}
+
+{% block command %}saptune solution list{% endblock %}
+
+{% block description %}Describes the output of '{{ self.command() }}.{% endblock %}
+
+{% block result_required %}["Solutions available", "remember message"]{% endblock %}
+
+{% block result_properties %}
+                "Solutions available": {
+                    "description": "List of the available Solutions.",
+                    "type":  "array",
+                    "items": {
+                        "type": "object",
+                        "required": [ "Solution ID", "Note list", "Solution enabled", "Solution override exists", "custom Solution", "Solution deprecated" ],
+                        "additionalProperties": false,
+                        "properties": {
+                            "Solution ID": { "$ref": "#/$defs/saptune solution id" },
+                            "Note list": { "$ref": "#/$defs/saptune Note list" },
+                            "Solution enabled": {
+                                "description": "States if the Solution is enabled.",
+                                "type": "boolean"
+                            }, 
+                            "Solution override exists": {
+                                "description": "States if an override file exists for the Solution.",
+                                "type": "boolean"
+                            }, 
+                            "custom Solution": {
+                                "description": "States if the Note is a custom Solution.",
+                                "type": "boolean"
+                            },
+                            "Solution deprecated": {
+                                "description": "States if the Solution is deprecated.",
+                                "type": "boolean"
+                            }
+                        }
+                    }                       
+                },
+                "remember message": { "$ref": "#/$defs/saptune remember message" }    
+{% endblock %}
