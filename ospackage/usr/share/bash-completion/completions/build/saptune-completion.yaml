@@ -22,7 +22,8 @@
 #               02.07.2025  v3.2  - Fixed syntax comments for `saptune note refresh` and `saptune refresh applied`
 #               28.09.2026  v4.0  - Added `saptune cloud get|set|clear|detect`
 #                                 - Added `CSP_TIMEOUT`, `CSP_RETRIES VALUE` and `DETECTION_ON_BOOT` to `saptune configure`
-
+#               06.10.2026  v4.1  - Bugfix: DETECTION_ON_BOOT -> CLOUD_DETECTION
+#
 #
 # Syntax:       saptune [--format FORMAT] [--fun] [--force-color] help
 #               saptune [--format FORMAT] [--fun] [--force-color] version
@@ -564,7 +565,7 @@ saptune configure:
   - TrentoASDP
   - CSP_TIMEOUT
   - CSP_RETRIES VALUE
-  - DETECTION_ON_BOOT
+  - CLOUD_DETECTION
 
 saptune configure COLOR_SCHEME: *color-schemes
 
@@ -608,12 +609,12 @@ saptune configure CSP_RETRIES: *stop
 
 saptune configure CSP_RETRIES *: *stop
 
-saptune configure DETECTION_ON_BOOT:
+saptune configure CLOUD_DETECTION:
   - "always"
   - "once"
   - "first"
 
-saptune configure DETECTION_ON_BOOT *: *stop
+saptune configure CLOUD_DETECTION *: *stop
 
 
 # --- saptune refresh ---

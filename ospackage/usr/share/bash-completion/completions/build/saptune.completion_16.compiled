@@ -130,10 +130,6 @@ _saptune_completions() {
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'configure DETECTION_ON_BOOT '*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
-      ;;
-
     'status --non-compliance-check'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
@@ -154,8 +150,8 @@ _saptune_completions() {
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'configure DETECTION_ON_BOOT'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "always once first")" -- "$cur")
+    'configure CLOUD_DETECTION '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
     'cloud clear instance_type '*)
@@ -188,6 +184,10 @@ _saptune_completions() {
 
     'solution change --force '*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'configure CLOUD_DETECTION'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "always once first")" -- "$cur")
       ;;
 
     'configure IGNORE_RELOAD '*)
@@ -583,7 +583,7 @@ _saptune_completions() {
       ;;
 
     'configure'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "reset show COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP CSP_TIMEOUT CSP_RETRIES VALUE DETECTION_ON_BOOT")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "reset show COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP CSP_TIMEOUT CSP_RETRIES VALUE CLOUD_DETECTION")" -- "$cur")
       ;;
 
     'solution'*)

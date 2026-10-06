@@ -126,10 +126,6 @@ _saptune_completions() {
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur")
       ;;
 
-    'configure DETECTION_ON_BOOT '*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
-      ;;
-
     'status --non-compliance-check'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
@@ -158,10 +154,6 @@ _saptune_completions() {
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'configure DETECTION_ON_BOOT'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "always once first")" -- "$cur")
-      ;;
-
     'configure SKIP_SYSCTL_FILES'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
@@ -170,23 +162,15 @@ _saptune_completions() {
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
+    'configure CLOUD_DETECTION '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
     'cloud detect instance_type'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'cloud get instance_type '*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
-      ;;
-
-    'cloud clear instance_type'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
-      ;;
-
-    'note verify --colorscheme'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur")
-      ;;
-
-    'solution change --force '*)
+    'cloud set instance_type '*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
@@ -198,32 +182,32 @@ _saptune_completions() {
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur")
       ;;
 
-    'cloud set instance_type '*)
+    'solution change --force '*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'cloud clear instance_type'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'cloud get instance_type '*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'configure CLOUD_DETECTION'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "always once first")" -- "$cur")
+      ;;
+
+    'note verify --colorscheme'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur")
       ;;
 
     'configure COLOR_SCHEME '*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'solution change --force'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
-      ;;
-
-    'cloud set instance_type'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
-      ;;
-
-    'staging release --force'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur")
-      ;;
-
     'configure CSP_TIMEOUT '*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
-      ;;
-
-    'configure IGNORE_RELOAD'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "yes no")" -- "$cur")
       ;;
 
     'configure CSP_RETRIES '*)
@@ -231,6 +215,22 @@ _saptune_completions() {
       ;;
 
     'cloud get instance_type'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
+      ;;
+
+    'solution change --force'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(cd /var/lib/saptune/working/sols/ ; for f in *.sol ; do echo ${f%.sol} ; done) $(cd /etc/saptune/extra/; for f in *.sol ; do echo ${f%.sol} ; done)")" -- "$cur")
+      ;;
+
+    'staging release --force'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$(find /var/lib/saptune/staging/latest/ -printf '%P ') all")" -- "$cur")
+      ;;
+
+    'configure IGNORE_RELOAD'*)
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "yes no")" -- "$cur")
+      ;;
+
+    'cloud set instance_type'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
@@ -242,11 +242,11 @@ _saptune_completions() {
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "full-green-zebra full-blue-zebra cmpl-green-zebra cmpl-blue-zebra full-red-noncmpl full-yellow-noncmpl red-noncmpl yellow-noncmpl")" -- "$cur")
       ;;
 
-    'configure CSP_RETRIES'*)
+    'configure CSP_TIMEOUT'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
-    'configure CSP_TIMEOUT'*)
+    'configure CSP_RETRIES'*)
       while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "$()")" -- "$cur")
       ;;
 
@@ -595,7 +595,7 @@ _saptune_completions() {
       ;;
 
     'configure'*)
-      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "reset show COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP CSP_TIMEOUT CSP_RETRIES VALUE DETECTION_ON_BOOT")" -- "$cur")
+      while read -r; do COMPREPLY+=("$REPLY"); done < <(compgen -W "$(_saptune_completions_filter "reset show COLOR_SCHEME SKIP_SYSCTL_FILES IGNORE_RELOAD DEBUG TrentoASDP CSP_TIMEOUT CSP_RETRIES VALUE CLOUD_DETECTION")" -- "$cur")
       ;;
 
     'cloud set'*)
