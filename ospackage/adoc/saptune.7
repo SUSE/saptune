@@ -1,0 +1,69 @@
+.\"/*
+.\" * Copyright (c) 2017-2025 SUSE LLC.
+.\" * All rights reserved
+.\" * Authors: Soeren Schmidt, Angela Briel
+.\" *
+.\" * This program is free software; you can redistribute it and/orq
+.\" * modify it under the terms of the GNU General Public License
+.\" * as published by the Free Software Foundation; either version 2
+.\" * of the License, or (at your option) any later version.
+.\" *
+.\" * This program is distributed in the hope that it will be useful,
+.\" * but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" * GNU General Public License for more details.
+.\" */
+.\"
+'\" t
+.\"     Title: saptune
+.\"    Author: Soeren Schmidt, Angela Briel
+.\" Generator: Asciidoctor 2.0.23
+.\"      Date: 2026-10-13
+.\"    Manual: saptune manual
+.\"    Source: saptune
+.\"  Language: English
+.\"
+.TH "SAPTUNE" "7" "2026-10-13" "saptune" "saptune manual"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+saptune \- Installation behavior
+.SH "DESCRIPTION"
+.sp
+Starting with saptune version 3.2 on SLE 16 we change the behavior of saptune during package installation. The system now always gets a default tuning.
+.sp
+If the saptune package gets installed (by default SLES for SAP 16 installation, by selecting \fISAP Application Server Base\fP during the SLE 16 installation, by pattern or manually) an initial base tuning is done similar to \fIsapconf\fP in SLES 15. The saptune systemd service is \fBstarted\fP and the solution \fBSAP_Base\fP gets applied (\f(CRsaptune solution apply SAP_Base\fP). As the saptune.service is enabled by vendor presets the base tuning is persistent after reboot.
+.sp
+The \fBSAP_Base\fP solution is based on the SAP Note \fI1275776 \- Linux: Preparing SLES for SAP environments\fP (\c
+.URL "https://me.sap.com/notes/1275776" "" ")"
+describing the new base tuning.
+.sp
+The system tuning for SAP workloads can be simply adapted by \f(CRsaptune solution change <newSolution>\fP or the combination of \f(CRsaptune revert all\fP followed by \f(CRsaptune solution apply <Solution>\fP or \f(CRsaptune note apply <Note>\fP.
+.SH "ATTENTION"
+.sp
+In SLE 15 nothing changed regarding the saptune package installation and the base tuning. Per default \fBsapconf\fP is installed, active and provides the base tuning for SAP workloads. To switch to saptune for SAP workload tuning please use the command \f(CRsaptune service takeover\fP and \f(CRsaptune solution apply <Solution>\fP.
+.SH "SEE ALSO"
+.sp
+\fBsaptune\-note\fP(5), \fBsaptune\-solution\fP(5), \fBsaptune\fP(8)
+.SH "AUTHORS"
+.sp
+Soeren Schmidt
+.sp
+Angela Briel

@@ -1,0 +1,358 @@
+= saptune-migrate(7)
+Soeren Schmidt <soeren.schmidt@suse.com>; Angela Briel <abriel@suse.com>
+v3.2, January 2021
+:doctype: manpage
+:manmanual: migration from saptune version 1 to saptune version 3
+:mansource: saptune
+
+== NAME
+saptune-migration - migration of saptune version 1 to saptune version 3
+
+== DESCRIPTION
+As there are too many logical and structural changes between the saptune versions 1 and 3 the migration has to be planned carefully and performed manually.
+
+To determine the current version please run `saptune version`.
+
+ATTENTION: If the saptune version reported back is *2* or higher *NO* migration is needed!
+
+The section *MIGRATION* will guide you through the migration process step by step. The sections *SOLUTIONS* and *SAP NOTES* will help you planning the migration.
+
+== FILES TO REMOVE AFTER MIGRATION
+The package update from version 1 to version 3 creates or copies some files during post install to allow this smooth migration. But after finishing the migration these files should be removed manually.
+
+* `/etc/saptune/extra/SAP_BOBJ-SAP_Business_OBJects.conf`
+* `/etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf`
+* `/etc/tuned/saptune/tuned.conf` and the directory `/etc/tuned/saptune`
+* `/etc/sysconfig/saptune-note-*`
+
+== IMPORTANT
+*Only a migration from version 1 to version 3 is supported!*
+
+== SOLUTIONS
+The following solutions are shipped:
+
+[cols="1,2,2",options="header",frame="topbot",grid="rows"]
+|===
+| SOLUTION | Version 1 | Version 3
+
+| BOBJ
+| 1275776* 1557506** 1984787 SAP_BOBJ
+| 941735 1771258 1984787 SAP_BOBJ
+
+| HANA
+| 1275776* 1557506** 1984787 2205917
+| 941735 1771258 1980196 1984787 2205917 2382421 2534844
+
+| MAXDB
+| 1275776* 1557506** 1984787
+| 941735 1771258 1984787
+
+| NETWEAVER
+| 1275776* 1557506** 1984787
+| 941735 1771258 1984787
+
+| NETWEAVER+HANA
+| -
+| 941735 1771258 1980196 1984787 2205917 2382421 2534844
+
+| S4HANA-APP+DB
+| -
+| 941735 1771258 1980196 1984787 2205917 2382421 2534844
+
+| S4HANA-APPSERVER
+| 1275776* 1557506** 1984787
+| 941735 1771258 1984787
+
+| S4HANA-DBSERVER
+| 1275776* 1557506** 1984787 2205917
+| 941735 1771258 1980196 1984787 2205917 2382421 2534844
+
+| SAP-ASE
+| 1275776* 1557506** 1984787 2205917 SAP_ASE
+| 941735 1410736 1680803 1771258 1984787
+|===
+
+\* SAP Note *1275776* has been rewritten and therefore removed in version 3. +
+\** SAP Note *1557506* has been removed from the solutions in version 3 because it is only required in a few workload specific use cases.
+
+Note: In version 1 the solutions BOBJ and SAP-ASE were not available on ppc64 little-endian.
+
+For details about the SAP Notes see section *SAP NOTES*.
+
+== SAP NOTES
+The following SAP Notes are shipped:
+
+=== SAP Notes from Version 1
+[cols="1,1,1,3",options="header"]
+|===
+| SAP Note | v1 | v3 | Comment
+
+| 1275776 | yes* | no | Removed in v3 (rewritten without recommendations; see replacement details below)
+| 1557506 | yes | yes | In version 3 only the HANA formula is used.
+| 1984787 | yes** | yes | In version 3 DefaultUserTaskMax is set/removed at SAP Note apply and a reboot is no longer required.
+| 2161991 | yes** | yes | Same defaults between version 1 and 3.
+| 2205917 | yes* | yes | In version 1 configuration was partially hard-coded and partially done by tuned. In version 3 done by saptune itself.
+| SAP_ASE | yes | no | Replaced by *1680803* in version 3. Same defaults, but 1680803 also covers TCP keepalive.
+| SAP_BOBJ | yes | yes | No changes between version 1 and 3.
+| SUSE-GUIDE-01 | yes | no | Deprecated (not an official SAP recommendation).
+| SUSE-GUIDE-02 | yes | no | Deprecated (not an official SAP recommendation).
+|===
+
+\* Configuration was partially hard coded in version 1. +
+\** Configuration was fully hard coded in version 1.
+
+=== SAP Notes Newly Introduced in Version 3
+[cols="1,1,1,3",options="header"]
+|===
+| SAP Note | v1 | v3 | Comment
+
+| 941735 | no | yes | Newly introduced in version 3 (SAP memory management).
+| 1410736 | no | yes | Newly introduced in version 3 (TCP/IP keepalive).
+| 1680803 | no | yes | Newly introduced in version 3 (Sybase ASE, replaces SAP_ASE).
+| 1771258 | no | yes | Newly introduced in version 3 (Resource limits).
+| 1805750 | no | yes | Newly introduced in version 3 (Sybase ASE).
+| 1980196 | no | yes | Newly introduced in version 3 (HANA max_map_count).
+| 2382421 | no | yes | Newly introduced in version 3 (Network tuning).
+| 2534844 | no | yes | Newly introduced in version 3 (HANA shmmni).
+|===
+
+=== Replacement Details for SAP Note 1275776
+SAP Note 1275776 has been rewritten and no longer contains settings recommendations; it was removed in version 3.
+Former parameters from 1275776 are now covered by the following notes:
+
+* `kernel.sem` -> SAP_BOBJ (new default value)
+* `kernel.shmall` -> 941735 (now fixed value)
+* `kernel.shmmax` -> 941735 and SAP_BOBJ (new default value)
+* `nofile` for @sapsys, @sdba, @dba -> 1771258 (new default value)
+* `vm.max_map_count` -> 1980196 (same default value)
+* `VSZ_TMPFS_PERCENT` -> 941735 (same default value)
+* `SHM_COUNT_REF_VALUE` -> 2534844 (as kernel.shmmni with new default value)
+
+To replace 1275776 in your configuration, use: `941735 1980196 2534844 1557506 1771258`.
+
+
+In version 1 part of configuration was hard coded or configurable via `/etc/sysconfig/saptune-note-*`, `/etc/saptune/extra/{SAP_BOBJ-SAP_Business_OBJects.conf,SAP_ASE-SAP_Adaptive_Server_Enterprise.conf}` and `/etc/tuned/saptune/tuned.conf`. +
+Due to tuned CPU tuning (see SAP Note 2205917) was always active.
+
+In version 3 everything can be configured via an override file in `/etc/saptune/override/`. +
+For details and defaults read the configuration in the corresponding Note definition files in `/usr/share/saptune/notes/`.
+
+Version 1 of saptune uses the following configurations:
+
+1275776::
+`/etc/sysconfig/saptune-note-1275776` +
+The following parameters are hardcoded:
+* `size of TMPFS_PERCENT`: 75%
+* `nofile limit @sapsys, @sdba, @dba`: 32800 (if lower)
+* `kernel.shmmax`: VSZ\*1024\*1024\*1024 (if lower, min. 20GB)
+* `kernel.shmall`: VSZ\*1024\*(1024/PSZ) (if lower, min. 20GB)
+* `SHM_COUNT_REF_VALUE`: max(2048, SHM_COUNT_REF_VALUE, 32768)
+* `vm.max_map_count`: 2147483647 (if lower)
+* `kernel.sem`: max(current,1250) max(current,256000) max(current,100) max(current,8192)
+
+1557506::
+everything is configurable in `/etc/sysconfig/saptune-note-1557506`
+
+1984787::
+no configuration file +
+* `systemd version`: done on installation by RPM requirements
+* `UserTasksMax`: RPM installation creates `/etc/systemd/login.d/sap.conf`
+
+2161991::
+no configuration file +
+The following parameters are hardcoded:
+* `IO_SCHEDULER`: noop
+
+2205917::
+no configuration file +
+The following parameters are hardcoded:
+* `THP`: never
+* `KSM`: 0
+* `numa_balancing`: disable +
+The following parameters are handled by tuned:
+* `[cpu] energy_perf_bias`
+* `[cpu] governor`
+* `[cpu] force_latency`
+* `[cpu] min_perf_pct`
+
+SAP_ASE::
+everything is configurable in `/etc/saptune/extra/SAP_ASE-SAP_Adaptive_Server_Enterprise.conf`
+
+SAP_BOBJ::
+everything is configurable in `/etc/saptune/extra/SAP_BOBJ-SAP_Business_OBJects.conf`
+
+== MIGRATION
+
+=== Migration Planning:
+Before starting the migration, familiarize yourself with saptune version 3.
+Please read the man pages of *saptune*(8) and *saptune-note*(5).
+
+Solutions of version 3 can encompass more SAP Notes than in version 1.
+Please check section *SOLUTIONS* for details. You might want to deselect some SAP Notes, change or disable parameters.
+
+SAP notes are more comprehensive in version 3.
+Please check section *SAP NOTES* for details. You might want to change or disable parameters.
+
+Some SAP notes have been removed in version 3.
+Please check section *SAP NOTES* for details. You might want to add your own configuration file.
+
+In version 1 multiple solutions can be applied, in saptune version 3 only one at the same time.
+If you had multiple solutions in the past, choose the most suitable one and add additional notes.
+
+Version 1 has changed system parameters only when the current value was lower.
+Version 3 will set the parameter always to the configured value, no matter the current value.
+
+=== Migration Steps:
+The following steps describe the easiest way to migrate from version 1 to version 3.
+
+1. Determine current solutions and SAP Notes for version 1 and plan the ones for version 3.
++
+Use these commands to get a list of selected solutions and notes:
++
+[source,sh]
+----
+saptune solution list
+saptune note list
+----
++
+Use the sections *SOLUTIONS* and *SAP NOTES* above to familiarize yourself with the changes and create a list of the solution and SAP Notes you are going to use with version 3.
+
+2. (Skip, if saptune defaults are acceptable) Check each chosen SAP Note and former configuration.
++
+Verify that the shipped defaults of version 3 meet your requirements.
++
+*Since saptune is running in version 1 prior to migration you cannot use 'saptune note show' yet. Please check the files in /usr/share/saptune/notes/ directly.*
++
+Verify the version 1 configuration (see *SAP NOTES* above) for settings to carry over.
++
+For step 8 you need to prepare a list with all parameters that have to be added, altered or disabled.
+
+3. Revert *all* solutions and notes.
++
+Use the following commands:
++
+[source,sh]
+----
+saptune solution revert <solution>
+saptune note revert <note>
+----
++
+Please check if the following variables in `/etc/sysconfig/saptune` are empty:
++
+[source,sh]
+----
+TUNE_FOR_SOLUTIONS=""
+TUNE_FOR_NOTES=""
+NOTE_APPLY_ORDER=""
+----
+
+4. Change saptune version variable to "3".
++
+Open `/etc/sysconfig/saptune` in an editor and set the variable `SAPTUNE_VERSION` from "1" to "3".
+
+5. Remove the configuration directory `/etc/tuned/saptune/`.
++
+During the package upgrade a compatibility configuration `/etc/tuned/saptune/` was created, which has to be removed to run version 3 properly.
++
+It is possible that it was created manually in the past to alter the configuration. In this case verify the configuration and extend your future saptune configuration (step 2). Saptune version 3 performs all tuning settings itself and no longer uses tuned for tuning.
++
+The line `pass:[#stv1tov2#]` is an indicator that the configuration file was created by the update process and not manually.
+
+6. Remove files which are not needed anymore.
++
+*Please copy each file to a safe location before deleting it! You might need it to check for former configuration values.*
++
+* Delete the configuration files `SAP_BOBJ-SAP_Business_OBJects.conf` and `SAP_ASE-SAP_Adaptive_Server_Enterprise.conf`:
++
+[source,sh]
+----
+rm /etc/saptune/extra/{SAP_BOBJ-SAP_Business_OBJects.conf,SAP_ASE-SAP_Adaptive_Server_Enterprise.conf}
+----
++
+* Delete old note configuration files:
++
+[source,sh]
+----
+rm /etc/sysconfig/saptune-note-*
+----
++
+* Delete `/etc/systemd/logind.conf.d/sap.conf`:
++
+*Be aware that the file also is used by sapconf and is only created on package installation! Saptune will create its own configuration file dynamically, if needed.*
++
+[source,sh]
+----
+rm /etc/systemd/logind.conf.d/sap.conf
+----
++
+* Delete obsolete log directory `/var/log/saptune/`:
++
+[source,sh]
+----
+rm -rf /var/log/saptune/*
+----
++
+* Remove 'nofile' entries for `@sapsys`, `@sdba` and `@dba` in `/etc/security/limits.conf`. This is now handled by individual files in `/etc/security/limits.d/`.
++
+* Remove all entries in `/etc/sysctl.conf` or files in `/etc/sysctl.d/*.conf` which are handled by saptune. Consider moving SAP-related settings from there to a saptune extra file.
+
+7. Restart `saptune.service`:
++
+[source,sh]
+----
+systemctl restart saptune.service
+----
+
+8. Apply the new configuration.
++
+* (Skip, if saptune defaults are acceptable) Create override files for SAP Notes, if you need to change or disable parameters:
++
+[source,sh]
+----
+saptune note customize <id>
+----
++
+* (Skip, if saptune defaults are acceptable) Create your own configuration for parameters not covered by an existing SAP Note:
++
+[source,sh]
+----
+saptune note create <id>
+----
++
+* Apply the chosen solution:
++
+[source,sh]
+----
+saptune solution apply <solution>
+----
++
+* Revert any SAP Note of the solution you do not need:
++
+[source,sh]
+----
+saptune note revert <id>
+----
++
+* Apply all additional SAP Notes:
++
+[source,sh]
+----
+saptune note apply <id>
+----
+
+9. Use `saptune verify` to check your configuration:
++
+[source,sh]
+----
+saptune note verify
+----
+
+10. Check the log file `/var/log/saptune/saptune.log` for any errors.
+
+11. (Optional) Do a reboot and verify that everything works as expected.
+
+The migration is completed.
+Please verify that any configuration management system or scripts which interact with saptune are adjusted accordingly.
+
+== SEE ALSO
+*saptune-note*(5), *saptune*(8), *tuned*(8), *tuned-adm*(8)
