@@ -2,12 +2,12 @@
 .\"     Title: saptune
 .\"    Author: Soeren Schmidt, Angela Briel
 .\" Generator: Asciidoctor 2.0.23
-.\"      Date: 2026-10-14
+.\"      Date: 2026-10-15
 .\"    Manual: saptune
 .\"    Source: saptune
 .\"  Language: English
 .\"
-.TH "SAPTUNE" "8" "2026-10-14" "saptune" "saptune"
+.TH "SAPTUNE" "8" "2026-10-15" "saptune" "saptune"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,7 +28,7 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-saptune \- Comprehensive system optimization management for SAP qsolutions (Version 3)
+saptune \- Comprehensive system optimization management for SAP solutions (Version 3)
 .if n .sp
 .RS 4
 .it 1 an-trap
@@ -44,66 +44,46 @@ If you still use version \fB1\fP of \fBsaptune\fP it\(cqs now time to migrate to
 .sp .5v
 .RE
 .SH "SYNOPSIS"
+\" _strm_3.2.0_start
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBdaemon\fP ( start |
-stop | status [\-\-non\-compliance\-check] ) \fBATTENTION: deprecated\fP
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBdaemon\fP ( start | stop | status [\-\-non\-compliance\-check] ) \fBATTENTION: deprecated\fP
+\" _strm_3.2.0_end
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBservice\fP ( start |
-stop | restart | takeover | enable | disable | enablestart | disablestop
-| status [\-\-non\-compliance\-check] )
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBservice\fP ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [\-\-non\-compliance\-check] )
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP ( list |
-verify | revertall | enabled | applied )
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP ( list | verify | revertall | enabled | applied )
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP ( apply |
-simulate | customise | create | edit | revert | show | delete ) NOTEID
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP refresh
-[NOTEID|applied] \fBATTENTION: experimental\fP
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP refresh [NOTEID|applied] \fBATTENTION: experimental\fP
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP verify
-[\-\-colorscheme SCHEME] [\-\-show\-non\-compliant] [NOTEID|applied]
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP verify [\-\-colorscheme SCHEME] [\-\-show\-non\-compliant] [NOTEID|applied]
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP rename NOTEID
-NEWNOTEID
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBnote\fP rename NOTEID NEWNOTEID
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP ( list |
-verify | enabled | applied )
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP ( list | verify | enabled | applied )
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP ( apply |
-simulate | customise | create | edit | revert | show | delete )
-SOLUTIONNAME
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP ( apply |
-change ) [\-\-force] SOLUTIONNAME
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP ( apply | change ) [\-\-force] SOLUTIONNAME
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP verify
-[\-\-colorscheme SCHEME] [\-\-show\-non\-compliant] [SOLUTIONNAME]
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP verify [\-\-colorscheme SCHEME] [\-\-show\-non\-compliant] [SOLUTIONNAME]
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP rename
-SOLUTIONNAME NEWSOLUTIONNAME
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBsolution\fP rename SOLUTIONNAME NEWSOLUTIONNAME
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBstaging\fP ( status |
-enable | disable | is\-enabled | list )
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBstaging\fP ( status | enable | disable | is\-enabled | list )
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBstaging\fP ( analysis
-| diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBstaging\fP ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBstaging\fP release
-[\-\-force|\-\-dry\-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBstaging\fP release [\-\-force|\-\-dry\-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBconfigure\fP (
-COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP |
-CLOUD_DETECTION | CSP_TIMEOUT | CSP_RETRIES ) Value
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBconfigure\fP (COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP | CLOUD_DETECTION | CSP_TIMEOUT | CSP_RETRIES ) VALUE
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBconfigure\fP ( reset
-| show )
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBconfigure\fP ( reset | show )
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBcloud\fP set
-instance_type CLOUD_VENDOR%INSTANCE_TYPE
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBcloud\fP set instance_type CLOUD_VENDOR%INSTANCE_TYPE
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBcloud\fP ( get |
-clear | detect ) instance_type
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBcloud\fP ( get | clear | detect ) instance_type
 .sp
 \fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBverify\fP applied
 .sp
@@ -114,51 +94,54 @@ clear | detect ) instance_type
 .sp
 \fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBcheck\fP
 .sp
-\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBstatus
-[\-\-non\-compliance\-check]\fP
+\fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBstatus [\-\-non\-compliance\-check]\fP
 .sp
 \fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBversion\fP
 .sp
 \fBsaptune\fP [\-\-format FORMAT] [\-\-force\-color] [\-\-fun] \fBhelp\fP
 .SH "DESCRIPTION"
 .sp
-saptune is designed to automate the configuration recommendations from
+\fBsaptune\fP is designed to automate the configuration recommendations from
 SAP and SUSE to run an SAP application on SLES for SAP. These
 configuration recommendations are normally referred to as SAP Notes. So
-some dedicated SAP Notes are the base for the work of saptune.
+some dedicated SAP Notes are the base for the work of \fBsaptune\fP.
 Additional some best practice guides are added as Note definitions to
 optimize the system for some really special cases.
 .sp
-saptune can apply settings for a single Note definition or can set all
+\fBsaptune\fP can apply settings for a single Note definition or can set all
 settings for a predefined solution, which is a collection of several SAP
 Notes. Additionally it can revert all these settings back to the
 previous system settings.
 .sp
 It can verify, if the current system configuration is in sync with a
 specific Note definition or a defined solution and displays the
-differences. Additionally, it can simulate the setting of a single SAP
+differences.
+\" _strm_3.2.0_start
+.sp
+Additionally, it can simulate the setting of a single SAP
 Note definition or a defined solution and will display the changes which
 will be done to the system.
+\" _strm_3.2.0_end
 .sp
-saptune does not only set kernel values (like sysctl does), but also
+\fBsaptune\fP does not only set kernel values (like \fBsysctl\fP does), but also
 values like cpu governor, energy perf bias, force latency (dma latency)
-and the disk io scheduler. Additionally it will check/verify, if
+and the disk I/O scheduler. Additionally it will check/verify, if
 suitable rpm versions are installed and special kernel command line
-values are set, according to the relevant SAP Notes. So saptune checks
+values are set, according to the relevant SAP Notes. So \fBsaptune\fP checks
 and applies values in various locations during runtime like
 .sp
-/proc/sys/, /proc/sys/vm/, /proc/sys/kernel, /proc/sys/fs,
-/sys/block/\fB/queue/scheduler and /sys/block/\fP/queue/nr_requests,
-/sys/devices/system/cpu/\fB/cpufreq/scaling_governor,
-/sys/devices/system/cpu/\fP/cpuidle/state*/latency,
-/sys/devices/system/cpu/\fB/cpuidle/state\fP/disable, /dev/shm,
-/etc/security/limits.d/, /etc/systemd/logind.conf.d/ and some others.
+\fI/proc/sys/\fP, \fI/proc/sys/vm/\fP, \fI/proc/sys/kernel\fP, \fI/proc/sys/fs\fP,
+\fI/sys/block/*/queue/scheduler\fP, \fI/sys/block/*/queue/nr_requests\fP,
+\fI/sys/devices/system/cpu/*/cpufreq/scaling_governor\fP,
+\fI/sys/devices/system/cpu/\(rs*/cpuidle/state*/latency\fP,
+\fI/sys/devices/system/cpu/*/cpuidle/state*/disable\fP, \fI/dev/shm\fP,
+\fI/etc/security/limits.d/\fP, \fI/etc/systemd/logind.conf.d/\fP and some others.
 .sp
-To do most of these settings saptune needs to run with root privilege.
-So please be in mind that users who run saptune are considered
+To do most of these settings \fBsaptune\fP needs to run with root privilege.
+So please be in mind that users who run \fBsaptune\fP are considered
 privileged users with administrative rights.
 .sp
-By default saptune is printing all results to stdout, Errors and
+By default \fBsaptune\fP is printing all results to stdout, Errors and
 Warnings are printed to stderr. By using \fB\-\-format FORMAT\fP this
 behavior can be changed.
 .br
@@ -167,57 +150,55 @@ Supported formats are:
 \fBjson\fP
 .RS 4
 Print all results in a machine readable json output format defined by
-the schemata delivered in \fI/usr/share/saptune/schemas/1.1\fP.
-+
-saptune does no longer use tuned(8) to restart after a system reboot.
-It is using its own systemd service named "saptune.service".
+the schemata delivered in _/usr/share/saptune/schemas/.
+.RE
+.sp
+\fBsaptune\fP does no longer use \fBtuned\fP(8) to restart after a system reboot.
+It is using its own systemd service named \fBsaptune.service\fP.
 .br
 Starting with version 3.2 and operating system version 15SP4 we ship
-the saptune.service with enhanced security\-related features like
+the \fBsaptune.service\fP with enhanced security\-related features like
 systemd hardening. But please keep in mind that all security measures
-only apply, if saptune is invoked by its systemd unit!
-+
+only apply, if \fBsaptune\fP is invoked by its systemd unit!
+.sp
 We decided to have only ONE solution applied, but multiple Notes. Each
 Note is applied exactly once.
-.RE
+\" _strm_3.2.0_start
 .SH "DAEMON ACTIONS \- ATTENTION: DEPRECATED"
-.sp
-===
 .sp
 \fBstart\fP
 .RS 4
-As saptune no longer uses tuned, this action is internally linked to
-\*(Aqsaptune service takeover\*(Aq. See description below
+As \fBsaptune\fP no longer uses \fBtuned\fP, this action is internally linked to
+\fBsaptune service takeover\fP. See description below.
 .RE
 .sp
 \fBstatus\fP
 .RS 4
-As saptune no longer uses tuned, this action is internally linked to
-\*(Aqsaptune service status\*(Aq. See description below
+As \fBsaptune\fP no longer uses \fBtuned\fP, this action is internally linked to
+\fBsaptune service status\fP. See description below.
 .RE
 .sp
 \fBstop\fP
 .RS 4
-As saptune no longer uses tuned, this action is internally linked to
-\*(Aqsaptune service disablestop\*(Aq. See description below
+As \fBsaptune\fP no longer uses \fBtuned\fP, this action is internally linked to
+\fBsaptune service disablestop\fP. See description below.
 .RE
+\" _strm_3.2.0_end
 .SH "SERVICE ACTIONS"
-.sp
-===
 .sp
 \fBstart\fP
 .RS 4
-Start saptune service and apply a set of optimizations to the system,
-if solutions or notes were selected during a previous call of saptune.
+Start \fBsaptune\fP service and apply a set of optimizations to the system,
+if solutions or Notes were selected during a previous call of \fBsaptune\fP.
 If the service is enabled, the tuning will be automatically activated
 upon system boot.
 .br
-It redirects to \*(Aq\fIsystemctl start saptune.service\fP\*(Aq
+It redirects to \fBsystemctl start saptune.service\fP
 .br
 Success is reported on stdout, errors including systemd error messages
 are printed on stderr. The action gets logged.
 +
-It will fail in case sapconf.service is running or has exited or save
+It will fail in case \fBsapconf.service\fP is running or has exited or save
 state files are present.
 +
 If the action was successfully the exit code is 0, otherwise 1.
@@ -226,7 +207,6 @@ If the action was successfully the exit code is 0, otherwise 1.
 \fBstatus\fP
 .RS 4
 Reports the following status information on stdout:
-+
 .sp
 .RS 4
 .ie n \{\
@@ -236,7 +216,7 @@ Reports the following status information on stdout:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-status of saptune.service (enabled/disabled,
+status of \fBsaptune.service\fP (enabled/disabled,
 active/inactive/failed/...the other possible unit states...)
 .RE
 .sp
@@ -248,7 +228,7 @@ active/inactive/failed/...the other possible unit states...)
 .  sp -1
 .  IP \(bu 2.3
 .\}
-saptune package version
+\fBsaptune\fP package version
 .RE
 .sp
 .RS 4
@@ -259,7 +239,7 @@ saptune package version
 .  sp -1
 .  IP \(bu 2.3
 .\}
-configured saptune major version (from the central saptune
+configured \fBsaptune\fP major version (from the central \fBsaptune\fP
 configuration file)
 .RE
 .sp
@@ -274,7 +254,7 @@ configuration file)
 enabled Solution
 .br
 The entry \*(Aqenabled Solution\*(Aq shows the Solution, which was manually
-applied by \*(Aq\fIsaptune solution apply <solution name>\fP\*(Aq and its related
+applied by \fBsaptune solution apply SOLUTIONNAME\fP and its related
 Notes.
 .RE
 .sp
@@ -303,8 +283,8 @@ applied and its related and applied Notes.
 additional enabled Notes, sorted lexicographically
 .br
 The entry \*(Aqadditional enabled Notes\*(Aq shows all Notes, which were
-additionally applied manually by \*(Aq\fIsaptune note apply <note name>\fP\*(Aq.
-They are \fBone\fP part of the list of notes in the entry \*(Aqapplied Notes\*(Aq
+additionally applied manually by \fBsaptune note apply NOTEID\fP.
+They are \fBone\fP part of the list of Notes in the entry \*(Aqapplied Notes\*(Aq
 and \*(Aqenabled Notes\*(Aq.
 .RE
 .sp
@@ -316,7 +296,7 @@ and \*(Aqenabled Notes\*(Aq.
 .  sp -1
 .  IP \(bu 2.3
 .\}
-all selected Notes in applied order
+all enabled Notes
 .br
 The list of \*(Aqenabled Notes\*(Aq includes all Notes from \*(Aqadditional
 enabled Notes\*(Aq and additional all the Notes related to the \*(Aqenabled
@@ -337,14 +317,13 @@ all currently applied Notes in applied order
 .br
 The list of \*(Aqapplied Notes\*(Aq includes the \fBmanually\fP applied Notes.
 Additional it includes all the Notes related to the \*(Aqconfigured
-Solution\*(Aq too. These Notes get applied when using \*(Aq\fIsaptune solution
-apply\fP\*(Aq. The solutions and their related notes can be listed by
-\*(Aq\fIsaptune solution list\fP\*(Aq.
-+
-And additional \*(Aqapplied Notes\*(Aq shows if the system is \*(Aq\fBactively\fP\*(Aq
+Solution\*(Aq too. These Notes get applied when using \fBsaptune solution
+apply\fP. The Solutions and their related Notes can be listed by
+\fBsaptune solution list\fP.
+.br
+Additional \*(Aqapplied Notes\*(Aq show if the system is \*(Aq\fBactively\fP\*(Aq
 tuned at the moment. If the list is empty, the system is \fBnot\fP tuned.
 If the list is \fBnot\fP empty, the system \fBis\fP tuned.
-+
 .RE
 .sp
 .RS 4
@@ -404,7 +383,7 @@ staged Solutions
 .  sp -1
 .  IP \(bu 2.3
 .\}
-status of sapconf.service (enabled/disabled,
+status of \fBsapconf.service\fP (enabled/disabled,
 active/inactive/failed/...the other possible unit states...)
 .RE
 .sp
@@ -462,161 +441,225 @@ the cloud service provider and instance type, if running on cloud
 .  sp -1
 .  IP \(bu 2.3
 .\}
-the tuning state of the system, gathered by \*(Aqsaptune note verify\*(Aq.
-.br
+the tuning state of the system, gathered by \fBsaptune note verify\fP:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
 "unknown (checking disabled)", if the flag \*(Aq\-\-non\-compliance\-check\*(Aq
 is used.
-.br
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
 "not tuned", if \fBno\fP Solution or Note is applied.
 .br
-"not\-present", if \*(Aqverify\*(Aq hit an error.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+"not\-present", if verify hits an error.
 .br
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
 "not compliant", if one or more parameter values differ from the
-related SAP Note. For detailed information please use \fI\*(Aqsaptune note
-verify\*(Aq\fP.
-.br
+related SAP Note. For detailed information please use \fBsaptune note verify\fP.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
 "compliant", if all parameter values comply with the values from the
 related SAP Notes.
-+
+.RE
+.RE
+.RE
+.sp
 This information is not logged, but only printed to stdout.
-+
+.sp
 If saptune.service is \fBnot\fP \*(Aqactive\*(Aq the exit code is 1. If the system
 is \*(Aq\fBnot tuned\fP\*(Aq \- which means no Note or Solution is enabled \- the
 exit code is 3. If the system is tuned, but the tuning is \fBnot
 compliant\fP the exit code is 4. Otherwise the exit code is 0.
-.RE
-.RE
-.sp
-===
 .sp
 \fBstop\fP
 .RS 4
-Stop saptune service and revert all optimizations that were previously
-applied by saptune. If the service is disabled, the tuning will no
+Stop \fBsaptune\fP service and revert all optimizations that were previously
+applied by \fBsaptune\fP. If the service is disabled, the tuning will no
 longer automatically activate upon boot.
 .br
-It redirects to \*(Aq\fIsystemctl stop saptune.service\fP\*(Aq
+It redirects to \fBsystemctl stop saptune.service\fP
 .br
 Success is reported on stdout, errors including systemd error messages
 are printed on stderr. The action gets logged.
-+
+.br
+\~
+.br
 If the action was successfully the exit code is 0, otherwise 1.
 .RE
 .sp
 \fBrestart\fP
 .RS 4
-Revert all optimizations that were previously applied by saptune. And
-after that apply a set of optimizations to the system, if solutions or
-notes were selected during a previous call of saptune.
+Revert all optimizations that were previously applied by \fBsaptune\fP. And
+after that apply a set of optimizations to the system, if Solutions or
+Notes were selected during a previous call of \fBsaptune\fP.
 .br
-It redirects to \*(Aq\fIsystemctl restart saptune.service\fP\*(Aq
+It redirects to \fBsystemctl restart saptune.service\fP
 .br
 Success is reported on stdout, errors including systemd error messages
 are printed on stderr. The action gets logged.
-+
+.br
+\~
+.br
 If the action was successfully the exit code is 0, otherwise 1.
-+
-If \*(Aq\fIIGNORE_RELOAD\fP\*(Aq is set to \*(Aq\fByes\fP\*(Aq in the saptune configuration
-file the action \*(Aq\fIrestart\fP\*(Aq will do \fBnothing\fP. The reason will be
-logged. See the \*(AqNOTE\*(Aq section at the end of the man page for more
+.br
+\~
+.br
+If \fIIGNORE_RELOAD\fP is set to \fByes\fP in the \fBsaptune\fP configuration
+file the action \fBrestart\fP will do \fBnothing\fP. The reason will be
+logged. See the \fBNOTE\fP section at the end of the man page for more
 information.
 .RE
 .sp
 \fBenable\fP
 .RS 4
-Enables the saptune service. To activate the tuning, the saptune
+Enables the saptune service. To activate the tuning, the \fBsaptune\fP
 service needs to be started. But as the service is now enabled, the
 tuning will automatically activated upon system boot.
 .br
-It redirects to \*(Aq\fIsystemctl enable saptune.service\fP\*(Aq
+It redirects to \fBsystemctl enable saptune.service\fP
 .br
 Success is reported on stdout, errors including systemd error messages
 are printed on stderr. The action gets logged.
-+
-It will fail in case sapconf.service is running or has exited or save
+.br
+\~
+.br
+It will fail in case \fBsapconf.service\fP is running or has exited or save
 state files are present.
-+
+.br
+\~
+.br
 If the action was successfully the exit code is 0, otherwise 1.
 .RE
 .sp
 \fBdisable\fP
 .RS 4
-Disable the saptune service. To revert all optimizations that were
-previously applied by saptune, the saptune service needs to be
+Disable the \fBsaptune\fP service. To revert all optimizations that were
+previously applied by \fBsaptune\fP, the \fBsaptune\fP service needs to be
 stopped. But as the service is now disabled, the tuning will no longer
 automatically activated upon system boot.
 .br
-It redirects to \*(Aq\fIsystemctl disable saptune.service\fP\*(Aq
+It redirects to \fBsystemctl disable saptune.service\fP
 .br
 Success is reported on stdout, errors including systemd error messages
-are printed on stderr. The action gets logged.
-+
+are printed on stderr. The action gets logged. *
+\~
+.br
 If the action was successfully the exit code is 0, otherwise 1.
 .RE
 .sp
 \fBenablestart\fP
 .RS 4
-Enables and start the saptune service and apply a set of optimizations
-to the system, if solutions or notes were selected during a previous
-call of saptune. As the service is now enabled, the tuning will
+Enables and start the \fBsaptune\fP service and apply a set of optimizations
+to the system, if Solutions or Notes were selected during a previous
+call of \fBsaptune\fP. As the service is now enabled, the tuning will
 automatically activated upon system boot.
 .br
-Calls \*(Aq\fIsystemctl enable saptune.service\fP\*(Aq and \*(Aq\fIsystemctl start
-saptune.service\fP\*(Aq in this order.
+Calls \fBsystemctl enable saptune.service\fP and \fBsystemctl start saptune.service\fP
+in this order.
 .br
 Success is reported on stdout, errors including systemd error messages
 are printed on stderr. The action gets logged.
-+
+.br
+\~
+.br
 If the action was successfully the exit code is 0, otherwise 1.
 .RE
 .sp
 \fBdisablestop\fP
 .RS 4
-Disable and stop the saptune service and revert all optimizations that
-were previously applied by saptune. As the service is now disabled,
+Disable and stop the \fBsaptune\fP service and revert all optimizations that
+were previously applied by \fBsaptune\fP. As the service is now disabled,
 the tuning will no longer automatically activated upon system boot.
 .br
-Calls \*(Aq\fIsystemctl disable saptune.service\fP\*(Aq and \*(Aq\fIsystemctl stop
-saptune.service\fP\*(Aq in this order.
+Calls \fBsystemctl disable saptune.service\fP and \fBsystemctl stop saptune.service\fP
+in this order.
 .br
 Success is reported on stdout, errors including systemd error messages
 are printed on stderr. The action gets logged.
-+
+.br
+\~
+.br
 If the action was successfully the exit code is 0, otherwise 1.
 .RE
 .sp
 \fBtakeover\fP
 .RS 4
-This action is meant to start and enable saptune service where
+This action is meant to start and enable \fBsaptune\fP service where
 competing services like sapconf and/or tuned get stopped and disabled.
-This is the modern replacement for the obsolete \*(Aq\fIsaptune daemon
-start\fP\*(Aq
+This is the modern replacement for the obsolete \fBsaptune daemon start\fP
 .br
-Calls \*(Aq\fIsystemctl enablestart saptune.service\fP\*(Aq after stopping and
-disabling sapconf.service and tuned.service.
+Calls \fBsystemctl enablestart saptune.service\fP after stopping and
+disabling \fBsapconf.service\fP and \fBtuned.service\fP.
 .br
 Success is reported on stdout, errors including systemd error messages
 are printed on stderr. The action gets logged.
-+
+.br
+\~
+.br
 If the action was successfully the exit code is 0, otherwise 1.
 .RE
 .sp
 \fBATTENTION:\fP
 .RS 4
-
-.br
-saptune is able to start/stop/enable/disable systemd units, but on
+\fBsaptune\fP is able to start/stop/enable/disable systemd units, but on
 boot the outcome depends on the order of execution.
-+
-If saptune is starting (or stopping) a systemd service ([service]
+.br
+\~
+.br
+If \fBsaptune\fP is starting (or stopping) a systemd service (\fB[service]\fP
 section) it might happen, that the action gets reverted later by
 systemd because that service is disabled (or enabled) and executed
-after saptune.service.
-+
-Similar a service enabled (or disabled) by saptune might already be
+after \fBsaptune.service\fP.
+.br
+\~
+.br
+Similar a service enabled (or disabled) by \fBsaptune\fP might already be
 stopped (or started) by systemd, because it came before
-saptune.service.
-+
+\fBsaptune.service\fP.
+.br
+\~
+.br
 If the execution order cannot be assured by service dependencies, it
 is recommended to set both (\*(Aqstart,enable\*(Aq or \*(Aqstop,disable\*(Aq) in a
 Note definition or an Override.
@@ -626,90 +669,107 @@ Note definition or an Override.
 Note denotes either a SAP Note, a vendor specific tuning definition or
 SUSE recommendation article.
 .sp
-===
-.sp
 \fBapply\fP
 .RS 4
 Apply optimization settings specified in the Note. The Note will be
-automatically activated upon system boot if the saptune service is
+automatically activated upon system boot if the \fBsaptune\fP service is
 enabled.
-+
-If a Note definition contains a \*(Aq\fB[reminder]\fP\*(Aq section, this section
-will be printed after the note has applied successfully. It will be
+.br
+\~
+.br
+If a Note definition contains a \fB[reminder]\fP section, this section
+will be printed after the Note has applied successfully. It will be
 highlighted with red color.
-+
+.br
+\~
+.br
 A Note can only be applied once.
-+
+.br
+\~
+.br
 ATTENTION: Please be in mind: If a Note definition to be applied
 contains parameter settings which are likewise set before by an
 already applied Note these settings get be overwritten.
 .br
 The last comes, the last wins, it\(cqs all about \*(Aqorder\*(Aq.
-+
-So be careful when applying solutions or notes or when reverting
-notes, especially if these notes are part of an already applied
-solution. You can re\-apply such a note, but the order \- and may be the
+.br
+\~
+.br
+So be careful when applying Solutions or Notes or when reverting
+Notes, especially if these Notes are part of an already applied
+Solution. You can re\-apply such a Note, but the order \- and may be the
 resulting parameter settings \- will be unlike before.
 .br
-Special attention is needed, if customer or vendor specific notes from
+Special attention is needed, if customer or vendor specific Notes from
 \fI/etc/saptune/extra\fP are used.
-+
-But saptune will detect such conflicting settings during \fIsaptune note
-verify\fP or \fIsaptune verify applied\fP and will print a footnote with a
-pointer to the \*(Aqwinning\*(Aq note.
+.br
+\~
+.br
+But \fBsaptune\fP will detect such conflicting settings during \fBsaptune note verify\fP
+or \fBsaptune verify applied\fP and will print a footnote with a
+pointer to the \*(Aqwinning\*(Aq Note.
 .br
 This conflict detection will not work if the verify command is used on
-non\-applied notes.
+non\-applied Notes.
 .RE
 .sp
 \fBlist\fP
 .RS 4
 List all SAP Notes, vendor specific tuning definitions and SUSE
-recommendation articles that saptune is capable of implementing.
-+
-Currently implemented notes are marked with \*(Aq\fB+\fP\*(Aq, if manually
-enabled, \*(Aq\fB*\fP\*(Aq, if enabled by solutions or \*(Aq\fB\-\fP\*(Aq, if a note belonging
-to an enabled solution was reverted manually. In all cases the notes
+recommendation articles that \fBsaptune\fP is capable of implementing.
+.br
+\~
+.br
+Currently implemented Notes are marked with \*(Aq\fB+\fP\*(Aq, if manually
+enabled, \*(Aq\fB*\fP\*(Aq, if enabled by Solutions or \*(Aq\fB\-\fP\*(Aq, if a Note belonging
+to an enabled Solution was reverted manually. In all cases the Notes
 are highlighted with green color.
 .br
-If an \fBoverride\fP file exists for a NoteID, the note is marked with
-\*(Aq\fBO\fP\*(Aq and a customer or vendor specific note is marked with \*(Aq\fBC\fP\*(Aq.
+If an \fBoverride\fP file exists for a NoteID, the Note is marked with
+\*(Aq\fBO\fP\*(Aq and a customer or vendor specific Note is marked with \*(Aq\fBC\fP\*(Aq.
 .br
-If we detect a \fBconflict\fP with notes the related entry in the list is
+If we detect a \fBconflict\fP with Notes the related entry in the list is
 marked with a leading \*(Aq\fB!\fP\*(Aq and the line is highlighted with yellow
 color. Look at the log file for details like warning messages
 addressing the problem.
 .br
-Currently we report a conflict if a customer or vendor specific note
-has the \fBsame\fP name as a shipped note. In this case the shipped note
-will take precedence over the custom note.
+Currently we report a conflict if a customer or vendor specific Note
+has the \fBsame\fP name as a shipped Note. In this case the shipped Note
+will take precedence over the custom Note.
 .RE
 .sp
 \fBenabled\fP
 .RS 4
-Print all currently enabled notes as a list separated by blanks
+Print all currently enabled Notes as a list separated by blanks
 without trailing line feed.
 .RE
 .sp
 \fBapplied\fP
 .RS 4
-Print all currently applied notes as a list separated by blanks
+Print all currently applied Notes as a list separated by blanks
 without trailing line feed.
 .RE
 .sp
 \fBverify\fP
 .RS 4
-If a Note ID is specified, saptune verifies the currently running
+If a Note ID is specified, \fBsaptune\fP verifies the currently running
 system against the recommendations specified in this Note.
 .br
-
+Without a Note all enabled Notes and all (even reverted) Notes of
+an enabled Solution are verified.
+If the keyword \fBapplied\fP is given instead of a Note, only all applied
+Notes are verified.
 .br
-
+\~
 .br
-+
-SAPNote, Version | Parameter | Expected | Override | Actual |
-Compliant
-+
+The output is table with the columns:
+.br
+\~
+.br
+\fBSAPNote, Version\fP shows the Note name and the
+.br
+\fBParameter\fP the system parameter that gets tuned
+.br
 \fBExpected\fP shows the values read from the Note definition file
 .br
 \fBOverride\fP shows the values found in an \fBoverride\fP file
@@ -719,190 +779,86 @@ Compliant
 \fBCompliant\fP shows \fByes\fP, if the \*(AqExpected\*(Aq and \*(AqActual\*(Aq value matches,
 or \fBno\fP, if there is no match.
 .br
-In some rows you can find references to \fBfootnotes\fP containing
+\~
+.br
+In some rows you can find references to footnotes containing
 additional information. They may explain, why a value does not match.
-+
-e.g.
 .br
-[1] setting is not supported by the system
+\~
 .br
-This may result in a \*(Aq \- \*(Aq in column \*(AqCompliant\*(Aq, but the system will
-nevertheless be reported as fully conforms to the specified note.
-.br
-[2] setting is not available on the system
-.br
-In case of \*(Aqgrub\*(Aq settings, this may result in a \*(Aqno\*(Aq in column
-\*(AqCompliant\*(Aq, but the system will nevertheless be reported as fully
-conforms to the specified note, because most \*(Aqgrub\*(Aq settings mentioned
-in the SAP Notes are covered by other, alternative settings.
-.br
-[3] value is only checked, but NOT set
-.br
-In case of \*(Aqgrub\*(Aq settings, this may result in a \*(Aqno\*(Aq in column
-\*(AqCompliant\*(Aq, but the system will nevertheless be reported as fully
-conforms to the specified note, because most \*(Aqgrub\*(Aq settings mentioned
-in the SAP Notes are covered by other, alternative settings.
-.br
-[4] cpu idle state settings differ
-.br
-[5] expected value does not contain a supported scheduler
-.br
-[6] grub settings are mostly covered by other settings. See man page
-saptune\-note(5) for details
-.br
-[7] parameter value is untouched by default
-.br
-If the parameter value in the Note definition file is left \*(Aqempty\*(Aq,
-the current system value of the parameter will not be changed.
-.br
-[8] cannot set Perf Bias because SecureBoot is enabled"
-.br
-If SecureBoot is enabled some system settings are \*(Aqread only\*(Aq and can
-not be changed.
-.br
-[9] expected value limited to \*(Aqmax_hw_sectors_kb\*(Aq"
-.br
-The possible value for parameter \*(AqMAX_SECTORS_KB\*(Aq
-(/sys/block/\fB/queue/max_sectors_kb) is limited by the value of
-/sys/block/\fP/queue/max_hw_sectors_kb.
-+
-If a Note definition contains a \*(Aq\fB[reminder]\fP\*(Aq section, this section
+If a Note definition contains a \fB[reminder]\fP section, this section
 will be printed below the table and the footnotes. It will be
 highlighted with red color.
-+
-By using the command line argument \*(Aq\fB\-\-show\-non\-compliant\fP\*(Aq it is
+.br
+\~
+.br
+By using the command line argument \fB\-\-show\-non\-compliant\fP it is
 possible to limit the verify output to show only non\-compliant
 parameter. The output will \fBnot\fP be colorized even that a \fBcolor
 scheme\fP is defined.
-+
+.br
+\~
+.br
 It is possible to use a \fBcolor scheme\fP for the verify output table.
 .br
 The \fBcolor scheme\fP can be given as a command line argument
-\*(Aq\fB\-\-colorscheme SCHEME\fP\*(Aq or as parameter \- value pair \*(Aq\fBCOLOR_SCHEME
-SCHEME\fP\*(Aq in the saptune command \*(Aq\fIsaptune configure COLOR_SCHEME
-<SCHEME>\fP\*(Aq
+\fB\-\-colorscheme SCHEME\fP or as parameter \- value pair \fBCOLOR_SCHEME
+SCHEME\fP in the saptune command \fBsaptune configure COLOR_SCHEME\fP.
 .br
-To reset the \fBcolor scheme\fP use the command \*(Aq\fIsaptune configure
-COLOR_SCHEME \*(Aq\*(Aq\fP \*(Aq
+To reset the \fBcolor scheme\fP use the command \fBsaptune configure COLOR_SCHEME\fP.
 .br
 Possible \fBcolor schemes\fP are:
-+
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-full\-green\-zebra \- whole line is colored green (compliant) or red
-(not compliant)
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-full\-blue\-zebra \- whole line is colored blue (compliant) or yellow
-(not compliant)
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-cmpl\-green\-zebra \- only the content in the Compliant column is
+.br
+\~
+.br
+\fBfull\-green\-zebra\fP \- whole line is colored green (compliant) or red (not compliant)
+.br
+\fBfull\-blue\-zebra\fP \- whole line is colored blue (compliant) or yellow (not compliant)
+.br
+\fBcmpl\-green\-zebra\fP \- only the content in the Compliant column is
 colored green (compliant) or red (not compliant)
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-cmpl\-blue\-zebra \- only the content in the Compliant column is
+.br
+\fBcmpl\-blue\-zebra\fP \- only the content in the Compliant column is
 colored blue (compliant) or yellow (not compliant)
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-full\-red\-noncmpl \- only the whole line of the not compliant
+.br
+\fBfull\-red\-noncmpl\fP \- only the whole line of the not compliant
 parameter is colored red
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-full\-yellow\-noncmpl \- only the whole line of the not compliant
+.br
+\fBfull\-yellow\-noncmpl\fP \- only the whole line of the not compliant
 parameter is colored yellow
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-red\-noncmpl \- only the content in the Compliant column of the not
+.br
+\fBred\-noncmpl\fP \- only the content in the Compliant column of the not
 compliant parameter is colored red
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
-yellow\-noncmpl \- only the content in the Compliant column of the not
+.br
+\fByellow\-noncmpl\fP \- only the content in the Compliant column of the not
 compliant parameter is colored yellow
-+
+.br
+\~
+.br
 The default, if no \fBcolor scheme\fP is given, is \fBfull\-red\-noncmpl\fP. If
 an unknown \fBcolor scheme\fP is given in the command line or in the
 config file, non\-colorized, simple black text is printed.
-+
+.br
+\~
+.br
 The \*(Aqfinal lines\*(Aq with the overall result of the verify operation are
 colored green (compliant) or red (not compliant) independent from the
 chosen \fBcolor scheme\fP
 .RE
-.RE
-.sp
-===
+\" _strm_3.2.0_start
 .sp
 \fBsimulate \- ATTENTION: deprecated\fP
 .RS 4
 Show all changes that will be applied to the system if the specified
 Note is applied. As a result you will see a table containing the
-following columns
-+
-Parameter | Value set | Value expected | Override | Comment
-+
+following columns:
+.br
+\~
+.br
+\fBSAPNote, Version\fP shows the Note name and the
+.br
+\fBParameter\fP the system parameter that gets tuned
+.br
 \fBValue set\fP shows the current system value
 .br
 \fBValue expected\fP shows the values read from the Note definition file
@@ -910,75 +866,80 @@ Parameter | Value set | Value expected | Override | Comment
 \fBOverride\fP shows the values found in an \fBoverride\fP file
 .br
 \fBComment\fP shows references to \fBfootnotes\fP containing additional
-information. They may explain, why a value will not be set by saptune.
-+
-e.g.
+information. They may explain, why a value will not be set by \fBsaptune\fP.
 .br
-[1] setting is not supported by the system
+\~
 .br
-[2] setting is not available on the system
-.br
-[3] value is only checked, but NOT set
-.br
-[4] cpu idle state settings differ
-.br
-[5] expected value does not contain a supported scheduler
-+
-If a Note definition contains a \*(Aq\fB[reminder]\fP\*(Aq section, this section
+If a Note definition contains a \fB[reminder]\fP section, this section
 will be printed below the table and the footnotes. It will be
 highlighted with red color.
 .RE
+\" _strm_3.2.0_end
 .sp
 \fBedit\fP
 .RS 4
 This allows to edit the values of the customer or vendor specific Note
-definitions in \fI/etc/saptune/extra\fP. An editor will be launched to
+definitions in \fB/etc/saptune/extra\fP. An editor will be launched to
 allow changing the Note definitions. The editor is defined by the
 \fBEDITOR\fP environment variable. If not set editor defaults to
-/usr/bin/vim.
-+
+\fI/usr/bin/vim\fP.
+.br
+\~
+.br
 You can change already available parameters and values or you can add
 new parameters and values or additional sections with parameter value
 pairs.
-+
+.br
+\~
+.br
 If the Note is currently applied and/or an override file exists,
-saptune will remind you to take care of this situation.
+\fBsaptune\fP will remind you to take care of this situation.
 .RE
 .sp
 \fBcustomise\fP
 .RS 4
-This allows to customize the values of the saptune Note definitions.
+This allows to customize the values of the \fBsaptune\fP Note definitions.
 The Note definition file will be copied from
 \fI/usr/share/saptune/notes\fP or \fI/etc/saptune/extra\fP to the override
 location at \fI/etc/saptune/override\fP, if the file does not exist
 already. After that an editor will be launched to allow changing the
 Note definitions. The editor is defined by the \fBEDITOR\fP environment
-variable. If not set editor defaults to /usr/bin/vim.
-+
+variable. If not set editor defaults to \fI/usr/bin/vim\fP.
+.br
+\~
+.br
 You can only change the value from already available parameters of the
-note. But you are not able to add new parameters.
-+
+Note. But you are not able to add new parameters.
+.br
+\~
+.br
 If you want to use new parameters to tune the system, please create
 your own custom Note definition file in \fI/etc/saptune/extra\fP.
-+
+.br
+\~
+.br
 You can prevent a parameter from being changed by leaving the
 parameter value in the override file empty. The parameter will be
 marked as \*(Aquntouched\*(Aq in the override column of the verify table.
-+
+.br
+\~
+.br
 The values from the override files will take precedence over the
 values from \fI/usr/share/saptune/notes\fP or \fI/etc/saptune/extra\fP. In
-such case you will not lose your customized Notes between saptune or
+such case you will not lose your customized Notes between \fBsaptune\fP or
 vendor updates.
 .br
-The saptune options \*(Aqlist\*(Aq, \*(Aqverify\*(Aq and \*(Aqsimulate\*(Aq will mark the
+The \fBsaptune\fP options \*(Aqlist\*(Aq, \*(Aqverify\*(Aq and \*(Aqsimulate\*(Aq will mark the
 existence of an override file and the contained values.
-+
+.br
+\~
+.br
 ATTENTION: Creating or changing an override file just changes the
 configuration \fIinside\fP this Note definition file, but does not change
 the \fIrunning\fP configuration of the system.
 .br
 That means: When creating or changing an override file for an \fBalready
-applied\fP Note definition, please do a \*(Aq\fIsaptune note revert <NoteID>\fP\*(Aq
+applied\fP Note definition, please do a \fBsaptune note revert NOTEID\fP
 and then apply this Note again, to get the changes take effect.
 .RE
 .sp
@@ -989,9 +950,9 @@ This allows to create own Note definition files in
 template file into the location \fI/etc/saptune/extra\fP, if the file does
 not exist already. After that an editor will be launched to allow
 changing the Note definitions. The editor is defined by the \fBEDITOR\fP
-environment variable. If not set editor defaults to /usr/bin/vim. You
-need to choose an unique NoteID for this operation. Use \*(Aq\fIsaptune note
-list\fP\*(Aq to find the already used NoteIDs.
+environment variable. If not set editor defaults to \fI/usr/bin/vim\fP. You
+need to choose an unique NoteID for this operation. Use \fBsaptune\fP note
+list* to find the already used NoteIDs.
 .RE
 .sp
 \fBrefresh *ATTENTION:\fP experimental*
@@ -999,19 +960,27 @@ list\fP\*(Aq to find the already used NoteIDs.
 Identifies and activates changed parameter settings of a Note
 definition. The changes get active without first reverting the \*(Aqold\*(Aq
 settings, so the tuning of the system gets not interrupted.
-+
+.br
+\~
+.br
 ATTENTION:
 .br
 This action is currently in the state \fBexperimental\fP!
-+
-Currently only parameter of section "[sysctl]", "[sys]" and "[vm]" are
+.br
+\~
+.br
+Currently only parameter of section \fB[sysctl]\fP, \fB[sys]\fP and \fB[vm]\fP are
 supported by the \fIrefresh\fP action.
-+
-Parameter of section "[version]", "[rpm]", "[grub]", "[fs]" and
-"[reminder]" are only checked by saptune, but not applied. So there is
-nothing to do during refresh of a note and these sections are skipped
+.br
+\~
+.br
+Parameter of section \fB[version]\fP, \fB[rpm]\fP, \fB[grub]\fP, \fB[fs]\fP and
+\fB[reminder]\fP are only checked by \fBsaptune\fP, but not applied. So there is
+nothing to do during refresh of a Note and these sections are skipped
 without notice.
-+
+.br
+\~
+.br
 Parameter of all other sections are currently \fBnot\fP supported by the
 \fIrefresh\fP action and \fBnot\fP evaluated. If such parameter are available
 in the to be refreshed Note an info is logged per affected parameter.
@@ -1025,8 +994,8 @@ will no longer be activated automatically upon system boot.
 .sp
 \fBrevertall\fP
 .RS 4
-Revert optimization settings carried out by all applied notes, and the
-notes will no longer be activated automatically upon system boot.
+Revert optimization settings carried out by all applied Notes, and the
+Notes will no longer be activated automatically upon system boot.
 .RE
 .sp
 \fBshow\fP
@@ -1039,16 +1008,20 @@ Print content of Note definition file to stdout
 This allows to delete a customer or vendor specific Note definition
 file including the corresponding override file if available. A
 confirmation is needed to finish the action.
-+
+.br
+\~
+.br
 ATTENTION:
 .br
-Note definition files shipped by the saptune package \- so called
-\fIinternal\fP saptune Note definition files \- \fBmust not\fP be deleted.
+Note definition files shipped by the \fBsaptune\fP package \- so called
+\fIinternal\fP \fBsaptune\fP Note definition files \- \fBmust not\fP be deleted.
 There will be an appropriate error message.
 .br
 If a corresponding override file is available, there will be the
 possibility to delete this file instead.
-+
+.br
+\~
+.br
 ATTENTION:
 .br
 If the Note is already applied, the command will be terminated with
@@ -1065,14 +1038,18 @@ action.
 .br
 If the \fBnew\fP Note definition name already exists the command will be
 terminated with a respective message.
-+
+.br
+\~
+.br
 ATTENTION:
 .br
-Note definition files shipped by the saptune package \- so called
-\fIinternal\fP saptune Note definition files \- and their corresponding
+Note definition files shipped by the \fBsaptune\fP package \- so called
+\fIinternal\fP \fBsaptune\fP Note definition files \- and their corresponding
 override files, if available, \fBmust not\fP be renamed. There will be an
 appropriate error message.
-+
+.br
+\~
+.br
 ATTENTION:
 .br
 If the Note is already applied, the command will be terminated with
@@ -1081,20 +1058,20 @@ can be renamed.
 .RE
 .SH "SOLUTION ACTIONS"
 .sp
-A solution is a collection of one or more Notes. Activation of a
-solution will activate all associated Notes.
+A Solution is a collection of one or more Notes. Activation of a
+Solution will activate all associated Notes.
 .br
-The solution definitions shipped with saptune can be found in the
-directory \fI/usr/share/saptune/sols\fP or vendor/customer specific solution
+The Solution definitions shipped with saptune can be found in the
+directory \fI/usr/share/saptune/sols\fP or vendor/customer specific Solution
 definitions can be found in the directory \fI/etc/saptune/extra\fP.
 .sp
-It\(cqs not possible to combine solutions, there can only be\fBone\fP
-solution enabled. But it is possible to change a solution definition by
+It\(cqs not possible to combine Solutions, there can only be \fBone\fP
+Solution enabled. But it is possible to change a Solution definition by
 using an override file in \fI/etc/saptune/override\fP or by creating a
-custom specific solution definition in the directory
+custom specific Solution definition in the directory
 \fI/etc/saptune/extra\fP.
 .sp
-The following solution definitions are currently shipped with saptune:
+The following Solution definitions are currently shipped with saptune:
 .TS
 allbox tab(:);
 ltB ltB.
@@ -1179,189 +1156,198 @@ Solution for running an SAP Adaptive Server Enterprise database.
 T}
 .TE
 .sp
-.sp
-===
 .RS 3
 .ll -.6i
 .sp
-Syntax of the solution definition file names: <solutionName>.sol
+Syntax of the Solution definition file names: \fI<SolutionName>.sol\fP
 .br
-e.g. V4711.sol
+e.g. \fIV4711.sol\fP
 .br
 .RE
 .ll
 .sp
-===
-.sp
 \fBapply\fP
 .RS 4
-Apply optimization settings recommended by the solution. These
+Apply optimization settings recommended by the Solution. These
 settings will be automatically activated upon system boot if the
-saptune service is enabled.
+\fBsaptune\fP service is enabled.
 .br
-Only one solution can be applied at the time. If a solution is
-already applied, \*(Aq\fIsaptune\fP\*(Aq will ask to replace the solution.
-With \*(Aq\fI\-\-force\fP\*(Aq the new solution will be applied without request.
+Only one Solution can be applied at the time. If a Solution is
+already applied, \fBsaptune\fP will ask to replace the Solution.
+With \fB\-\-force\fP the new Solution will be applied without request.
 .RE
 .sp
 \fBlist\fP
 .RS 4
-List all solution names that saptune is capable of implementing.
+List all Solution names that \fBsaptune\fP is capable of implementing.
 .br
-The currently implemented solution is marked with \*(Aq\fB*\fP\*(Aq and is
-highlighted with green color. A deprecated solution is marked with
+The currently implemented Solution is marked with \*(Aq\fB*\fP\*(Aq and is
+highlighted with green color. A deprecated Solution is marked with
 \*(Aq\fBD\fP\*(Aq.
 .br
-If an \fBoverride\fP file exists for a solution, the solution is marked
-with \*(Aq\fBO\fP\*(Aq. A custom specific solution is marked with \*(Aq\fBC\fP\*(Aq.
+If an \fBoverride\fP file exists for a Solution, the Solution is marked
+with \*(Aq\fBO\fP\*(Aq. A custom specific Solution is marked with \*(Aq\fBC\fP\*(Aq.
 .br
-If a note belonging to an enabled solution is reverted manually, the
-note is highlighted with red color (instead of green) and is crossed
+If a Note belonging to an enabled Solution is reverted manually, the
+Note is highlighted with red color (instead of green) and is crossed
 out.
 .br
-If we detect a \fBconflict\fP with solutions the related entry in the list
+If we detect a \fBconflict\fP with Solutions the related entry in the list
 is marked with a leading \*(Aq\fB!\fP\*(Aq and the line is highlighted with yellow
 color. Look at the log file for details like warning messages
 addressing the problem.
 .br
 Currently we report a conflict if a customer or vendor specific
-solution has the \fBsame\fP name as a shipped solution. In this case the
-shipped solution will take precedence over the custom solution.
+Solution has the \fBsame\fP name as a shipped Solution. In this case the
+shipped Solution will take precedence over the custom Solution.
 .RE
 .sp
 \fBenabled\fP
 .RS 4
-Print the currently enabled solution.
+Print the currently enabled Solution.
 .RE
 .sp
 \fBapplied\fP
 .RS 4
-Print the currently applied solution.
+Print the currently applied Solution.
 .br
-If one or more notes of the solution are \fBreverted\fP, which is
-indicated by a \*(Aq\-\*(Aq in the output of \*(Aqsaptune note list\*(Aq, the string
-\*(Aq\fB(partial)\fP is added to the solution name.
+If one or more Notes of the Solution are \fBreverted\fP, which is
+indicated by a \*(Aq\-\*(Aq in the output of \fBsaptune note list\fP, the string
+\fB(partial)\fP is added to the Solution name.
 .RE
+\" _strm_3.2.0_start
 .sp
 \fBsimulate \- ATTENTION: deprecated\fP
 .RS 4
-Show all notes that are associated with the specified solution, and
-all changes that will be applied once the solution is activated.
+Show all Notes that are associated with the specified Solution, and
+all changes that will be applied once the Solution is activated.
 .RE
+\" _strm_3.2.0_end
 .sp
 \fBverify\fP
 .RS 4
-If a Solution name is specified, saptune verifies the running system
+If a Solution name is specified, \fBsaptune\fP verifies the running system
 against all Notes of that Solution regardless of their state.
-.br
-
-.br
 .RE
 .sp
 \fBedit\fP
 .RS 4
-This allows to edit the note list of the customer or vendor specific
-solution definitions in \fI/etc/saptune/extra\fP. An editor will be
+This allows to edit the Note list of the customer or vendor specific
+Solution definitions in \fI/etc/saptune/extra\fP. An editor will be
 launched to allow changing the Note definitions. The editor is defined
 by the \fBEDITOR\fP environment variable. If not set editor defaults to
-/usr/bin/vim.
-+
-You can change, add or delete noteIDs in the list of notes defining
-the solution.
-+
-If the solution is currently applied and/or an override file exists,
+\fI/usr/bin/vim\fP.
+.br
+\~
+.br
+You can change, add or delete NoteIDs in the list of Notes defining
+the Solution.
+.br
+\~
+.br
+If the Solution is currently applied and/or an override file exists,
 saptune will remind you to take care of this situation.
 .RE
 .sp
 \fBcustomise\fP
 .RS 4
-This allows to customize the note list of the saptune solution
-definitions. The solution definition file will be copied from
+This allows to customize the Note list of the \fBsaptune\fP Solution
+definitions. The Solution definition file will be copied from
 \fI/usr/share/saptune/sols\fP or \fI/etc/saptune/extra\fP to the override
 location at \fI/etc/saptune/override\fP, if the file does not exist
 already. After that an editor will be launched to allow changing the
-solution definitions. The editor is defined by the \fBEDITOR\fP
-environment variable. If not set editor defaults to /usr/bin/vim.
-+
-You can change, add or delete noteIDs in the list of notes defining
-the solution.
-+
+Solution definitions. The editor is defined by the \fBEDITOR\fP
+environment variable. If not set editor defaults to \fI/usr/bin/vim\fP.
+.br
+\~
+.br
+You can change, add or delete NoteIDs in the list of Notes defining
+the Solution.
+.br
+\~
+.br
 The values from the override files will take precedence over the
 values from \fI/usr/share/saptune/sols\fP or \fI/etc/saptune/extra\fP. In such
-case you will not lose your customized solutions between saptune or
+case you will not lose your customized Solutions between \fBsaptune\fP or
 vendor updates.
 .br
-The saptune option \*(Aqlist\*(Aq will mark the existence of an override file.
-+
+The \fBsaptune\fP option \*(Aqlist\*(Aq will mark the existence of an override file.
+.br
+\~
+.br
 ATTENTION: Creating or changing an override file just changes the
-configuration \fIinside\fP this solution definition file, but does not
+configuration \fIinside\fP this Solution definition file, but does not
 change the \fIrunning\fP configuration of the system.
 .br
 That means: When creating or changing an override file for an \fBalready
-applied\fP solution definition, please do a \*(Aq\fIsaptune solution revert
-<solutionName>\fP\*(Aq and then apply this solution again, to get the
+applied\fP Solution definition, please do a \fBsaptune solution revert
+SOLUTIONNAME\fP and then apply this Solution again, to get the
 changes take effect.
 .RE
 .sp
 \fBcreate\fP
 .RS 4
-This allows to create own solution definition files in
-\fI/etc/saptune/extra\fP. The solution definition file will be created
+This allows to create own Solution definition files in
+\fI/etc/saptune/extra\fP. The Solution definition file will be created
 from a template file into the location \fI/etc/saptune/extra\fP, if the
 file does not exist already. After that an editor will be launched to
-allow changing the solution definition. The editor is defined by the
+allow changing the Solution definition. The editor is defined by the
 \fBEDITOR\fP environment variable. If not set editor defaults to
-/usr/bin/vim. You need to choose an unique solution name for this
-operation. Use \*(Aq\fIsaptune solution list\fP\*(Aq to find the already used
-solution names.
+/usr/bin/vim. You need to choose an unique Solution name for this
+operation. Use \fBsaptune solution list\fP to find the already used
+Solution names.
 .RE
 .sp
 \fBrevert\fP
 .RS 4
-Revert optimization settings recommended by the solution, and these
+Revert optimization settings recommended by the Solution, and these
 settings will no longer be activated automatically upon system boot.
 .RE
 .sp
 \fBchange\fP
 .RS 4
-Switch to a new solution even that another solution was already
+Switch to a new Solution even that another Solution was already
 applied.
 .br
-
+\~
 .br
 ATTENTION:
 .br
-because of the revert of the old solution during the execution of the
+because of the revert of the old Solution during the execution of the
 action \*(Aqchange\*(Aq the system will be not sufficient tuned for SAP
-workloads for a short period of time until the new solution is applied
+workloads for a short period of time until the new Solution is applied
 successfully. This may harm a running SAP system. So use this action
 carefully.
 .br
 And please keep in mind: Because of the \*(Aqrevert\*(Aq and \*(Aqapply\*(Aq the order
-of notes and therefore the active tuning may change, especially if
-additional notes were applied beside the old applied solution.
+of Notes and therefore the active tuning may change, especially if
+additional Notes were applied beside the old applied Solution.
 .RE
 .sp
 \fBshow\fP
 .RS 4
-Print content of solution definition file to stdout
+Print content of Solution definition file to stdout.
 .RE
 .sp
 \fBdelete\fP
 .RS 4
-This allows to delete a customer or vendor specific solution
+This allows to delete a customer or vendor specific Solution
 definition file including the corresponding override file if
 available. A confirmation is needed to finish the action.
-+
+.br
+\~
+.br
 ATTENTION:
 .br
-Solution definition files shipped by the saptune package \- so called
-\fIinternal\fP saptune solution definition files \- \fBmust not\fP be deleted.
+Solution definition files shipped by the \fBsaptune\fP package \- so called
+\fIinternal\fP \fBsaptune\fP Solution definition files \- \fBmust not\fP be deleted.
 There will be an appropriate error message.
 .br
 If a corresponding override file is available, there will be the
 possibility to delete this file instead.
-+
+.br
+\~
+.br
 ATTENTION:
 .br
 If the Solution is already applied, the command will be terminated
@@ -1371,21 +1357,25 @@ before it can be deleted.
 .sp
 \fBrename\fP
 .RS 4
-This allows to rename a customer or vendor specific solution
+This allows to rename a customer or vendor specific Solution
 definition file to a new name. If a corresponding override file is
 available, this file will be renamed too. A confirmation is needed to
 finish the action.
 .br
-If the \fBnew\fP solution definition name already exists the command will
+If the \fBnew\fP Solution definition name already exists the command will
 be terminated with a respective message.
-+
+.br
+\~
+.br
 ATTENTION:
 .br
-Solution definition files shipped by the saptune package \- so called
-\fIinternal\fP saptune solution definition files \- and their corresponding
+Solution definition files shipped by the \fBsaptune\fP package \- so called
+\fIinternal\fP \fBsaptune\fP Solution definition files \- and their corresponding
 override files, if available, \fBmust not\fP be renamed. There will be an
 appropriate error message.
-+
+.br
+\~
+.br
 ATTENTION:
 .br
 If the Solution is already applied, the command will be terminated
@@ -1397,63 +1387,61 @@ before it can be renamed.
 Staging is implemented to enable customers to control and release
 changes shipped by package updates to their working environment.
 .br
-The basic idea is, that Note definition files shipped by saptune in
-updates are not used by saptune for system tuning immediately. An
+The basic idea is, that Note definition files shipped by \fBsaptune\fP in
+updates are not used by \fBsaptune\fP for system tuning immediately. An
 administrator has to explicitly release the updates before being used by
-saptune. This allows customers to update saptune, even with changed
+\fBsaptune\fP. This allows customers to update \fBsaptune\fP, even with changed
 Notes, without having changes in system behavior.
 .sp
 Staging is disabled by default, as not every customer needs the feature
-and having it enabled by default would break the preveious behaviour.
+and having it enabled by default would break the previous behavior.
 .sp
-Staging can be enable by \*(Aq\fBsaptune staging enable\fP\*(Aq (see desciption
-below)
+Staging can be enable by \*(Aq\fBsaptune staging enable\fP\*(Aq (see description
+below).
 .sp
-So now we will have 3 areas, where Note definition files and solution
-definitions shipped by saptune can reside:
+So now we will have 3 areas, where Note definition files and Solution
+definitions shipped by \fBsaptune\fP can reside:
 .br
-This is only related to Note definition files and solution definitions
-shipped by saptune. Custom definition files or override files are \fBNOT\fP
+This is only related to Note definition files and Solution definitions
+shipped by \fBsaptune\fP. Custom definition files or override files are \fBNOT\fP
 affected.
 .sp
 \fBPackage Area\fP
 .br
-Directory where the saptune package stores and maintains shipped Note
-definition files and solution definitions. This directory gets changed
+Directory where the \fBsaptune\fP package stores and maintains shipped Note
+definition files and Solution definitions. This directory gets changed
 by RPM package operations solely.
 .br
-Currently this is \fB/usr/share/saptune/\fP.
+Currently this is \fI/usr/share/saptune/\fP.
 .sp
 \fBWorking Area\fP
 .br
-Directory which contains configuration objects saptune
-note|solution|daemon|service will use. Only Notes and solutions from
+Directory which contains configuration objects \fBsaptune
+note|solution|daemon|service\fP will use. Only Notes and Solutions from
 here can be applied.
 .br
-Currently this is \fB/var/lib/saptune/working/\fP.
+Currently this is \fI/var/lib/saptune/working/\fP.
 .sp
 \fBStaging Area\fP
 .br
 Directory where configuration objects are stored, which are present in
 the package area but differ from the objects in the working area.
 .br
-Currently this is \fB/var/lib/saptune/staging/\fP.
+Currently this is \fI/var/lib/saptune/staging/\fP.
 .br
 At the moment only the Notes from the last update are kept in
-\fB/var/lib/saptune/staging/latest\fP.
-.sp
-===
+\fI/var/lib/saptune/staging/latest\fP.
 .sp
 \fBstatus\fP
 .RS 4
 Displays the status of staging, basically the content of the variable
-STAGING in the central saptune configuration file.
+STAGING in the central \fBsaptune\fP configuration file.
 .RE
 .sp
 \fBis\-enabled\fP
 .RS 4
 Returns the status of staging, basically the content of the variable
-STAGING in the central saptune configuration file, as exit code (0 ==
+STAGING in the central \fBsaptune\fP configuration file, as exit code (0 ==
 enabled, 1 == disabled). No output is generated as this is meant to be
 used in scripts.
 .RE
@@ -1461,9 +1449,11 @@ used in scripts.
 \fBenable|disable\fP
 .RS 4
 Enables or disables staging, by setting the variable STAGING in the
-central saptune configuration file. The result of the status change is
+central \fBsaptune\fP configuration file. The result of the status change is
 displayed.
-+
+.br
+\~
+.br
 Altering the setting does not changes the content of the staging and
 working directory.
 .br
@@ -1473,12 +1463,12 @@ area and update the working area.
 .sp
 \fBlist\fP
 .RS 4
-Lists all Notes and the solution definition which can be released from
+Lists all Notes and the Solution definition which can be released from
 the staging area including name, description, version and release
 date.
 .br
-The solution definition is shown as a whole object. It is only
-possible to release the entire definition, but not single solutions.
+The Solution definition is shown as a whole object. It is only
+possible to release the entire definition, but not single Solutions.
 .br
 Lastly a hint is printed to remind the user that he has to release
 staged objects before he can use them and that it is possible to view
@@ -1494,7 +1484,7 @@ For each Note in the staging area the output contains the values of
 all parameter which differ. This includes new or removed parameters as
 well as changes in the reminder section.
 .br
-For the Solution, all changed solutions are displayed with their
+For the Solution, all changed Solutions are displayed with their
 differences.
 .br
 Lastly a hint is printed to remind the user that he has to release
@@ -1523,16 +1513,17 @@ it will be removed from the working area.
 .br
 First the command will show an analysis of the objects going to be
 released to make the user aware of further needed actions or potential
-problems (for details see saptune staging dependencies).
+problems (for details see \fBsaptune\fP staging dependencies).
 .br
-+
+\~
+.br
 Because the release is irreversible, the user has to confirm the
 action.
 .RE
 .SH "CONFIGURE ACTIONS"
 .sp
-Replaces the direct editing of the saptune configuration file
-/etc/sysconfig/saptune in SLES for SAP 15, which will be replaced by an
+Replaces the direct editing of the \fBsaptune\fP configuration file
+\fI/etc/sysconfig/saptune\fP in SLES for SAP 15, which will be replaced by an
 intern configuration file in SLE 16 and not be present in future
 versions.
 .br
@@ -1540,37 +1531,37 @@ Not all of the former variables will be available as configure option,
 only those who should be changeable by the user.
 .br
 .sp
-===
-.sp
 \fBCOLOR_SCHEME SCHEME\fP
 .RS 4
-Default color scheme. See \*(Aqsaptune verify\*(Aq in this man page for
+Default color scheme. See \fBsaptune verify\fP in this man page for
 available color schemes.
 .br
 To reset the \fBcolor scheme\fP use an empty value as SCHEME like
-\*(Aq\fIsaptune configure COLOR_SCHEME \*(Aq\*(Aq\fP \*(Aq
+\fBsaptune configure COLOR_SCHEME\fP
 .RE
 .sp
 \fBSKIP_SYSCTL_FILES FILE[,FILE...]\fP
 .RS 4
-Comma\-separated list of sysctl config files or directories which
-should be excluded when checking if parameters handled by saptune are
-handled by sysctl as well. Input is checked, if the given files are in
-a location which is searched by sysctl command. If not, the files will
+Comma\-separated list of \fBsysctl\fP config files or directories which
+should be excluded when checking if parameters handled by \fBsaptune\fP are
+handled by \fBsysctl\fP as well. Input is checked, if the given files are in
+a location which is searched by \fBsysctl\fP command. If not, the files will
 be skipped.
 .RE
 .sp
 \fBIGNORE_RELOAD yes|no\fP
 .RS 4
-Controls behavior of systemctl reload saptune.service and the
-systemctl try\-restart saptune.service during package installation.
+Controls behavior of \fBsystemctl\fP reload \fBsaptune.service\fP and the
+systemctl try\-restart \fBsaptune.service\fP during package installation.
 .RE
 .sp
 \fBDEBUG on|off\fP
 .RS 4
 Turns on or off the DebugLog output.
 .br
-ATTENTION: Active DebugLog will clutter the output of saptune commands
+\~
+.br
+ATTENTION: Active DebugLog will clutter the output of \fBsaptune\fP commands
 and can render the output hard to read. Additional it is flooding the
 log file with debug information. So use this setting with caution.
 Only turn it on, if instructed by SUSE support to do so.
@@ -1578,26 +1569,27 @@ Only turn it on, if instructed by SUSE support to do so.
 .sp
 \fBTrentoASDP <period>|off\fP
 .RS 4
-Sets the discovery period (saptune\-discovery\-period) of the Trento
-Agent in /etc/trento/agent.yaml for collecting \fIsaptune\fP information
+Sets the discovery period (\fBsaptune\-discovery\-period\fP) of the Trento
+Agent in \fI/etc/trento/agent.yaml\fP for collecting \fBsaptune\fP information
 from the system.
 .br
-The discovery period is the time in seconds between 2 \fIsaptune\fP calls
-initiated by the Trento Agent \- the tick interval for the saptune
-discovery loop. Adapting this value can prevent \*(Aqsaptune currently in
-use, try later\*(Aq errors (exit code \fB11\fP) from saptune.
+The discovery period is the time in seconds between 2 \fBsaptune\fP calls
+initiated by the Trento Agent \- the tick interval for the \fBsaptune\fP
+discovery loop. Adapting this value can prevent \fBsaptune\fP currently in
+use, try later\*(Aq errors (exit code \fB11\fP) from \fBsaptune\fP.
 .br
 Trento will start with a default of 900s
 .br
 Possible values are "300", "600", "900", "1800" and "3600" seconds or
-"off" to disable the check during start of saptune
-+
-If the variable is set saptune will check during start if the value of
-the variable found in the saptune configuration file is valid and
-still set in /etc/trento/agent.yaml. If not a Warning will pop up.
+"off" to disable the check during start of \fBsaptune\fP.
+\~
 .br
-Setting TrentoASDP to "off" will disable the check during start of
-saptune. The setting of \*(Aqsaptune\-discovery\-period\*(Aq in the Trento Agent
+If the variable is set \fBsaptune\fP will check during start if the value of
+the variable found in the \fBsaptune\fP configuration file is valid and
+still set in \fI/etc/trento/agent.yaml\fP. If not a warning will pop up.
+.br
+Setting \fBTrentoASDP\fP to "off" will disable the check during start of
+\fBsaptune\fP. The setting of \fBsaptune\-discovery\-period\fP in the Trento Agent
 config is not affected by this setting.
 .RE
 .sp
@@ -1626,7 +1618,6 @@ variable gets ignored!
 The default is \fBfirst\fP.
 .br
 Possible values are:
-+
 .sp
 .RS 4
 .ie n \{\
@@ -1636,9 +1627,9 @@ Possible values are:
 .  sp -1
 .  IP \(bu 2.3
 .\}
-always
+\fBalways\fP
 .br
-Detection is done at each saptune invocation.
+Detection is done at each \fBsaptune\fP invocation.
 .RE
 .sp
 .RS 4
@@ -1649,7 +1640,7 @@ Detection is done at each saptune invocation.
 .  sp -1
 .  IP \(bu 2.3
 .\}
-once
+\fBonce\fP
 .br
 Detection is done only once when the configuration is empty.
 .RE
@@ -1662,25 +1653,23 @@ Detection is done only once when the configuration is empty.
 .  sp -1
 .  IP \(bu 2.3
 .\}
-first
+\fBfirst\fP
 .br
-Detection is done the first time saptune is called on a running system
-(\fIsystemctl is\-system\-running\fP reports the system as \fBrunning\fP or
+Detection is done the first time \fBsaptune\fP is called on a running system
+(\fBsystemctl is\-system\-running\fP reports the system as \fBrunning\fP or
 \fBdegraded\fP) after every boot.
 .RE
 .RE
 .sp
-===
-.sp
 \fBreset\fP
 .RS 4
-Reverts the tuning and reset the content of the saptune configuration
+Reverts the tuning and reset the content of the \fBsaptune\fP configuration
 file to the installation default. Asks for confirmation.
 .RE
 .sp
 \fBshow\fP
 .RS 4
-Shows the content of the saptune configuration file
+Shows the content of the \fBsaptune\fP configuration file
 .RE
 .SH "CLOUD ACTIONS"
 .sp
@@ -1698,7 +1687,7 @@ Clears the stored instance type as well as the manual set flag.
 \fBdetect instance_type\fP
 .RS 4
 Runs the instance detection, stores the instance type and flags the
-setting as detected by saptune. The result of the detection will be
+setting as detected by \fBsaptune\fP. The result of the detection will be
 printed to stdout too.
 .RE
 .sp
@@ -1718,7 +1707,7 @@ currently used.
 .RS 4
 Verifies all system parameters against all applied Notes.
 .br
-Same as a \fIsaptune note verify\fP
+Same as a \fBsaptune note verify\fP.
 .RE
 .SH "REFRESH ACTIONS"
 .sp
@@ -1726,13 +1715,13 @@ Same as a \fIsaptune note verify\fP
 .RS 4
 Refreshes all applied Notes.
 .br
-Same as a \fIsaptune note refresh\fP
+Same as a \fBsaptune note refresh\fP.
 .RE
 .SH "REVERT ACTIONS"
 .sp
 \fBrevert all\fP
 .RS 4
-Revert all optimization settings recommended by the SAP solution
+Revert all optimization settings recommended by the SAP Solution
 and/or the Notes, and these settings will no longer be activated
 automatically upon system boot.
 .RE
@@ -1740,143 +1729,123 @@ automatically upon system boot.
 .sp
 \fBcheck\fP
 .RS 4
-Will simply call the external script \*(Aq/usr/sbin/saptune_check\*(Aq.
+Will simply call the external script \fI/usr/sbin/saptune_check\fP.
 .RE
 .SH "STATUS ACTIONS"
 .sp
 \fBstatus\fP
 .RS 4
-Will display the currently saptune status. This will be short for
+Will display the currently \fBsaptune\fP status. This will be short for
 \*(Aqsaptune service status\*(Aq.
 .RE
 .SH "VERSION ACTIONS"
 .sp
 \fBversion\fP
 .RS 4
-Will display the currently active saptune version.
+Will display the currently active \fBsaptune\fP version.
 .RE
 .SH "HELP ACTIONS"
 .sp
 \fBhelp\fP
 .RS 4
-Will display the syntax of saptune
+Will display the syntax of \fBsaptune\fP.
 .RE
 .SH "VENDOR SUPPORT"
 .sp
 To support vendor or customer specific tuning values, saptune supports
 \*(Aqdrop\-in\*(Aq files residing in \fI/etc/saptune/extra\fP. All files found in
 \fI/etc/saptune/extra\fP are listed when running \*(Aq\fBsaptune note list\fP\*(Aq. All
-\fBnote options\fP are available for these files.
+\fBNote options\fP are available for these files.
 .sp
 We simplified the file name syntax for these vendor files.
 .br
 Related to this we add \*(Aqheader\*(Aq support (see description of section
-[version] in saptune\-note(5)) for the vendor files as already available
-for the Note definition files in /usr/share/saptune/notes to get a
-proper description during saptune option \*(Aqlist\*(Aq
+\fB[version]\fP in \fBsaptune\-note\fP(5)) for the vendor files as already available
+for the Note definition files in \fI/usr/share/saptune/notes\fP to get a
+proper description during \fBsaptune\fP option \*(Aqlist\*(Aq
 .br
+\" _strm_3.2.0_start
+.sp
 The old file names are still valid, but \fBdeprecated\fP. The support will
 be dropped in the near future. That means, files without a valid header
-information (see description of section [version] in saptune\-note(5))
+information (see description of section \fB[version]\fP in \fBsaptune\-note\fP(5))
 will be skipped in the future.
+\" _strm_3.2.0_end
 .sp
-===
-.RS 3
-.ll -.6i
-.sp
-Syntax of the file names: <NoteID>.conf
+\fBSyntax of the file names:\fP
 .br
-e.g. V4711.conf
-.sp
-old syntax of the file names: <NoteID>\-<description>
+\fINOTEID.conf\fP
 .br
-e.g. Vendor\-Recommended_OS_Settings
-.br
-or SAP4711\-very_aromatic_tunings
-.br
-.RE
-.ll
+e.g. \fIV4711.conf\fP
+\" _strm_3.2.0_start
 .sp
-===
-.RS 3
-.ll -.6i
+old syntax of the file names: \fINOTEID\-DESCRIPTION\fP
+.br
+e.g. \fIVendor\-Recommended_OS_Settings\fP or \fISAP4711\-very_aromatic_tunings\fP
+\" _strm_3.2.0_end
 .sp
-Syntax of the file: The content of the \*(Aqdrop\-in\*(Aq file should be written
+\fBSyntax of the file:\fP
+.br
+The content of the \*(Aqdrop\-in\*(Aq file should be written
 in a INI file style with sections headed by \*(Aq[section_name]\*(Aq keywords.
-See saptune\-note(5) to find the supported sections and their available
+See \fBsaptune\-note\fP(5) to find the supported sections and their available
 options.
 .sp
 ATTENTION: If renaming or removing an active (aka \*(Aqalready applied\*(Aq)
-note definition file from the file system the \fBold\fP name of this note
+Note definition file from the file system the \fBold\fP name of this Note
 still remains in the configuration of saptune. This may lead to
 unexpected messages.
 .br
-So please always revert the note \fBbefore\fP renaming or removing it from
+So please always revert the Note \fBbefore\fP renaming or removing it from
 the file system.
 .br
-Even if editing an active vendor or customer specific note definition
-file on the file system level, please do a revert of that note and then
+Even if editing an active vendor or customer specific Note definition
+file on the file system level, please do a revert of that Note and then
 apply the Note again, to get the changes take effect.
-.br
-.RE
-.ll
 .sp
-===
-.RS 3
-.ll -.6i
+\fBCustomer specific Solution definitions\fP
+.br
+In addition to the vendor or customer specific Note file definitions
+described previously \fBsaptune\fP now supports vendor or customer specific
+\fBSolution definitions\fP by using \*(Aqdrop\-in\*(Aq files in \fI/etc/saptune/extra\fP.
+All Solutions found in \fI/etc/saptune/extra\fP are listed when running
+\*(Aq\fBsaptune solution list\fP\*(Aq. All \fBSolution options\fP are available for
+these Solutions.
 .sp
-customer specific solution definitions
+\fBSyntax of the Solution definition file names:\fP
+\fISOLUTIONNAME.sol\fP
 .br
-In addition to the vendor or customer specific note file definitions
-described previously saptune now supports vendor or customer specific
-\fBsolution definitions\fP by using \*(Aqdrop\-in\*(Aq files in \fI/etc/saptune/extra\fP.
-All solutions found in \fI/etc/saptune/extra\fP are listed when running
-\*(Aq\fBsaptune solution list\fP\*(Aq. All \fBsolution options\fP are available for
-these solutions.
-.br
-.RE
-.ll
-.sp
-===
-.RS 3
-.ll -.6i
-.sp
-Syntax of the solution definition file names: <solutionName>.sol
-.br
-e.g. V4711.sol
-.br
-.RE
-.ll
+e.g. \fIV4711.sol\fP
 .SH "ATTENTION"
 .sp
 Trento support: If you plan to use Trento and its capability of checking
 the correctness of the configuration of your SAP environment please
-adapt the following solution name schema for your custom solutions.
+adapt the following Solution name schema for your custom Solutions:
 .br
-<saptune_shipped_solutionname>\fB_\fP<your_preferred_badge>.sol
+\fI<saptune_shipped_Solutionname>{underscore}<your_preferred_badge>.sol\fP
 .br
-e.g. NETWEAVER_MyOwnSolution.sol
+e.g. \fINETWEAVER_MyOwnSolution.sol\fP
 .sp
-Syntax of the file: The content of the custom specific solution files
+Syntax of the file: The content of the custom specific Solution files
 should be written in a INI file style with sections headed by
-\*(Aq[section_name]\*(Aq keywords.
+\fB[section_name]\fP keywords.
 .br
-At the moment saptune supports two architectures \- \fIArchX86\fP for the x86
+At the moment \fBsaptune\fP supports two architectures \- \fIArchX86\fP for the x86
 platform and \fIArchPPC64LE\fP for 64\-bit PowerPC little endian platform for
-the solution definitions.
+the Solution definitions.
 .br
-So possible sections for solution definitions are [version] (see
-description of section [version] in saptune\-note(5)) for a brief
-description of the solutions, and [ArchX86] and [ArchPPC64LE] for the
-solution definitions.
+So possible sections for Solution definitions are [version] (see
+description of section [version] in \fBsaptune\-note\fP(5)) for a brief
+description of the Solutions, and \fB[ArchX86]\fP and \fB[ArchPPC64LE]\fP for the
+Solution definitions.
 .br
-The solution itself is described as a list of note definition files
-separated by blanks. The solution \fBname\fP is defined by the filename
-without the \fI.sol\fP suffix. A solution is only valid and listed by
-\*(Aq\fBsaptune solution list\fP\*(Aq, if all listed note definition files can be
+The Solution itself is described as a list of Note definition files
+separated by blanks. The Solution \fBname\fP is defined by the filename
+without the \fI.sol\fP suffix. A Solution is only valid and listed by
+\fBsaptune solution list\fP, if all listed Note definition files can be
 found in the working area or in \fI/etc/saptune/extra\fP.
 .sp
-e.g. filename is \fBNEWSOL1.sol\fP with content
+e.g. filename is \fINEWSOL1.sol\fP with content
 .sp
 [version]
 .br
@@ -1884,7 +1853,7 @@ VERSION=1
 .br
 DATE=15.12.2020
 .br
-DESCRIPTION=My custom specific solution definitions
+DESCRIPTION=My custom specific Solution definitions
 .br
 REFERENCES=
 .br
@@ -1903,17 +1872,39 @@ All saptune commands share the following exit codes:
 .sp
 0
 .RS 4
-action was successfully
+Success: The requested command completed successfully, or the command was a pure informational query
 .RE
 .sp
 1
 .RS 4
-action failed
+General Failure / Syntax Error / Permission Denied: Unrecognized command\-line arguments, invalid flags,
+missing parameters, execution failure, or invoked without root privileges
+.RE
+.sp
+11
+.RS 4
+Lock Collision: Another instance of saptune is currently running and holds /run/.saptune.lock
+.RE
+.sp
+12
+.RS 4
+Lock Creation Error: Problems creating or setting the lock file \fI/run/.saptune.lock\fP
+.RE
+.sp
+99
+.RS 4
+Lock File Corruption: Error reading or parsing the PID from \fI/run/.saptune.lock\fP
 .RE
 .sp
 128
 .RS 4
-an error in the configuration file occurred e.g. missing variables)
+Central Configuration Error: The saptune configuration file cannot be read, mandatory keys are missing, STAGING has an invalid value, SAPTUNE_VERSION does not match, or cloud instance
+detection/storage failed
+.RE
+.sp
+130
+.RS 4
+JSON Output Serialization Failure: An error occurred while serializing the machine\-readable JSON structure
 .RE
 .br
 .RE
@@ -1922,13 +1913,17 @@ an error in the configuration file occurred e.g. missing variables)
 The following commands have individual exit codes additionally or
 alternatively:
 .sp
-\fBsaptune service status\fP
+\fBsaptune status\fP, \fBsaptune service status\fP, \fBsaptune daemon status\fP
 .RS 4
-\fI__\fP
+.sp
+0
+.RS 4
+\fBsaptune.service\fP is active, the system is tuned, and all applied settings are compliant.
+.RE
 .sp
 1
 .RS 4
-saptune.service is not started (regardless if configured or not)
+\fBsaptune.service\fP is not active / stopped.
 .RE
 .sp
 2
@@ -1938,78 +1933,107 @@ not used
 .sp
 3
 .RS 4
-saptune.service has been started, but tuning (Note or Solution) is
-not configured
+\fBsaptune.service\fP has been started, but tuning (Note or Solution) is not configured.
 .RE
 .sp
 4
 .RS 4
-  saptune.service has been started, but tuning is not compliant.
-\fI__\fP
+\fBsaptune.service\fP has been started, system is tuned, but tuning is not compliant — one or more parameters deviated from recommendations.
+.RE
+.RE
+.sp
+\fBsaptune note|solution verify\fP, \fBsaptune verify applied\fP
+.RS 4
+.sp
+0
+.RS 4
+All evaluated parameters conform to recommendations (or no Notes/Solutions are enabled/applied to check).
+.RE
+.sp
+1
+.RS 4
+One or more parameters deviated from recommendations (non\-compliant) OR an inspection error occurred / specified Note or Solution does not exist.
 .RE
 .RE
 .sp
 \fBsaptune staging analysis\fP
 .RS 4
-\fI__\fP
+.sp
+0
+.RS 4
+All evaluated objects are releaseable with no administrative action required (e.g. new or un\-enabled definitions).
+.RE
 .sp
 1
 .RS 4
-actions are required by the user, but no solution might break
+Advisory action required (e.g. Note or Solution is currently applied and must be re\-applied or refreshed after release, or benefits from an update).
 .RE
 .sp
 2
 .RS 4
-a Solution might break
-.RE
-.sp
-5
-.RS 4
-  error during calculation
-\fI__\fP
+Breaking release: Releasing the object would break \fBsaptune\fP functionality (e.g. a deleted Note is part of an active enabled Solution, or a required note is missing).
 .RE
 .RE
 .sp
 \fBsaptune staging release\fP
 .RS 4
-\fI__\fP
+.sp
+0
+.RS 4
+Objects successfully released to the working area; OR \fB\-\-dry\-run\fP completed without changes; OR release cancelled by user interaction; OR no staging files available.
+.RE
+.sp
+1
+.RS 4
+Specified object not found in the staging area; OR an error occurred copying/moving files.
+.RE
 .sp
 2
 .RS 4
-a Solution might break
+Release blocked because releasing the object would break \fBsaptune\fP functionality.
+.RE
 .RE
 .sp
-5
+\fBsaptune staging is\-enabled\fP
 .RS 4
-  error during calculation
-\fI__\fP
+.sp
+0
+.RS 4
+Staging is enabled.
+.RE
+.sp
+1
+.RS 4
+Staging is disabled.
 .RE
 .RE
 .sp
 \fBsaptune check\fP
 .RS 4
-\fI__\fP
+.sp
+0
+.RS 4
+All checks passed (or only advisory warnings found).
+.RE
 .sp
 1
 .RS 4
-some warnings occurred and saptune should work
+One or more checks failed; \fBsaptune\fP will not work properly.
 .RE
 .sp
 2
 .RS 4
-some errors occurred and saptune will not work
+Operating system is not SLES, or \fBsaptune\fP package is not installed.
 .RE
 .sp
 3
 .RS 4
-wrong parameters has been given to the tool (should never happen, if
-called by saptune check!)
+Invalid/wrong command\-line parameter passed to \fBsaptune_check\fP.
 .RE
 .sp
 5
 .RS 4
-  unexpected errors in regards of JSON output occurred
-\fI__\fP
+Unexpected error regarding JSON output generation.
 .RE
 .RE
 .SH "HOTFIX"
@@ -2019,28 +2043,28 @@ SAP installations.
 .br
 It is meant to bridge the time with a \fBtemporary mitigation\fP until the
 \fBpermanent fix\fP is available. As soon as the fix is released, the next
-released saptune version will contain an \fBupdate\fP to the HotFix to be
+released \fBsaptune\fP version will contain an \fBupdate\fP to the HotFix to be
 applied only when necessary. \fBOne year\fP after the fix is available, we
-will \fBremove\fP the HotFix from saptune.
+will \fBremove\fP the HotFix from \fBsaptune\fP.
 .sp
 We hope to provide an comfortable way to address such issues.
 .sp
 The HotFix will be added as individual Note with the name
 .br
-\fBHotFix<TID_NUMBER>\fP and can be part of a Solution.
+\fBHotFixTID_NUMBER\fP and can be part of a Solution.
 .br
 A HotFix release will contain only configuration changes and no new
 features.
 .sp
 To activate the HotFix you can simply apply the Note by
 .sp
-\fIsaptune note apply HotFix<TID_NUMBER>\fP
+\fBsaptune note apply HotFix<TID_NUMBER>\fP
 .br
 which will not interrupt your current tuning but add the needed
 parameter settings. The change will take effect immediately and is
 reboot persistent.
 .sp
-Or you \fIrestart the saptune.service\fP, which will lead to a short gap in
+Or you restart the \fBsaptune.service\fP, which will lead to a short gap in
 your tuning because of the \*(Aqrevert\*(Aq/\*(Aqapply\*(Aq workflow of the service
 restart. Your SAP workload should be stopped for this operation.
 .sp
@@ -2049,49 +2073,53 @@ Or you reboot your server.
 As soon as the permanent fix is available and installed on the system,
 the Hotfix can be reverted with
 .br
-\fIsaptune note revert HotFix<TID_NUMBER>\fP
+\fBsaptune note revert HotFix<TID_NUMBER>\fP
 .sp
-The next released saptune version will contain an update of the HotFix
+The next released \fBsaptune\fP version will contain an update of the HotFix
 with a condition (\fBtag\fP) to apply this HotFix only under the condition
 the permanent fix is not installed on the systems.
 .br
-The HotFix will be removed from saptune one year after the permanent fix
+The HotFix will be removed from \fBsaptune\fP one year after the permanent fix
 is available, giving customers enough time to update their systems.
 .SH "CHANGES"
 .sp
 \fBchangelog\fP
 .RS 4
-The changelog file of the saptune rpm package contains detailed
+The changelog file of the \fBsaptune\fP rpm package contains detailed
 information, what was changed between the various package versions.
 The command
-+
-rpm \-q \-\-changes saptune | more
-+
+.br
+\~
+.br
+\fBrpm \-q \-\-changes saptune | more\fP
+.br
+\~
+.br
 will show the content of the file
 .RE
 .sp
 \fBversion 3\fP
 .RS 4
-With the update to saptune version 3 saptune does no longer use
-tuned(8) to restart after a system reboot. It is using its own systemd
-service named "saptune.service".
+With the update to \fBsaptune\fP version 3 \fBsaptune\fP does no longer use
+\fBtuned\fP(8) to restart after a system reboot. It is using its own systemd
+service named \fBsaptune.service\fP.
 .br
-So we now \fBdeprecated\fP all "DAEMON ACTIONS" like \*(Aq\fIsaptune daemon
-start\fP\*(Aq. These commands will still work as they are internally linked
-to the related "SERVICE ACTIONS" like \*(Aq\fIsaptune service takeover\fP\*(Aq.
+So we now \fBdeprecated\fP all "DAEMON ACTIONS" like \fBsaptune daemon start\fP.
+These commands will still work as they are internally linked
+to the related "SERVICE ACTIONS" like \fBsaptune service takeover\fP.
 Please refer to the related section descriptions at the top of this
 man page.
 .RE
 .sp
 \fBversion 3.1\fP
 .RS 4
-With the update to saptune version 3.1 we \fBdeprecated\fP the actions
-\*(Aq\fIsaptune note simulate\fP\*(Aq and \*(Aq\fIsaptune solution simulate\fP\*(Aq.
+With the update to \fBsaptune\fP version 3.1 we \fBdeprecated\fP the actions
+\fBsaptune note simulate\fP and \fBsaptune solution simulate\fP.
 .RE
 .sp
 \fBversion 3.2\fP
 .RS 4
-With the update to saptune version 3.2 on SLES for SAP 12 and 15 we
+With the update to \fBsaptune\fP version 3.2 on SLES for SAP 12 and 15 we
 \fBdeprecated\fP the manual editing of the file \fI/etc/sysconfig/saptune\fP
 as the main configuration file will be (re)moved in future versions.
 .br
@@ -2110,7 +2138,7 @@ simulate\*(Aq are removed in SLE16
 \fBversion 3.2.3\fP
 .RS 4
 SAP Note \fB941735\fP not relevant/valid anymore, we \fBdeprecated\fP the Note
-with the update to saptune version 3.2.3 on SLES for SAP 12, 15 and 16
+with the update to \fBsaptune\fP version 3.2.3 on SLES for SAP 12, 15 and 16
 and on plain SLES 16.
 .RE
 .SH "FILES"
@@ -2119,7 +2147,7 @@ and on plain SLES 16.
 .RS 3
 .ll -.6i
 .sp
-schemata defining the json output format available since saptune version
+schemata defining the json output format available since \fBsaptune\fP version
 3.1
 .br
 .RE
@@ -2129,7 +2157,7 @@ schemata defining the json output format available since saptune version
 .RS 3
 .ll -.6i
 .sp
-schemata defining the json output format available since saptune version
+schemata defining the json output format available since \fBsaptune\fP version
 3.2
 .br
 .RE
@@ -2141,11 +2169,11 @@ schemata defining the json output format available since saptune version
 .sp
 part of the \fBPackage Area\fP
 .br
-the saptune SAP Note definitions, which are shipped by the saptune RPM
+the \fBsaptune\fP SAP Note definitions, which are shipped by the \fBsaptune\fP RPM
 package
 .br
 Please do not change the files located here. You will lose all your
-changes during a saptune package update.
+changes during a \fBsaptune\fP package update.
 .br
 .RE
 .ll
@@ -2156,10 +2184,10 @@ changes during a saptune package update.
 .sp
 part of the \fBPackage Area\fP
 .br
-the saptune solution definitions, which are shipped by the saptune RPM
+the saptune Solution definitions, which are shipped by the \fBsaptune\fP RPM
 package
 .sp
-Please do not change as maintenance updates of package saptune will
+Please do not change as maintenance updates of package \fBsaptune\fP will
 overwrite these files without preserving any custom changes.
 .br
 .RE
@@ -2171,17 +2199,17 @@ overwrite these files without preserving any custom changes.
 .sp
 part of the \fBWorking Area\fP
 .br
-the saptune SAP Note definitions, which can be listed by \*(Aq\fBsaptune note
-list\fP\*(Aq
+the saptune SAP Note definitions, which can be listed by \fBsaptune note
+list\fP
 .sp
 The files are named with the number of their corresponding SAP Note
 (==NoteID).
 .br
 A description of the syntax and the available tuning options can be
-found in saptune\-note(5)
+found in \fBsaptune\-note\fP(5)
 .br
 Please do not change the files located here. You will lose all your
-changes during a \*(Aq\fBsaptune staging release\fP\*(Aq command. Use override files
+changes during a \fBsaptune staging release\fP command. Use override files
 to change parameter values if needed.
 .br
 .RE
@@ -2193,17 +2221,17 @@ to change parameter values if needed.
 .sp
 part of the \fBWorking Area\fP
 .br
-the saptune solution definitions, which can be listed by \*(Aq\fBsaptune
-solution list\fP\*(Aq
+the \fBsaptune\fP Solution definitions, which can be listed by \fBsaptune
+solution list\fP
 .br
 At the moment saptune supports two architectures \- \fIArchX86\fP for the x86
 platform and \fIArchPPC64LE\fP for 64\-bit PowerPC little endian platform \-
-with different solution definitions.
+with different Solution definitions.
 .sp
-Please do not change the files located here as the command \*(Aq\fBsaptune
-staging release\fP\*(Aq may overwrite these files without preserving any
-custom changes. Use override files to change the note list of the
-solutions.
+Please do not change the files located here as the command \fBsaptune
+staging release\fP may overwrite these files without preserving any
+custom changes. Use override files to change the Note list of the
+Solutions.
 .br
 .RE
 .ll
@@ -2214,7 +2242,7 @@ solutions.
 .sp
 part of the \fBStaging Area\fP
 .br
-the saptune SAP Note or solution definitions, which are present in the
+the \fBsaptune\fP SAP Note or Solution definitions, which are present in the
 Package Area but differ from the files in the Working Area.
 .br
 .RE
@@ -2224,9 +2252,9 @@ Package Area but differ from the files in the Working Area.
 .RS 3
 .ll -.6i
 .sp
-the file where saptune stores the detected cloud instance.
+the file where \fBsaptune\fP stores the detected cloud instance.
 .br
-Please use \*(Aq\fBsaptune cloud\fP\*(Aq command instead of editing the file
+Please use \fBsaptune cloud\fP command instead of editing the file
 directly.
 .br
 .RE
@@ -2236,16 +2264,16 @@ directly.
 .RS 3
 .ll -.6i
 .sp
-the central saptune configuration file in SLES for SAP \fB12 and 15\fP
-containing the information about the currently enabled notes and
-solutions, the order in which these notes are applied and the version of
-saptune currently used.
+the central \fBsaptune\fP configuration file in SLES for SAP \fB12 and 15\fP
+containing the information about the currently enabled Notes and
+Solutions, the order in which these Notes are applied and the version of
+\fBsaptune\fP currently used.
 .br
 ATTENTION: the manual editing of this file will be \fBdeprecated\fP on SLES
 for SAP 12 and 15 as the main configuration file will be (re)moved in
 SLE 16.
 .br
-Please use the \*(Aq\fBsaptune configure\fP\*(Aq command instead of editing the file
+Please use the \fBsaptune configure\fP command instead of editing the file
 directly.
 .br
 .RE
@@ -2255,12 +2283,12 @@ directly.
 .RS 3
 .ll -.6i
 .sp
-the central saptune configuration file in SLES and SLES for SAP \fB16\fP
-containing the information about the currently enabled notes and
-solutions, the order in which these notes are applied and the version of
-saptune currently used.
+the central \fBsaptune\fP configuration file in SLES and SLES for SAP \fB16\fP
+containing the information about the currently enabled Notes and
+Solutions, the order in which these Notes are applied and the version of
+\fBsaptune\fP currently used.
 .br
-ATTENTION: Do not edit the file directly! Use the \*(Aq\fBsaptune configure\fP\*(Aq
+ATTENTION: Do not edit the file directly! Use the \fBsaptune configure\fP
 command instead.
 .br
 .RE
@@ -2270,13 +2298,13 @@ command instead.
 .RS 3
 .ll -.6i
 .sp
-vendor or customer specific tuning or solution definitions.
+vendor or customer specific tuning or Solution definitions.
 .br
 Please see \fBVENDOR SUPPORT\fP above for more information.
 .sp
-You can use \*(Aq\fBsaptune note create NoteID\fP\*(Aq or \*(Aq\fBsaptune solution create
-solutionName\fP\*(Aq to create a new vendor or customer specific definition or
-\*(Aq\fBsaptune note edit NoteID\fP\*(Aq or \*(Aq\fBsaptune solution edit solutionName\fP\*(Aq
+You can use \fBsaptune note create NOTEID\fP or \fBsaptune solution create
+SOLUTIONNAME\fP to create a new vendor or customer specific definition or
+\fBsaptune note edit NOTEID\fP or \fBsaptune solution edit SolutionName\fP
 to modify an already existing vendor or customer specific definition.
 .br
 .RE
@@ -2286,20 +2314,20 @@ to modify an already existing vendor or customer specific definition.
 .RS 3
 .ll -.6i
 .sp
-the saptune Note and solution definition override location.
+the \fBsaptune\fP Note and Solution definition override location.
 .sp
-If you need to customize the Note or solution definitions found in
+If you need to customize the Note or Solution definitions found in
 \fI/usr/share/saptune/notes\fP or \fI/usr/share/saptune/sols\fP or in
 \fI/etc/saptune/extra\fP, you can copy them to \fI/etc/saptune/override\fP and
 modify them as you need. Please stay with the original name of the Note
-or solution definition (the NoteID or solution name) and do \fBNOT\fP rename
+or Solution definition (the Note ID or Solution name) and do \fBNOT\fP rename
 it.
 .sp
 If the shipped Note or Solution does \fBNOT\fP contain an untagged section
 an override will not work.
 .sp
-Or use \*(Aq\fBsaptune note customize NoteID\fP\*(Aq or \*(Aq\fBsaptune solution customize
-solutionName\fP\*(Aq to do the job for you.
+Or use \fBsaptune note customize NOTEID\fP or \fBsaptune solution customize
+SOLUTIONNAME\fP to do the job for you.
 .br
 .RE
 .ll
@@ -2308,52 +2336,52 @@ solutionName\fP\*(Aq to do the job for you.
 .RS 3
 .ll -.6i
 .sp
-saptune was designed to preserve the state of the system before starting
+\fBsaptune\fP was designed to preserve the state of the system before starting
 the SAP specific tuning, so that it will be possible to restore this
 previous state of the system, if the SAP specific tuning is no longer
 needed or should be changed.
 .sp
-This system state is saved during the \*(Aqapply\*(Aq operation of saptune in
-the saptune internal used files in /run/saptune/saved_state and
-/run/saptune/parameter. The content of these files highly depends on the
+This system state is saved during the \*(Aqapply\*(Aq operation of \fBsaptune\fP in
+the \fBsaptune\fP internal used files in \fI/run/saptune/saved_state\fP and
+\fI/run/saptune/parameter\fP. The content of these files highly depends on the
 previous state of the system.
 .br
-If the values are applied by saptune, no further monitoring of the
-system parameters are done, so changes of saptune relevant parameters
-will not be observed. If a SAP Note or a SAP solution should be
-reverted, then first the values read from the /run/saptune/saved_state
-and /run/saptune/parameter files will be applied to the system to
+If the values are applied by \fBsaptune\fP, no further monitoring of the
+system parameters are done, so changes of \fBsaptune\fP relevant parameters
+will not be observed. If a SAP Note or a SAP Solution should be
+reverted, then first the values read from the \fI/run/saptune/saved_state\fP
+and \fI/run/saptune/parameter\fP files will be applied to the system to
 restore the previous system state and then the corresponding save_state
 file will be removed.
 .sp
 Please do not change or remove files in this directory. The knowledge
 about the previous system state gets lost and the revert functionality
-of saptune will be destructed. So you will lose the capability to revert
-back the tunings saptune has done.
+of \fBsaptune\fP will be destructed. So you will lose the capability to revert
+back the tunings \fBsaptune\fP has done.
 .br
 .RE
 .ll
 .SH "NOTE"
 .sp
-Using saptune within a pipe, the color information will be removed from
+Using \fBsaptune\fP within a pipe, the color information will be removed from
 the output.
 .br
 It is possible to change this behavior by using the command line option
 \fB\-\-force\-color\fP
 .SH "NOTE"
 .sp
-When the values from the saptune Note definitions are applied to the
+When the values from the \fBsaptune\fP Note definitions are applied to the
 system, no further monitoring of the system parameters are done. So
-changes of saptune relevant parameters by using the \*(Aqsysctl\*(Aq command or
+changes of \fBsaptune\fP relevant parameters by using the \*(Aqsysctl\*(Aq command or
 by editing configuration files will not be observed. If the values set
-by saptune should be reverted, these unrecognized changed settings will
-be overwritten by the previous saved system settings from saptune.
+by \fBsaptune\fP should be reverted, these unrecognized changed settings will
+be overwritten by the previous saved system settings from \fBsaptune\fP.
 .SH "NOTE"
 .sp
-To prevent unintended reload/restart of saptune during package
-installation/update of saptune or normal work, which will result in a
+To prevent unintended reload/restart of \fBsaptune\fP during package
+installation/update of \fBsaptune\fP or normal work, which will result in a
 short time period, where the system is not tuned for SAP workloads, it\(cqs
-possible to set the parameter \fBIGNORE_RELOAD\fP in the central saptune
+possible to set the parameter \fBIGNORE_RELOAD\fP in the central \fBsaptune\fP
 configuration file \fI/etc/sysconfig/saptune\fP.
 .br
 \fBIGNORE_RELOAD\fP is used to control the \*(Aq\fBsystemctl reload
@@ -2362,31 +2390,35 @@ saptune.service\fP\*(Aq behavior.
 Default is \fBIGNORE_RELOAD="no"\fP, which means that the \*(Aqreload\*(Aq is
 working as expected.
 .br
-If set to \*(Aq\fByes\fP\*(Aq a \*(Aq\fBsystemctl reload saptune.service\fP\*(Aq and a \*(Aq\fBsaptune
-service restart\fP\*(Aq will do \fBnothing\fP. The reason will be logged.
+If set to \fByes\fP a \fBsystemctl reload saptune.service\fP and a \fBsaptune
+service restart\fP will do \fBnothing\fP. The reason will be logged.
 .br
-Additional this parameter setting will prevent \*(Aq\fBsystemctl restart
-saptune.service\fP\*(Aq (which is a \*(AqExecStop\*(Aq followed by \*(AqExecStart\*(Aq) called
-from macros used during the package installation/update of the saptune
+Additional this parameter setting will prevent \fBsystemctl restart
+saptune.service\fP (which is a \*(AqExecStop\*(Aq followed by \*(AqExecStart\*(Aq) called
+from macros used during the package installation/update of the \fBsaptune\fP
 package from restarting the tuning.
 .br
-ATTENTION: Outside the saptune package installation \*(Aq\fBsystemctl restart
-saptune.service\fP\*(Aq can \fBnot\fP be blocked.
+ATTENTION: Outside the \fBsaptune\fP package installation \fBsystemctl restart
+saptune.service\fP can \fBnot\fP be blocked.
 .SH "ATTENTION"
 .sp
 Higher or lower system values set by the system, the SAP installer or by
 the administrator using sysctl command or sysctl configuration files
-will be now \fBoverwritten\fP by saptune, if they are part of the applied
+will be now \fBoverwritten\fP by \fBsaptune\fP, if they are part of the applied
 Note definitions.
 .sp
-saptune now sets the values read from the Note definition files
+\fBsaptune\fP now sets the values read from the Note definition files
 irrespective of already set higher system values. If you need other
 tuning values as defined in the Note definition files, please use the
 possibility to create \fBoverride\fP files, which contain the values you
 need.
 .SH "SEE ALSO"
 .sp
-saptune\-note(5) saptune\-solution(5) saptune(7) saptune\-migrate(7)
+saptune\-note(5) saptune\-solution(5) saptune(7)
+\" _strm_3.2.0_start
+.sp
+saptune\-migrate(7)
+\" _strm_3.2.0_end
 .SH "AUTHOR"
 .sp
 Soeren Schmidt \c

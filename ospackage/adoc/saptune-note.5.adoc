@@ -7,26 +7,26 @@ v3.2, 2025
 
 == NAME
 
-saptune-note - Note definition files for saptune version *3*
+saptune-note - Note definition files for *saptune* version *3*
 
 == DESCRIPTION
 
 This man page documents the format of the Note definition files for
-saptune version *3*.
+*saptune* version *3*.
 
-The saptune Note definitions will be installed by the rpm in
+The *saptune* Note definitions will be installed by the rpm in
 _/usr/share/saptune/notes_ (the *Package Area*), but for the execution
 they will be searched in _/var/lib/saptune/working/notes_ (the *Working
 Area*) for the saptune SAP Note definitions or in
-_/etc/saptune/override_ for customer specific changes to the saptune SAP
+_/etc/saptune/override_ for customer specific changes to the *saptune* SAP
 Note definitions or in _/etc/saptune/extra_ for vendor or customer
 specific tuning definitions. +
 The *Note definition* files use the INI file format. +
 A comment line starts with pass:[#]. +
 Inline comments are possible and start with a blank followed by a pass:[#] followed by any non-pass:[#] character (' #anything except pass:[#]') +
 If you need to add a character sequence of ' #anything' to your description, please write it as ' pass:[##]anything' (double the pass:[#]) to give
-saptune the chance to distinguish this text from an inline comment.
-saptune will strip the second pass:[#] from the output result, so that the
+*saptune* the chance to distinguish this text from an inline comment.
+*saptune* will strip the second pass:[#] from the output result, so that the
 resulting text will appear as ' #anything'. +
 Lines starting with '[' indicate the begin of a new section. +
 Hint: Key-value assignments outside any section are bound to an unnamed
@@ -221,11 +221,11 @@ devices.
   Valid values for *blkmodel=* are the values found in
   */sys/block/<dev>/device/model* or parts of the string available in
   this file. +
-  The value of the blkmodel tag is used as a regular expression
+  The value of the *blkmodel* tag is used as a regular expression
   '*.*<value>.**' to match the content of the model file.
   +
   Attention: if the tag does not match any block device, no block device
-  will be handled by saptune. e.g. '*saptune note verify*' will list NO
+  will be handled by *saptune*. e.g. '*saptune note verify*' will list NO
   block devices.
 
 ____
@@ -240,7 +240,7 @@ ____
   to define a _pattern_ to match a special block device in _/sys/block/_
   +
   Attention: if the pattern does not match any block device, no block
-  device will be handled by saptune. e.g. '*saptune note verify*' will
+  device will be handled by *saptune*. e.g. *saptune note verify* will
   list NO block device. There will be NO Warning or Error message logged
   in such a case.
 
@@ -267,7 +267,7 @@ _values_, the last valid section will win.
 
 So it's all about *order*.
 
-The following section definitions are available and used in the saptune
+The following section definitions are available and used in the *saptune*
 SAP Note definition files. Each of these sections can be used in a
 vendor or customer specific Note definition file placed in
 _/etc/saptune/extra_.
@@ -281,7 +281,7 @@ See detailed description below:
 == [version]
 
 This section is a mandatory section and is used to display version,
-description and last change date of the underlying Note during saptune
+description and last change date of the underlying Note during *saptune*
 action 'list'.
 
 Old Syntax: *ATTENTION: deprecated* +
@@ -303,8 +303,8 @@ future use, but this field was never used.
 
 The internal used NoteID - the unique identifier of a Note definition -
 was always taken from the filename of the Note definition file without
-extension '.conf'. It will be displayed during the action 'saptune note
-list' and used for all other actions, where the NoteID is needed as
+extension '.conf'. It will be displayed during the action *saptune note
+list* and used for all other actions, where the NoteID is needed as
 parameter.
 
 The CATEGORY is for future use. So we do not have defined CATEGORIES at
@@ -317,7 +317,7 @@ lower-case letters, dots, underscores, minus and plus signs.
 DATE is the date of the last changes.
 
 NAME is the description of the Note, which will be displayed during the
-action 'saptune note list' +
+action *saptune note list* +
 Attention: The note description from the field NAME must be placed in
 double quotes even if there are no spaces used inside the description.
 
@@ -327,7 +327,7 @@ Customer specific Note definition files need to be adapted to the new
 syntax by the admin.
 
 Only in the Solution definition files the old syntax is still valid.
-This may change with a next saptune version.
+This may change with a next *saptune* version.
 
 New Syntax: +
 
@@ -359,14 +359,14 @@ REFERENCES=https://inter.net.addr.com/path/Note_Info http://inter.net.addr.com/a
 
 The entries are treated as 'Key Value' pairs. The equal operator (=) is mandatory, but can be used with spaces around. The entries can be placed in any order inside the version section.
 
-We skipped the fields 'CATEGORY' and '<noteId>' from the old syntax because these values are not in use. The '<noteId>' was always taken from the filename of the Note definition file and we stay with this behaviour for now.
+We skipped the fields 'CATEGORY' and '<noteId>' from the old syntax because these values are not in use. The '<noteId>' was always taken from the filename of the Note definition file and we stay with this behavior for now.
 
 
 VERSION is a number that should indicate how many changes are done for this Note definition in the past. Allowed are digits, upper-case and lower-case letters, dots, underscores, minus and plus signs.
 
 DATE is the date of the last changes.
 
-DESCRIPTION is the description of the Note, which will be displayed during the action 'saptune note list'.
+DESCRIPTION is the description of the Note, which will be displayed during the action *saptune note list*.
 
 REFERENCES is a list of URLs separated by blank, which contain additional information about the Note definition and the content. If you need to use a 'blank' inside the URL definition please mask it as '%20'.
 ....
@@ -523,7 +523,7 @@ This section can only contain the following options:
 The section "[filesystem]" is checking filesystem mount options. +
 The values from the Note definition files are only checked against
 _/proc/mounts_ and _/etc/fstab_. Changing the filesystem mount options
-is not supported by saptune.
+is not supported by *saptune*.
 
 This section can only contain the following parameter:
 
@@ -564,9 +564,9 @@ This section can only contain the following parameter:
 The section "[grub]" is checking kernel command line settings for grub.
 The values from the Note definition files are only checked against
 _/proc/cmdline_. Changing the grub configuration is not supported by
-saptune.
+*saptune*.
 
-Some of these values are set by 'alternative' settings by saptune during
+Some of these values are set by 'alternative' settings by *saptune* during
 runtime, so changing the grub configuration is possible but not needed.
 
 This section can contain options like:
@@ -626,7 +626,7 @@ This section can *only* contain the following option:
 *UserTasksMax=*_STRING_::
   This option is only available on SLE12. In SLE15 the limit is removed
   from the systemd login manager and therefore the setting is no longer
-  supported by saptune.
+  supported by *saptune*.
   +
   This option configures a parameter of the systemd login manager. It
   sets the maximum number of OS tasks each user may run concurrently.
@@ -679,11 +679,11 @@ This section can contain the following options:
 *Note:*::
    +
   Newer _cloud-init_ versions have a dependency of _cloud-final.service_
-  to _multi-user.target_ which prevents saptune to run on boot on Azure
+  to _multi-user.target_ which prevents *saptune* to run on boot on Azure
   systems if the systemd service drop-in file
   '_/etc/systemd/system/saptune.service.d/10-after_cloud-init.conf_' is
-  created by saptune. +
-  With 3.2.3 on each execution saptune will *not* create this file
+  created by *saptune*. +
+  With 3.2.3 on each execution *saptune* will *not* create this file
   anymore, but remove it if present! +
   Additionally SAP Note *941735* contains a [mem:csp=azure] section with
   *disabled* ShmFileSystemSizeMB and VSZ_TMPFS_PERCENT parameters
@@ -692,7 +692,7 @@ This section can contain the following options:
   sporadic non-compliant verify reports. +
   If you really still need to change the size of TMPFS for you SAP
   workload, please do it by *other* means. +
-  If you nevertheless prefer to use saptune to set the size of TMPFS
+  If you nevertheless prefer to use *saptune* to set the size of TMPFS
   *and* if you have a *persistent* swap size during boot you can use an
   override file for Note *941735* to set your desired TMPFS parameter
   settings.
@@ -736,9 +736,9 @@ This section can contain the following options:
 == [reminder]
 
 The section "[reminder]" contains important information and all settings
-of a SAP Note, which can not be set by saptune.
+of a SAP Note, which can not be set by *saptune*.
 
-This section is displayed at the end of the saptune options 'verify',
+This section is displayed at the end of the *saptune* options 'verify',
 'simulate' and 'apply'. It will be highlighted with red color to get the
 attention of the customer.
 
@@ -757,7 +757,7 @@ rpm versions on the system. No other action is supported. +
 Only *lower* versions installed on the system are considered as
 non-compliant. A installed rpm version equal or higher is considered as
 compliant. +
-Package dependencies - if needed - are handled by the saptune package
+Package dependencies - if needed - are handled by the *saptune* package
 installation.
 
 Additional to the check for mandatory packages we now (starting with
@@ -800,7 +800,7 @@ bzip2 all 1.0.8
 
 Only the lines where the SLE version is matching the running system OS
 are checked and displayed during the 'verify' and 'simulate' option. +
-Entries with non-matching SLE versions are reported in the saptune log
+Entries with non-matching SLE versions are reported in the *saptune* log
 file as INFO +
 That means, if there is no matching SLE version for the running OS no
 rpm entries are listed during the 'verify' and 'simulate' operation.
@@ -852,11 +852,11 @@ The syntax for the entries are:
   See sar(1), sa2(8), sa1(8) for more information
   +
   If a service is enabled or disabled by default or admin choice,
-  saptune will NOT disable or enable this service, if only '*start*' or
+  *saptune* will NOT disable or enable this service, if only '*start*' or
   '*stop*' is used. In this case it will only start/stop the service. If
   such a service is started by systemd during a system reboot *after*
-  the start of saptune.service it will be possible that a service is
-  stopped/running even if it was started/stopped by saptune. To change
+  the start of *saptune.service* it will be possible that a service is
+  stopped/running even if it was started/stopped by *saptune*. To change
   this, the service can be additional enabled or disabled by using
   '*enable*' or '*disable*' in the Note definition or Override file.
 
@@ -870,27 +870,27 @@ the desired tunables in 'sysctl.conf' syntax.
 *sysctl.parameter=*_VALUE_::
   There will be a detection of conflicting (system) sysctl entries. +
   When parsing the section '[sysctl]' in the Note definition file
-  saptune additional collects all defined sysctl settings (parameter and
+  *saptune* additional collects all defined sysctl settings (parameter and
   value) available in "/etc/sysctl.conf", "/run/sysctl.d/",
   "/etc/sysctl.d/", "/usr/local/lib/sysctl.d/", "/usr/lib/sysctl.d/",
   "/lib/sysctl.d/", "/boot/" (list retrieved from the comment in
   /etc/sysctl.conf and man page sysctl.conf(5)). When this file list
   contains a directory (like /etc/sysctl.d/) the files located in this
   directory are read too. +
-  saptune will now check, if the parameters from the section '[sysctl]'
+  *saptune* will now check, if the parameters from the section '[sysctl]'
   in the Note definition file are additional defined in one or more of
   the (system) sysctl config files. If yes, a warning is displayed and
-  logged and a footnote will be prepared for the 'saptune verify'
+  logged and a footnote will be prepared for the *saptune verify*
   output. The info shown is the filename, where the parameter is
   additionally defined with it's value in brackets. +
-  The central saptune configuration file contains a parameter
+  The central *saptune* configuration file contains a parameter
   *SKIP_SYSCTL_FILES*, which contains a comma separated list of
   sysctl.conf files or directories containing sysctl.conf files, which
   should be excluded from this warning message and the footnote. +
   Default is *SKIP_SYSCTL_FILES="/boot"* to skip the WARNINGS for
   _/boot/sysctl.conf-<kernelversion>_ +
-  The parameter can be adapted by '_saptune configure SKIP_SYSCTL_FILES
-  <newValue>_'
+  The parameter can be adapted by *saptune configure SKIP_SYSCTL_FILES
+  VALUE*.
   +
   Hint: At the moment links are not recognized. So the linked files will
   be added both in the file list.
@@ -907,7 +907,7 @@ e.g. _/sys/module/watchdog/parameters/open_timeout_ should be written as
 
 *sys.parameter=*_VALUE_::
    +
-  ATTENTION: saptune is NOT validating the value before trying to apply.
+  ATTENTION: *saptune* is NOT validating the value before trying to apply.
 
 == [vm]
 
@@ -938,21 +938,21 @@ The directory (Package Area) contains the Notes, which are shipped by
 the saptune RPM package. They are not directly used by *saptune* but get
 copied during installation or update to the Working or Staging Area. +
 Do not change the files located here. You will lose all your changes
-during a saptune package update. Use an override or extra file for your
-changes as described in saptune(8).
+during a *saptune* package update. Use an override or extra file for your
+changes as described in *saptune*(8).
 ____
 
 _/var/lib/saptune/working/notes_
 
 ____
 The directory (the Working Area) contains Notes, which are shipped by
-the saptune RPM package. They are copied from the Package Area during
+the *saptune* RPM package. They are copied from the Package Area during
 installation or update if they do not belong to the Staging Area due to
 the configuration. +
 Do not change the files located here. Depending on your configuration
-you will lose all your changes during a saptune package update or a
+you will lose all your changes during a *saptune* package update or a
 '*saptune staging release*' command later. Use an override or extra file
-for your changes as described in saptune(8).
+for your changes as described in *saptune*(8).
 ____
 
 _/var/lib/saptune/staging/latest_
@@ -962,8 +962,8 @@ The directory (the Staging Area) contains Notes coming from the package.
 They are copied from the Package Area during installation or update if
 they do not belong to the Working Area due to the configuration. +
 Do not change the files located here. You will lose all your changes
-during a saptune package update. Use an override or extra file for your
-changes as described in saptune(8).
+during a *saptune* package update. Use an override or extra file for your
+changes as described in *saptune*(8).
 ____
 
 _/etc/saptune/extra_

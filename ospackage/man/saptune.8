@@ -681,7 +681,7 @@ Staging is implemented to enable customers to control and release changes shippe
 .br
 The basic idea is, that Note definition files shipped by saptune in updates are not used by saptune for system tuning immediately. An administrator has to explicitly release the updates before being used by saptune. This allows customers to update saptune, even with changed Notes, without having changes in system behavior.
 
-Staging is disabled by default, as not every customer needs the feature and having it enabled by default would break the preveious behaviour. 
+Staging is disabled by default, as not every customer needs the feature and having it enabled by default would break the preveious behaviour.
 
 Staging can be enable by '\fBsaptune staging enable\fP' (see desciption below)
 
@@ -793,11 +793,11 @@ If the variable is set saptune will check during start if the value of the varia
 Setting TrentoASDP to "off" will disable the check during start of saptune. The setting of 'saptune-discovery-period' in the Trento Agent config is not affected by this setting.
 .TP
 .B CSP_TIMEOUT <int>
-Integer value representing the connection timeout for the cloud Metadata Server query used for the cloud instance detection. 
+Integer value representing the connection timeout for the cloud Metadata Server query used for the cloud instance detection.
 Default is 5 seconds.
 .TP
 .B CSP_RETRIES <int>
-Number of retries for the cloud Metadata Server query used for the cloud instance detection. 
+Number of retries for the cloud Metadata Server query used for the cloud instance detection.
 Default is 3 retries.
 .TP
 .B CLOUD_DETECTION always|once|first
@@ -954,7 +954,7 @@ So possible sections for solution definitions are [version] (see description of 
 .br
 The solution itself is described as a list of note definition files separated by blanks. The solution \fBname\fP is defined by the filename without the \fI.sol\fP suffix. A solution is only valid and listed by '\fBsaptune solution list\fP', if all listed note definition files can be found in the working area or in \fI/etc/saptune/extra\fP.
 
-e.g. 
+e.g.
 filename is \fBNEWSOL1.sol\fP with content
 
 [version]
