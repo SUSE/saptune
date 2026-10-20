@@ -30,7 +30,7 @@ const (
 	footnote14   = "[14] the parameter value exceeds the maximum possible number of open files. Check and increase fs.nr_open if really needed."
 	footnote15   = "[15] the parameter is only used to calculate the size of tmpfs (/dev/shm)"
 	footnote16   = "[16] parameter not available on the system, setting not possible"
-	footnote17   = "[17] value has been set later by Note LASTNOTEID"
+	footnote17   = "[17] CURNOTE: value of PARAM has been set later by Note LASTNOTEID"
 )
 
 // set 'unsupported' footnote regarding the architecture
@@ -318,7 +318,10 @@ func chkForConflicts(comparison note.FieldComparison, compliant, comment, noteID
 		compliant = strings.Replace(compliant, "no ", " - ", 1)
 	}
 	comment = comment + " [17]"
+
 	footnote[16] = writeFN(footnote[16], footnote17, lastNote, "LASTNOTEID")
+	footnote[16] = writeFN("", footnote[16], noteID, "CURNOTE")
+	footnote[16] = writeFN("", footnote[16], param, "PARAM")
 	system.DebugLog("chkForConflicts - return compliant as '%s', comment as '%s', footnote as '%+v'", compliant, comment, footnote)
 	return compliant, comment, footnote
 }

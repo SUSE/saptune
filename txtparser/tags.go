@@ -232,7 +232,7 @@ func chkCspTags(tagField string, secFields []string) bool {
 		ret = false
 	}
 	if ret && cInstType != "" {
-		chkInst, _ := system.GetCSPInstanceInfo(chkCsp)
+		chkInst := system.GetCSPInstanceInfo()
 		if cInstType != chkInst.InstanceType {
 			system.InfoLog("cloud instance type '%s' in section definition '%v' does not match the detected cloud instance type of the running system ('%s'). Skipping whole section with all lines till next valid section definition", cInstType, secFields, chkInst.InstanceType)
 			ret = false

@@ -133,7 +133,7 @@ func RetrievalRequest(params CommParams) string {
 			//io.Copy(io.Discard, response.Body)
 			defer response.Body.Close()
 			bdy, e := io.ReadAll(response.Body)
-			ErrorLog(responseMessage(response))
+			ErrorLogNoStdErr(responseMessage(response))
 			DebugLog("body is '%+v', as string '%s', e is '%v'", bdy, string(bdy), e)
 			continue
 		}
@@ -151,7 +151,7 @@ func RetrievalRequest(params CommParams) string {
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		ErrorLog("failed to read HTTP response body: '%s' - %v", strings.TrimSpace(string(body)), err)
-		ErrorLog(responseMessage(response))
+		ErrorLogNoStdErr(responseMessage(response))
 		return ""
 	}
 	DebugLog("RetrievalRequest - return body as '%s'", strings.TrimSpace(string(body)))
