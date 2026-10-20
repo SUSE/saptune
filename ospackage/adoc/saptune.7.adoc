@@ -1,0 +1,24 @@
+= saptune(7)
+Soeren Schmidt <soeren.schmidt@suse.com>; Angela Briel <abriel@suse.com>
+v3.2, 2025
+:doctype: manpage
+:manmanual: saptune manual
+:mansource: saptune
+
+== NAME
+saptune - Installation behavior
+
+== DESCRIPTION
+Starting with *saptune* version 3.2 on SLE 16 we change the behavior of *saptune* during package installation. The system now always gets a default tuning.
+
+If the *saptune* package gets installed (by default SLES for SAP 16 installation, by selecting _SAP Application Server Base_ during the SLE 16 installation, by pattern or manually) an initial base tuning is done similar to *sapconf* in SLES 15. The *saptune* systemd service is *started* and the Solution *SAP_Base* gets applied (*saptune solution apply SAP_Base*). As the *saptune.service* is enabled by vendor presets the base tuning is persistent after reboot.
+
+The *SAP_Base* Solution is based on the SAP Note _1275776 - Linux: Preparing SLES for SAP environments_ (https://me.sap.com/notes/1275776) describing the new base tuning.
+
+The system tuning for SAP workloads can be simply adapted by *saptune solution change NEWSOLUTIONNAME* or the combination of `saptune revert all` followed by *saptune solution apply SOLUTIONNAME* or *saptune note apply NOTEID*.
+
+== ATTENTION
+In SLE 15 nothing changed regarding the *saptune* package installation and the base tuning. Per default *sapconf* is installed, active and provides the base tuning for SAP workloads. To switch to *saptune* for SAP workload tuning please use the command *saptune service takeover* and *saptune solution apply SOLUTIONNAME*.
+
+== SEE ALSO
+*saptune-note*(5), *saptune-solution*(5), *saptune*(8)

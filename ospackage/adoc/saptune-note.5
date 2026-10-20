@@ -1,0 +1,1576 @@
+.\"/*
+.\" * Copyright (c) 2017-2025 SUSE LLC.
+.\" * All rights reserved
+.\" * Authors: Soeren Schmidt, Angela Briel
+.\" *
+.\" * This program is free software; you can redistribute it and/orq
+.\" * modify it under the terms of the GNU General Public License
+.\" * as published by the Free Software Foundation; either version 2
+.\" * of the License, or (at your option) any later version.
+.\" *
+.\" * This program is distributed in the hope that it will be useful,
+.\" * but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" * GNU General Public License for more details.
+.\" */
+.\"
+'\" t
+.\"     Title: saptune-note
+.\"    Author: Angela Briel, Soeren Schmidt
+.\" Generator: Asciidoctor 2.0.23
+.\"      Date: 2026-10-16
+.\"    Manual: saptune note file format description
+.\"    Source: saptune
+.\"  Language: English
+.\"
+.TH "SAPTUNE\-NOTE" "5" "2026-10-16" "saptune" "saptune note file format description"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+saptune-note \- Note definition files for *saptune* version *3*
+.SH "DESCRIPTION"
+.sp
+This man page documents the format of the Note definition files for
+\fBsaptune\fP version \fB3\fP.
+.sp
+The \fBsaptune\fP Note definitions will be installed by the rpm in
+\fI/usr/share/saptune/notes\fP (the \fBPackage Area\fP), but for the execution
+they will be searched in \fI/var/lib/saptune/working/notes\fP (the \fBWorking
+Area\fP) for the saptune SAP Note definitions or in
+\fI/etc/saptune/override\fP for customer specific changes to the \fBsaptune\fP SAP
+Note definitions or in \fI/etc/saptune/extra\fP for vendor or customer
+specific tuning definitions.
+.br
+The \fBNote definition\fP files use the INI file format.
+.br
+A comment line starts with #.
+.br
+Inline comments are possible and start with a blank followed by a # followed by any non\-# character (\*(Aq #anything except #\*(Aq)
+.br
+If you need to add a character sequence of \*(Aq #anything\*(Aq to your description, please write it as \*(Aq ##anything\*(Aq (double the #) to give
+\fBsaptune\fP the chance to distinguish this text from an inline comment.
+\fBsaptune\fP will strip the second # from the output result, so that the
+resulting text will appear as \*(Aq #anything\*(Aq.
+.br
+Lines starting with \*(Aq[\*(Aq indicate the begin of a new section.
+.br
+Hint: Key\-value assignments outside any section are bound to an unnamed
+section and will not be recognized.
+.SH "SECTIONS"
+.sp
+A section starts with a \fB[SECTIONNAME]\fP keyword in the first line,
+followed by lines with options and comments.
+.sp
+It is possible to limit the scope of a section (e.g. to a special
+\fIhardware architecture\fP and/or a special \fIos version\fP, etc.) by adding
+\fBtags\fP to the section definition.
+.br
+See below a detailed description in the section \fBTAGGING\fP.
+.sp
+\fB[version]\fP
+.RS 4
+This section is a mandatory section and is used to display version,
+description and last change date of the underlying Note during \fBsaptune\fP
+action \*(Aqlist\*(Aq.
+\" _strm_3.2.0_start
+.sp
+Old Syntax: \fBATTENTION: deprecated\fP
+.sp
+.if n .RS 4
+.nf
+.fam C
+# <prefix>NOTE=NOTEID CATEGORY=<category> VERSION=<versionNo> DATE=<release date of used Note and related values> NAME="<description of the Note>"
+.fam
+.fi
+.if n .RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+All fields are separated by spaces. But please do not use spaces around
+the equal operator (=) of the fields. And please do not change the order
+of the fields.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+The \fBNOTEID\fP must be a text string without spaces. It was planned for
+future use, but this field was never used.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+The internal used \fBNOTEID\fP \- the unique identifier of a Note definition \-
+was always taken from the filename of the Note definition file without
+extension \*(Aq.conf\*(Aq. It will be displayed during the action \fBsaptune note
+list\fP and used for all other actions, where the NoteID is needed as
+parameter.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+The \fBCATEGORY\fP is for future use. So we do not have defined categories at
+the moment. It must be a text string without spaces.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBVERSION\fP is a number that should indicate how many changes are done for
+this Note definition in the past. Allowed are digits, upper\-case and
+lower\-case letters, dots, underscores, minus and plus signs.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBDATE\fP is the date of the last changes.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBNAME\fP is the description of the Note, which will be displayed during the
+action \fBsaptune note list\fP
+.br
+Attention: The Note description from the field \fBNAME\fP must be placed in
+double quotes even if there are no spaces used inside the description.
+.RE
+.sp
+\fBATTENTION:\fP The old syntax for the version section is deprecated. A
+Warning message will point to the affected Note definition file.
+Customer specific Note definition files need to be adapted to the new
+syntax by the admin.
+.br
+\~
+.br
+Only in the Solution definition files the old syntax is still valid.
+This may change with a next \fBsaptune\fP version.
+.br
+\~
+.br
+Example:
+.sp
+.if n .RS 4
+.nf
+.fam C
+# VIP\-NOTE=vip1 CATEGORY=VIP VERSION=5 DATE=16.04.2019 NAME="VIP: this
+is VIP Note 1, which contains Very Important Parameters"
+.fam
+.fi
+.if n .RE
+\" _strm_3.2.0_end
+.sp
+New Syntax:
+.sp
+.if n .RS 4
+.nf
+.fam C
+VERSION=<versionNo>
+DATE=<release date of used Note and related values>
+DESCRIPTION=<description of the Note>
+REFERENCES=<list of URLs containing information regarding the Note separated by blank>
+.fam
+.fi
+.if n .RE
+.sp
+\~
+.br
+The entries are treated as key\-value pairs. The equal operator (=) is mandatory, but can be used with spaces around. The entries can be placed in any order inside the version section.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+The fields \fBCATEGORY\fP and \fBNOTEID\fP from the old syntax have been omitted. \fBNOTEID\fP is taken from the filename of the Note definition file.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBVERSION\fP is a number that should indicate how many changes are done for this Note definition in the past. Allowed are digits, upper\-case and lower\-case letters, dots, underscores, minus and plus signs.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBDATE\fP is the date of the last changes.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBDESCRIPTION\fP is the description of the Note, which will be displayed during the action \fBsaptune note list\fP.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBREFERENCES\fP is a list of URLs separated by blank, which contain additional information about the Note definition and the content. If you need to use a \*(Aqblank\*(Aq inside the URL definition please mask it as \*(Aq%20\*(Aq.
+.RE
+.sp
+Example:
+.RE
+.sp
+.if n .RS 4
+.nf
+.fam C
+VERSION=5
+DATE=16.04.2019
+DESCRIPTION=VIP: this is VIP Note 1, which contains Very Important Parameters
+REFERENCES=https://inter.net.addr.com/path/Note_Info http://inter.net.addr.com/another_path/A_second_Note_Info
+.fam
+.fi
+.if n .RE
+.sp
+\fB[block]\fP
+.RS 4
+The settings of the "[block]" section will be set on \fBall\fP block devices
+found in \fI/sys/block\fP, which are considered as \fBvalid\fP.
+.br
+\~
+.br
+The following rules apply for \fBvalid\fP devices:
+.br
+\~
+.br
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+all multipath devices (\fIdm\-*\fP, if_ mpath\-\fI, but not _LVM\-\fP or other \fIdm\-\fP)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+all physical disks (indicated by \fIdevice/type=0\fP or names like \fInvme*\fP,
+\fIvd*\fP; for \fInvme*\fP devices additional check for existence of file
+\*(Aqqueue/scheduler\*(Aq and \*(Aqqueue/nr_requests\*(Aq)
+.br
+\fBexcept\fP they are part of a device mapper construct (like \fImpath\-\fP).
+.RE
+.sp
+\~
+.br
+The section \fB[block]\fP can contain the following options:
+.br
+.sp
+\fBIO_SCHEDULER=\fP\fISTRING\fP
+.RS 4
+The default I/O scheduler for single\-queued block layer devices offers
+satisfactory performance for wide range of I/O task, however choosing
+an alternative scheduler may potentially yield better latency
+characteristics and throughput. "noop" is an alternative scheduler, in
+comparison to other schedulers it may offer more consistent
+performance, lower computation overhead, and potentially higher
+throughput. For most SAP environments (RAID, storage arrays,
+virtualization) \*(Aqnoop\*(Aq is the better choice.
+.br
+With the new introduced multi\-queue scheduler for block layer devices
+the recommended I/O scheduler is \*(Aqnone\*(Aq as an equivalent to \*(Aqnoop\*(Aq for
+single\-queued block layer devices.
+.br
+\~
+.br
+So \fBIO_SCHEDULER\fP can now contain a comma separated list of possible
+schedulers, which are checked from left to right. The first one which
+is available in \fI/sys/block/<device>/queue/scheduler\fP will be used as
+new scheduler setting for the respective block device.
+.br
+The selection per device is logged.
+.br
+When set, \fBall\fP block devices on the system will be switched to one of
+the chosen schedulers.
+.br
+Valid values can be found in \fI/sys/block/<device>/queue/scheduler\fP.
+.RE
+.sp
+\fBNRREQ=\fP\fIINT\fP
+.RS 4
+IO \fBnr_requests\fP specifies the maximum number of read and write requests
+that can be queued at one time. The default value is 128, which means
+that 128 read requests and 128 write requests can be queued before the
+next process to request a read or write is put to sleep.
+.br
+When set, the number of requests for \fBall\fP block devices on the system
+will be switched to the chosen value.
+.RE
+.sp
+\fBREAD_AHEAD_KB=\fP\fIINT\fP
+.RS 4
+disk readahead (\fIqueue/read_ahead_kb\fP) defines the maximum number of
+kilobytes that the operating system may read ahead during a sequential
+read operation. As a result, the likely\-needed information is already
+present within the kernel page cache for the next sequential read,
+which improves read I/O performance. Device mappers often benefit from
+a high read_ahead_kb value. Increasing the read_ahead_kb value might
+improve performance in environments where sequential reading of large
+files takes place.
+.br
+When set, the value of read_ahead_kb for \fBall\fP block devices on the
+system will be switched to the chosen value.
+.RE
+.sp
+\fBMAX_SECTORS_KB=\fP\fIINT\fP
+.RS 4
+disk max_sectors_kb (\fIqueue/max_sectors_kb\fP) defines the maximum number
+of kilobytes that the block layer will allow for a filesystem request.
+Must be smaller than or equal to the maximum size allowed by the
+hardware (\fIqueue/max_hw_sectors_kb\fP).
+.br
+When set, the value of \fBmax_sectors_kb\fP for \fBall\fP block devices on the
+system will be switched to the chosen value.
+.br
+If the value is higher than \fBmax_hw_sectors_kb\fP it will be limited to
+\fBmax_hw_sectors_kb\fP and a footnote is displayed.
+.RE
+.RE
+.sp
+\fB[cpu]\fP
+.RS 4
+The section "[cpu]" manipulates files in \fI/sys/devices/system/cpu/cpu*\fP.
+.br
+This section can only contain the following options:
+.sp
+\fBenergy_perf_bias=\fP\fISTRING\fP
+.RS 4
+Energy Performance Bias EPB (applies to Intel\-based systems only)
+.br
+supported values are: \fBperformance\fP (0), \fBnormal\fP (6) and \fBpowersave\fP
+(15)
+.br
+The command \fBcpupower set \-b <value>\fP is used to set the value, if the
+system supports Intel\(cqs performance bias setting. See \fBcpupower\fP(1) and
+\fBcpupower\-set\fP(1) for more information.
+.br
+If system does not support Intel\(cqs performance bias setting \-
+\*(Aq\fBall:none\fP\*(Aq is used in the column \*(Aq\fIActual\fP\*(Aq of the verify table and
+the \fIfootnote\fP \*(Aq[1] setting is not supported by the system\*(Aq is
+displayed.
+.br
+\~
+.br
+When set as \fBenergy_perf_bias=<performance|normal|powersave\fP in the
+Note definition file, the value will be set for \fBall\fP available
+CPUs.
+.br
+The command \fBcpupower \-c all set \-b <value>\fP or \fBcpupower \-c <cpu>
+set \-b <value>\fP is used to set the value.
+.RE
+.sp
+\fBgovernor=\fP\fISTRING\fP
+.RS 4
+CPU Frequency/Voltage scaling (applies to Intel\-based systems only)
+.br
+The clock frequency and voltage of modern CPUs can scale, in order to
+save energy when there\(cqs less work to be done. However SAP HANA as a
+high\-performance database benefits from high CPU frequencies.
+.br
+Supported values are: \fBperformance\fP and \fBpowersave\fP
+.br
+The command \fBcpupower frequency\-set \-g <value>\fP is used to set the
+value, if the value is a supported governor. See \fBcpupower\fP(1) and
+\fBcpupower\-frequency\-set\fP(1) for more information.
+.br
+If the governor settings of all available CPUs are equal,
+\*(Aq\fBall:<governor>\fP\*(Aq is used in the column \*(Aq\fIActual\fP\*(Aq of the verify
+table. If not, each CPU with its assigned governor is listed (e.g.
+\fBcpu1:powersave cpu2:powersave cpu3:powersave cpu4:powersave\fP
+\fBcpu5:powersave cpu6:powersave cpu7:powersave cpu0:performance\fP)
+.br
+\~
+.br
+When set as \fBgovernor=<performance|powersave\fP in the Note definition
+file, the value will be set for \fBall\fP available CPUs.
+.br
+The command \fBcpupower \-c all frequency\-set \-g <value>\fP or \fBcpupower
+\-c <cpu> frequency\-set \-g <value>\fP is used to set the value.
+.RE
+.sp
+\fBforce_latency=\fP\fISTRING\fP
+.RS 4
+force latency \- configure C\-States for lower latency (applies to
+Intel\-based systems only)
+.br
+Input is a valid C\-State name supported by the system, see
+\fI/sys/devices/system/cpu/cpu0/cpuidle/state*/name\fP for valid values.
+.br
+This C\-State name is internally mapped into an integer value
+representing the related latency value, see
+\fI/sys/devices/system/cpu/cpu0/cpuidle/state*/latency\fP
+.br
+OR
+.br
+Input is a string, which is internally treated as a decimal (not a
+hexadecimal) integer number representing a maximum response time in
+microseconds.
+.br
+It is used to establish a latency upper limit by limiting the use of
+C\-States (CPU idle or CPU latency states) to only those with an exit
+latency smaller than the value set here. That means only those states
+that require less than the requested number of microseconds to wake up
+are enabled, all the other C\-States are disabled.
+.br
+The files \fI/sys/devices/system/cpu/cpu*/cpuidle/state*/latency\fP and
+\fI/sys/devices/system/cpu/cpu*/cpuidle/state*/disable\fP are used to
+limit the C\-States.
+.br
+\~
+.br
+If system does not support force latency settings \- \fBall:none\fP is
+used in the column \*(Aq\fIActual\fP\*(Aq of the verify table and the \fIfootnote\fP
+\*(Aq[1] setting is not supported by the system\*(Aq is displayed.
+.br
+\~
+.br
+When set in the Note definition file for all available CPUs all CPU
+latency states with a value read from
+\fI/sys/devices/system/cpu/cpu*/cpuidle/state*/latency\fP \fB>=\fP (higher
+than) the value from the Note definition file are disabled by writing
+\*(Aq\fB1\fP\*(Aq to \fI/sys/devices/system/cpu/cpu*/cpuidle/state*/disable\fP
+.br
+\~
+.br
+ATTENTION: not idling \fBat all\fP increases power consumption
+significantly and reduces the life span of the machine because of wear
+and tear. So do not use a too strict latency setting. For SAP HANA
+workloads a value of \*(Aq\fB70\fP\*(Aq microseconds (as a "light sleep") seems to
+be sufficient. And the impact on power consumption and life of the
+CPUs is less severe. But don\(cqt forget: The deeper the idle state, the
+larger is the exit latency.
+.RE
+.RE
+.sp
+\fB[filesystem]\fP
+.RS 4
+The section \fB[filesystem]\fP is checking filesystem mount options.
+.br
+The values from the Note definition files are only checked against
+\fI/proc/mounts\fP and \fI/etc/fstab\fP. Changing the filesystem mount options
+is not supported by \fBsaptune\fP.
+.br
+\~
+.br
+This section can only contain the following parameter:
+.sp
+\fBxfs_options=\fP\fISTRING\fP
+.RS 4
+where \fBSTRING\fP is a list of valid mount options separated by \fB,\fP.
+.br
+A prefix \fB\-\fP for the option indicates, that the option should NOT be
+available on any xfs filesystem. A prefix \fB+\fP or no prefix for the
+option indicates, that the option should be available on any xfs
+filesystem.
+.br
+\~
+.br
+For the check first the \fBmounted\fP filesystems of the requested
+filesystem type (for now only xfs) will be read from \fI/proc/mounts\fP
+and separated in a list with mount points containing the option and
+another list with mount points NOT containing the option.
+.br
+Then the defined filesystems of the requested filesystem type (for now
+only xfs) will be read from \fI/etc/fstab\fP, skipping the already
+mounted mount points and split the remaining entries in a list with
+mount points containing the option and another list with mount points
+NOT containing the option.
+.br
+At least combine the lists from proc and fstab to get one list of
+mount points containing the option and another list with mount points
+NOT containing the option.
+.br
+\~
+.br
+To decide, if a mount point contains the option or not, we use a
+simple string comparison between the value from the Note definition
+file and the option available on the system.
+.br
+\fBThis can lead to a not\-compliant result even everything is in
+order!\fP
+.br
+Because default options might not appear in the output of
+\fI/proc/mounts\fP, they are not found even if they are set internally. Also
+the content of the the \*(Aqdefaults\*(Aq entry of not\-mounted filesystem is
+opaque.
+.br
+Keep this in mind when crafting Overrides or extra Notes!
+.RE
+.RE
+.sp
+\fB[grub]\fP
+.RS 4
+The section \fB[grub]\fP is checking kernel command line settings for grub.
+The values from the Note definition files are only checked against
+\fI/proc/cmdline\fP. Changing the grub configuration is not supported by
+\fBsaptune\fP.
+.br
+\~
+.br
+Some of these values are set by \*(Aqalternative\*(Aq settings by \fBsaptune\fP during
+runtime, so changing the grub configuration is possible but not needed.
+.br
+\~
+.br
+This section can contain options like:
+.sp
+\fBintel_idle.max_cstate=1\fP and \fBprocessor.max_cstate=1\fP
+.RS 4
+Configure C\-States for lower latency in Linux (applies to Intel\-based
+systems only) \- see force_latency in section \fB[cpu]\fP as \*(Aqalternative\*(Aq
+settings
+.RE
+.sp
+\fBnuma_balancing=disable\fP
+.RS 4
+Turn off autoNUMA balancing \- see \fBkernel.numa_balancing\fP in section
+[sysctl] as \*(Aqalternative\*(Aq settings
+.RE
+.sp
+\fBtransparent_hugepage=never\fP
+.RS 4
+Configure transparent hugepages \- see THP in section \fB[vm]\fP as
+\*(Aqalternative\*(Aq settings
+.RE
+.RE
+\" _strm_3.2.0_start
+.sp
+\fB[limits]\fP \fBATTENTION:\fP deprecated
+.RS 4
+The section "[limits]" is dealing with ulimit settings for user login
+sessions in the pam_limits module. The settings will \fBNOT\fP be done in
+the central limits file \fI/etc/security/limits.conf\fP. Instead there will
+be a \fBdrop\-in file\fP in \fI/etc/security/limits.d\fP for each
+domain\-item\-type combination used in the Note definition file.
+.br
+\~
+.br
+The drop\-in file name syntax will be:
+.br
+\fIsaptune\-<domain>\-<item>\-<type>.conf\fP
+.br
+\~
+.br
+For more information and a description of the syntax and the needed
+fields please look at \fBlimits.conf\fP(5).
+.br
+\~
+.br
+This section has to contain the following option:
+.sp
+\fBLIMITS=\fP\fISTRING\fP
+.RS 4
+where STR*ING is a list of valid limit definitions separated by \fB,\fP
+.br
+a valid limit definition contains the fields \*(Aqdomain item type value\*(Aq
+separated by one space.
+.br
+For more information about the syntax of valid limit definitions
+please refer to \fBlimits.conf\fP(5) or the comment section of
+\fI/etc/security/limits.conf\fP.
+.br
+Note: The \fB@\fP sign in front of the domain name matches a group.
+.br
+\~
+.br
+To leave \fBall\fP limits definitions of a Note definition file
+\*(Aquntouched\*(Aq in the system, leave the \fBLIMITS\fP string in the \fBoverride
+file\fP of the Note definition file empty
+.br
+\~
+.br
+To leave only \fBsome\fP of the limits definitions of a Note definition
+file \*(Aquntouched\*(Aq in the system, remove these limits definitions from
+the \fBLIMITS\fP string in the \fBoverride file\fP of the Note definition
+file.
+.RE
+.RE
+.sp
+\fB[login]\fP
+.RS 4
+The section \fB[login]\fP manipulates the behavior of the systemd login
+manager.
+.br
+This section can \fBonly\fP contain the following option:
+.sp
+\fBUserTasksMax=\fP\fISTRING\fP
+.RS 4
+This option is only available on SLE12. In SLE15 the limit is removed
+from the systemd login manager and therefore the setting is no longer
+supported by \fBsaptune\fP.
+.br
+\~
+.br
+This option configures a parameter of the systemd login manager. It
+sets the maximum number of OS tasks each user may run concurrently.
+The behavior of the systemd login manager was changed starting
+SLES12SP2 to prevent fork bomb attacks.
+.br
+\~
+.br
+Recommended value is \fBinfinity\fP.
+.br
+\~
+.br
+If set, the drop\-in file
+\fI/etc/systemd/logind.conf.d/saptune\-UserTasksMax.conf\fP is created and
+for all currently logged in users the maximum number of OS tasks each
+user may run concurrently is changed using the command \fBsystemctl
+\-\-runtime set\-property user\-<uid>.slice TasksMax=<value>\fP.
+.br
+After creating the drop\-in file the \fBsystemd\-logind.service\fP will be
+reloaded.
+.br
+\~
+.br
+ATTENTION: With this setting your system is vulnerable to fork bomb
+attacks
+.RE
+.RE
+\" _strm_3.2.0_end
+.sp
+\fB[mem]\fP
+.RS 4
+The section "[mem]" manipulates the size of TMPFS (\fI/dev/shm\fP).
+.br
+\~
+.br
+With the STD implementation, the SAP Extended Memory is no longer stored
+in the TMPFS (under \fI/dev/shm\fP). However, the TMPFS is required by the
+Virtual Machine Container (VMC). For this reason, we still recommend the
+same configuration of the TMPFS:
+.br
+75% (RAM + Swap) is still recommended as the size.
+.br
+This section can contain the following options:
+.sp
+\fBShmFileSystemSizeMB=\fP\fIINT\fP
+.RS 4
+Use \fBShmFileSystemSizeMB\fP to set an absolute value for your TMPFS.
+.br
+If \fBShmFileSystemSizeMB\fP is set to a value > 0, the setting for
+\fBVSZ_TMPFS_PERCENT\fP will be ignored and the size will NOT be
+calculated.
+.br
+If \fBShmFileSystemSizeMB\fP is set to \fB0\fP the size will be calculated
+using \fBVSZ_TMPFS_PERCENT\fP.
+.RE
+.sp
+\fBVSZ_TMPFS_PERCENT=\fP\fIINT\fP
+.RS 4
+Size of TMPFS mounted on \fI/dev/shm\fP in percent of the virtual
+memory.
+.br
+Depending on the size of the virtual memory (physical+swap) the value
+is calculated by \fB(RAM + SWAP) * VSZ_TMPFS_PERCENT/100\fP.
+.br
+If \fBVSZ_TMPFS_PERCENT\fP is set to \*(Aq\fB0\fP\*(Aq, the value is calculated by (RAM
++ SWAP) * 75/100, as the default is 75.
++
+As this parameter is only used to calculate the value of
+\fBShmFileSystemSizeMB\fP it will not be checked and compared during the
+saptune operation \*(Aqverify\*(Aq. A footnote is pointing this out.
+.RE
+.sp
+\fBNote:\fP
+.br
+Newer \fBcloud\-init\fP versions have a dependency of \fBcloud\-final.service\fP
+to \fImulti\-user.target\fP which prevents \fBsaptune\fP to run on boot on Azure
+systems if the systemd service drop\-in file
+\fI/etc/systemd/system/saptune.service.d/10\-after_cloud\-init.conf\fP is
+created by \fBsaptune\fP.
+.br
+With 3.2.3 on each execution \fBsaptune\fP will \fBnot\fP create this file
+anymore, but remove it if present!
+.br
+Additionally SAP Note \fB941735\fP contains a \fB[mem:csp=azure]\fP section with
+\fBdisabled\fP ShmFileSystemSizeMB and \fBVSZ_TMPFS_PERCENT\fP parameters
+because calculating the size of \fI/dev/shm\fP is not reliable possible
+anymore if swap is configured by \fBcloud\-init\fP. This can lead to
+sporadic non\-compliant verify reports.
+.br
+If you really still need to change the size of TMPFS for you SAP
+workload, please do it by \fBother\fP means.
+.br
+If you nevertheless prefer to use \fBsaptune\fP to set the size of TMPFS
+\fBand\fP if you have a \fBpersistent\fP swap size during boot you can use an
+override file for Note \fB941735\fP to set your desired TMPFS parameter
+settings.
+.RE
+\" _strm_3.2.0_start
+.sp
+\fB[pagecache]\fP
+.RS 4
+The section \fB[pagecache]\fP is dealing with the pagecache limit feature as
+described in SAP Note 1557506, which is only available on SLE12.
+.br
+\~
+.br
+ATTENTION: The pagecache limit Note will \fBNOT\fP be part of any Solution
+definition by default. As it is essential to configure this feature
+really carefully, you need to customize the Note definition file first
+to enable the feature and then you can apply the Note settings manually.
+After that, the settings will be applied automatically during each
+startup of the system.
+.br
+This section can contain the following options:
+.sp
+\fBENABLE_PAGECACHE_LIMIT=yes|no\fP
+.RS 4
+This defines whether pagecache limit feature should be enabled or not.
+It is a yesno value. By default it is set to \fBno\fP
+.br
+Consider to enable pagecache limit feature if your SAP workloads cause
+frequent and excessive swapping activities. It is recommended to leave
+pagecache limit disabled if the system has low or no swap space.
+.RE
+.sp
+\fBvm.pagecache_limit_ignore_dirty=\fP\fIINT\fP
+.RS 4
+Whether or not to ignore dirty memory when enforcing the pagecache
+limit.
+.br
+If set to 0, dirty memory will be freed (written onto disk) when
+enforcing the pagecache limit.
+.br
+If set to 1 (default), dirty memory will not be freed when enforcing
+the pagecache limit.
+.br
+If set to 2 \- a middle ground, some dirty memory will be freed when
+enforcing the limit.
+.RE
+.sp
+\fBOVERRIDE_PAGECACHE_LIMIT_MB=\fP\fIINT\fP
+.RS 4
+When pagecache limit feature is enabled, the limit value is usually
+automatically calculated using the \*(AqSAP HANA formula\*(Aq, which means 2% of
+system memory is used as pagecache limit.
+.br
+However, the value can be overridden if you set this parameter to the
+desired limit value.
+.br
+To remove the override, set the parameter to empty string.
+.RE
+.RE
+\" _strm_3.2.0_end
+.sp
+\fB[reminder]\fP
+.RS 4
+The section \fB[reminder]\fP contains important information and all settings
+of a SAP Note, which can not be set by \fBsaptune\fP.
+.br
+\~
+.br
+This section is displayed at the end of the \fBsaptune\fP options \*(Aqverify\*(Aq,
+\*(Aqsimulate\*(Aq and \*(Aqapply\*(Aq. It will be highlighted with red color to get the
+attention of the customer.
+.br
+\~
+.br
+Sometimes this section may include lines with parameter settings
+commented out as the SAP Note only contains rough estimations as the
+settings are highly customer environment and workload dependent. Please
+be aware that these parameter settings can\(cqt be activated by an override
+file. If you need to set such parameters you need to create a \*(Aqcustom\*(Aq
+Note containing these settings by using \fBsaptune note create\fP
+.RE
+.sp
+\fB[rpm]\fP
+.RS 4
+The section \fB[rpm]\fP is checking rpm versions on the system. The values
+from the Note definition files are only checked against the installed
+rpm versions on the system. No other action is supported.
+.br
+Only \fBlower\fP versions installed on the system are considered as
+non\-compliant. A installed rpm version equal or higher is considered as
+compliant.
+.br
+Package dependencies \- if needed \- are handled by the \fBsaptune\fP package
+installation.
+.br
+\~
+.br
+Additional to the check for mandatory packages we now (starting with
+version 3.2.2) support the check of \fIoptional\fP packages.
+.br
+A \fB?\fP prefix as the first character of the package name indicates an
+\fIoptional\fP package. \fIOptional\fP packages have to follow the \fBNew\fP Syntax
+described below.
+.br
+The version compliance check will only be done if the package is
+installed. In this case it must follow the version restriction described
+above.
+.br
+Additional it is possible to omit the version for \fIoptional\fP packages.
+In this case each installed version is compliant. It\(cqs a way to list if
+an optional package is at least available on the system.
+.br
+During the \*(Aqverify\*(Aq and \*(Aqsimulate\*(Aq operation an \fIoptional\fP package is
+only listed if the package is installed. The \fB?\fP prefix is displayed in
+the parameter output as \fBrpm:?PACKAGENAME\fP.
+.br
+\~
+.br
+With the availability of tagged sections, we support 2 different types
+of rpm line syntax. The first one \- our \fBOld\fP Syntax \- only for
+compatibility reasons. The second one \- our \fBNew\fP Syntax \- is our
+preferred syntax in combination with tagged rpm sections.
+.br
+\~
+.br
+\fBOld\fP Syntax:
+.br
+.sp
+.if n .RS 4
+.nf
+.fam C
+<rpm package name> <SLE Version> <rpm package version>
+.fam
+.fi
+.if n .RE
+.sp
+this syntax is mainly used for compatibility reasons and when using a
+\*(Aqnon\-tagged\*(Aq rpm section.
+.br
+Add one line for each SLE version a package should be checked for, even
+if the package version is the same.
+.br
+The SLE version has to be noted in the same format as the \*(Aq\fBVERSION=\fP\*(Aq
+entry in \fI/etc/os\-release\fP.
+.br
+\~
+.br
+To address all SLE versions and service packs the keyword \*(Aq\fBall\fP\*(Aq can be
+used instead of a dedicated SLE version.
+.br
+\~
+.br
+e.g
+.br
+systemd 12\-SP2 228\-142.1
+.br
+sapinit\-systemd\-compat 12 1.0\-2.1
+.br
+util\-linux 16.0 2.40.4\-160000.1.3
+.br
+bzip2 all 1.0.8
+.br
+\~
+.br
+Only the lines where the SLE version is matching the running system OS
+are checked and displayed during the \*(Aqverify\*(Aq and \*(Aqsimulate\*(Aq option.
+.br
+Entries with non\-matching SLE versions are reported in the \fBsaptune\fP log
+file as INFO
+.br
+That means, if there is no matching SLE version for the running OS no
+rpm entries are listed during the \*(Aqverify\*(Aq and \*(Aqsimulate\*(Aq operation.
+.br
+\~
+.br
+\fBNew\fP Syntax:
+.br
+.sp
+.if n .RS 4
+.nf
+.fam C
+<rpm package name> <rpm package version>
+.fam
+.fi
+.if n .RE
+.sp
+This syntax is the preferred syntax when using a \*(Aqtagged\*(Aq rpm section,
+where the targeted operating system and/or system architecture is
+defined by using the tags \fBos=\fP and/or \fBarch=\fP
+.br
+Add one line for each package and package version to be checked. Only
+\fIoptional\fP packages are allowed to omit the package version.
+.br
+\~
+.br
+e.g
+.br
+systemd 228\-142.1
+.br
+util\-linux 2.25\-22.1
+.br
+?sssd 2.9.3\-150600.3.25.1
+.br
+?polkit
+.br
+\~
+.br
+Only the lines where the tags of the section match the running system OS
+and/or the system architecture are checked and displayed during the
+\*(Aqverify\*(Aq and \*(Aqsimulate\*(Aq option.
+.br
+That means, if there is no matching SLE version for the running OS
+and/or no matching system architecture in the tags of the rpm section no
+rpm entries are listed during the \*(Aqverify\*(Aq and \*(Aqsimulate\*(Aq operation.
+.RE
+.sp
+\fB[service]\fP
+.RS 4
+The section \fB[service]\fP is dealing with starting, enabling, disabling
+and stopping services controlled by systemd.
+.br
+The syntax for the entries are:
+.sp
+\fB<servicename>=\fP\fISTRING\fP
+.RS 4
+where STRING is a list of valid values separated by \*(Aq\fB,\fP\*(Aq, which are
+checked from left to right. The first entry of the pair \*(Aqstart\*(Aq/\*(Aqstop\*(Aq
+or \*(Aqenable\*(Aq/\*(Aqdisable\*(Aq will be used as new settings for the service.
+.br
+Valid services are those listed by the command \fBsystemctl
+list\-unit\-files\fP.
+.br
+Valid values are \*(Aq\fBstart\fP\*(Aq or \*(Aq\fBstop\fP\*(Aq, \*(Aq\fBenable\fP\*(Aq or \*(Aq\fBdisable\fP\*(Aq.
+.RE
+.sp
+\fBExceptions and Warnings:\fP
+.br
+For the service \fBuuidd.socket\fP only \*(Aq\fBstart\fP\*(Aq is a valid value,
+because the uuidd.socket service is essential for a working SAP
+environment.
+.br
+\~
+.br
+Concerning \fBsysstat.service\fP please be in mind: A running \fBsysstat\fP
+service can effect the system performance. But if there are real
+performance trouble with the SAP system, SAP service normally orders
+the \fBsysstat\fP reports collected in \fI/var/log/sa\fP.
+.br
+See \fBsar\fP(1), \fBsa2\fP(8), \fBsa1\fP(8) for more information.
+.br
+\~
+.br
+If a service is enabled or disabled by default or admin choice,
+\fBsaptune\fP will NOT disable or enable this service, if only \fBstart\fP or
+\fBstop\fP is used. In this case it will only start/stop the service. If
+such a service is started by systemd during a system reboot \fBafter\fP
+the start of \fBsaptune.service\fP it will be possible that a service is
+stopped/running even if it was started/stopped by \fBsaptune\fP. To change
+this, the service can be additional enabled or disabled by using
+\fBenable\fP or \fBdisable\fP in the Note definition or Override file.
+.RE
+.sp
+\fB[sysctl]\fP
+.RS 4
+The section \fB[sysctl]\fP can be used to modify kernel parameters. The
+parameters available are those listed under \fI/proc/sys/\fP.
+.br
+Please write the section keyword \*(Aq[sysctl]\*(Aq in the first line and add
+the desired tunables in \fIsysctl.conf\fP syntax.
+.sp
+\fBsysctl.parameter=\fP\fIVALUE\fP
+.RS 4
+There will be a detection of conflicting (system) \fBsysctl\fP entries.
+.br
+When parsing the section \fB[sysctl]\fP in the Note definition file
+\fBsaptune\fP additional collects all defined sysctl settings (parameter and
+value) available in \fI/etc/sysctl.conf\fP, \fI/run/sysctl.d/\fP,
+\fI/etc/sysctl.d/\fP, \fI/usr/local/lib/sysctl.d/\fP, \fI/usr/lib/sysctl.d/\fP,
+\fI/lib/sysctl.d/\fP, \fI/boot/\fP (list retrieved from the comment in
+\fI/etc/sysctl.conf\fP and man page \fBsysctl.conf\fP(5)). When this file list
+contains a directory (like \fI/etc/sysctl.d/\fP) the files located in this
+directory are read too.
+.br
+\fBsaptune\fP will now check, if the parameters from the section \fB[sysctl]\fP
+in the Note definition file are additional defined in one or more of
+the (system) sysctl config files. If yes, a warning is displayed and
+logged and a footnote will be prepared for the \fBsaptune verify\fP
+output. The info shown is the filename, where the parameter is
+additionally defined with it\(cqs value in brackets.
+.br
+The central \fBsaptune\fP configuration file contains a parameter
+\fBSKIP_SYSCTL_FILES\fP, which contains a comma separated list of
+\fIsysctl.conf\fP files or directories containing \fIsysctl.conf\fP files, which
+should be excluded from this warning message and the footnote.
+.br
+Default is \fBSKIP_SYSCTL_FILES="/boot"\fP to skip the WARNINGS for
+\fI/boot/sysctl.conf\-<kernelversion>\fP
+.br
+The parameter can be adapted by \fBsaptune configure SKIP_SYSCTL_FILES
+VALUE\fP.
+.br
+\~
+.br
+Hint: At the moment links are not recognized. So the linked files will
+be added both in the file list.
+.RE
+.RE
+.sp
+\fB[sys]\fP
+.RS 4
+The section \fB[sys]\fP can be used to modify parameters available under
+\fI/sys/\fP, if the related file is writable.
+.br
+The syntax for the sys parameters is following the \fIsysctl.conf\fP syntax.
+So it\(cqs the absolute filename without the prefixed \fI/sys/\fP and all
+remaining \*(Aq/\*(Aq exchanged by \*(Aq.\*(Aq
+.br
+e.g. \fI/sys/module/watchdog/parameters/open_timeout\fP should be written as
+\fBmodule.watchdog.parameters.open_timeout\fP
+.sp
+\fBsys.parameter=\fP\fIVALUE\fP
+.RS 4
+ATTENTION: \fBsaptune\fP is NOT validating the value before trying to apply.
+.RE
+.RE
+.sp
+\fB[vm]\fP
+.RS 4
+The section \fB[vm]\fP manipulates \fI/sys/kernel/mm\fP switches.
+.br
+This section can contain the following options:
+.sp
+\fBTHP=\fP\fISTRING\fP
+.RS 4
+This option configures transparent hugepages by changing
+\fI/sys/kernel/mm/transparent_hugepage/enabled\fP
+.br
+Possible values are \fBnever\fP to disable, \fBalways\fP to enable and
+\fBmadvise\fP.
+.RE
+.sp
+\fBKSM=\fP\fIINT\fP
+.RS 4
+Kernel Samepage Merging (KSM). KSM allows for an application to
+register with the kernel so as to have its memory pages merged with
+other processes that also register to have their pages merged. For KVM
+the KSM mechanism allows for guest virtual machines to share pages
+with each other. In today\(cqs environment where many of the guest
+operating systems like XEN, KVM are similar and are running on same
+host machine, this can result in significant memory savings, the
+default value is set to 0.
+.RE
+.RE
+.SH "TAGGING"
+.sp
+It is possible to limit the scope of a section (e.g. to a special
+\fIhardware architecture\fP and/or a special \fIos version\fP, a special \fIblock
+device hardware\fP or a \fIcloud service provider\fP) by adding \fBtags\fP to the
+section definition.
+.br
+Tags are separated by \*(Aq:\*(Aq and can appear in any order. Unsupported tags
+are considered an error and the whole section is ignored.
+.br
+It is possible to use more than one tag per section. The tags are
+concatenated by \fBAND\fP and not OR. That means using the same tag multiple
+times with different values inside a section will not work. The whole
+section will be ignored.
+.br
+In such a case split your section into 2 (or more) consecutive
+sections.
+.br
+For some tags the value of the tag is treated as a string and used as a
+regular expression to match the content of the respective source. This
+is mentioned in the description of the possible tags below. As a
+reference \c
+.URL "https://golang.org/pkg/regexp/#MatchString" "" ""
+can be used to see,
+what additional expressions may be possible inside the tag value. But
+attention, only some basic ones are really supported (like \*(Aqsd[ab]\*(Aq for
+block devices).
+.sp
+Attention: as the IBM Power platform (hardware architecture \*(Aqppc64le\*(Aq)
+does not support files in \fI/sys/class/dmi\fP (the directory is not
+available on this hardware architecture) some of the tags listed below
+are not usable on Power systems for now.
+.sp
+The \fBsyntax\fP for such sections is:
+.sp
+[section_name:[tag=value]...]
+.sp
+Supported tags are:
+.sp
+\fBos=\fP\fI<os_version>\fP
+.RS 4
+to define a special \fIos version\fP
+.br
+Valid values for \fBos=\fP must match the value from the \fBVERSION=\fP line
+of \fI/etc/os\-release\fP, e.g. 12\-SP5, 12, 15, 15\-SP5 or 16.0
+.br
+\~
+.br
+If \fBVERSION=\fP contains spaces, only the string until the first space
+is used for comparison. This excludes any suffixes \- like for beta
+versions \- from the comparison.
+.br
+\~
+.br
+To mark an entire major release the wildcard \fB*\fP in combination with a
+separator \fB\-\fP or \fB.\fP (regardless of the one present in \fBVERSION\fP) can
+be used. Valid patterns are: 12\-*, 12.*, 15\-*, 15.*, 16\-* or 16.*
+.br
+\~
+.br
+Additional there is the possibility to use a list or a range of valid
+service packs or dot releases. Again the separator can be \fB\-\fP or \fB.\fP
+(regardless of the one present in \fBVERSION\fP). And for service packs
+(in 12/15) the \fISP\fP prefix should be omitted.
+.br
+e.g 15\-[2,4\-5,6\-,\-7] or 15.[2,4\-5,6\-,\-7]
+.RE
+.sp
+\fBarch=\fP\fI<hardware_architecture>\fP
+.RS 4
+to define a special \fIhardware architecture\fP:
+.br
+Valid values for \fBarch=\fP are the output from \fBuname \-i\fP
+.br
+\~
+.br
+Example:
+.br
+[sysctl:os=15\-SP1:arch=ppc64le]
+.RE
+.sp
+\fBkernel=\fP\fI<kernel_release>\fP
+.RS 4
+to define a special \fIkernel release\fP of the running kernel:
+.br
+Valid values for \fBkernel=\fP are regular expressions (RE2) that match
+the output from \fBuname \-r\fP
+.br
+\~
+.br
+Example:
+.br
+[grub:os=15\-SP7:kernel=^6.4.0\-150700.5(1|3.[36])\-default$]
+.br
+[grub:kernel=^6.4.0\-150600.23.(42|47|50|53|60|78)\-default$]
+.RE
+.sp
+\fBpmu_name=\fP\fI<CPU platform>\fP
+.RS 4
+to select a special \fICPU platform\fP:
+.br
+Valid values for \fBpmu_name=\fP are the content from
+\fI/sys/devices/cpu/caps/pmu_name\fP. So this tag is an Intel CPU only
+feature for now.
+.br
+The tag is \fBnot\fP limited to the cpu section, it can be used in any
+section
+.br
+\~
+.br
+Example:
+.br
+[cpu:pmu_name=skylake]
+.br
+or
+.br
+[grub:pmu_name=haswell]
+.RE
+.sp
+\fBvendor=\fP\fI<hardware vendor>\fP
+.RS 4
+to define a special \fIsystem hardware vendor\fP
+.br
+Valid values for \fBvendor=\fP are the values found in
+\fI/sys/class/dmi/id/board_vendor\fP or parts of the string available in
+this file.
+.br
+The value of the vendor tag is used as a regular expression
+\fB.*<value>.*\fP to match the content of the vendor file.
+.br
+\~
+.br
+For IBM Power platform (hardware architecture \*(Aqppc64le\*(Aq) the value is
+set to \*(AqIBM\*(Aq.
+.RE
+.sp
+\fBmodel=\fP\fI<hardware model>\fP
+.RS 4
+to define a special \fIsystem hardware model\fP
+.br
+Valid values for \fBmodel=\fP are the values found in
+\fI/sys/class/dmi/id/product_name\fP or parts of the string available in
+this file.
+.br
+The value of the model tag is used as a regular expression
+\fB.*<value>.*\fP to match the content of the model file.
+.br
+\~
+.br
+On IBM Power platform (hardware architecture \*(Aqppc64le\*(Aq) the file
+\fI/sys/firmware/devicetree/base/model\fP is used to identify the hardware
+model.
+.br
+\~
+.br
+Example:
+.br
+[sysctl:vendor=FUJITSU:model=RX4770 M.*]
+.RE
+.sp
+\fBcsp=\fP\fI<cloud service provider%instance type>\fP
+.RS 4
+to define a special \fIcloud service provider\fP and (optional) a special
+instance type (separated by \*(Aq%\*(Aq)
+.br
+Valid values for the cloud service provider in \fBcsp=\fP are \fBazure\fP,
+\fBaws\fP, \fBgoogle\fP and \fBibmVPC\fP
+.br
+For the valid instance types please refer to the documentation of the
+related cloud service provider.
+.br
+\~
+.br
+Example:
+.br
+[sysctl:csp=azure]
+.br
+or
+.br
+[sysctl:csp=google%e2\-micro]
+.RE
+.sp
+\fBvirt=\fP\fI<virtualization type>\fP
+.RS 4
+to define a special \fIvirtualization\fP class or type
+.br
+Valid class values for \fBvirt=\fP are \fBvm\fP, \fBchroot\fP, \fBcontainer\fP and
+\fBbare\-metal\fP.
+.br
+Valid type values for \fBvirt=\fP are the output reported by
+\fB/usr/bin/systemd\-detect\-virt\fP. If no virtualization is detected it\(cqs
+considered as \fBbare\-metal\fP
+.br
+\~
+.br
+Example:
+.br
+[sysctl:virt=vm]
+.RE
+.sp
+\fBDMI interface tag:\fP\fI<filename>=<file content>\fP
+.RS 4
+Additional every filename from \fI/sys/class/dmi/id/\fP can be used as a
+tag.
+.br
+This way it\(cqs possible to restrict a section to a special hardware
+vendor or hardware model regarding the bios, the chassis, the board or
+anything else provided by the DMI interface.
+.br
+The value of the DMI interface tag is used as a regular expression
+\fB.*<value>.*\fP to match the content of the file in
+\fI/sys/class/dmi/id/<filename>\fP.
+.br
+\~
+.br
+Attention: if the pattern does not match any filename in
+\fI/sys/class/dmi/id\fP, the section will be skipped as unknown.
+.br
+\~
+.br
+Attention: not usable on IBM Power platform (hardware architecture
+\*(Aqppc64le\*(Aq)
+.br
+\~
+.br
+Example:
+.br
+[sysctl:bios_vendor=Dell]
+.RE
+.sp
+For the following 3 tags we have special rules.
+.br
+These tags have different effects regarding the section they are used. In
+all sections except the \fB[block]\fP section they are used the same way all
+other tags are used to restrict the section to be only valid on a system
+which includes this special sort of block device.
+.br
+But used in the \fB[block]\fP section they mean that all the settings
+available in this section will \fBonly\fP apply to block devices, which
+match the tag value. So you can restrict the settings to dedicated block
+devices.
+.sp
+\fBblkvendor=\fP\fI<block device hardware vendor>\fP
+.RS 4
+to define a \fIhardware vendor\fP to match a special block device
+.br
+Valid values for \fBblkvendor=\fP are the values found in
+\fB/sys/block/<dev>/device/vendor\fP or parts of the string available in
+this file.
+.br
+The value of the blkvendor tag is used as a regular expression
+\fB.*<value>.*\fP to match the content of the vendor file.
+.br
+\~
+.br
+Example:
+.br
+[block:blkvendor=ATA]
+.br
+[block:blkvendor=FTS:blkmodel=PRAID EP420.*]
+.br
+[block:blkvendor=FUJITSU:blkmodel=ETERNUS_]
+.RE
+.sp
+\fBblkmodel=\fP\fI<block device hardware model>\fP
+.RS 4
+to define a \fIhardware model\fP to match a special block device
+.br
+Valid values for \fBblkmodel=\fP are the values found in
+\fB/sys/block/<dev>/device/model\fP or parts of the string available in
+this file.
+.br
+The value of the \fBblkmodel\fP tag is used as a regular expression
+\fB.*<value>.\fP* to match the content of the model file.
+.br
+\~
+.br
+Attention: if the tag does not match any block device, no block device
+will be handled by \fBsaptune\fP. e.g. \*(Aq\fBsaptune note verify\fP\*(Aq will list NO
+block devices.
+.br
+\~
+.br
+Example:
+.br
+[block:blkmodel=QEMU HARDDISK]
+.RE
+.sp
+\fBblkpat=\fP\fI<pattern>\fP
+.RS 4
+to define a \fIpattern\fP to match a special block device in \fI/sys/block/\fP
+.br
+\~
+.br
+Attention: if the pattern does not match any block device, no block
+device will be handled by \fBsaptune\fP. e.g. \fBsaptune note verify\fP will
+list NO block device. There will be NO Warning or Error message logged
+in such a case.
+.br
+\~
+.br
+Example:
+.br
+[block:blkpat=nvme] to match all \fI/sys/block/nvme.*\fP block devices
+.br
+[block:blkpat=sd[ab]] to match \fI/sys/block/sda\fP and \fI/sys/block/sdb\fP
+.RE
+.sp
+For processing a section the following rules apply:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Only sections that match the system are processed. Sections without a
+tag are always used.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+The order of the section within the file matter. Each section and
+each line in a section gets processed from top to down.
+.RE
+.sp
+The rules apply for shipped Note definition files as well as for
+customer defined Note definition files. Tagged sections can be used in
+override files.
+.sp
+\fBATTENTION:\fP To be clear \- if there are more sections with the \fBsame\fP
+\fIsection_name\fP containing the \fBsame\fP \fIparameters\fP with \fBdifferent\fP
+\fIvalues\fP, the last valid section will win.
+.sp
+So it\(cqs all about \fBorder\fP.
+.sp
+The following section definitions are available and used in the \fBsaptune\fP
+SAP Note definition files. Each of these sections can be used in a
+vendor or customer specific Note definition file placed in
+\fI/etc/saptune/extra\fP.
+.sp
+List of supported sections:
+.br
+\fBversion\fP, \fBblock\fP, \fBcpu\fP, \fBfilesystem\fP, \fBgrub\fP, \fBlimits\fP, \fBlogin\fP, \fBmem\fP, \fBpagecache\fP,
+\fBreminder\fP, \fBrpm\fP, \fBservice\fP, \fBsysctl\fP, \fBsys\fP, \fBvm\fP
+.SH "FILES"
+.sp
+\fI/usr/share/saptune/notes\fP
+.RS 3
+.ll -.6i
+.sp
+The directory (Package Area) contains the Notes, which are shipped by
+the saptune RPM package. They are not directly used by \fBsaptune\fP but get
+copied during installation or update to the Working or Staging Area.
+.br
+Do not change the files located here. You will lose all your changes
+during a \fBsaptune\fP package update. Use an override or extra file for your
+changes as described in \fBsaptune\fP(8).
+.br
+.RE
+.ll
+.sp
+\fI/var/lib/saptune/working/notes\fP
+.RS 3
+.ll -.6i
+.sp
+The directory (the Working Area) contains Notes, which are shipped by
+the \fBsaptune\fP RPM package. They are copied from the Package Area during
+installation or update if they do not belong to the Staging Area due to
+the configuration.
+.br
+Do not change the files located here. Depending on your configuration
+you will lose all your changes during a \fBsaptune\fP package update or a
+\*(Aq\fBsaptune staging release\fP\*(Aq command later. Use an override or extra file
+for your changes as described in \fBsaptune\fP(8).
+.br
+.RE
+.ll
+.sp
+\fI/var/lib/saptune/staging/latest\fP
+.RS 3
+.ll -.6i
+.sp
+The directory (the Staging Area) contains Notes coming from the package.
+They are copied from the Package Area during installation or update if
+they do not belong to the Working Area due to the configuration.
+.br
+Do not change the files located here. You will lose all your changes
+during a \fBsaptune\fP package update. Use an override or extra file for your
+changes as described in \fBsaptune\fP(8).
+.br
+.RE
+.ll
+.sp
+\fI/etc/saptune/extra\fP
+.RS 3
+.ll -.6i
+.sp
+The directory contains vendor or customer specific Notes created by
+\fBsaptune note create NOTEID\fP
+.br
+.RE
+.ll
+.sp
+\fI/etc/saptune/override\fP
+.RS 3
+.ll -.6i
+.sp
+The directory contains overrides for Notes created by \fBsaptune note
+customise NOTEID\fP
+.br
+.RE
+.ll
+.SH "SEE ALSO"
+.sp
+saptune\-solution(5) saptune(7) saptune(8)
+\" _strm_3.2.0_start
+.sp
+saptune\-migrate(7)
+\" _strm_3.2.0_end
+.SH "AUTHOR"
+.sp
+Soeren Schmidt \c
+.MTO "soeren.schmidt\(atsuse.com" "" ","
+Angela Briel <
+.MTO "abriel\(atsuse.com" "" ">"
+.SH "AUTHORS"
+.sp
+Angela Briel
+.sp
+Soeren Schmidt

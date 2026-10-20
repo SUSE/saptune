@@ -1,0 +1,1238 @@
+.\"/*
+.\" * Copyright (c) 2017-2025 SUSE LLC.
+.\" * All rights reserved
+.\" * Authors: Soeren Schmidt, Angela Briel
+.\" *
+.\" * This program is free software; you can redistribute it and/orq
+.\" * modify it under the terms of the GNU General Public License
+.\" * as published by the Free Software Foundation; either version 2
+.\" * of the License, or (at your option) any later version.
+.\" *
+.\" * This program is distributed in the hope that it will be useful,
+.\" * but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" * GNU General Public License for more details.
+.\" */
+.\"
+'\" t
+.\"     Title: saptune-migrate
+.\"    Author: Soeren Schmidt, Angela Briel
+.\" Generator: Asciidoctor 2.0.23
+.\"      Date: 2026-10-16
+.\"    Manual: migration from saptune version 1 to saptune version 3
+.\"    Source: saptune
+.\"  Language: English
+.\"
+.TH "SAPTUNE\-MIGRATION" "7" "2026-10-16" "saptune" "migration from saptune version 1 to saptune version 3"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+saptune-migration \- migration of saptune version 1 to saptune version 3
+.SH "DESCRIPTION"
+.sp
+As there are too many logical and structural changes between the \fBsaptune\fP versions 1 and 3 the migration has to be planned carefully and performed manually.
+.sp
+To determine the current version please run \fBsaptune version\fP.
+.sp
+ATTENTION: If the \fBsaptune\fP version reported back is \fB2\fP or higher \fBNO\fP migration is needed!
+.sp
+The section \fBMIGRATION\fP will guide you through the migration process step by step. The sections \fBSOLUTIONS\fP and \fBSAP NOTES\fP will help you planning the migration.
+.SH "FILES TO REMOVE AFTER MIGRATION"
+.sp
+The package update from version 1 to version 3 creates or copies some files during post install to allow this smooth migration. But after finishing the migration these files should be removed manually.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fI/etc/saptune/extra/SAP_BOBJ\-SAP_Business_OBJects.conf\fP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fI/etc/saptune/extra/SAP_ASE\-SAP_Adaptive_Server_Enterprise.conf\fP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fI/etc/tuned/saptune/tuned.conf\fP and the directory \fI/etc/tuned/saptune\fP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fI/etc/sysconfig/saptune\-note\-*\fP
+.RE
+.SH "IMPORTANT"
+.sp
+\fBOnly a migration from version 1 to version 3 is supported!\fP
+.SH "SOLUTIONS"
+.sp
+The following Solutions are shipped:
+.TS
+allbox tab(:);
+ltB ltB ltB.
+T{
+.sp
+SOLUTION
+T}:T{
+.sp
+Version 1
+T}:T{
+.sp
+Version 3
+T}
+.T&
+lt lt lt.
+T{
+.sp
+BOBJ
+T}:T{
+.sp
+1275776* 1557506** 1984787 SAP_BOBJ
+T}:T{
+.sp
+941735 1771258 1984787 SAP_BOBJ
+T}
+T{
+.sp
+HANA
+T}:T{
+.sp
+1275776* 1557506** 1984787 2205917
+T}:T{
+.sp
+941735 1771258 1980196 1984787 2205917 2382421 2534844
+T}
+T{
+.sp
+MAXDB
+T}:T{
+.sp
+1275776* 1557506** 1984787
+T}:T{
+.sp
+941735 1771258 1984787
+T}
+T{
+.sp
+NETWEAVER
+T}:T{
+.sp
+1275776* 1557506** 1984787
+T}:T{
+.sp
+941735 1771258 1984787
+T}
+T{
+.sp
+NETWEAVER+HANA
+T}:T{
+.sp
+\-
+T}:T{
+.sp
+941735 1771258 1980196 1984787 2205917 2382421 2534844
+T}
+T{
+.sp
+S4HANA\-APP+DB
+T}:T{
+.sp
+\-
+T}:T{
+.sp
+941735 1771258 1980196 1984787 2205917 2382421 2534844
+T}
+T{
+.sp
+S4HANA\-APPSERVER
+T}:T{
+.sp
+1275776* 1557506** 1984787
+T}:T{
+.sp
+941735 1771258 1984787
+T}
+T{
+.sp
+S4HANA\-DBSERVER
+T}:T{
+.sp
+1275776* 1557506** 1984787 2205917
+T}:T{
+.sp
+941735 1771258 1980196 1984787 2205917 2382421 2534844
+T}
+T{
+.sp
+SAP\-ASE
+T}:T{
+.sp
+1275776* 1557506** 1984787 2205917 SAP_ASE
+T}:T{
+.sp
+941735 1410736 1680803 1771258 1984787
+T}
+.TE
+.sp
+.sp
+* SAP Note \fB1275776\fP has been rewritten and therefore removed in version 3.
+.br
+** SAP Note \fB1557506\fP has been removed from the Solutions in version 3 because it is only required in a few workload specific use cases.
+.sp
+Note: In version 1 the Solutions BOBJ and SAP\-ASE were not available on ppc64 little\-endian.
+.sp
+For details about the SAP Notes see section \fBSAP NOTES\fP.
+.SH "SAP NOTES"
+.sp
+The following SAP Notes are shipped:
+.SS "SAP Notes from Version 1"
+.TS
+allbox tab(:);
+ltB ltB ltB ltB.
+T{
+.sp
+SAP Note
+T}:T{
+.sp
+v1
+T}:T{
+.sp
+v3
+T}:T{
+.sp
+Comment
+T}
+.T&
+lt lt lt lt.
+T{
+.sp
+1275776
+T}:T{
+.sp
+yes*
+T}:T{
+.sp
+no
+T}:T{
+.sp
+Removed in v3 (rewritten without recommendations; see replacement details below)
+T}
+T{
+.sp
+1557506
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+In version 3 only the HANA formula is used.
+T}
+T{
+.sp
+1984787
+T}:T{
+.sp
+yes**
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+In version 3 DefaultUserTaskMax is set/removed at SAP Note apply and a reboot is no longer required.
+T}
+T{
+.sp
+2161991
+T}:T{
+.sp
+yes**
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+Same defaults between version 1 and 3.
+T}
+T{
+.sp
+2205917
+T}:T{
+.sp
+yes*
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+In version 1 configuration was partially hard\-coded and partially done by tuned. In version 3 done by saptune itself.
+T}
+T{
+.sp
+SAP_ASE
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+no
+T}:T{
+.sp
+Replaced by \fB1680803\fP in version 3. Same defaults, but 1680803 also covers TCP keepalive.
+T}
+T{
+.sp
+SAP_BOBJ
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+No changes between version 1 and 3.
+T}
+T{
+.sp
+SUSE\-GUIDE\-01
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+no
+T}:T{
+.sp
+Deprecated (not an official SAP recommendation).
+T}
+T{
+.sp
+SUSE\-GUIDE\-02
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+no
+T}:T{
+.sp
+Deprecated (not an official SAP recommendation).
+T}
+.TE
+.sp
+.sp
+* Configuration was partially hard coded in version 1.
+.br
+** Configuration was fully hard coded in version 1.
+.SS "SAP Notes Newly Introduced in Version 3"
+.TS
+allbox tab(:);
+ltB ltB ltB ltB.
+T{
+.sp
+SAP Note
+T}:T{
+.sp
+v1
+T}:T{
+.sp
+v3
+T}:T{
+.sp
+Comment
+T}
+.T&
+lt lt lt lt.
+T{
+.sp
+941735
+T}:T{
+.sp
+no
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+Newly introduced in version 3 (SAP memory management).
+T}
+T{
+.sp
+1410736
+T}:T{
+.sp
+no
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+Newly introduced in version 3 (TCP/IP keepalive).
+T}
+T{
+.sp
+1680803
+T}:T{
+.sp
+no
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+Newly introduced in version 3 (Sybase ASE, replaces SAP_ASE).
+T}
+T{
+.sp
+1771258
+T}:T{
+.sp
+no
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+Newly introduced in version 3 (Resource limits).
+T}
+T{
+.sp
+1805750
+T}:T{
+.sp
+no
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+Newly introduced in version 3 (Sybase ASE).
+T}
+T{
+.sp
+1980196
+T}:T{
+.sp
+no
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+Newly introduced in version 3 (HANA max_map_count).
+T}
+T{
+.sp
+2382421
+T}:T{
+.sp
+no
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+Newly introduced in version 3 (Network tuning).
+T}
+T{
+.sp
+2534844
+T}:T{
+.sp
+no
+T}:T{
+.sp
+yes
+T}:T{
+.sp
+Newly introduced in version 3 (HANA shmmni).
+T}
+.TE
+.sp
+.SS "Replacement Details for SAP Note 1275776"
+.sp
+SAP Note 1275776 has been rewritten and no longer contains settings recommendations; it was removed in version 3.
+Former parameters from 1275776 are now covered by the following Notes:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBkernel.sem\fP \(-> SAP_BOBJ (new default value)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBkernel.shmall\fP \(-> 941735 (now fixed value)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBkernel.shmmax\fP \(-> 941735 and SAP_BOBJ (new default value)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBnofile\fP for @sapsys, @sdba, @dba \(-> 1771258 (new default value)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBvm.max_map_count\fP \(-> 1980196 (same default value)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBVSZ_TMPFS_PERCENT\fP \(-> 941735 (same default value)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBSHM_COUNT_REF_VALUE\fP \(-> 2534844 (as kernel.shmmni with new default value)
+.RE
+.sp
+To replace 1275776 in your configuration, use: \fB941735 1980196 2534844 1557506 1771258\fP.
+.sp
+In version 1 part of configuration was hard coded or configurable via \fI/etc/sysconfig/saptune\-note\-*\fP, \fI/etc/saptune/extra/{SAP_BOBJ\-SAP_Business_OBJects.conf,SAP_ASE\-SAP_Adaptive_Server_Enterprise.conf}\fP and \fI/etc/tuned/saptune/tuned.conf\fP.
+.br
+Due to tuned CPU tuning (see SAP Note 2205917) was always active.
+.sp
+In version 3 everything can be configured via an override file in \fI/etc/saptune/override/\fP.
+.br
+For details and defaults read the configuration in the corresponding Note definition files in \fI/usr/share/saptune/notes/\fP.
+.sp
+Version 1 of \fBsaptune\fP uses the following configurations:
+.sp
+1275776
+.RS 4
+\fI/etc/sysconfig/saptune\-note\-1275776\fP
+.br
+The following parameters are hardcoded:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBsize of TMPFS_PERCENT\fP: 75%
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBnofile limit @sapsys, @sdba, @dba\fP: 32800 (if lower)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBkernel.shmmax\fP: VSZ\(rs*1024\(rs*1024\(rs*1024 (if lower, min. 20GB)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBkernel.shmall\fP: VSZ*1024\(rs*(1024/PSZ) (if lower, min. 20GB)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBSHM_COUNT_REF_VALUE\fP: max(2048, SHM_COUNT_REF_VALUE, 32768)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBvm.max_map_count\fP: 2147483647 (if lower)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBkernel.sem\fP: max(current,1250) max(current,256000) max(current,100) max(current,8192)
+.RE
+.RE
+.sp
+1557506
+.RS 4
+everything is configurable in \fI/etc/sysconfig/saptune\-note\-1557506\fP
+.RE
+.sp
+1984787
+.RS 4
+no configuration file
+.br
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBsystemd version\fP: done on installation by RPM requirements
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBUserTasksMax\fP: RPM installation creates \fI/etc/systemd/login.d/sap.conf\fP
+.RE
+.RE
+.sp
+2161991
+.RS 4
+no configuration file
+.br
+The following parameters are hardcoded:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBIO_SCHEDULER\fP: noop
+.RE
+.RE
+.sp
+2205917
+.RS 4
+no configuration file
+.br
+The following parameters are hardcoded:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBTHP\fP: never
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBKSM\fP: 0
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fBnuma_balancing\fP: disable
+.br
+The following parameters are handled by tuned:
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fB[cpu] energy_perf_bias\fP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fB[cpu] governor\fP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fB[cpu] force_latency\fP
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+\fB[cpu] min_perf_pct\fP
+.RE
+.RE
+.sp
+SAP_ASE
+.RS 4
+everything is configurable in \fI/etc/saptune/extra/SAP_ASE\-SAP_Adaptive_Server_Enterprise.conf\fP
+.RE
+.sp
+SAP_BOBJ
+.RS 4
+everything is configurable in \fI/etc/saptune/extra/SAP_BOBJ\-SAP_Business_OBJects.conf\fP
+.RE
+.SH "MIGRATION"
+.SS "Migration Planning:"
+.sp
+Before starting the migration, familiarize yourself with \fBsaptune\fP version 3.
+Please read the man pages of \fBsaptune\fP(8) and \fBsaptune\-note\fP(5).
+.sp
+Solutions of version 3 can encompass more SAP Notes than in version 1.
+Please check section \fBSOLUTIONS\fP for details. You might want to deselect some SAP Notes, change or disable parameters.
+.sp
+SAP Notes are more comprehensive in version 3.
+Please check section \fBSAP NOTES\fP for details. You might want to change or disable parameters.
+.sp
+Some SAP Notes have been removed in version 3.
+Please check section \fBSAP NOTES\fP for details. You might want to add your own configuration file.
+.sp
+In version 1 multiple Solutions can be applied, in \fBsaptune\fP version 3 only one at the same time.
+If you had multiple Solutions in the past, choose the most suitable one and add additional Notes.
+.sp
+Version 1 has changed system parameters only when the current value was lower.
+Version 3 will set the parameter always to the configured value, no matter the current value.
+.SS "Migration Steps:"
+.sp
+The following steps describe the easiest way to migrate from version 1 to version 3.
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 1." 4.2
+.\}
+Determine current Solutions and SAP Notes for version 1 and plan the ones for version 3.
+.sp
+Use these commands to get a list of selected Solutions and Notes:
+.sp
+.if n .RS 4
+.nf
+.fam C
+saptune solution list
+saptune note list
+.fam
+.fi
+.if n .RE
+.sp
+Use the sections \fBSOLUTIONS\fP and \fBSAP NOTES\fP above to familiarize yourself with the changes and create a list of the Solution and SAP Notes you are going to use with version 3.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 2." 4.2
+.\}
+(Skip, if \fBsaptune\fP defaults are acceptable) Check each chosen SAP Note and former configuration.
+.sp
+Verify that the shipped defaults of version 3 meet your requirements.
+.sp
+\fBSince saptune is running in version 1 prior to migration you cannot use \*(Aqsaptune note show\*(Aq yet. Please check the files in /usr/share/saptune/notes/ directly.\fP
+.sp
+Verify the version 1 configuration (see \fBSAP NOTES\fP above) for settings to carry over.
+.sp
+For step 8 you need to prepare a list with all parameters that have to be added, altered or disabled.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 3.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 3." 4.2
+.\}
+Revert \fBall\fP Solutions and Notes.
+.sp
+Use the following commands:
+.sp
+.if n .RS 4
+.nf
+.fam C
+saptune solution revert SOLUTIONNAME
+saptune note revert NOTEID
+.fam
+.fi
+.if n .RE
+.sp
+Please check if the following variables in \fI/etc/sysconfig/saptune\fP are empty:
+.sp
+.if n .RS 4
+.nf
+.fam C
+TUNE_FOR_SOLUTIONS=""
+TUNE_FOR_NOTES=""
+NOTE_APPLY_ORDER=""
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 4.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 4." 4.2
+.\}
+Change saptune version variable to "3".
+.sp
+Open \fI/etc/sysconfig/saptune\fP in an editor and set the variable \fBSAPTUNE_VERSION\fP from "1" to "3".
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 5.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 5." 4.2
+.\}
+Remove the configuration directory \fI/etc/tuned/saptune/\fP.
+.sp
+During the package upgrade a compatibility configuration \fI/etc/tuned/saptune/\fP was created, which has to be removed to run version 3 properly.
+.sp
+It is possible that it was created manually in the past to alter the configuration. In this case verify the configuration and extend your future saptune configuration (step 2). \fBSaptune\fP version 3 performs all tuning settings itself and no longer uses tuned for tuning.
+.sp
+The line \fB#stv1tov2#\fP is an indicator that the configuration file was created by the update process and not manually.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 6.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 6." 4.2
+.\}
+Remove files which are not needed anymore.
+.sp
+\fBPlease copy each file to a safe location before deleting it! You might need it to check for former configuration values.\fP
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Delete the configuration files \fISAP_BOBJ\-SAP_Business_OBJects.conf\fP and \fISAP_ASE\-SAP_Adaptive_Server_Enterprise.conf\fP:
+.sp
+.if n .RS 4
+.nf
+.fam C
+rm /etc/saptune/extra/{SAP_BOBJ\-SAP_Business_OBJects.conf,SAP_ASE\-SAP_Adaptive_Server_Enterprise.conf}
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Delete old note configuration files:
+.sp
+.if n .RS 4
+.nf
+.fam C
+rm /etc/sysconfig/saptune\-note\-*
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Delete \fI/etc/systemd/logind.conf.d/sap.conf\fP:
+.sp
+\fBBe aware that the file also is used by *sapconf\fP and is only created on package installation! \fBSaptune\fP will create its own configuration file dynamically, if needed.*
+.sp
+.if n .RS 4
+.nf
+.fam C
+rm /etc/systemd/logind.conf.d/sap.conf
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Delete obsolete log directory \fI/var/log/saptune/\fP:
+.sp
+.if n .RS 4
+.nf
+.fam C
+rm \-rf /var/log/saptune/*
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Remove \*(Aqnofile\*(Aq entries for \fB@sapsys\fP, \fB@sdba\fP and \fB@dba\fP in \fI/etc/security/limits.conf\fP. This is now handled by individual files in \fI/etc/security/limits.d/\fP.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Remove all entries in \fI/etc/sysctl.conf\fP or files in \fI/etc/sysctl.d/*.conf\fP which are handled by saptune. Consider moving SAP\-related settings from there to a saptune extra file.
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 7.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 7." 4.2
+.\}
+Restart \fBsaptune.service\fP:
+.sp
+.if n .RS 4
+.nf
+.fam C
+systemctl restart saptune.service
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 8.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 8." 4.2
+.\}
+Apply the new configuration.
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+(Skip, if saptune defaults are acceptable) Create override files for SAP Notes, if you need to change or disable parameters:
+.sp
+.if n .RS 4
+.nf
+.fam C
+saptune note customize NOTEID
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+(Skip, if saptune defaults are acceptable) Create your own configuration for parameters not covered by an existing SAP Note:
+.sp
+.if n .RS 4
+.nf
+.fam C
+saptune note create NOTEID
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Apply the chosen Solution:
+.sp
+.if n .RS 4
+.nf
+.fam C
+saptune solution apply SOLUTIONNAME
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Revert any SAP Note of the Solution you do not need:
+.sp
+.if n .RS 4
+.nf
+.fam C
+saptune note revert NOTEID
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+Apply all additional SAP Notes:
+.sp
+.if n .RS 4
+.nf
+.fam C
+saptune note apply NOTEID
+.fam
+.fi
+.if n .RE
+.RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 9.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 9." 4.2
+.\}
+Use \fBsaptune verify\fP to check your configuration:
+.sp
+.if n .RS 4
+.nf
+.fam C
+saptune note verify
+.fam
+.fi
+.if n .RE
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 10.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 10." 4.2
+.\}
+Check the log file \fI/var/log/saptune/saptune.log\fP for any errors.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 11.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 11." 4.2
+.\}
+(Optional) Do a reboot and verify that everything works as expected.
+.RE
+.sp
+The migration is completed.
+Please verify that any configuration management system or scripts which interact with saptune are adjusted accordingly.
+.SH "SEE ALSO"
+.sp
+\fBsaptune\-note\fP(5), \fBsaptune\fP(8), \fBtuned\fP(8), \fBtuned\-adm\fP(8)
+.SH "AUTHORS"
+.sp
+Soeren Schmidt
+.sp
+Angela Briel

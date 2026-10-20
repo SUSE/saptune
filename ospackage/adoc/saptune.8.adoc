@@ -1,0 +1,1542 @@
+= saptune(8)
+Soeren Schmidt <soeren.schmidt@suse.com>; Angela Briel <abriel@suse.com>
+v3.2, April 2025
+:doctype: manpage
+:manmanual: saptune
+:mansource: saptune
+
+
+== NAME
+saptune - Comprehensive system optimization management for SAP solutions (Version 3)
+
+[WARNING]
+====
+If you still use version *1* of *saptune* it's now time to migrate to *saptune* version *3*, so please refer to man page *saptune-migrate*(7).
+====
+
+
+== SYNOPSIS
+++++
+\" _strm_3.2.0_start
+++++
+*saptune* [--format FORMAT] [--force-color] [--fun] *daemon* ( start | stop | status [--non-compliance-check] ) *ATTENTION: deprecated*
+++++
+\" _strm_3.2.0_end
+++++
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *service* ( start | stop | restart | takeover | enable | disable | enablestart | disablestop | status [--non-compliance-check] )
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *note* ( list | verify | revertall | enabled | applied )
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *note* ( apply | simulate | customise | create | edit | revert | show | delete ) NOTEID
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *note* refresh [NOTEID|applied] *ATTENTION: experimental*
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *note* verify [--colorscheme SCHEME] [--show-non-compliant] [NOTEID|applied]
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *note* rename NOTEID NEWNOTEID
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *solution* ( list | verify | enabled | applied )
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *solution* ( apply | simulate | customise | create | edit | revert | show | delete ) SOLUTIONNAME
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *solution* ( apply | change ) [--force] SOLUTIONNAME
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *solution* verify [--colorscheme SCHEME] [--show-non-compliant] [SOLUTIONNAME]
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *solution* rename SOLUTIONNAME NEWSOLUTIONNAME
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *staging* ( status | enable | disable | is-enabled | list )
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *staging* ( analysis | diff ) [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *staging* release [--force|--dry-run] [ ( NOTEID | SOLUTIONNAME.sol )... | all ]
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *configure* (COLOR_SCHEME | SKIP_SYSCTL_FILES | IGNORE_RELOAD | DEBUG | TrentoASDP | CLOUD_DETECTION | CSP_TIMEOUT | CSP_RETRIES ) VALUE
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *configure* ( reset | show )
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *cloud* set instance_type CLOUD_VENDOR%INSTANCE_TYPE
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *cloud* ( get | clear | detect ) instance_type
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *verify* applied
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *refresh* applied
+*ATTENTION: experimental*
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *revert* all
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *check*
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *status [--non-compliance-check]*
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *version*
+
+*saptune* [--format FORMAT] [--force-color] [--fun] *help*
+
+== DESCRIPTION
+
+*saptune* is designed to automate the configuration recommendations from
+SAP and SUSE to run an SAP application on SLES for SAP. These
+configuration recommendations are normally referred to as SAP Notes. So
+some dedicated SAP Notes are the base for the work of *saptune*.
+Additional some best practice guides are added as Note definitions to
+optimize the system for some really special cases.
+
+*saptune* can apply settings for a single Note definition or can set all
+settings for a predefined solution, which is a collection of several SAP
+Notes. Additionally it can revert all these settings back to the
+previous system settings.
+
+It can verify, if the current system configuration is in sync with a
+specific Note definition or a defined solution and displays the
+differences.
+++++
+\" _strm_3.2.0_start
+++++
+Additionally, it can simulate the setting of a single SAP
+Note definition or a defined solution and will display the changes which
+will be done to the system.
+++++
+\" _strm_3.2.0_end
+++++
+
+*saptune* does not only set kernel values (like *sysctl* does), but also
+values like cpu governor, energy perf bias, force latency (dma latency)
+and the disk I/O scheduler. Additionally it will check/verify, if
+suitable rpm versions are installed and special kernel command line
+values are set, according to the relevant SAP Notes. So *saptune* checks
+and applies values in various locations during runtime like
+
+_/proc/sys/_, _/proc/sys/vm/_, _/proc/sys/kernel_, _/proc/sys/fs_,
+_/sys/block/\*/queue/scheduler_, _/sys/block/*/queue/nr_requests_,
+_/sys/devices/system/cpu/\*/cpufreq/scaling_governor_,
+_/sys/devices/system/cpu/\*/cpuidle/state*/latency_,
+_/sys/devices/system/cpu/\*/cpuidle/state*/disable_, _/dev/shm_,
+_/etc/security/limits.d/_, _/etc/systemd/logind.conf.d/_ and some others.
+
+To do most of these settings *saptune* needs to run with root privilege.
+So please be in mind that users who run *saptune* are considered
+privileged users with administrative rights.
+
+By default *saptune* is printing all results to stdout, Errors and
+Warnings are printed to stderr. By using *--format FORMAT* this
+behavior can be changed. +
+Supported formats are:
+
+*json*::
+  Print all results in a machine readable json output format defined by
+  the schemata delivered in _/usr/share/saptune/schemas/.
+
+*saptune* does no longer use *tuned*(8) to restart after a system reboot.
+It is using its own systemd service named *saptune.service*. +
+Starting with version 3.2 and operating system version 15SP4 we ship
+the *saptune.service* with enhanced security-related features like
+systemd hardening. But please keep in mind that all security measures
+only apply, if *saptune* is invoked by its systemd unit!
+
+We decided to have only ONE solution applied, but multiple Notes. Each
+Note is applied exactly once.
+
+++++
+\" _strm_3.2.0_start
+++++
+== DAEMON ACTIONS - ATTENTION: deprecated
+
+*start*::
+  As *saptune* no longer uses *tuned*, this action is internally linked to
+  *saptune service takeover*. See description below.
+*status*::
+  As *saptune* no longer uses *tuned*, this action is internally linked to
+  *saptune service status*. See description below.
+*stop*::
+  As *saptune* no longer uses *tuned*, this action is internally linked to
+  *saptune service disablestop*. See description below.
+++++
+\" _strm_3.2.0_end
+++++
+
+== SERVICE ACTIONS
+
+*start*::
+  Start *saptune* service and apply a set of optimizations to the system,
+  if solutions or Notes were selected during a previous call of *saptune*.
+  If the service is enabled, the tuning will be automatically activated
+  upon system boot. +
+  It redirects to *systemctl start saptune.service* +
+  Success is reported on stdout, errors including systemd error messages
+  are printed on stderr. The action gets logged.
+  +
+  It will fail in case *sapconf.service* is running or has exited or save
+  state files are present.
+  +
+  If the action was successfully the exit code is 0, otherwise 1.
+*status*::
+  Reports the following status information on stdout:
+
+  * status of *saptune.service* (enabled/disabled,
+  active/inactive/failed/...the other possible unit states...)
+  * *saptune* package version
+  * configured *saptune* major version (from the central *saptune*
+  configuration file)
+  * enabled Solution +
+  The entry 'enabled Solution' shows the Solution, which was manually
+  applied by *saptune solution apply SOLUTIONNAME* and its related
+  Notes.
+  * applied Solution +
+  The entry 'applied Solution' shows the Solution, which is currently
+  applied and its related and applied Notes.
+  * additional enabled Notes, sorted lexicographically +
+  The entry 'additional enabled Notes' shows all Notes, which were
+  additionally applied manually by *saptune note apply NOTEID*.
+  They are *one* part of the list of Notes in the entry 'applied Notes'
+  and 'enabled Notes'.
+  * all enabled Notes +
+  The list of 'enabled Notes' includes all Notes from 'additional
+  enabled Notes' and additional all the Notes related to the 'enabled
+  Solution' too. The list shows the order in which these Notes were
+  applied and will be re-applied after a system reboot, if the
+  *saptune.service* is enabled.
+  * all currently applied Notes in applied order +
+  The list of 'applied Notes' includes the *manually* applied Notes.
+  Additional it includes all the Notes related to the 'configured
+  Solution' too. These Notes get applied when using *saptune solution
+  apply*. The Solutions and their related Notes can be listed by
+  *saptune solution list*. +
+  Additional 'applied Notes' show if the system is '*actively*'
+  tuned at the moment. If the list is empty, the system is *not* tuned.
+  If the list is *not* empty, the system *is* tuned.
+  * A list of orphaned Overrides +
+  These are override files existing in _/etc/saptune/override_, but with
+  no related Note definition file found in the working area
+  _/var/lib/saptune/working/_ or in the custom/vendor directory
+  _/etc/saptune/extra_.
+  * state of staging
+  * staged Notes
+  * staged Solutions
+  * status of *sapconf.service* (enabled/disabled,
+  active/inactive/failed/...the other possible unit states...)
+  * status of tuned (enabled/disabled, active/inactive/failed/...the
+  other possible unit states..., profile)
+  * the overall systemd 'system' status, read from _'systemctl
+  is-system-running'_ (running, degraded, ....)
+  * the virtualization platform (detected by '_systemd-detect-virt_')
+  * the cloud service provider and instance type, if running on cloud
+  * the tuning state of the system, gathered by *saptune note verify*:
+    ** "unknown (checking disabled)", if the flag '--non-compliance-check'
+       is used.
+    ** "not tuned", if *no* Solution or Note is applied. +
+    ** "not-present", if verify hits an error. +
+    ** "not compliant", if one or more parameter values differ from the
+       related SAP Note. For detailed information please use *saptune note verify*.
+    ** "compliant", if all parameter values comply with the values from the
+       related SAP Notes.
+
+This information is not logged, but only printed to stdout.
+
+If saptune.service is *not* 'active' the exit code is 1. If the system
+is '*not tuned*' - which means no Note or Solution is enabled - the
+exit code is 3. If the system is tuned, but the tuning is *not
+compliant* the exit code is 4. Otherwise the exit code is 0.
+
+*stop*::
+  Stop *saptune* service and revert all optimizations that were previously
+  applied by *saptune*. If the service is disabled, the tuning will no
+  longer automatically activate upon boot. +
+  It redirects to *systemctl stop saptune.service* +
+  Success is reported on stdout, errors including systemd error messages
+  are printed on stderr. The action gets logged. +
+  {nbsp} +
+  If the action was successfully the exit code is 0, otherwise 1.
+*restart*::
+  Revert all optimizations that were previously applied by *saptune*. And
+  after that apply a set of optimizations to the system, if Solutions or
+  Notes were selected during a previous call of *saptune*. +
+  It redirects to *systemctl restart saptune.service* +
+  Success is reported on stdout, errors including systemd error messages
+  are printed on stderr. The action gets logged. +
+  {nbsp} +
+  If the action was successfully the exit code is 0, otherwise 1. +
+  {nbsp} +
+  If _IGNORE_RELOAD_ is set to *yes* in the *saptune* configuration
+  file the action *restart* will do *nothing*. The reason will be
+  logged. See the *NOTE* section at the end of the man page for more
+  information.
+*enable*::
+  Enables the saptune service. To activate the tuning, the *saptune*
+  service needs to be started. But as the service is now enabled, the
+  tuning will automatically activated upon system boot. +
+  It redirects to *systemctl enable saptune.service* +
+  Success is reported on stdout, errors including systemd error messages
+  are printed on stderr. The action gets logged. +
+  {nbsp} +
+  It will fail in case *sapconf.service* is running or has exited or save
+  state files are present. +
+  {nbsp} +
+  If the action was successfully the exit code is 0, otherwise 1.
+*disable*::
+  Disable the *saptune* service. To revert all optimizations that were
+  previously applied by *saptune*, the *saptune* service needs to be
+  stopped. But as the service is now disabled, the tuning will no longer
+  automatically activated upon system boot. +
+  It redirects to *systemctl disable saptune.service* +
+  Success is reported on stdout, errors including systemd error messages
+  are printed on stderr. The action gets logged. *
+  {nbsp} +
+  If the action was successfully the exit code is 0, otherwise 1.
+*enablestart*::
+  Enables and start the *saptune* service and apply a set of optimizations
+  to the system, if Solutions or Notes were selected during a previous
+  call of *saptune*. As the service is now enabled, the tuning will
+  automatically activated upon system boot. +
+  Calls *systemctl enable saptune.service* and *systemctl start saptune.service*
+  in this order. +
+  Success is reported on stdout, errors including systemd error messages
+  are printed on stderr. The action gets logged. +
+  {nbsp} +
+  If the action was successfully the exit code is 0, otherwise 1.
+*disablestop*::
+  Disable and stop the *saptune* service and revert all optimizations that
+  were previously applied by *saptune*. As the service is now disabled,
+  the tuning will no longer automatically activated upon system boot. +
+  Calls *systemctl disable saptune.service* and *systemctl stop saptune.service*
+  in this order. +
+  Success is reported on stdout, errors including systemd error messages
+  are printed on stderr. The action gets logged. +
+  {nbsp} +
+  If the action was successfully the exit code is 0, otherwise 1.
+*takeover*::
+  This action is meant to start and enable *saptune* service where
+  competing services like sapconf and/or tuned get stopped and disabled.
+  This is the modern replacement for the obsolete *saptune daemon start* +
+  Calls *systemctl enablestart saptune.service* after stopping and
+  disabling *sapconf.service* and *tuned.service*. +
+  Success is reported on stdout, errors including systemd error messages
+  are printed on stderr. The action gets logged. +
+  {nbsp} +
+  If the action was successfully the exit code is 0, otherwise 1.
+
+*ATTENTION:*::
+
+  *saptune* is able to start/stop/enable/disable systemd units, but on
+  boot the outcome depends on the order of execution. +
+  {nbsp} +
+  If *saptune* is starting (or stopping) a systemd service (*[service]*
+  section) it might happen, that the action gets reverted later by
+  systemd because that service is disabled (or enabled) and executed
+  after *saptune.service*. +
+  {nbsp} +
+  Similar a service enabled (or disabled) by *saptune* might already be
+  stopped (or started) by systemd, because it came before
+  *saptune.service*. +
+  {nbsp} +
+  If the execution order cannot be assured by service dependencies, it
+  is recommended to set both ('start,enable' or 'stop,disable') in a
+  Note definition or an Override.
+
+== NOTE ACTIONS
+
+Note denotes either a SAP Note, a vendor specific tuning definition or
+SUSE recommendation article.
+
+*apply*::
+  Apply optimization settings specified in the Note. The Note will be
+  automatically activated upon system boot if the *saptune* service is
+  enabled. +
+  {nbsp} +
+  If a Note definition contains a *[reminder]* section, this section
+  will be printed after the Note has applied successfully. It will be
+  highlighted with red color. +
+  {nbsp} +
+  A Note can only be applied once. +
+  {nbsp} +
+  ATTENTION: Please be in mind: If a Note definition to be applied
+  contains parameter settings which are likewise set before by an
+  already applied Note these settings get be overwritten. +
+  The last comes, the last wins, it's all about 'order'. +
+  {nbsp} +
+  So be careful when applying Solutions or Notes or when reverting
+  Notes, especially if these Notes are part of an already applied
+  Solution. You can re-apply such a Note, but the order - and may be the
+  resulting parameter settings - will be unlike before. +
+  Special attention is needed, if customer or vendor specific Notes from
+  _/etc/saptune/extra_ are used. +
+  {nbsp} +
+  But *saptune* will detect such conflicting settings during *saptune note verify*
+  or *saptune verify applied* and will print a footnote with a
+  pointer to the 'winning' Note. +
+  This conflict detection will not work if the verify command is used on
+  non-applied Notes.
+
+*list*::
+  List all SAP Notes, vendor specific tuning definitions and SUSE
+  recommendation articles that *saptune* is capable of implementing. +
+  {nbsp} +
+  Currently implemented Notes are marked with '*+*', if manually
+  enabled, '***', if enabled by Solutions or '*-*', if a Note belonging
+  to an enabled Solution was reverted manually. In all cases the Notes
+  are highlighted with green color. +
+  If an *override* file exists for a NoteID, the Note is marked with
+  '*O*' and a customer or vendor specific Note is marked with '*C*'. +
+  If we detect a *conflict* with Notes the related entry in the list is
+  marked with a leading '*!*' and the line is highlighted with yellow
+  color. Look at the log file for details like warning messages
+  addressing the problem. +
+  Currently we report a conflict if a customer or vendor specific Note
+  has the *same* name as a shipped Note. In this case the shipped Note
+  will take precedence over the custom Note.
+
+*enabled*::
+  Print all currently enabled Notes as a list separated by blanks
+  without trailing line feed.
+
+*applied*::
+  Print all currently applied Notes as a list separated by blanks
+  without trailing line feed.
+
+*verify*::
+  If a Note ID is specified, *saptune* verifies the currently running
+  system against the recommendations specified in this Note. +
+  Without a Note all enabled Notes and all (even reverted) Notes of
+  an enabled Solution are verified.
+  If the keyword *applied* is given instead of a Note, only all applied
+  Notes are verified. +
+  {nbsp} +
+  The output is table with the columns: +
+  {nbsp} +
+  *SAPNote, Version* shows the Note name and the +
+  *Parameter* the system parameter that gets tuned +
+  *Expected* shows the values read from the Note definition file +
+  *Override* shows the values found in an *override* file +
+  *Actual* shows the current system value +
+  *Compliant* shows *yes*, if the 'Expected' and 'Actual' value matches,
+   or *no*, if there is no match. +
+  {nbsp} +
+  In some rows you can find references to footnotes containing
+  additional information. They may explain, why a value does not match. +
+  {nbsp} +
+  If a Note definition contains a *[reminder]* section, this section
+  will be printed below the table and the footnotes. It will be
+  highlighted with red color. +
+  {nbsp} +
+  By using the command line argument *--show-non-compliant* it is
+  possible to limit the verify output to show only non-compliant
+  parameter. The output will *not* be colorized even that a *color
+  scheme* is defined. +
+  {nbsp} +
+  It is possible to use a *color scheme* for the verify output table. +
+  The *color scheme* can be given as a command line argument
+  *--colorscheme SCHEME* or as parameter - value pair *COLOR_SCHEME
+  SCHEME* in the saptune command *saptune configure COLOR_SCHEME*. +
+  To reset the *color scheme* use the command *saptune configure COLOR_SCHEME*. +
+  Possible *color schemes* are: +
+    {nbsp} +
+    *full-green-zebra* - whole line is colored green (compliant) or red (not compliant) +
+    *full-blue-zebra* - whole line is colored blue (compliant) or yellow (not compliant) +
+    *cmpl-green-zebra* - only the content in the Compliant column is
+      colored green (compliant) or red (not compliant) +
+    *cmpl-blue-zebra* - only the content in the Compliant column is
+      colored blue (compliant) or yellow (not compliant) +
+    *full-red-noncmpl* - only the whole line of the not compliant
+      parameter is colored red +
+    *full-yellow-noncmpl* - only the whole line of the not compliant
+      parameter is colored yellow +
+    *red-noncmpl* - only the content in the Compliant column of the not
+      compliant parameter is colored red +
+    *yellow-noncmpl* - only the content in the Compliant column of the not
+      compliant parameter is colored yellow +
+  {nbsp} +
+  The default, if no *color scheme* is given, is *full-red-noncmpl*. If
+  an unknown *color scheme* is given in the command line or in the
+  config file, non-colorized, simple black text is printed. +
+  {nbsp} +
+  The 'final lines' with the overall result of the verify operation are
+  colored green (compliant) or red (not compliant) independent from the
+  chosen *color scheme*
+
+++++
+\" _strm_3.2.0_start
+++++
+*simulate - ATTENTION: deprecated*::
+  Show all changes that will be applied to the system if the specified
+  Note is applied. As a result you will see a table containing the
+  following columns: +
+  {nbsp} +
+  *SAPNote, Version* shows the Note name and the +
+  *Parameter* the system parameter that gets tuned +
+  *Value set* shows the current system value +
+  *Value expected* shows the values read from the Note definition file +
+  *Override* shows the values found in an *override* file +
+  *Comment* shows references to *footnotes* containing additional
+  information. They may explain, why a value will not be set by *saptune*. +
+  {nbsp} +
+  If a Note definition contains a *[reminder]* section, this section
+  will be printed below the table and the footnotes. It will be
+  highlighted with red color.
+++++
+\" _strm_3.2.0_end
+++++
+
+*edit*::
+  This allows to edit the values of the customer or vendor specific Note
+  definitions in */etc/saptune/extra*. An editor will be launched to
+  allow changing the Note definitions. The editor is defined by the
+  *EDITOR* environment variable. If not set editor defaults to
+  _/usr/bin/vim_. +
+  {nbsp} +
+  You can change already available parameters and values or you can add
+  new parameters and values or additional sections with parameter value
+  pairs. +
+  {nbsp} +
+  If the Note is currently applied and/or an override file exists,
+  *saptune* will remind you to take care of this situation.
+
+*customise*::
+  This allows to customize the values of the *saptune* Note definitions.
+  The Note definition file will be copied from
+  _/usr/share/saptune/notes_ or _/etc/saptune/extra_ to the override
+  location at _/etc/saptune/override_, if the file does not exist
+  already. After that an editor will be launched to allow changing the
+  Note definitions. The editor is defined by the *EDITOR* environment
+  variable. If not set editor defaults to _/usr/bin/vim_. +
+  {nbsp} +
+  You can only change the value from already available parameters of the
+  Note. But you are not able to add new parameters. +
+  {nbsp} +
+  If you want to use new parameters to tune the system, please create
+  your own custom Note definition file in _/etc/saptune/extra_. +
+  {nbsp} +
+  You can prevent a parameter from being changed by leaving the
+  parameter value in the override file empty. The parameter will be
+  marked as 'untouched' in the override column of the verify table. +
+  {nbsp} +
+  The values from the override files will take precedence over the
+  values from _/usr/share/saptune/notes_ or _/etc/saptune/extra_. In
+  such case you will not lose your customized Notes between *saptune* or
+  vendor updates. +
+  The *saptune* options 'list', 'verify' and 'simulate' will mark the
+  existence of an override file and the contained values. +
+  {nbsp} +
+  ATTENTION: Creating or changing an override file just changes the
+  configuration _inside_ this Note definition file, but does not change
+  the _running_ configuration of the system. +
+  That means: When creating or changing an override file for an *already
+  applied* Note definition, please do a *saptune note revert NOTEID*
+  and then apply this Note again, to get the changes take effect.
+
+*create*::
+  This allows to create own Note definition files in
+  _/etc/saptune/extra_. The Note definition file will be created from a
+  template file into the location _/etc/saptune/extra_, if the file does
+  not exist already. After that an editor will be launched to allow
+  changing the Note definitions. The editor is defined by the *EDITOR*
+  environment variable. If not set editor defaults to _/usr/bin/vim_. You
+  need to choose an unique NoteID for this operation. Use *saptune* note
+  list* to find the already used NoteIDs.
+
+*refresh *ATTENTION:* experimental*::
+  Identifies and activates changed parameter settings of a Note
+  definition. The changes get active without first reverting the 'old'
+  settings, so the tuning of the system gets not interrupted. +
+  {nbsp} +
+  ATTENTION: +
+  This action is currently in the state *experimental*! +
+  {nbsp} +
+  Currently only parameter of section *[sysctl]*, *[sys]* and *[vm]* are
+  supported by the _refresh_ action. +
+  {nbsp} +
+  Parameter of section *[version]*, *[rpm]*, *[grub]*, *[fs]* and
+  *[reminder]* are only checked by *saptune*, but not applied. So there is
+  nothing to do during refresh of a Note and these sections are skipped
+  without notice. +
+  {nbsp} +
+  Parameter of all other sections are currently *not* supported by the
+  _refresh_ action and *not* evaluated. If such parameter are available
+  in the to be refreshed Note an info is logged per affected parameter.
+
+*revert*::
+  Revert optimization settings carried out by the Note, and the Note
+  will no longer be activated automatically upon system boot.
+
+*revertall*::
+  Revert optimization settings carried out by all applied Notes, and the
+  Notes will no longer be activated automatically upon system boot.
+
+*show*::
+  Print content of Note definition file to stdout
+
+*delete*::
+  This allows to delete a customer or vendor specific Note definition
+  file including the corresponding override file if available. A
+  confirmation is needed to finish the action. +
+  {nbsp} +
+  ATTENTION: +
+  Note definition files shipped by the *saptune* package - so called
+  _internal_ *saptune* Note definition files - *must not* be deleted.
+  There will be an appropriate error message. +
+  If a corresponding override file is available, there will be the
+  possibility to delete this file instead. +
+  {nbsp} +
+  ATTENTION: +
+  If the Note is already applied, the command will be terminated with
+  the information, that the Note first needs to be reverted before it
+  can be deleted.
+
+*rename*::
+  This allows to rename a customer or vendor specific Note definition
+  file to a new name. If a corresponding override file is available,
+  this file will be renamed too. A confirmation is needed to finish the
+  action. +
+  If the *new* Note definition name already exists the command will be
+  terminated with a respective message. +
+  {nbsp} +
+  ATTENTION: +
+  Note definition files shipped by the *saptune* package - so called
+  _internal_ *saptune* Note definition files - and their corresponding
+  override files, if available, *must not* be renamed. There will be an
+  appropriate error message. +
+  {nbsp} +
+  ATTENTION: +
+  If the Note is already applied, the command will be terminated with
+  the information, that the Note first needs to be reverted before it
+  can be renamed.
+
+== SOLUTION ACTIONS
+
+A Solution is a collection of one or more Notes. Activation of a
+Solution will activate all associated Notes. +
+The Solution definitions shipped with saptune can be found in the
+directory _/usr/share/saptune/sols_ or vendor/customer specific Solution
+definitions can be found in the directory _/etc/saptune/extra_.
+
+It's not possible to combine Solutions, there can only be **one**
+Solution enabled. But it is possible to change a Solution definition by
+using an override file in _/etc/saptune/override_ or by creating a
+custom specific Solution definition in the directory
+_/etc/saptune/extra_.
+
+The following Solution definitions are currently shipped with saptune:
+
+[cols="1,3",options="header"]
+|===
+| SOLUTION | Definition
+
+| BOBJ | Solution for running SAP BusinessObjects.
+| HANA | Solution for running an SAP HANA database.
+| MAXDB | Solution for running an SAP MaxDB database.
+| NETWEAVER | Solution for running SAP NetWeaver application servers.
+| NETWEAVER+HANA | Solution for running both SAP application servers and SAP HANA on the same host.
+| NETWEAVER+MAXDB | Solution for running both SAP application servers and SAP MaxDB on the same host.
+| S4HANA-APPSERVER | Solution for running SAP S/4HANA application servers.
+| S4HANA-APP+DB | Solution for running both SAP S/4HANA application servers and SAP HANA on the same host.
+| S4HANA-DBSERVER | Solution for running the SAP HANA database of an SAP S/4HANA installation.
+| SAP-ASE | Solution for running an SAP Adaptive Server Enterprise database.
+|===
+
+____
+Syntax of the Solution definition file names: _<SolutionName>.sol_ +
+e.g. _V4711.sol_
+____
+
+
+*apply*::
+  Apply optimization settings recommended by the Solution. These
+  settings will be automatically activated upon system boot if the
+  *saptune* service is enabled. +
+  Only one Solution can be applied at the time. If a Solution is
+  already applied, *saptune* will ask to replace the Solution.
+  With *--force* the new Solution will be applied without request.
+
+*list*::
+  List all Solution names that *saptune* is capable of implementing. +
+  The currently implemented Solution is marked with '***' and is
+  highlighted with green color. A deprecated Solution is marked with
+  '*D*'. +
+  If an *override* file exists for a Solution, the Solution is marked
+  with '*O*'. A custom specific Solution is marked with '*C*'. +
+  If a Note belonging to an enabled Solution is reverted manually, the
+  Note is highlighted with red color (instead of green) and is crossed
+  out. +
+  If we detect a *conflict* with Solutions the related entry in the list
+  is marked with a leading '*!*' and the line is highlighted with yellow
+  color. Look at the log file for details like warning messages
+  addressing the problem. +
+  Currently we report a conflict if a customer or vendor specific
+  Solution has the *same* name as a shipped Solution. In this case the
+  shipped Solution will take precedence over the custom Solution.
+
+*enabled*::
+  Print the currently enabled Solution.
+
+*applied*::
+  Print the currently applied Solution. +
+  If one or more Notes of the Solution are *reverted*, which is
+  indicated by a '-' in the output of *saptune note list*, the string
+  *(partial)* is added to the Solution name.
+
+++++
+\" _strm_3.2.0_start
+++++
+*simulate - ATTENTION: deprecated*::
+  Show all Notes that are associated with the specified Solution, and
+  all changes that will be applied once the Solution is activated.
+++++
+\" _strm_3.2.0_end
+++++
+
+*verify*::
+  If a Solution name is specified, *saptune* verifies the running system
+  against all Notes of that Solution regardless of their state.
+
+*edit*::
+  This allows to edit the Note list of the customer or vendor specific
+  Solution definitions in _/etc/saptune/extra_. An editor will be
+  launched to allow changing the Note definitions. The editor is defined
+  by the *EDITOR* environment variable. If not set editor defaults to
+  _/usr/bin/vim_. +
+  {nbsp} +
+  You can change, add or delete NoteIDs in the list of Notes defining
+  the Solution. +
+  {nbsp} +
+  If the Solution is currently applied and/or an override file exists,
+  saptune will remind you to take care of this situation.
+
+*customise*::
+  This allows to customize the Note list of the *saptune* Solution
+  definitions. The Solution definition file will be copied from
+  _/usr/share/saptune/sols_ or _/etc/saptune/extra_ to the override
+  location at _/etc/saptune/override_, if the file does not exist
+  already. After that an editor will be launched to allow changing the
+  Solution definitions. The editor is defined by the *EDITOR*
+  environment variable. If not set editor defaults to _/usr/bin/vim_. +
+  {nbsp} +
+  You can change, add or delete NoteIDs in the list of Notes defining
+  the Solution. +
+  {nbsp} +
+  The values from the override files will take precedence over the
+  values from _/usr/share/saptune/sols_ or _/etc/saptune/extra_. In such
+  case you will not lose your customized Solutions between *saptune* or
+  vendor updates. +
+  The *saptune* option 'list' will mark the existence of an override file. +
+  {nbsp} +
+  ATTENTION: Creating or changing an override file just changes the
+  configuration _inside_ this Solution definition file, but does not
+  change the _running_ configuration of the system. +
+  That means: When creating or changing an override file for an *already
+  applied* Solution definition, please do a *saptune solution revert
+  SOLUTIONNAME* and then apply this Solution again, to get the
+  changes take effect.
+
+*create*::
+  This allows to create own Solution definition files in
+  _/etc/saptune/extra_. The Solution definition file will be created
+  from a template file into the location _/etc/saptune/extra_, if the
+  file does not exist already. After that an editor will be launched to
+  allow changing the Solution definition. The editor is defined by the
+  *EDITOR* environment variable. If not set editor defaults to
+  /usr/bin/vim. You need to choose an unique Solution name for this
+  operation. Use *saptune solution list* to find the already used
+  Solution names.
+
+*revert*::
+  Revert optimization settings recommended by the Solution, and these
+  settings will no longer be activated automatically upon system boot.
+
+*change*::
+  Switch to a new Solution even that another Solution was already
+  applied. +
+  {nbsp} +
+  ATTENTION: +
+  because of the revert of the old Solution during the execution of the
+  action 'change' the system will be not sufficient tuned for SAP
+  workloads for a short period of time until the new Solution is applied
+  successfully. This may harm a running SAP system. So use this action
+  carefully. +
+  And please keep in mind: Because of the 'revert' and 'apply' the order
+  of Notes and therefore the active tuning may change, especially if
+  additional Notes were applied beside the old applied Solution.
+
+*show*::
+  Print content of Solution definition file to stdout.
+
+*delete*::
+  This allows to delete a customer or vendor specific Solution
+  definition file including the corresponding override file if
+  available. A confirmation is needed to finish the action. +
+  {nbsp} +
+  ATTENTION: +
+  Solution definition files shipped by the *saptune* package - so called
+  _internal_ *saptune* Solution definition files - *must not* be deleted.
+  There will be an appropriate error message. +
+  If a corresponding override file is available, there will be the
+  possibility to delete this file instead. +
+  {nbsp} +
+  ATTENTION: +
+  If the Solution is already applied, the command will be terminated
+  with the information, that the Solution first needs to be reverted
+  before it can be deleted.
+
+*rename*::
+  This allows to rename a customer or vendor specific Solution
+  definition file to a new name. If a corresponding override file is
+  available, this file will be renamed too. A confirmation is needed to
+  finish the action. +
+  If the *new* Solution definition name already exists the command will
+  be terminated with a respective message. +
+  {nbsp} +
+  ATTENTION: +
+  Solution definition files shipped by the *saptune* package - so called
+  _internal_ *saptune* Solution definition files - and their corresponding
+  override files, if available, *must not* be renamed. There will be an
+  appropriate error message. +
+  {nbsp} +
+  ATTENTION: +
+  If the Solution is already applied, the command will be terminated
+  with the information, that the Solution first needs to be reverted
+  before it can be renamed.
+
+== STAGING ACTIONS
+
+Staging is implemented to enable customers to control and release
+changes shipped by package updates to their working environment. +
+The basic idea is, that Note definition files shipped by *saptune* in
+updates are not used by *saptune* for system tuning immediately. An
+administrator has to explicitly release the updates before being used by
+*saptune*. This allows customers to update *saptune*, even with changed
+Notes, without having changes in system behavior.
+
+Staging is disabled by default, as not every customer needs the feature
+and having it enabled by default would break the previous behavior.
+
+Staging can be enable by '*saptune staging enable*' (see description
+below).
+
+So now we will have 3 areas, where Note definition files and Solution
+definitions shipped by *saptune* can reside: +
+This is only related to Note definition files and Solution definitions
+shipped by *saptune*. Custom definition files or override files are *NOT*
+affected.
+
+*Package Area* +
+Directory where the *saptune* package stores and maintains shipped Note
+definition files and Solution definitions. This directory gets changed
+by RPM package operations solely. +
+Currently this is _/usr/share/saptune/_.
+
+*Working Area* +
+Directory which contains configuration objects *saptune
+note|solution|daemon|service* will use. Only Notes and Solutions from
+here can be applied. +
+Currently this is _/var/lib/saptune/working/_.
+
+*Staging Area* +
+Directory where configuration objects are stored, which are present in
+the package area but differ from the objects in the working area. +
+Currently this is _/var/lib/saptune/staging/_. +
+At the moment only the Notes from the last update are kept in
+_/var/lib/saptune/staging/latest_.
+
+*status*::
+  Displays the status of staging, basically the content of the variable
+  STAGING in the central *saptune* configuration file.
+
+*is-enabled*::
+  Returns the status of staging, basically the content of the variable
+  STAGING in the central *saptune* configuration file, as exit code (0 ==
+  enabled, 1 == disabled). No output is generated as this is meant to be
+  used in scripts.
+
+*enable|disable*::
+  Enables or disables staging, by setting the variable STAGING in the
+  central *saptune* configuration file. The result of the status change is
+  displayed. +
+  {nbsp} +
+  Altering the setting does not changes the content of the staging and
+  working directory. +
+  If a user disables staging an package updated might clean the staging
+  area and update the working area.
+
+*list*::
+  Lists all Notes and the Solution definition which can be released from
+  the staging area including name, description, version and release
+  date. +
+  The Solution definition is shown as a whole object. It is only
+  possible to release the entire definition, but not single Solutions. +
+  Lastly a hint is printed to remind the user that he has to release
+  staged objects before he can use them and that it is possible to view
+  the changes.
+
+*diff [ ( NOTEID | SOLUTIONNAME.sol )... | all ]*::
+  Shows the differences between the Note (or all Notes) or the Solution
+  definition in the staging area and the working area. +
+  For each Note in the staging area the output contains the values of
+  all parameter which differ. This includes new or removed parameters as
+  well as changes in the reminder section. +
+  For the Solution, all changed Solutions are displayed with their
+  differences. +
+  Lastly a hint is printed to remind the user that he has to release
+  staged objects before he can use them.
+
+*analysis [ ( NOTEID | SOLUTIONNAME.sol )... | all ]*::
+  Does an analysis of the requested Notes, the Solution definitions or
+  everything in the staging area to warn the user about possible issues
+  or additional steps to perform. +
+  Lastly a hint is printed to remind the user that he has to release
+  staged objects before he can use them as well that he should check out
+  the differences.
+
+*release [ ( NOTEID | SOLUTIONNAME.sol )... | all ]*::
+  Releases the requested Notes, the Solution definitions or everything
+  in the stages area. +
+  This means the Notes or the Solution definitions get moved from the
+  staging area to the working area. In case of a deleted Note/Solution,
+  it will be removed from the working area. +
+  First the command will show an analysis of the objects going to be
+  released to make the user aware of further needed actions or potential
+  problems (for details see *saptune* staging dependencies). +
+  {nbsp} +
+  Because the release is irreversible, the user has to confirm the
+  action.
+
+== CONFIGURE ACTIONS
+
+Replaces the direct editing of the *saptune* configuration file
+_/etc/sysconfig/saptune_ in SLES for SAP 15, which will be replaced by an
+intern configuration file in SLE 16 and not be present in future
+versions. +
+Not all of the former variables will be available as configure option,
+only those who should be changeable by the user. +
+
+*COLOR_SCHEME SCHEME*::
+  Default color scheme. See *saptune verify* in this man page for
+  available color schemes. +
+  To reset the *color scheme* use an empty value as SCHEME like
+  *saptune configure COLOR_SCHEME*
+
+*SKIP_SYSCTL_FILES FILE[,FILE...]*::
+  Comma-separated list of *sysctl* config files or directories which
+  should be excluded when checking if parameters handled by *saptune* are
+  handled by *sysctl* as well. Input is checked, if the given files are in
+  a location which is searched by *sysctl* command. If not, the files will
+  be skipped.
+
+*IGNORE_RELOAD yes|no*::
+  Controls behavior of *systemctl* reload *saptune.service* and the
+  systemctl try-restart *saptune.service* during package installation.
+
+*DEBUG on|off*::
+  Turns on or off the DebugLog output. +
+  {nbsp} +
+  ATTENTION: Active DebugLog will clutter the output of *saptune* commands
+  and can render the output hard to read. Additional it is flooding the
+  log file with debug information. So use this setting with caution.
+  Only turn it on, if instructed by SUSE support to do so.
+
+*TrentoASDP <period>|off*::
+  Sets the discovery period (*saptune-discovery-period*) of the Trento
+  Agent in _/etc/trento/agent.yaml_ for collecting *saptune* information
+  from the system. +
+  The discovery period is the time in seconds between 2 *saptune* calls
+  initiated by the Trento Agent - the tick interval for the *saptune*
+  discovery loop. Adapting this value can prevent *saptune* currently in
+  use, try later' errors (exit code *11*) from *saptune*. +
+  Trento will start with a default of 900s +
+  Possible values are "300", "600", "900", "1800" and "3600" seconds or
+  "off" to disable the check during start of *saptune*.
+  {nbsp} +
+  If the variable is set *saptune* will check during start if the value of
+  the variable found in the *saptune* configuration file is valid and
+  still set in _/etc/trento/agent.yaml_. If not a warning will pop up. +
+  Setting *TrentoASDP* to "off" will disable the check during start of
+  *saptune*. The setting of *saptune-discovery-period* in the Trento Agent
+  config is not affected by this setting.
+
+*CSP_TIMEOUT <int>*::
+  Integer value representing the connection timeout for the cloud
+  Metadata Server query used for the cloud instance detection. Default
+  is 5 seconds.
+
+*CSP_RETRIES <int>*::
+  Number of retries for the cloud Metadata Server query used for the
+  cloud instance detection. Default is 3 retries.
+
+*CLOUD_DETECTION always|once|first*::
+  Configures the frequency of cloud and instance detection. When the
+  variable is set, a cloud and instance detection is triggered
+  immediately. +
+  If the instance type and cloud vendor have been set manually, the
+  variable gets ignored! +
+  The default is *first*. +
+  Possible values are:
+  * *always* +
+  Detection is done at each *saptune* invocation.
+  * *once* +
+  Detection is done only once when the configuration is empty.
+  * *first* +
+  Detection is done the first time *saptune* is called on a running system
+  (*systemctl is-system-running* reports the system as *running* or
+  *degraded*) after every boot.
+
+*reset*::
+  Reverts the tuning and reset the content of the *saptune* configuration
+  file to the installation default. Asks for confirmation.
+
+*show*::
+  Shows the content of the *saptune* configuration file
+
+== CLOUD ACTIONS
+
+*get instance_type*::
+  Returns the stored instance type and if the information was set
+  manually or has been determined by detection.
+
+*clear instance_type*::
+  Clears the stored instance type as well as the manual set flag.
+
+*detect instance_type*::
+  Runs the instance detection, stores the instance type and flags the
+  setting as detected by *saptune*. The result of the detection will be
+  printed to stdout too.
+
+*set instance_type CLOUD_VENDOR%INSTANCE_TYPE*::
+  Sets the cloud vendor and the instance type and flags the setting as
+  manually set. An empty value will not be accepted. +
+  There is no check, if the system is currently running on the given
+  cloud vendor and instance type. This allows to change the cloud
+  configuration for further use in a different instance type than
+  currently used.
+
+== VERIFY ACTIONS
+
+*verify applied*::
+  Verifies all system parameters against all applied Notes. +
+  Same as a *saptune note verify*.
+
+== REFRESH ACTIONS
+
+*refresh applied *ATTENTION:* experimental*::
+  Refreshes all applied Notes. +
+  Same as a *saptune note refresh*.
+
+== REVERT ACTIONS
+
+*revert all*::
+  Revert all optimization settings recommended by the SAP Solution
+  and/or the Notes, and these settings will no longer be activated
+  automatically upon system boot.
+
+== CHECK ACTIONS
+
+*check*::
+  Will simply call the external script _/usr/sbin/saptune_check_.
+
+== STATUS ACTIONS
+
+*status*::
+  Will display the currently *saptune* status. This will be short for
+  'saptune service status'.
+
+== VERSION ACTIONS
+
+*version*::
+  Will display the currently active *saptune* version.
+
+== HELP ACTIONS
+
+*help*::
+  Will display the syntax of *saptune*.
+
+== VENDOR SUPPORT
+
+To support vendor or customer specific tuning values, saptune supports
+'drop-in' files residing in _/etc/saptune/extra_. All files found in
+_/etc/saptune/extra_ are listed when running '*saptune note list*'. All
+*Note options* are available for these files.
+
+We simplified the file name syntax for these vendor files. +
+Related to this we add 'header' support (see description of section
+*[version]* in *saptune-note*(5)) for the vendor files as already available
+for the Note definition files in _/usr/share/saptune/notes_ to get a
+proper description during *saptune* option 'list' +
+++++
+\" _strm_3.2.0_start
+++++
+The old file names are still valid, but *deprecated*. The support will
+be dropped in the near future. That means, files without a valid header
+information (see description of section *[version]* in *saptune-note*(5))
+will be skipped in the future.
+++++
+\" _strm_3.2.0_end
+++++
+
+*Syntax of the file names:* +
+_NOTEID.conf_ +
+e.g. _V4711.conf_
+++++
+\" _strm_3.2.0_start
+++++
+old syntax of the file names: _NOTEID-DESCRIPTION_ +
+e.g. _Vendor-Recommended_OS_Settings_ or _SAP4711-very_aromatic_tunings_
+++++
+\" _strm_3.2.0_end
+++++
+
+*Syntax of the file:* +
+The content of the 'drop-in' file should be written
+in a INI file style with sections headed by '[section_name]' keywords.
+See *saptune-note*(5) to find the supported sections and their available
+options.
+
+ATTENTION: If renaming or removing an active (aka 'already applied')
+Note definition file from the file system the *old* name of this Note
+still remains in the configuration of saptune. This may lead to
+unexpected messages. +
+So please always revert the Note *before* renaming or removing it from
+the file system. +
+Even if editing an active vendor or customer specific Note definition
+file on the file system level, please do a revert of that Note and then
+apply the Note again, to get the changes take effect.
+
+*Customer specific Solution definitions* +
+In addition to the vendor or customer specific Note file definitions
+described previously *saptune* now supports vendor or customer specific
+*Solution definitions* by using 'drop-in' files in _/etc/saptune/extra_.
+All Solutions found in _/etc/saptune/extra_ are listed when running
+'*saptune solution list*'. All *Solution options* are available for
+these Solutions.
+
+*Syntax of the Solution definition file names:*
+_SOLUTIONNAME.sol_ +
+e.g. _V4711.sol_
+
+
+== ATTENTION
+
+Trento support: If you plan to use Trento and its capability of checking
+the correctness of the configuration of your SAP environment please
+adapt the following Solution name schema for your custom Solutions: +
+_<saptune_shipped_Solutionname>{underscore}<your_preferred_badge>.sol_ +
+e.g. _NETWEAVER_MyOwnSolution.sol_
+
+Syntax of the file: The content of the custom specific Solution files
+should be written in a INI file style with sections headed by
+*[section_name]* keywords. +
+At the moment *saptune* supports two architectures - _ArchX86_ for the x86
+platform and _ArchPPC64LE_ for 64-bit PowerPC little endian platform for
+the Solution definitions. +
+So possible sections for Solution definitions are [version] (see
+description of section [version] in *saptune-note*(5)) for a brief
+description of the Solutions, and *[ArchX86]* and *[ArchPPC64LE]* for the
+Solution definitions. +
+The Solution itself is described as a list of Note definition files
+separated by blanks. The Solution *name* is defined by the filename
+without the _.sol_ suffix. A Solution is only valid and listed by
+*saptune solution list*, if all listed Note definition files can be
+found in the working area or in _/etc/saptune/extra_.
+
+e.g. filename is _NEWSOL1.sol_ with content
+
+[version] +
+VERSION=1 +
+DATE=15.12.2020 +
+DESCRIPTION=My custom specific Solution definitions +
+REFERENCES= +
+[ArchX86] +
+1980196 CUSTOMNOTE1 CUSTOMNOTE2 +
+[ArchPPC64LE] +
+1980196 CUSTOMNOTE1 CUSTOMNOTE2
+
+== EXIT CODES
+
+All saptune commands share the following exit codes:
+
+____
+0::
+  Success: The requested command completed successfully, or the command was a pure informational query
+1::
+  General Failure / Syntax Error / Permission Denied: Unrecognized command-line arguments, invalid flags,
+  missing parameters, execution failure, or invoked without root privileges
+11::
+  Lock Collision: Another instance of saptune is currently running and holds /run/.saptune.lock
+12::
+  Lock Creation Error: Problems creating or setting the lock file _/run/.saptune.lock_
+99::
+  Lock File Corruption: Error reading or parsing the PID from _/run/.saptune.lock_
+128::
+  Central Configuration Error: The saptune configuration file cannot be read, mandatory keys are missing, STAGING has an invalid value, SAPTUNE_VERSION does not match, or cloud instance
+  detection/storage failed
+130::
+  JSON Output Serialization Failure: An error occurred while serializing the machine-readable JSON structure
+____
+
+The following commands have individual exit codes additionally or
+alternatively:
+
+*saptune status*, *saptune service status*, *saptune daemon status*::
+  0;;
+    *saptune.service* is active, the system is tuned, and all applied settings are compliant.
+  1;;
+    *saptune.service* is not active / stopped.
+  2;;
+    not used
+  3;;
+    *saptune.service* has been started, but tuning (Note or Solution) is not configured.
+  4;;
+    *saptune.service* has been started, system is tuned, but tuning is not compliant — one or more parameters deviated from recommendations.
+
+*saptune note|solution verify*, *saptune verify applied*::
+  0;;
+    All evaluated parameters conform to recommendations (or no Notes/Solutions are enabled/applied to check).
+  1;;
+    One or more parameters deviated from recommendations (non-compliant) OR an inspection error occurred / specified Note or Solution does not exist.
+
+*saptune staging analysis*::
+  0;;
+    All evaluated objects are releaseable with no administrative action required (e.g. new or un-enabled definitions).
+  1;;
+    Advisory action required (e.g. Note or Solution is currently applied and must be re-applied or refreshed after release, or benefits from an update).
+  2;;
+    Breaking release: Releasing the object would break *saptune* functionality (e.g. a deleted Note is part of an active enabled Solution, or a required note is missing).
+
+*saptune staging release*::
+  0;;
+    Objects successfully released to the working area; OR *--dry-run* completed without changes; OR release cancelled by user interaction; OR no staging files available.
+  1;;
+    Specified object not found in the staging area; OR an error occurred copying/moving files.
+  2;;
+    Release blocked because releasing the object would break *saptune* functionality.
+
+*saptune staging is-enabled*::
+  0;;
+    Staging is enabled.
+  1;;
+    Staging is disabled.
+
+*saptune check*::
+  0;;
+    All checks passed (or only advisory warnings found).
+  1;;
+    One or more checks failed; *saptune* will not work properly.
+  2;;
+    Operating system is not SLES, or *saptune* package is not installed.
+  3;;
+    Invalid/wrong command-line parameter passed to *saptune_check*.
+  5;;
+    Unexpected error regarding JSON output generation.
+
+
+== HOTFIX
+
+A HotFix is a new way to react fast to *critical bugs*, that can harm
+SAP installations. +
+It is meant to bridge the time with a *temporary mitigation* until the
+*permanent fix* is available. As soon as the fix is released, the next
+released *saptune* version will contain an *update* to the HotFix to be
+applied only when necessary. *One year* after the fix is available, we
+will *remove* the HotFix from *saptune*.
+
+We hope to provide an comfortable way to address such issues.
+
+The HotFix will be added as individual Note with the name +
+*HotFixTID_NUMBER* and can be part of a Solution. +
+A HotFix release will contain only configuration changes and no new
+features.
+
+To activate the HotFix you can simply apply the Note by
+
+*saptune note apply HotFix<TID_NUMBER>* +
+which will not interrupt your current tuning but add the needed
+parameter settings. The change will take effect immediately and is
+reboot persistent.
+
+Or you restart the *saptune.service*, which will lead to a short gap in
+your tuning because of the 'revert'/'apply' workflow of the service
+restart. Your SAP workload should be stopped for this operation.
+
+Or you reboot your server.
+
+As soon as the permanent fix is available and installed on the system,
+the Hotfix can be reverted with +
+*saptune note revert HotFix<TID_NUMBER>*
+
+The next released *saptune* version will contain an update of the HotFix
+with a condition (*tag*) to apply this HotFix only under the condition
+the permanent fix is not installed on the systems. +
+The HotFix will be removed from *saptune* one year after the permanent fix
+is available, giving customers enough time to update their systems.
+
+== CHANGES
+
+*changelog*::
+  The changelog file of the *saptune* rpm package contains detailed
+  information, what was changed between the various package versions.
+  The command +
+  {nbsp} +
+  *rpm -q --changes saptune | more* +
+  {nbsp} +
+  will show the content of the file
+
+*version 3*::
+  With the update to *saptune* version 3 *saptune* does no longer use
+  *tuned*(8) to restart after a system reboot. It is using its own systemd
+  service named *saptune.service*. +
+  So we now *deprecated* all "DAEMON ACTIONS" like *saptune daemon start*.
+  These commands will still work as they are internally linked
+  to the related "SERVICE ACTIONS" like *saptune service takeover*.
+  Please refer to the related section descriptions at the top of this
+  man page.
+
+*version 3.1*::
+  With the update to *saptune* version 3.1 we *deprecated* the actions
+  *saptune note simulate* and *saptune solution simulate*.
+
+*version 3.2*::
+  With the update to *saptune* version 3.2 on SLES for SAP 12 and 15 we
+  *deprecated* the manual editing of the file _/etc/sysconfig/saptune_
+  as the main configuration file will be (re)moved in future versions. +
+  Additional the Solution *SAP-ASE.sol* and the related Notes *1680803*
+  and *1805750* are *deprecated* on SLES for SAP 12 and 15 and removed
+  in SLE 16. +
+  SAP Note *1771258* not relevant/valid anymore on SLE 16, we
+  *deprecated* the Note and the support for setting PAM limits in SLES
+  for SAP 12 and 15 and removed both in SLE 16 +
+  The already deprecated actions 'daemon', 'note simulate' and 'solution
+  simulate' are removed in SLE16
+
+*version 3.2.3*::
+  SAP Note *941735* not relevant/valid anymore, we *deprecated* the Note
+  with the update to *saptune* version 3.2.3 on SLES for SAP 12, 15 and 16
+  and on plain SLES 16.
+
+== FILES
+
+_/usr/share/saptune/schemas/1.0_
+
+____
+schemata defining the json output format available since *saptune* version
+3.1
+____
+
+_/usr/share/saptune/schemas/1.1_
+
+____
+schemata defining the json output format available since *saptune* version
+3.2
+____
+
+_/usr/share/saptune/notes_
+
+____
+part of the *Package Area* +
+the *saptune* SAP Note definitions, which are shipped by the *saptune* RPM
+package +
+Please do not change the files located here. You will lose all your
+changes during a *saptune* package update.
+____
+
+_/usr/share/saptune/sols_
+
+____
+part of the *Package Area* +
+the saptune Solution definitions, which are shipped by the *saptune* RPM
+package
+
+Please do not change as maintenance updates of package *saptune* will
+overwrite these files without preserving any custom changes.
+____
+
+_/var/lib/saptune/working/notes_
+
+____
+part of the *Working Area* +
+the saptune SAP Note definitions, which can be listed by *saptune note
+list*
+
+The files are named with the number of their corresponding SAP Note
+(==NoteID). +
+A description of the syntax and the available tuning options can be
+found in *saptune-note*(5) +
+Please do not change the files located here. You will lose all your
+changes during a *saptune staging release* command. Use override files
+to change parameter values if needed.
+____
+
+_/var/lib/saptune/working/sols_
+
+____
+part of the *Working Area* +
+the *saptune* Solution definitions, which can be listed by *saptune
+solution list* +
+At the moment saptune supports two architectures - _ArchX86_ for the x86
+platform and _ArchPPC64LE_ for 64-bit PowerPC little endian platform -
+with different Solution definitions.
+
+Please do not change the files located here as the command *saptune
+staging release* may overwrite these files without preserving any
+custom changes. Use override files to change the Note list of the
+Solutions.
+____
+
+_/var/lib/saptune/staging/latest_
+
+____
+part of the *Staging Area* +
+the *saptune* SAP Note or Solution definitions, which are present in the
+Package Area but differ from the files in the Working Area.
+____
+
+_/var/lib/saptune/config/cloud.json_
+
+____
+the file where *saptune* stores the detected cloud instance. +
+Please use *saptune cloud* command instead of editing the file
+directly.
+____
+
+_/etc/sysconfig/saptune_
+
+____
+the central *saptune* configuration file in SLES for SAP *12 and 15*
+containing the information about the currently enabled Notes and
+Solutions, the order in which these Notes are applied and the version of
+*saptune* currently used. +
+ATTENTION: the manual editing of this file will be *deprecated* on SLES
+for SAP 12 and 15 as the main configuration file will be (re)moved in
+SLE 16. +
+Please use the *saptune configure* command instead of editing the file
+directly.
+____
+
+_/var/lib/saptune/config/saptune_
+
+____
+the central *saptune* configuration file in SLES and SLES for SAP *16*
+containing the information about the currently enabled Notes and
+Solutions, the order in which these Notes are applied and the version of
+*saptune* currently used. +
+ATTENTION: Do not edit the file directly! Use the *saptune configure*
+command instead.
+____
+
+
+_/etc/saptune/extra_
+
+____
+vendor or customer specific tuning or Solution definitions. +
+Please see *VENDOR SUPPORT* above for more information.
+
+You can use *saptune note create NOTEID* or *saptune solution create
+SOLUTIONNAME* to create a new vendor or customer specific definition or
+*saptune note edit NOTEID* or *saptune solution edit SolutionName*
+to modify an already existing vendor or customer specific definition.
+____
+
+_/etc/saptune/override_
+
+____
+the *saptune* Note and Solution definition override location.
+
+If you need to customize the Note or Solution definitions found in
+_/usr/share/saptune/notes_ or _/usr/share/saptune/sols_ or in
+_/etc/saptune/extra_, you can copy them to _/etc/saptune/override_ and
+modify them as you need. Please stay with the original name of the Note
+or Solution definition (the Note ID or Solution name) and do *NOT* rename
+it.
+
+If the shipped Note or Solution does *NOT* contain an untagged section
+an override will not work.
+
+Or use *saptune note customize NOTEID* or *saptune solution customize
+SOLUTIONNAME* to do the job for you.
+____
+
+_/run/saptune/saved_state/_ _/run/saptune/parameter/_
+
+____
+*saptune* was designed to preserve the state of the system before starting
+the SAP specific tuning, so that it will be possible to restore this
+previous state of the system, if the SAP specific tuning is no longer
+needed or should be changed.
+
+This system state is saved during the 'apply' operation of *saptune* in
+the *saptune* internal used files in _/run/saptune/saved_state_ and
+_/run/saptune/parameter_. The content of these files highly depends on the
+previous state of the system. +
+If the values are applied by *saptune*, no further monitoring of the
+system parameters are done, so changes of *saptune* relevant parameters
+will not be observed. If a SAP Note or a SAP Solution should be
+reverted, then first the values read from the _/run/saptune/saved_state_
+and _/run/saptune/parameter_ files will be applied to the system to
+restore the previous system state and then the corresponding save_state
+file will be removed.
+
+Please do not change or remove files in this directory. The knowledge
+about the previous system state gets lost and the revert functionality
+of *saptune* will be destructed. So you will lose the capability to revert
+back the tunings *saptune* has done.
+____
+
+== NOTE
+
+Using *saptune* within a pipe, the color information will be removed from
+the output. +
+It is possible to change this behavior by using the command line option
+*--force-color*
+
+== NOTE
+
+When the values from the *saptune* Note definitions are applied to the
+system, no further monitoring of the system parameters are done. So
+changes of *saptune* relevant parameters by using the 'sysctl' command or
+by editing configuration files will not be observed. If the values set
+by *saptune* should be reverted, these unrecognized changed settings will
+be overwritten by the previous saved system settings from *saptune*.
+
+== NOTE
+
+To prevent unintended reload/restart of *saptune* during package
+installation/update of *saptune* or normal work, which will result in a
+short time period, where the system is not tuned for SAP workloads, it's
+possible to set the parameter *IGNORE_RELOAD* in the central *saptune*
+configuration file _/etc/sysconfig/saptune_. +
+*IGNORE_RELOAD* is used to control the '*systemctl reload
+saptune.service*' behavior. +
+Default is *IGNORE_RELOAD="no"*, which means that the 'reload' is
+working as expected. +
+If set to *yes* a *systemctl reload saptune.service* and a *saptune
+service restart* will do *nothing*. The reason will be logged. +
+Additional this parameter setting will prevent *systemctl restart
+saptune.service* (which is a 'ExecStop' followed by 'ExecStart') called
+from macros used during the package installation/update of the *saptune*
+package from restarting the tuning. +
+ATTENTION: Outside the *saptune* package installation *systemctl restart
+saptune.service* can *not* be blocked.
+
+== ATTENTION
+
+Higher or lower system values set by the system, the SAP installer or by
+the administrator using sysctl command or sysctl configuration files
+will be now *overwritten* by *saptune*, if they are part of the applied
+Note definitions.
+
+*saptune* now sets the values read from the Note definition files
+irrespective of already set higher system values. If you need other
+tuning values as defined in the Note definition files, please use the
+possibility to create *override* files, which contain the values you
+need.
+
+== SEE ALSO
+
+saptune-note(5) saptune-solution(5) saptune(7)
+++++
+\" _strm_3.2.0_start
+++++
+saptune-migrate(7)
+++++
+\" _strm_3.2.0_end
+++++
+
+== AUTHOR
+
+Soeren Schmidt <soeren.schmidt@suse.com>, Angela Briel <abriel@suse.com>

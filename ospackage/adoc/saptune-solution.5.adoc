@@ -1,0 +1,102 @@
+= saptune-solution(5)
+Angela Briel <abriel@suse.com>; Soeren Schmidt <soeren.schmidt@suse.com>
+v3.2, December 2024
+:doctype: manpage
+:manmanual: saptune solution file format description
+:mansource: saptune
+
+== NAME
+saptune-solution - Solution definition files for saptune version 3
+
+== DESCRIPTION
+This man page documents the format of the Solution definition files for *saptune* version *3*.
+
+The *saptune* Solution definitions will be installed by the rpm in _/usr/share/saptune/sols_ (the *Package Area*), but for the execution they will be searched in _/var/lib/saptune/working/sols_ (the *Working Area*) for shipped definitions and in _/etc/saptune/extra_ for vendor or customer specific definitions. Customer specific changes are placed in _/etc/saptune/override_.
+
+Solution definition files are suffixed with `.sol` to distinguish them from Note definition files.
+
+The *Solution definition* files use the INI file format.
+
+A comment line starts with pass:[#].
+
+Inline comments are possible and start with a blank followed by a pass:[#] followed by any non-pass:[#] character ('pass:[#]anything except pass:[#]').
+
+If you need to add a character sequence of ' pass:[#]anything' to your description, please write it as ' pass:[##]anything' (double the pass:[#]) to give *saptune* the chance to distinguish this text from an inline comment. *saptune* will strip the second pass:[#] from the output result, so that the resulting text will appear as ' pass:[#]anything'.
+
+Lines starting with `[` indicate the begin of a new section.
+
+== SECTIONS
+A section starts with a `[section_name]` keyword in the first line, followed by lines with options and comments.
+
+The following section definitions are available and used in the *saptune* SAP Solution definition files. Each of these sections can be used in a vendor or customer specific Solution definition file placed in _/etc/saptune/extra_.
+
+List of supported sections: +
+`version`, `ArchX86`, `ArchPPC64LE`
+
+See detailed description below:
+
+=== [version]
+This section is an optional section and is used to track changes.
+
+[source,ini]
+----
+VERSION=<versionNo>
+DATE=<release date>
+DESCRIPTION=<description of the Solution>
+REFERENCES=<list of URLs containing information regarding the Solution separated by blank>
+----
+
+Example:
+
+[source,ini]
+----
+VERSION=1
+DATE=07.07.2021
+DESCRIPTION=Definition of SAP HANA Solution for SLE15
+REFERENCES=
+----
+
+The entries are treated as 'Key Value' pairs. The equal operator (`=`) is mandatory, but can be used with spaces around. The entries can be placed in any order inside the version section.
+
+* *VERSION* is a number that should indicate how many changes are done for this Solution definition in the past. Allowed are digits, upper-case and lower-case letters, dots, underscores, minus and plus signs.
+* *DATE* is the date of the last changes.
+* *DESCRIPTION* is the description of the Solution.
+* *REFERENCES* is a list of URLs separated by blank, which contain additional information about the Solution definition and the content. If you need to use a 'blank' inside the URL definition please mask it as `%20`.
+
+// section ArchX86
+=== [ArchX86]
+This section will be used only on *64bit Intel x86* systems and contains exactly *one* line with the SAP Notes separated by spaces which shall be applied in the given order.
+
+The section is optional and does not need to be part of a Solution if it is not meant for this architecture. If the section is missing, the Solution will not be listed and can not be applied or customized on *x86_64* systems.
+
+If you customize the Solution you have to define the entire SAP Note list you want to have for this section.
+
+// section ArchPPC64LE
+=== [ArchPPC64LE]
+This section will be used only on *64bit PowerPC little-endian* systems and contains exactly *one* line with the SAP Notes separated by spaces which shall be applied in the given order.
+
+The section is optional and does not need to be part of a Solution if it is not meant for this architecture. If the section is missing, the Solution will not be listed and can not be applied or customized on *ppc64le* systems.
+
+If you customize the Solution you have to define the entire SAP Note list you want to have for this section.
+
+== FILES
+_/usr/share/saptune/sols_::
+The directory (*Package Area*) contains the Solutions, which are shipped by the *saptune* RPM package. They are not directly used by *saptune* but get copied during installation or update to the Working or Staging Area. +
+Do not change the files located here. You will lose all your changes during a *saptune* package update. Use an override or extra file for your changes as described in *saptune*(8).
+
+_/var/lib/saptune/working/sols_::
+The directory (the *Working Area*) contains Solutions, which are shipped by the saptune RPM package. They are copied from the Package Area during installation or update if they do not belong to the Staging Area due to the configuration. +
+Do not change the files located here. Depending on your configuration you will lose all your changes during a *saptune* package update or a `saptune staging release` command later. Use an override or extra file for your changes as described in *saptune*(8).
+
+_/var/lib/saptune/staging/latest_::
+The directory (the *Staging Area*) contains Solutions coming from the package. They are copied from the Package Area during installation or update if they do not belong to the Working Area due to the configuration. +
+Do not change the files located here. You will lose all your changes during a *saptune* package update. Use an override or extra file for your changes as described in *saptune*(8).
+
+_/etc/saptune/extra_::
+The directory contains vendor or customer specific Solutions created by *saptune solution create SOLUTIONNAME*.
+
+_/etc/saptune/override_::
+The directory contains overrides for Solutions created by *saptune solution customise SOLUTIONNAME*.
+
+== SEE ALSO
+*saptune-note*(5), *saptune*(7), *saptune*(8)
