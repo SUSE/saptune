@@ -52,13 +52,13 @@
 | github.com/SUSE/saptune/app/app.go | 71.4 | :cloud: |
 | github.com/SUSE/saptune/system/cmdline.go | 70.6 | :cloud: |
 | github.com/SUSE/saptune/app/note.go | 69.3 | :cloud: |
-| github.com/SUSE/saptune/actions/footnote.go | 66.2 | :cloud: |
+| github.com/SUSE/saptune/actions/footnote.go | 65.4 | :cloud: |
 | github.com/SUSE/saptune/main.go | 59.3 | :cloud: |
-| github.com/SUSE/saptune/actions/serviceacts.go | 51.4 | :cloud: |
+| github.com/SUSE/saptune/actions/serviceacts.go | 51.6 | :cloud: |
 | github.com/SUSE/saptune/actions/solutionacts.go | 40.8 | :fire: |
 | github.com/SUSE/saptune/system/cpu.go | 33.4 | :fire: |
 | github.com/SUSE/saptune/system/json.go | 23.4 | :fire: |
-| github.com/SUSE/saptune/system/csp.go | 10.8 | :fire: |
+| github.com/SUSE/saptune/system/csp.go | 11.0 | :fire: |
 | github.com/SUSE/saptune/actions/stagingacts.go | 1.9 | :fire: |
 | github.com/SUSE/saptune/system/communication.go | 0.0 | :fire: |
 | github.com/SUSE/saptune/app/parameter.go | 0.0 | :fire: |
