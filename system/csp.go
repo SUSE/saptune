@@ -36,7 +36,6 @@ var CSPInstanceConfig = "/var/lib/saptune/config/cloud.json"
 
 // CSPInstance defines the structure of the cloud instance configuration
 type CSPInstance struct {
-	Provider     string `json:"csp"`
 	InstanceType string `json:"instance_type"`
 	ManualSet    bool   `json:"manual_set"`
 }
@@ -249,7 +248,6 @@ func retrieveCloudInstanceType(csp string) string {
 func ResetCloudConfigFile() error {
 	DebugLog("ResetCloudConfigFile")
 	cspInstance := CSPInstance{
-		Provider:     GetCSP(),
 		InstanceType: "",
 		ManualSet:    false,
 	}
@@ -275,63 +273,56 @@ func WriteCloudConfigFile(cspInstance CSPInstance) error {
 
 // readCloudConfigFile reads the cloud json file
 // /var/lib/saptune/config/cloud.json
-func readCloudConfigFile() (CSPInstance, error) {
+func readCloudConfigFile() CSPInstance {
 	DebugLog("readCloudConfigFile")
 	cspInstance := CSPInstance{
-		Provider:     "",
 		InstanceType: "",
 		ManualSet:    false,
 	}
 	content, err := os.ReadFile(CSPInstanceConfig)
 	if err != nil {
 		ErrorLog("Failed to read file '%s' - '%v'.", CSPInstanceConfig, err)
-		return cspInstance, err
+		_ = ResetCloudConfigFile()
+		return cspInstance
 	}
 	if len(content) == 0 {
-		err = ErrorLog("File '%s' is empty.", CSPInstanceConfig)
-		return cspInstance, err
+		ErrorLog("File '%s' is empty.", CSPInstanceConfig)
+		_ = ResetCloudConfigFile()
+		return cspInstance
 	}
 	err = json.Unmarshal(content, &cspInstance)
 	if err != nil {
 		ErrorLog("Failed to read json content of file '%s' - '%v'.", CSPInstanceConfig, err)
-		return cspInstance, err
+		_ = ResetCloudConfigFile()
+		return cspInstance
 	}
 	DebugLog("readCloudConfigFile - returns cspInstance as '%+v', err as '%v'", cspInstance, err)
-	return cspInstance, err
+	return cspInstance
 }
 
 // GetCSPInstanceInfo reads the cloud instance type from file
 // /var/lib/saptune/config/cloud.json
-func GetCSPInstanceInfo(csp string) (CSPInstance, error) {
-	DebugLog("GetCSPInstanceInfo - cps is '%s'", csp)
-	instanceInfo, err := readCloudConfigFile()
-	if err != nil {
-		return instanceInfo, err
-	}
-	if instanceInfo.Provider != csp {
-		InfoLog("Mishmash in file '%s' detected. The stored cloud provider '%s' does not match the current running one '%s'.", CSPInstanceConfig, instanceInfo.Provider, csp)
-	}
-	DebugLog("GetCSPInstanceInfo - returns instanceInfo as '%+v', err as '%v'", instanceInfo, err)
-	return instanceInfo, err
+func GetCSPInstanceInfo() CSPInstance {
+	DebugLog("GetCSPInstanceInfo")
+	instanceInfo := readCloudConfigFile()
+	DebugLog("GetCSPInstanceInfo - returns instanceInfo as '%+v'", instanceInfo)
+	return instanceInfo
 }
 
 // DetectCSPInstance is called early in main to check the instance type
 // in /var/lib/saptune/config/cloud.json
 func DetectCSPInstance(csp string) error {
 	DebugLog("DetectCSPInstance - cps is '%s'", csp)
+	var err error
 	// read /var/lib/saptune/config/cloud.json
-	cspInstance, err := readCloudConfigFile()
-	if err != nil {
-		return err
-	}
+	cspInstance := readCloudConfigFile()
 	if cspInstance.ManualSet {
-		NoticeLog("cloud provider '%s' and instance type '%s' were set manually", cspInstance.Provider, cspInstance.InstanceType)
+		NoticeLog("cloud provider is '%s', cloud instance type '%s' was set manually", csp, cspInstance.InstanceType)
 		return nil
 	}
 	// manual_set key is false
-	if cspInstance.Provider == "" || cspInstance.InstanceType == "" {
-		cspInstance.Provider = csp
-		_, err = DetectAndStoreInstanceType(cspInstance)
+	if cspInstance.InstanceType == "" {
+		_, err = DetectAndStoreInstanceType(csp, cspInstance)
 		return err
 	}
 
@@ -361,9 +352,9 @@ func DetectCSPInstance(csp string) error {
 
 // DetectAndStoreInstanceType detects the instance type and writes the result to
 // file /var/lib/saptune/config/cloud.json
-func DetectAndStoreInstanceType(cspInstance CSPInstance) (CSPInstance, error) {
-	DebugLog("DetectAndStoreInstanceType - cspInstance is '%+v'", cspInstance)
-	cspInstance.InstanceType = retrieveCloudInstanceType(cspInstance.Provider)
+func DetectAndStoreInstanceType(csp string, cspInstance CSPInstance) (CSPInstance, error) {
+	DebugLog("DetectAndStoreInstanceType - csp is '%s', cspInstance is '%+v'", csp, cspInstance)
+	cspInstance.InstanceType = retrieveCloudInstanceType(csp)
 	if cspInstance.InstanceType == "" {
 		return cspInstance, ErrorLog("Instance detection failed")
 	}
@@ -383,13 +374,9 @@ func updateCloudInstanceInfo(csp string, cspInstance CSPInstance) error {
 	if instType == "" {
 		return ErrorLog("Instance detection failed, no update of file '%s'", CSPInstanceConfig)
 	}
-	if csp != cspInstance.Provider {
-		WarningLog("Stored cloud provider '%s' differs from the detected one '%s'.", cspInstance.Provider, csp)
-	}
 	if instType != cspInstance.InstanceType {
 		WarningLog("Stored instance type '%s' differs from the detected one '%s'.", cspInstance.InstanceType, instType)
 	}
-	cspInstance.Provider = csp
 	cspInstance.InstanceType = instType
 	err := WriteCloudConfigFile(cspInstance)
 	DebugLog("updateCloudInstanceInfo - returns err as '%v'", err)
@@ -405,11 +392,13 @@ func GetCSPInstanceStatusInfo() string {
 	if csp == "" {
 		cloudInfo = "not on cloud"
 	} else {
-		cloud, _ := GetCSPInstanceInfo(csp)
-		if cloud.InstanceType == "" {
-			cloudInfo = csp
-		} else {
-			cloudInfo = csp + "%" + cloud.InstanceType
+		cloudInfo = csp
+		cloud := GetCSPInstanceInfo()
+		if cloud.InstanceType != "" {
+			cloudInfo = cloudInfo + " - " + cloud.InstanceType
+			if cloud.ManualSet {
+				cloudInfo = cloudInfo + " (manual set)"
+			}
 		}
 	}
 	DebugLog("GetCSPInstanceStatusInfo - returns cloudInfo as '%s'", cloudInfo)

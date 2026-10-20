@@ -362,7 +362,7 @@ func detectCSPInstance() {
 			system.ErrorExit("", 128)
 		}
 		if err != nil {
-			system.ErrorExit("Cloud instance type detection failed. Exiting.")
+			system.ErrorLog("Cloud instance type detection failed.")
 		}
 	} else {
 		system.InfoLog("not on public cloud, no instance type detection needed")
