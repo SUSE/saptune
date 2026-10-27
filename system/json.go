@@ -101,17 +101,18 @@ type notesOrder struct {
 
 // JNoteListEntry is one line of 'saptune note list'
 type JNoteListEntry struct {
-	NoteID       string `json:"Note ID"`
-	NoteDesc     string `json:"Note description"`
-	NoteRef      JObj   `json:"Note reference"`
-	NoteVers     string `json:"Note version"`
-	NoteRdate    string `json:"Note release date"`
-	ManEnabled   bool   `json:"Note enabled manually"`
-	SolEnabled   bool   `json:"Note enabled by Solution"`
-	ManReverted  bool   `json:"Note reverted manually"`
-	NoteOverride bool   `json:"Note override exists"`
-	CustomNote   bool   `json:"custom Note"`
-	DepNote      bool   `json:"Note deprecated"`
+	NoteID          string `json:"Note ID"`
+	NoteDesc        string `json:"Note description"`
+	NoteRef         JObj   `json:"Note reference"`
+	NoteVers        string `json:"Note version"`
+	NoteRdate       string `json:"Note release date"`
+	ManEnabled      bool   `json:"Note enabled manually"`
+	SolEnabled      bool   `json:"Note enabled by Solution"`
+	ManReverted     bool   `json:"Note reverted manually"`
+	NoteOverride    bool   `json:"Note override exists"`
+	CustomNote      bool   `json:"custom Note"`
+	ConflictingNote bool   `json:"conflicting Note"`
+	DepNote         bool   `json:"Note deprecated"`
 }
 
 // JNoteList is the whole 'saptune note list'
@@ -124,15 +125,17 @@ type JNoteList struct {
 // JPNotesLine one row of 'saptune note verify|simulate'
 // from PrintNoteFields
 type JPNotesLine struct {
-	NoteID    string       `json:"Note ID,omitempty"`
-	NoteVers  string       `json:"Note version,omitempty"`
-	Parameter string       `json:"parameter"`
-	Compliant *bool        `json:"compliant,omitempty"`
-	ExpValue  string       `json:"expected value,omitempty"`
-	OverValue string       `json:"override value,omitempty"`
-	ActValue  *string      `json:"actual value,omitempty"`
-	Comment   string       `json:"comment,omitempty"`
-	Footnotes []JFootNotes `json:"amendments,omitempty"`
+	NoteID          string       `json:"Note ID,omitempty"`
+	NoteVers        string       `json:"Note version,omitempty"`
+	Parameter       string       `json:"parameter"`
+	Compliant       *bool        `json:"compliant,omitempty"`
+	ExpValue        string       `json:"expected value,omitempty"`
+	OverValue       string       `json:"override value,omitempty"`
+	ActValue        *string      `json:"actual value,omitempty"`
+	CustomNote      bool         `json:"custom Note"`
+	ConflictingNote bool         `json:"conflicting Note"`
+	Comment         string       `json:"comment,omitempty"`
+	Footnotes       []JFootNotes `json:"amendments,omitempty"`
 }
 
 // JFootNotes collects the footnotes per parameter
@@ -367,16 +370,17 @@ func racIsSupported(rac string) bool {
 // used in NoteActionList
 func JNoteListEntryInit() JNoteListEntry {
 	newListEntry := JNoteListEntry{
-		NoteID:       "",
-		NoteDesc:     "",
-		NoteRef:      make([]string, 0),
-		NoteVers:     "",
-		NoteRdate:    "",
-		ManEnabled:   false,
-		SolEnabled:   false,
-		ManReverted:  false,
-		NoteOverride: false,
-		CustomNote:   false,
+		NoteID:          "",
+		NoteDesc:        "",
+		NoteRef:         make([]string, 0),
+		NoteVers:        "",
+		NoteRdate:       "",
+		ManEnabled:      false,
+		SolEnabled:      false,
+		ManReverted:     false,
+		NoteOverride:    false,
+		CustomNote:      false,
+		ConflictingNote: false,
 	}
 	return newListEntry
 }

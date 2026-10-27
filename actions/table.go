@@ -170,6 +170,8 @@ func collectMRO(stuff ...interface{}) system.JPNotesLine {
 	if stuff[10].(string) == "NA" || stuff[10].(string) == "PNA" || stuff[10].(string) == "all:none" {
 		nLine.ActValue = nil
 	}
+
+	nLine.CustomNote, nLine.ConflictingNote = detectCustomNoteConflict(nLine.NoteID)
 	return nLine
 }
 
@@ -222,7 +224,7 @@ func setupTableFormat(skeys []string, noteCompare map[string]map[string]note.Fie
 	for _, skey := range skeys {
 		keyFields := strings.Split(skey, "§")
 		noteID := keyFields[0]
-		noteField := fmt.Sprintf("%s, %s", noteID, txtparser.GetINIFileVersionSectionEntry(noteCompare[noteID]["ConfFilePath"].ActualValue.(string), "version"))
+		noteField := noteFieldFormat(noteID, txtparser.GetINIFileVersionSectionEntry(noteCompare[noteID]["ConfFilePath"].ActualValue.(string), "version"))
 		comparisons := noteCompare[noteID]
 		for _, comparison := range comparisons {
 			if comparison.ReflectMapKey == "reminder" || comparison.ReflectFieldName == "Inform" {
@@ -245,6 +247,23 @@ func setupTableFormat(skeys []string, noteCompare map[string]map[string]note.Fie
 		}
 	}
 	return fmtlen0, fmtlen1, fmtlen2, fmtlen3, fmtlen4, format
+}
+
+// noteFieldFormat builds the note field for the table
+func noteFieldFormat(noteID, version string) string {
+	system.DebugLog("noteFieldFormat - noteID is '%s', version is '%s'", noteID, version)
+	notePrefix := " "
+	customNoteFlag, customConflict := detectCustomNoteConflict(noteID)
+	if customNoteFlag {
+		if customConflict {
+			notePrefix = "!"
+		} else {
+			notePrefix = "C"
+		}
+	}
+	noteField := fmt.Sprintf("%s %s, %s", notePrefix, noteID, version)
+	system.DebugLog("noteFieldFormat  - return noteField as '%s'", noteField)
+	return noteField
 }
 
 // printHeadline prints a headline for the table
@@ -313,7 +332,7 @@ func getNoteAndVersion(kField, nID, nField string, nComparisons map[string]map[s
 			pHead = "yes"
 		}
 		nID = kField
-		nField = fmt.Sprintf("%s, %s", nID, txtparser.GetINIFileVersionSectionEntry(nComparisons[nID]["ConfFilePath"].ActualValue.(string), "version"))
+		nField = noteFieldFormat(nID, txtparser.GetINIFileVersionSectionEntry(nComparisons[nID]["ConfFilePath"].ActualValue.(string), "version"))
 	}
 	return pHead, nID, nField
 }

@@ -126,11 +126,14 @@ func setupNoteListFormat(noteID string, solutionNoteIDs []string, tuneApp *app.A
 		format = " O" + format
 		jnoteListEntry.NoteOverride = true
 	}
-	if _, err := os.Stat(fmt.Sprintf("%s%s.conf", ExtraTuningSheets, noteID)); err == nil {
-		// custom note
-		if _, err := os.Stat(fmt.Sprintf("%s%s", NoteTuningSheets, noteID)); err == nil {
+
+	customNoteFlag, customConflict := detectCustomNoteConflict(noteID)
+	jnoteListEntry.ConflictingNote = false
+	if customNoteFlag {
+		if customConflict {
 			format = " " + setYellowText + "!" + format + resetTextColor
 			jnoteListEntry.CustomNote = false
+			jnoteListEntry.ConflictingNote = true
 		} else {
 			format = " C" + format
 			jnoteListEntry.CustomNote = true
@@ -156,6 +159,23 @@ func setupNoteListFormat(noteID string, solutionNoteIDs []string, tuneApp *app.A
 		jnoteListEntry.ManEnabled = true
 	}
 	return format, jnoteListEntry
+}
+
+// detectCustomNoteConflict detects if a custom note has a conflict with a
+// shipped note
+func detectCustomNoteConflict(noteID string) (bool, bool) {
+	system.DebugLog("detectCustomNoteConflict - noteID is '%s'", noteID)
+	customNoteFlag := false
+	customConflict := false
+	if _, err := os.Stat(fmt.Sprintf("%s%s.conf", ExtraTuningSheets, noteID)); err == nil {
+		// custom note
+		customNoteFlag = true
+		if _, err := os.Stat(fmt.Sprintf("%s%s", NoteTuningSheets, noteID)); err == nil {
+			customConflict = true
+		}
+	}
+	system.DebugLog("detectCustomNoteConflict - return customNoteFlag as '%v, customConflict as '%v'", customNoteFlag, customConflict)
+	return customNoteFlag, customConflict
 }
 
 // NoteActionVerify compares all parameter settings from a Note definition
