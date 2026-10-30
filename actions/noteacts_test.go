@@ -170,7 +170,7 @@ and then please double check your input
 		var verifyMatchText = `
    SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
 --------------------+------------------------------+-------------+-----------+-------------+-----------
-   simpleNote, 1    | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
+     simpleNote, 1  | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
 
 
 [31mAttention for SAP Note simpleNote:
@@ -198,7 +198,7 @@ simpleNote - Configuration drop in for simple tests
 
    SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
 --------------------+------------------------------+-------------+-----------+-------------+-----------
-   simpleNote, 1    | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
+     simpleNote, 1  | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
 
 
 [31mAttention for SAP Note simpleNote:
@@ -224,7 +224,7 @@ current order of enabled notes is: simpleNote
 		var verifyMatchText = `
    SAPNote, Version | Parameter                    | Expected    | Override  | Actual      | Compliant
 --------------------+------------------------------+-------------+-----------+-------------+-----------
-   simpleNote, 1    | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
+     simpleNote, 1  | net.ipv4.ip_local_port_range | 31768 61999 |           | 31768 61999 | yes
 
 
 [31mAttention for SAP Note simpleNote:

@@ -79,6 +79,8 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			ret = chkKernelTags(tagField[1], secFields)
 		case "meminfo":
 			ret = chkMeminfoTags(secTag, secFields)
+		case "hostname", "dnsdomainname", "fqdn":
+			ret = chkHostTags(tagField[0], tagField[1], secFields)
 		default:
 			ret = chkOtherTags(tagField[0], tagField[1], secFields)
 		}
@@ -87,6 +89,39 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 		}
 	}
 	return ret, blkDev
+}
+
+// chkHostTags checks if the hostname, dnsdomainname or fqdn section tag
+// is valid or not
+func chkHostTags(tag, tagField string, secFields []string) bool {
+	system.DebugLog("chkHostTags - tag is '%s', tagField is '%s', secFields is '%v'", tag, tagField, secFields)
+	ret := true
+	re, err := regexp.Compile(tagField)
+	if err != nil {
+		system.InfoLog("invalid regular expression '%s' for %s in section definition '%v'. Skipping whole section with all lines till next valid section definition", tagField, tag, secFields)
+		return false
+	}
+	val := ""
+	switch tag {
+	case "hostname":
+		val, err = system.GetHostname()
+	case "dnsdomainname":
+		val, err = system.GetDNSDomainname()
+	case "fqdn":
+		val, err = system.GetFQDN()
+	default:
+		return false
+	}
+	if err != nil {
+		system.InfoLog("command to retrieve %s reported an error or non-zero exit code. Skipping whole section '%v' with all lines till next valid section definition", tag, secFields)
+		return false
+	}
+	if !re.MatchString(val) {
+		system.InfoLog("%s '%s' in section definition '%v' does not match the %s of the running system ('%s'). Skipping whole section with all lines till next valid section definition", tag, tagField, secFields, tag, val)
+		ret = false
+	}
+	system.DebugLog("chkHostTags - returns ret as '%v'", ret)
+	return ret
 }
 
 // chkMeminfoTags checks if the meminfo section tag is valid and matches the system state
