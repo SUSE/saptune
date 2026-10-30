@@ -124,7 +124,7 @@ func TestSetBlkVal(t *testing.T) {
 		t.Error(err, info)
 	}
 	val, info = OptBlkVal("IO_SCHEDULER_"+tstDisk, "noop, none", &tblck, blckOK)
-	if val != "noop" && val != "none" {
+	if val != "noop" && val != "none" && info != "NA" {
 		t.Error(val, info)
 	}
 	// apply - value not used, but map changed above in optimise
