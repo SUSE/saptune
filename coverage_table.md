@@ -3,6 +3,7 @@
 | github.com/SUSE/saptune/txtparser/sysconfig.go | 100.0 | :sunny: |
 | github.com/SUSE/saptune/system/trento.go | 100.0 | :sunny: |
 | github.com/SUSE/saptune/system/service.go | 100.0 | :sunny: |
+| github.com/SUSE/saptune/system/hostname.go | 100.0 | :sunny: |
 | github.com/SUSE/saptune/system/commandsMap.go | 100.0 | :sunny: |
 | github.com/SUSE/saptune/system/calc.go | 100.0 | :sunny: |
 | github.com/SUSE/saptune/sap/note/sectVM.go | 100.0 | :sunny: |
@@ -29,14 +30,14 @@
 | github.com/SUSE/saptune/system/fs.go | 91.8 | :sunny: |
 | github.com/SUSE/saptune/system/file.go | 91.1 | :sunny: |
 | github.com/SUSE/saptune/system/sysctl.go | 89.5 | :sunny: |
-| github.com/SUSE/saptune/txtparser/tags.go | 88.9 | :sunny: |
-| github.com/SUSE/saptune/txtparser/section.go | 88.9 | :sunny: |
+| github.com/SUSE/saptune/txtparser/tags.go | 89.4 | :sunny: |
 | github.com/SUSE/saptune/sap/note/sectMem.go | 87.8 | :sunny: |
 | github.com/SUSE/saptune/sap/note/sectCPU.go | 87.0 | :sunny: |
 | github.com/SUSE/saptune/system/mem.go | 85.7 | :sunny: |
 | github.com/SUSE/saptune/system/system.go | 84.7 | :sunny: |
 | github.com/SUSE/saptune/sap/note/sectPagecache.go | 84.6 | :sunny: |
 | github.com/SUSE/saptune/actions/table.go | 84.0 | :sunny: |
+| github.com/SUSE/saptune/txtparser/section.go | 83.7 | :sunny: |
 | github.com/SUSE/saptune/app/solution.go | 81.9 | :sunny: |
 | github.com/SUSE/saptune/sap/note/sectLogin.go | 80.5 | :sunny: |
 | github.com/SUSE/saptune/app/state.go | 78.1 | :cloud: |
