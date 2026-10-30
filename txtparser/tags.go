@@ -32,11 +32,12 @@ func isTagAvail(tag string, secFields []string) bool {
 // splitSecTag splits the section tag along '=' or '%' into parts
 func splitSecTag(secTag string) []string {
 	system.DebugLog("splitSecTag - secTag is '%s'", secTag)
-	sub := "="
-	if strings.Contains(secTag, "%") {
-		sub = "%"
+	sepRegex :=regexp.MustCompile(`[%=]`)
+	sub := sepRegex.FindString(secTag)
+	tagField := []string{secTag}
+	if sub != "" {
+		tagField = strings.Split(secTag, sub)
 	}
-	tagField := strings.Split(secTag, sub)
 	system.DebugLog("splitSecTag - returns tagField as '%v'", tagField)
 	return tagField
 }
