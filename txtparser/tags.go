@@ -18,15 +18,27 @@ func isTagAvail(tag string, secFields []string) bool {
 			cnt = cnt + 1
 			continue
 		}
-		tagField := strings.Split(secTag, "=")
+		tagField := splitSecTag(secTag)
 		if len(tagField) != 2 {
-			return false
+			continue
 		}
 		if tag == tagField[0] {
 			return true
 		}
 	}
 	return false
+}
+
+// splitSecTag splits the section tag along '=' or '%' into parts
+func splitSecTag(secTag string) []string {
+	system.DebugLog("splitSecTag - secTag is '%s'", secTag)
+	sub := "="
+	if strings.Contains(secTag, "%") {
+		sub = "%"
+	}
+	tagField := strings.Split(secTag, sub)
+	system.DebugLog("splitSecTag - returns tagField as '%v'", tagField)
+	return tagField
 }
 
 // chkSecTags checks, if the tags of a section are valid
@@ -43,7 +55,7 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			// support empty tags
 			continue
 		}
-		tagField := strings.Split(secTag, "=")
+		tagField := splitSecTag(secTag)
 		if len(tagField) != 2 {
 			system.WarningLog("wrong syntax of section tag '%s', skipping whole section '%v'. Please check. ", secTag, secFields)
 			return false, blkDev
@@ -65,6 +77,8 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			ret = chkCPUTags(tagField[1], secFields)
 		case "kernel":
 			ret = chkKernelTags(tagField[1], secFields)
+		case "meminfo":
+			ret = chkMeminfoTags(secTag, secFields)
 		default:
 			ret = chkOtherTags(tagField[0], tagField[1], secFields)
 		}
@@ -73,6 +87,59 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 		}
 	}
 	return ret, blkDev
+}
+
+// chkMeminfoTags checks if the meminfo section tag is valid and matches the system state
+func chkMeminfoTags(secTag string, secFields []string) bool {
+	system.DebugLog("chkMeminfoTags - secTag is '%s', secFields is '%v'", secTag, secFields)
+	// regMeminfoTag parses meminfo%<KEY><OPERATOR><VALUE> tags
+	regMeminfoTag := regexp.MustCompile(`^meminfo%([A-Za-z0-9_()]+)\s*(<=|>=|==|!=|<|>)\s*([0-9]+)$`)
+	m := regMeminfoTag.FindStringSubmatch(secTag)
+	if len(m) != 4 {
+		system.WarningLog("wrong syntax of meminfo section tag '%s', skipping whole section '%v'. Please check. ", secTag, secFields)
+		return false
+	}
+	key := m[1]
+	op := m[2]
+	valStr := m[3]
+
+	targetVal, err := strconv.ParseUint(valStr, 10, 64)
+	if err != nil {
+		system.WarningLog("invalid value '%s' in meminfo section tag '%s', skipping whole section '%v'. Please check. ", valStr, secTag, secFields)
+		return false
+	}
+
+	actualVal, err := system.GetMeminfoEntry(key)
+	if err != nil {
+		system.InfoLog("meminfo key '%s' in section definition '%v' not found in %s. Skipping whole section with all lines till next valid section definition", key, secFields, system.ProcMeminfo)
+		return false
+	}
+
+	var match bool
+	switch op {
+	case "==":
+		match = (actualVal == targetVal)
+	case "!=":
+		match = (actualVal != targetVal)
+	case "<":
+		match = (actualVal < targetVal)
+	case "<=":
+		match = (actualVal <= targetVal)
+	case ">":
+		match = (actualVal > targetVal)
+	case ">=":
+		match = (actualVal >= targetVal)
+	default:
+		system.WarningLog("unsupported operator '%s' in meminfo section tag '%s', skipping whole section '%v'. Please check. ", op, secTag, secFields)
+		return false
+	}
+
+	if !match {
+		system.InfoLog("meminfo key '%s' value '%d' in section definition '%v' does not match condition '%s %d'. Skipping whole section with all lines till next valid section definition", key, actualVal, secFields, op, targetVal)
+		return false
+	}
+	system.DebugLog("chkMeminfoTags - returns")
+	return true
 }
 
 // chkOsTags checks if the os section tag is valid or not
