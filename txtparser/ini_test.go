@@ -396,3 +396,68 @@ func TestGetSysctlExcludes(t *testing.T) {
 	t.Log(excludeDirs)
 	excludeDirs = excludeDirsOrg
 }
+
+func TestParseINICPUFlags(t *testing.T) {
+	oldCPUInfoFile := system.CPUInfoFile
+	defer func() { system.CPUInfoFile = oldCPUInfoFile }()
+
+	system.CPUInfoFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpuinfo")
+
+	input := `
+[version]
+# SAP-NOTE=1234567 VERSION=1 DATE=01.01.2026 NAME="test note"
+
+[sysctl:cpuflags=^avx$]
+kernel.pid_max=4194304
+
+[rpm:cpuflags=!^avx$]
+testpackage 1.0.0
+
+[cpu:cpuflags=!^vmx$]
+governor=performance
+`
+	ini := ParseINI(input)
+	if ini == nil {
+		t.Fatal("expected non-nil INIFile")
+	}
+
+	// kernel.pid_max should be present in sysctl (avx is present)
+	if entry, ok := ini.KeyValue["sysctl"]["kernel.pid_max"]; !ok || entry.Value != "4194304" {
+		t.Errorf("expected kernel.pid_max=4194304, got %v", entry)
+	}
+
+	// testpackage should NOT be present in rpm (!^avx$ failed, section skipped)
+	if entries, ok := ini.KeyValue["rpm"]; ok && len(entries) > 0 {
+		t.Errorf("rpm section should have been skipped, but got %v", entries)
+	}
+
+	// governor should be present in cpu (vmx is absent, !^vmx$ passed)
+	if entry, ok := ini.KeyValue["cpu"]["governor"]; !ok || entry.Value != "performance" {
+		t.Errorf("expected governor=performance, got %v", entry)
+	}
+
+	// Verify AllValues contains sysctl and cpu, but not rpm
+	foundSysctl := false
+	foundRPM := false
+	foundCPU := false
+	for _, v := range ini.AllValues {
+		if v.Section == "sysctl" && v.Key == "kernel.pid_max" {
+			foundSysctl = true
+		}
+		if v.Section == "rpm" {
+			foundRPM = true
+		}
+		if v.Section == "cpu" && v.Key == "governor" {
+			foundCPU = true
+		}
+	}
+	if !foundSysctl {
+		t.Errorf("expected sysctl in AllValues")
+	}
+	if foundRPM {
+		t.Errorf("did not expect rpm in AllValues")
+	}
+	if !foundCPU {
+		t.Errorf("expected cpu in AllValues")
+	}
+}

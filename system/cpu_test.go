@@ -220,6 +220,52 @@ func TestCPUPlatform(t *testing.T) {
 	cpuPlatformFile = oldCPUPlatformFile
 }
 
+func TestCPUFlags(t *testing.T) {
+	// Test on host system
+	_ = CPUFlags()
+
+	oldCPUInfoFile := CPUInfoFile
+	defer func() { CPUInfoFile = oldCPUInfoFile }()
+
+	// Test with testdata/cpuinfo
+	CPUInfoFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpuinfo")
+	flags := CPUFlags()
+	if len(flags) == 0 {
+		t.Error("expected CPU flags from testdata/cpuinfo, got none")
+	}
+
+	foundAVX := false
+	foundCPU1Flag := false
+	for _, f := range flags {
+		if f == "avx" {
+			foundAVX = true
+		}
+		if f == "extraflag_only_in_cpu1" {
+			foundCPU1Flag = true
+		}
+	}
+	if !foundAVX {
+		t.Errorf("expected 'avx' flag in CPU#0 flags")
+	}
+	if foundCPU1Flag {
+		t.Errorf("found flag from CPU#1 in CPU#0 flags")
+	}
+
+	// Test with missing file
+	CPUInfoFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpuinfo_nonexistent")
+	flags = CPUFlags()
+	if flags != nil {
+		t.Errorf("expected nil for missing file, got %v", flags)
+	}
+
+	// Test with no flags line
+	CPUInfoFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpuinfo_noflags")
+	flags = CPUFlags()
+	if flags != nil {
+		t.Errorf("expected nil for cpuinfo without flags, got %v", flags)
+	}
+}
+
 func TestIsCPUonline(t *testing.T) {
 	if !isCPUonline("cpu0") {
 		t.Errorf("reports cpu as offline, but should be online")

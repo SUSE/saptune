@@ -22,6 +22,8 @@ const (
 	cpuDirSys       = "devices/system/cpu"
 )
 
+// CPUInfoFile is the cpuinfo representation in the proc filesystem
+var CPUInfoFile = "/proc/cpuinfo"
 var cpuPlatformFile = "/sys/devices/cpu/caps/pmu_name"
 var efiVarsDir = "/sys/firmware/efi/efivars"
 var cpuDir = "/sys/devices/system/cpu"
@@ -703,6 +705,45 @@ func CPUPlatform() string {
 		InfoLog("Problems reading file '%s' - %+v\n", cpuPlatformFile, err)
 	}
 	return strings.TrimSpace(string(cpuPlatform))
+}
+
+// CPUFlags returns the CPU flags of CPU#0 from /proc/cpuinfo
+func CPUFlags() []string {
+	content, err := os.ReadFile(CPUInfoFile)
+	if err != nil {
+		InfoLog("Problems reading file '%s' - %+v\n", CPUInfoFile, err)
+		return nil
+	}
+
+	proc0Found := false
+	inProc0 := false
+
+	for _, rawLine := range strings.Split(string(content), "\n") {
+		line := strings.TrimSpace(rawLine)
+		if strings.HasPrefix(line, "processor") {
+			parts := strings.SplitN(line, ":", 2)
+			if len(parts) == 2 && strings.TrimSpace(parts[0]) == "processor" {
+				procID := strings.TrimSpace(parts[1])
+				if procID == "0" {
+					proc0Found = true
+					inProc0 = true
+				} else if proc0Found {
+					// Left processor 0
+					break
+				}
+			}
+			continue
+		}
+		if strings.HasPrefix(line, "flags") {
+			if inProc0 || !proc0Found {
+				parts := strings.SplitN(line, ":", 2)
+				if len(parts) == 2 && strings.TrimSpace(parts[0]) == "flags" {
+					return strings.Fields(parts[1])
+				}
+			}
+		}
+	}
+	return nil
 }
 
 // checkCPUState checks, if all cpus have the same state settings
