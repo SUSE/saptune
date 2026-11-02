@@ -669,3 +669,121 @@ net.ipv4.tcp_tw_reuse = 1
 		t.Errorf("did not expect 'fs.file-max' in file INI")
 	}
 }
+
+func TestChkCPUFlagsTags(t *testing.T) {
+	oldCPUInfoFile := system.CPUInfoFile
+	defer func() { system.CPUInfoFile = oldCPUInfoFile }()
+
+	system.CPUInfoFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpuinfo")
+	secFields := []string{"sysctl", "cpuflags=^avx$"}
+
+	// Single positive match
+	if !chkCPUFlagsTags("^avx$", secFields) {
+		t.Errorf("expected true for '^avx$', got false")
+	}
+
+	// Single positive mismatch
+	if chkCPUFlagsTags("^nonexistent$", secFields) {
+		t.Errorf("expected false for '^nonexistent$', got true")
+	}
+
+	// Negated flag absent -> true
+	if !chkCPUFlagsTags("!^nonexistent$", secFields) {
+		t.Errorf("expected true for '!^nonexistent$', got false")
+	}
+
+	// Negated flag present -> false
+	if chkCPUFlagsTags("!^avx$", secFields) {
+		t.Errorf("expected false for '!^avx$', got true")
+	}
+
+	// Empty tag
+	if chkCPUFlagsTags("", secFields) {
+		t.Errorf("expected false for empty tag, got true")
+	}
+	if chkCPUFlagsTags("   ", secFields) {
+		t.Errorf("expected false for whitespace-only tag, got true")
+	}
+
+	// Invalid regex
+	if chkCPUFlagsTags("[a-", secFields) {
+		t.Errorf("expected false for invalid regex, got true")
+	}
+
+	// Empty negated pattern
+	if chkCPUFlagsTags("!", secFields) {
+		t.Errorf("expected false for '!', got true")
+	}
+
+	// Space separation and multiple flags (AND logic)
+	// Both present:
+	if !chkCPUFlagsTags("^avx$   ^sse2$  ^sse3$", secFields) {
+		t.Errorf("expected true for '^avx$   ^sse2$  ^sse3$', got false")
+	}
+	// One missing among present:
+	if chkCPUFlagsTags("^avx$ ^nonexistent$ ^sse2$", secFields) {
+		t.Errorf("expected false when one flag is missing, got true")
+	}
+
+	// Alternation in regex:
+	if !chkCPUFlagsTags("^(avx|nonexistent)$", secFields) {
+		t.Errorf("expected true for '^(avx|nonexistent)$', got false")
+	}
+	if chkCPUFlagsTags("^(vmx|smx)$", secFields) {
+		t.Errorf("expected false for '^(vmx|smx)$' when neither exists, got true")
+	}
+
+	// Negation combined with positive flags:
+	// vmx absent, sse3 present, ssse3 present -> true
+	if !chkCPUFlagsTags("!^vmx$ ^sse3$ ^ssse3$", secFields) {
+		t.Errorf("expected true for '!^vmx$ ^sse3$ ^ssse3$', got false")
+	}
+	// sse2 is present, so !^sse2$ should fail:
+	if chkCPUFlagsTags("!^sse2$ ^sse3$ ^ssse3$", secFields) {
+		t.Errorf("expected false for '!^sse2$ ^sse3$ ^ssse3$' when sse2 is present, got true")
+	}
+
+	// Negated flag alone:
+	if !chkCPUFlagsTags("!^vmx$", secFields) {
+		t.Errorf("expected true for '!^vmx$', got false")
+	}
+
+	// Ensure flags from CPU#1 only are not matched:
+	if chkCPUFlagsTags("^extraflag_only_in_cpu1$", secFields) {
+		t.Errorf("expected false for CPU#1 only flag, got true")
+	}
+
+	// Test with no flags file (e.g. ppc64le)
+	system.CPUInfoFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpuinfo_noflags")
+	if chkCPUFlagsTags("^avx$", secFields) {
+		t.Errorf("expected false for cpuinfo with no flags, got true")
+	}
+	if chkCPUFlagsTags("!^vmx$", secFields) {
+		t.Errorf("expected false for cpuinfo with no flags even if negated, got true")
+	}
+
+	// Test with missing file
+	system.CPUInfoFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpuinfo_missing")
+	if chkCPUFlagsTags("^avx$", secFields) {
+		t.Errorf("expected false for missing cpuinfo, got true")
+	}
+
+	// Integration test via chkSecTags
+	system.CPUInfoFile = path.Join(os.Getenv("GOPATH"), "/src/github.com/SUSE/saptune/testdata/cpuinfo")
+	ok, _ := chkSecTags([]string{"sysctl", "cpuflags=^avx$"}, nil)
+	if !ok {
+		t.Errorf("chkSecTags expected true for valid cpuflags, got false")
+	}
+	ok, _ = chkSecTags([]string{"sysctl", "cpuflags=!^avx$"}, nil)
+	if ok {
+		t.Errorf("chkSecTags expected false for negated present flag, got true")
+	}
+	ok, _ = chkSecTags([]string{"sysctl", "cpuflags=!^vmx$ ^avx$"}, nil)
+	if !ok {
+		t.Errorf("chkSecTags expected true for '!^vmx$ ^avx$', got false")
+	}
+	ok, _ = chkSecTags([]string{"sysctl", "cpuflags="}, nil)
+	if ok {
+		t.Errorf("chkSecTags expected false for empty cpuflags, got true")
+	}
+}

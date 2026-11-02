@@ -32,7 +32,7 @@ func isTagAvail(tag string, secFields []string) bool {
 // splitSecTag splits the section tag along '=' or '%' into parts
 func splitSecTag(secTag string) []string {
 	system.DebugLog("splitSecTag - secTag is '%s'", secTag)
-	sepRegex :=regexp.MustCompile(`[%=]`)
+	sepRegex := regexp.MustCompile(`[%=]`)
 	sub := sepRegex.FindString(secTag)
 	tagField := []string{secTag}
 	if sub != "" {
@@ -82,6 +82,8 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			ret = chkMeminfoTags(secTag, secFields)
 		case "hostname", "dnsdomainname", "fqdn":
 			ret = chkHostTags(tagField[0], tagField[1], secFields)
+		case "cpuflags":
+			ret = chkCPUFlagsTags(tagField[1], secFields)
 		default:
 			ret = chkOtherTags(tagField[0], tagField[1], secFields)
 		}
@@ -411,6 +413,58 @@ func chkCPUTags(tagField string, secFields []string) bool {
 		ret = false
 	}
 	return ret
+}
+
+// chkCPUFlagsTags checks, if the cpuflags section tag is valid or not
+func chkCPUFlagsTags(tagField string, secFields []string) bool {
+	fields := strings.Fields(tagField)
+	if len(fields) == 0 {
+		system.WarningLog("empty tag 'cpuflags' in section definition '%v'. Skipping whole section with all lines till next valid section definition", secFields)
+		return false
+	}
+
+	cpuFlags := system.CPUFlags()
+	if len(cpuFlags) == 0 {
+		system.InfoLog("no CPU flags found in '%s' for section definition '%v'. Skipping whole section with all lines till next valid section definition", system.CPUInfoFile, secFields)
+		return false
+	}
+
+	for _, elem := range fields {
+		negated := false
+		patternStr := elem
+		if strings.HasPrefix(patternStr, "!") {
+			negated = true
+			patternStr = strings.TrimPrefix(patternStr, "!")
+		}
+		if patternStr == "" {
+			system.WarningLog("invalid syntax in section tag 'cpuflags' in section definition '%v'. Skipping whole section with all lines till next valid section definition", secFields)
+			return false
+		}
+		re, err := regexp.Compile(patternStr)
+		if err != nil {
+			system.WarningLog("invalid regular expression '%s' in section tag 'cpuflags' in section definition '%v': %v. Skipping whole section with all lines till next valid section definition", patternStr, secFields, err)
+			return false
+		}
+
+		match := false
+		for _, flag := range cpuFlags {
+			if re.MatchString(flag) {
+				match = true
+				break
+			}
+		}
+
+		if !negated && !match {
+			system.InfoLog("CPU flag matching '%s' in section definition '%v' not found in '%s'. Skipping whole section with all lines till next valid section definition", patternStr, secFields, system.CPUInfoFile)
+			return false
+		}
+		if negated && match {
+			system.InfoLog("negated CPU flag matching '%s' in section definition '%v' was found in '%s'. Skipping whole section with all lines till next valid section definition", patternStr, secFields, system.CPUInfoFile)
+			return false
+		}
+	}
+
+	return true
 }
 
 // chkHWTags checks, if the vendor or model section tag is valid or not

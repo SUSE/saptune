@@ -1,0 +1,33 @@
+processor	: 0
+vendor_id	: AuthenticAMD
+cpu family	: 25
+model		: 117
+model name	: AMD Ryzen 7 PRO 8840HS w/ Radeon 780M Graphics
+stepping	: 2
+microcode	: 0xa705208
+cpu MHz		: 3293.782
+cache size	: 1024 KB
+physical id	: 0
+siblings	: 4
+core id		: 0
+cpu cores	: 4
+apicid		: 0
+initial apicid	: 0
+fpu		: yes
+fpu_exception	: yes
+cpuid level	: 16
+wp		: yes
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 sse3 ht syscall nx mmxext fxsr_opt rdtscp lm constant_tsc rep_good nopl nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch ibpb vmmcall fsgsbase bmi1 avx2 bmi2 invpcid rdseed adx clflushopt sha_ni arat flush_l1d
+bugs		: fxsave_leak sysret_ss_attrs null_seg spectre_v1 spectre_v2 srso ibpb_no_ret spectre_v2_user tsa
+bogomips	: 6587.56
+TLB size	: 3584 4K pages
+clflush size	: 64
+cache_alignment	: 64
+address sizes	: 48 bits physical, 48 bits virtual
+power management:
+
+processor	: 1
+vendor_id	: AuthenticAMD
+cpu family	: 25
+model		: 117
+flags		: fpu vme extraflag_only_in_cpu1
