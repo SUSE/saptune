@@ -787,3 +787,174 @@ func TestChkCPUFlagsTags(t *testing.T) {
 		t.Errorf("chkSecTags expected false for empty cpuflags, got true")
 	}
 }
+
+func TestChkCPUVulnerabilityTag(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldDir := system.CPUVulnerabilitiesDir
+	defer func() { system.CPUVulnerabilitiesDir = oldDir }()
+	system.CPUVulnerabilitiesDir = tmpDir
+
+	if err := os.WriteFile(path.Join(tmpDir, "meltdown"), []byte("Mitigation: PTI\n"), 0644); err != nil {
+		t.Errorf("failed to create test file: %v", err)
+	}
+	if err := os.WriteFile(path.Join(tmpDir, "tsx_async_abort"), []byte("Not affected\n"), 0644); err != nil {
+		t.Errorf("failed to create test file: %v", err)
+	}
+
+	secFields := []string{"rpm", "cpu_vulnerability%meltdown=Mitigation.*"}
+
+	// 1. Valid matches
+	if !chkCPUVulnerabilityTag("cpu_vulnerability", "meltdown=Mitigation.*", secFields) {
+		t.Errorf("expected true for meltdown=Mitigation.*, got false")
+	}
+	if !chkCPUVulnerabilityTag("cpu_vulnerability", "meltdown=^Mitigation: PTI$", secFields) {
+		t.Errorf("expected true for meltdown=^Mitigation: PTI$, got false")
+	}
+	if !chkCPUVulnerabilityTag("cpu_vulnerability", "tsx_async_abort=^Not affected$", secFields) {
+		t.Errorf("expected true for tsx_async_abort=^Not affected$, got false")
+	}
+
+	// 2. Mismatch
+	if chkCPUVulnerabilityTag("cpu_vulnerability", "meltdown=^Vulnerable$", secFields) {
+		t.Errorf("expected false for meltdown=^Vulnerable$, got true")
+	}
+	if chkCPUVulnerabilityTag("cpu_vulnerability", "tsx_async_abort=^Mitigation$", secFields) {
+		t.Errorf("expected false for tsx_async_abort=^Mitigation$, got true")
+	}
+
+	// 3. Missing vulnerability file
+	if chkCPUVulnerabilityTag("cpu_vulnerability", "spectre_v1=.*", secFields) {
+		t.Errorf("expected false for missing vulnerability file, got true")
+	}
+
+	// 4. Missing directory
+	system.CPUVulnerabilitiesDir = path.Join(tmpDir, "nonexistent")
+	if chkCPUVulnerabilityTag("cpu_vulnerability", "meltdown=.*", secFields) {
+		t.Errorf("expected false for missing vulnerabilities directory, got true")
+	}
+
+	// 5. Directory is a regular file
+	regFilePath := path.Join(tmpDir, "regular_file")
+	_ = os.WriteFile(regFilePath, []byte("test"), 0644)
+	system.CPUVulnerabilitiesDir = regFilePath
+	if chkCPUVulnerabilityTag("cpu_vulnerability", "meltdown=.*", secFields) {
+		t.Errorf("expected false when vulnerabilities directory is a file, got true")
+	}
+	system.CPUVulnerabilitiesDir = tmpDir
+
+	// 6. Syntax errors in tag definition
+	badTags := []string{
+		"meltdown",
+		"meltdown=",
+		"meltdown=a=b",
+	}
+	for _, bt := range badTags {
+		if chkCPUVulnerabilityTag("cpu_vulnerability", bt, secFields) {
+			t.Errorf("expected false for bad tag '%s', got true", bt)
+		}
+	}
+
+	// 7. Path traversal and illegal vulnerability names
+	pathTraversals := []string{
+		".=.*",
+		"..=.*",
+		"../etc/passwd=.*",
+		".hidden=.*",
+		"sub/dir=.*",
+		"sub\\dir=*",
+	}
+	for _, pt := range pathTraversals {
+		if chkCPUVulnerabilityTag("cpu_vulnerability", pt, secFields) {
+			t.Errorf("expected false for traversal tag '%s', got true", pt)
+		}
+	}
+
+	// 8. Invalid regex
+	if chkCPUVulnerabilityTag("cpu_vulnerability", "meltdown=[unclosed", secFields) {
+		t.Errorf("expected false for invalid regex, got true")
+	}
+}
+
+func TestChkSecTagsCPUVulnerability(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldDir := system.CPUVulnerabilitiesDir
+	defer func() { system.CPUVulnerabilitiesDir = oldDir }()
+	system.CPUVulnerabilitiesDir = tmpDir
+
+	if err := os.WriteFile(path.Join(tmpDir, "meltdown"), []byte("Mitigation: PTI\n"), 0644); err != nil {
+		t.Errorf("failed to create test file: %v", err)
+	}
+	if err := os.WriteFile(path.Join(tmpDir, "tsx_async_abort"), []byte("Not affected\n"), 0644); err != nil {
+		t.Errorf("failed to create test file: %v", err)
+	}
+
+	// Valid single tag
+	ret, _ := chkSecTags([]string{"sysctl", "cpu_vulnerability%meltdown=^Mitigation.*"}, nil)
+	if !ret {
+		t.Errorf("expected true for single matching cpu_vulnerability tag, got false")
+	}
+
+	// Mismatched tag
+	ret, _ = chkSecTags([]string{"sysctl", "cpu_vulnerability%meltdown=^Vulnerable.*"}, nil)
+	if ret {
+		t.Errorf("expected false for mismatched cpu_vulnerability tag, got true")
+	}
+
+	// Multiple matching tags
+	ret, _ = chkSecTags([]string{"sysctl", "cpu_vulnerability%meltdown=Mitigation.*", "cpu_vulnerability%tsx_async_abort=^Not affected$"}, nil)
+	if !ret {
+		t.Errorf("expected true for multiple matching cpu_vulnerability tags, got false")
+	}
+
+	// Multiple tags with one mismatch
+	ret, _ = chkSecTags([]string{"sysctl", "cpu_vulnerability%meltdown=Mitigation.*", "cpu_vulnerability%tsx_async_abort=^Vulnerable$"}, nil)
+	if ret {
+		t.Errorf("expected false when one cpu_vulnerability tag mismatches, got true")
+	}
+
+	// Malformed tag (missing %)
+	ret, _ = chkSecTags([]string{"sysctl", "cpu_vulnerability=something"}, nil)
+	if ret {
+		t.Errorf("expected false for cpu_vulnerability without %%, got true")
+	}
+
+	// Malformed tag (path traversal)
+	ret, _ = chkSecTags([]string{"sysctl", "cpu_vulnerability%..=something"}, nil)
+	if ret {
+		t.Errorf("expected false for path traversal tag, got true")
+	}
+}
+
+func TestParseINICPUVulnerability(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldDir := system.CPUVulnerabilitiesDir
+	defer func() { system.CPUVulnerabilitiesDir = oldDir }()
+	system.CPUVulnerabilitiesDir = tmpDir
+
+	_ = os.WriteFile(path.Join(tmpDir, "meltdown"), []byte("Mitigation: PTI\n"), 0644)
+	_ = os.WriteFile(path.Join(tmpDir, "tsx_async_abort"), []byte("Not affected\n"), 0644)
+
+	iniContent := `
+[sysctl:cpu_vulnerability%meltdown=^Mitigation.*]
+net.ipv4.tcp_timestamps = 0
+
+[sysctl:cpu_vulnerability%meltdown=^Vulnerable$]
+net.ipv4.tcp_timestamps = 1
+
+[systemd:cpu_vulnerability%tsx_async_abort=^Not affected$]
+CPUAffinity = 1
+`
+	ini := ParseINI(iniContent)
+	if ini == nil {
+		t.Errorf("expected non-nil INIFile")
+	}
+
+	val := ini.KeyValue["sysctl"]["net.ipv4.tcp_timestamps"].Value
+	if val != "0" {
+		t.Errorf("expected tcp_timestamps to be '0', got '%s'", val)
+	}
+
+	if len(ini.AllValues) != 2 {
+		t.Errorf("expected 2 entries in AllValues, got %d", len(ini.AllValues))
+	}
+}

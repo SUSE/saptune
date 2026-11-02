@@ -3,6 +3,7 @@ package txtparser
 import (
 	"fmt"
 	"github.com/SUSE/saptune/system"
+	"path/filepath"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -84,6 +85,8 @@ func chkSecTags(secFields, blkDev []string) (bool, []string) {
 			ret = chkHostTags(tagField[0], tagField[1], secFields)
 		case "cpuflags":
 			ret = chkCPUFlagsTags(tagField[1], secFields)
+		case "cpu_vulnerability":
+			ret = chkCPUVulnerabilityTag(tagField[0], tagField[1], secFields)
 		default:
 			ret = chkOtherTags(tagField[0], tagField[1], secFields)
 		}
@@ -445,7 +448,6 @@ func chkCPUFlagsTags(tagField string, secFields []string) bool {
 			system.WarningLog("invalid regular expression '%s' in section tag 'cpuflags' in section definition '%v': %v. Skipping whole section with all lines till next valid section definition", patternStr, secFields, err)
 			return false
 		}
-
 		match := false
 		for _, flag := range cpuFlags {
 			if re.MatchString(flag) {
@@ -453,7 +455,6 @@ func chkCPUFlagsTags(tagField string, secFields []string) bool {
 				break
 			}
 		}
-
 		if !negated && !match {
 			system.InfoLog("CPU flag matching '%s' in section definition '%v' not found in '%s'. Skipping whole section with all lines till next valid section definition", patternStr, secFields, system.CPUInfoFile)
 			return false
@@ -463,8 +464,37 @@ func chkCPUFlagsTags(tagField string, secFields []string) bool {
 			return false
 		}
 	}
-
 	return true
+}
+
+// chkCPUVulnerabilityTag checks if the cpu_vulnerability section tag is valid
+func chkCPUVulnerabilityTag(tag, tagField string, secFields []string) bool {
+	ret := true
+	tagParts := strings.Split(tagField, "=")
+	if len(tagParts) != 2 || tagParts[1] == "" {
+		system.WarningLog("wrong syntax of section tag '%s', skipping whole section '%v'. Please check. ", tag, secFields)
+		return false
+	}
+	vuln := tagParts[0]
+	if strings.HasPrefix(vuln, ".") || strings.Contains(vuln, "/") || strings.Contains(vuln, "\\") || filepath.Clean(vuln) != vuln || filepath.Base(vuln) != vuln {
+		system.WarningLog("invalid vulnerability '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", vuln, secFields)
+		return false
+	}
+	content, err := system.GetCPUVulnerability(vuln)
+	if err != nil {
+		system.InfoLog("CPU vulnerability file '%s/%s' does not exist or cannot be read. Skipping whole section '%v' with all lines till next valid section definition", system.CPUVulnerabilitiesDir, vuln, secFields)
+		return false
+	}
+	re, err := regexp.Compile(tagParts[1])
+	if err != nil {
+		system.WarningLog("invalid regex '%s' in section definition '%v'. Skipping whole section with all lines till next valid section definition", tagParts[1], secFields)
+		return false
+	}
+	if !re.MatchString(content) {
+		system.InfoLog("CPU vulnerability '%s' content '%s' in section definition '%v' does not match regex '%s'. Skipping whole section with all lines till next valid section definition", vuln, content, secFields, tagParts[1])
+		ret = false
+	}
+	return ret
 }
 
 // chkHWTags checks, if the vendor or model section tag is valid or not

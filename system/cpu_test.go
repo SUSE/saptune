@@ -396,3 +396,42 @@ func TestCPUErrorCases(t *testing.T) {
 	}
 	cpuDir = oldCPUDir
 }
+
+func TestGetCPUVulnerability(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldDir := CPUVulnerabilitiesDir
+	defer func() { CPUVulnerabilitiesDir = oldDir }()
+	CPUVulnerabilitiesDir = tmpDir
+
+	// Test non-existent file
+	val, err := GetCPUVulnerability("meltdown")
+	if err == nil {
+		t.Errorf("expected error for non-existent file, got nil")
+	}
+	if val != "" {
+		t.Errorf("expected empty string, got '%s'", val)
+	}
+
+	// Test existing file with trailing newline
+	vContent := "Mitigation: PTI\n"
+	if err := os.WriteFile(path.Join(tmpDir, "meltdown"), []byte(vContent), 0644); err != nil {
+		t.Errorf("failed to write test file: %v", err)
+	}
+	val, err = GetCPUVulnerability("meltdown")
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if val != "Mitigation: PTI" {
+		t.Errorf("expected 'Mitigation: PTI', got '%s'", val)
+	}
+
+	// Test when CPUVulnerabilitiesDir does not exist
+	CPUVulnerabilitiesDir = path.Join(tmpDir, "nonexistent_dir")
+	val, err = GetCPUVulnerability("meltdown")
+	if err == nil {
+		t.Errorf("expected error for non-existent directory, got nil")
+	}
+	if val != "" {
+		t.Errorf("expected empty string, got '%s'", val)
+	}
+}
