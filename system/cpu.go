@@ -24,6 +24,11 @@ const (
 
 // CPUInfoFile is the cpuinfo representation in the proc filesystem
 var CPUInfoFile = "/proc/cpuinfo"
+
+// CPUVulnerabilitiesDir is the path to the cpu vulnerabilities in the
+// /sys filesystem
+var CPUVulnerabilitiesDir = "/sys/devices/system/cpu/vulnerabilities"
+
 var cpuPlatformFile = "/sys/devices/cpu/caps/pmu_name"
 var efiVarsDir = "/sys/firmware/efi/efivars"
 var cpuDir = "/sys/devices/system/cpu"
@@ -714,10 +719,8 @@ func CPUFlags() []string {
 		InfoLog("Problems reading file '%s' - %+v\n", CPUInfoFile, err)
 		return nil
 	}
-
 	proc0Found := false
 	inProc0 := false
-
 	for _, rawLine := range strings.Split(string(content), "\n") {
 		line := strings.TrimSpace(rawLine)
 		if strings.HasPrefix(line, "processor") {
@@ -744,6 +747,24 @@ func CPUFlags() []string {
 		}
 	}
 	return nil
+}
+
+// GetCPUVulnerability returns the content of /sys/devices/system/cpu/vulnerabilities/<vuln>
+func GetCPUVulnerability(vuln string) (string, error) {
+	var err error
+	var content []byte
+	ret := ""
+	if _, err := os.Stat(CPUVulnerabilitiesDir); err != nil {
+		InfoLog("CPU vulnerabilities directory '%s' does not exist.", CPUVulnerabilitiesDir)
+		return ret, err
+	}
+	fileName := fmt.Sprintf("%s/%s", CPUVulnerabilitiesDir, vuln)
+	if content, err = os.ReadFile(fileName); err == nil {
+		ret = strings.TrimSpace(string(content))
+	} else {
+		InfoLog("failed to read '%s' - %v", fileName, err)
+	}
+	return ret, err
 }
 
 // checkCPUState checks, if all cpus have the same state settings
