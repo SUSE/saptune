@@ -29,6 +29,8 @@ var logSwitch = map[string]string{"verbose": os.Getenv("SAPTUNE_VERBOSE"), "debu
 // SaptuneVersion is the saptune version from the main configuration file
 var SaptuneVersion = ""
 
+var elizaIn io.Reader = os.Stdin
+
 func main() {
 	startLogging()
 	solution.InitSols()
@@ -113,6 +115,11 @@ func ctrlClArgs(writer io.Writer) {
 	if arg1 == "help" || system.IsFlagSet("help") {
 		system.JnotSupportedYet()
 		actions.PrintHelpAndExit(writer, 0)
+	}
+	if system.IsFlagSet("fun") && arg1 == "eliza" {
+		actions.RunEliza(elizaIn, writer)
+		system.ErrorExit("", 0)
+		return
 	}
 	if arg1 == "" {
 		actions.PrintHelpAndExit(writer, 1)

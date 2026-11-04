@@ -76,6 +76,7 @@ var defaultCommand = map[string]bool{
 	"status":                      false,
 	"version":                     false,
 	"help":                        false,
+	"eliza":                       false,
 }
 
 // newDefaultCommandsMap creates a new 'command - action' map

@@ -47,6 +47,8 @@ Call external script '/usr/sbin/saptune_check'
   saptune [--format FORMAT] [--force-color] [--fun] check
 Print current saptune status:
   saptune [--format FORMAT] [--force-color] [--fun] status [--non-compliance-check]
+Have fun with ELIZA:
+  saptune --fun eliza
 Print current saptune version:
   saptune [--format FORMAT] [--force-color] [--fun] version
 Print this message:
