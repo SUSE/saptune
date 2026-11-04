@@ -316,6 +316,11 @@ func chkRealmOpts(cmdLinePos map[string]int) bool {
 			}
 		}
 	}
+	if stArgs[cmdLinePos["realm"]] == "eliza" && !IsFlagSet("fun") {
+		// eliza requires fun
+		DebugLog("chkRealmOpts failed - 'eliza' requires '--fun'")
+		ret = false
+	}
 	return ret
 }
 
