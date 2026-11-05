@@ -20,13 +20,17 @@
                             "Solution enabled": {
                                 "description": "States if the Solution is enabled.",
                                 "type": "boolean"
-                            }, 
+                            },
                             "Solution override exists": {
                                 "description": "States if an override file exists for the Solution.",
                                 "type": "boolean"
-                            }, 
+                            },
                             "custom Solution": {
                                 "description": "States if the Note is a custom Solution.",
+                                "type": "boolean"
+                            },
+                            "conflicting Solution": {
+                                "description": "States if the Solution is a Custom Solution with the same name as a shipped Solution.",
                                 "type": "boolean"
                             },
                             "Solution deprecated": {
@@ -34,7 +38,7 @@
                                 "type": "boolean"
                             }
                         }
-                    }                       
+                    }
                 },
-                "remember message": { "$ref": "#/$defs/saptune remember message" }    
+                "remember message": { "$ref": "#/$defs/saptune remember message" }
 {% endblock %}

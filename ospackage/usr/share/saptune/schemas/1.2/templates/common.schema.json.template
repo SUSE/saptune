@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/{{ self.command()|replace(' ', '_') }}.schema.json",  
+    "$id": "file:///usr/share/saptune/schemas/1.2/{{ self.command()|replace(' ', '_') }}.schema.json",
 
     "title": "{% block title %}{% endblock %}",
     "description": "{% block description %}{% endblock %}",
@@ -60,7 +60,7 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 255
-        }, 
+        },
 
         "messages": {
             "description": "Contains all log messages normally printed on the screen in the order they were created.",
@@ -86,16 +86,16 @@
                     }
                 }
             }
-        }   
+        }
     },
 
-    "$defs": { 
+    "$defs": {
 
         "saptune remember message": {
             "description": "The remember message.",
             "type": "string",
             "examples": [ "\nRemember: if you wish to automatically activate the solution's tuning options after a reboot, you must enable and start saptune.service by running:\n    saptune service enablestart\n" ]
-        },   
+        },
 
         "saptune note id": {
             "description": "The Note ID.",
@@ -134,7 +134,7 @@
         "systemd state is-enabled": {
             "description": "Possible systemd states for 'is-enabled' of a service.",
             "type": "string",
-            "enum": ["enabled", "enabled-runtime", "linked", "linked-runtime", "alias", "masked", "masked-runtime", "static", "indirect", "disabled", "generated", "transient", "bad"]   
+            "enum": ["enabled", "enabled-runtime", "linked", "linked-runtime", "alias", "masked", "masked-runtime", "static", "indirect", "disabled", "generated", "transient", "bad"]
         },
 
         "systemd state is-active": {
@@ -168,7 +168,7 @@
 
          "saptune parameter compliance": {
              "description": "States if the parameter is compliant or not.",
-             "type": "boolean" 
+             "type": "boolean"
          },
 
         "saptune amendments": {
@@ -178,29 +178,29 @@
                 "description": "Amendment (footnote) consists of an id and the explaining text.",
                 "type": "object",
                 "required": [ "index", "amendment" ],
-                "additionalProperties": false,  
+                "additionalProperties": false,
                 "properties": {
-                    "index": { 
+                    "index": {
                         "description": "Index of the amendment (footnote).",
                         "type": "integer",
-                        "examples": ["11", "15"] 
+                        "examples": ["11", "15"]
                     },
-                    "amendment": { 
+                    "amendment": {
                         "description": "Describes the meaning of the amendment (footnote).",
-                        "type": "string", 
+                        "type": "string",
                         "minLength": 1,
-                        "examples": ["the parameter is only used to calculate the size of tmpfs (/dev/shm)", "setting is not available on the system"] 
+                        "examples": ["the parameter is only used to calculate the size of tmpfs (/dev/shm)", "setting is not available on the system"]
                     }
                 }
             }
         },
 
-        "saptune attentions": { 
+        "saptune attentions": {
             "description": "Attentions printed for a Note.",
             "type": "array",
             "items": {
                 "required": [ "Note ID", "attention" ],
-                "additionalProperties": false,  
+                "additionalProperties": false,
                 "properties": {
                     "Note ID": { "$ref": "#/$defs/saptune note id" },
                     "attention": { "type": "string", "minLength": 1 }
@@ -211,53 +211,53 @@
         "saptune enabled Notes": {
             "description": "List of the enabled Notes.",
             "type":  "array",
-            "items": { "$ref": "#/$defs/saptune note id" }                       
+            "items": { "$ref": "#/$defs/saptune note id" }
         },
 
         "saptune Note list": {
             "description": "List of Notes.",
             "type": "array",
-            "items": { "$ref": "#/$defs/saptune note id" } 
+            "items": { "$ref": "#/$defs/saptune note id" }
         },
 
         "saptune applied Notes": {
             "description": "List of the applied Notes.",
             "type":  "array",
-            "items": { "$ref": "#/$defs/saptune note id" }                       
-        },    
+            "items": { "$ref": "#/$defs/saptune note id" }
+        },
 
         "orphaned Overrides": {
             "description": "List of the orphaned Override files (file names).",
             "type":  "array",
             "items": { "$ref": "#/$defs/saptune override file" }
-        },    
+        },
 
         "saptune staged Notes": {
             "description": "List of the staged Notes.",
             "type":  "array",
-            "items": { "$ref": "#/$defs/saptune note id" }                       
+            "items": { "$ref": "#/$defs/saptune note id" }
         },
-         
+
         "saptune additional enabled Notes": {
             "description": "List of additional (to a Solution) applied Notes. ",
             "type":  "array",
-            "items": { "$ref": "#/$defs/saptune note id" }                       
+            "items": { "$ref": "#/$defs/saptune note id" }
         },
 
-        "saptune Solution and their Notes" : {  
+        "saptune Solution and their Notes" : {
             "description": "Lists the Solution and the Notes belonging to it.",
             "type": "array",
             "items": {
                 "description":  "The Solution ID and its Notes.",
                 "type": "object",
                 "required": [ "Solution ID", "Note list" ],
-                "additionalProperties": false,  
+                "additionalProperties": false,
                 "properties": {
                     "Solution ID": { "$ref": "#/$defs/saptune solution id" },
                     "Note list": { "$ref": "#/$defs/saptune Note list" }
                 }
             }
-        },        
+        },
 
         "saptune system compliance": {
             "description": "Overall compliance of all currently applied SAP Notes.",
@@ -267,23 +267,23 @@
         "saptune enabled Solution": {
             "description": "The enabled Solution.",
             "type": "array",
-            "items": { "$ref": "#/$defs/saptune solution id" }            
+            "items": { "$ref": "#/$defs/saptune solution id" }
         },
 
         "saptune applied Solution": {
             "description": "The applied Solution (with information if partially applied).",
             "type": "array",
-            "items": { 
+            "items": {
                 "description": "Solution information object.",
                 "type": "object",
                 "required": [ "Solution ID", "applied partially" ],
-                "additionalProperties": false,  
+                "additionalProperties": false,
                 "properties": {
                     "Solution ID": { "$ref": "#/$defs/saptune solution id" },
                     "applied partially": {
                         "description": "States if the Solution is only partially applied.",
                         "type": "boolean"
-                    } 
+                    }
                 }
             }
         },
@@ -291,8 +291,8 @@
         "saptune staged Solutions": {
             "description": "List of staged Solutions.",
             "type": "array",
-            "items": { "$ref": "#/$defs/saptune solution id" }                                                  
-        }        
+            "items": { "$ref": "#/$defs/saptune solution id" }
+        }
     }
 }
 

@@ -13,9 +13,9 @@
                     "items": {
                         "type": "object",
                         "required": [ "Note ID", "Note version", "parameter" ],
-                        "additionalProperties": true,  
+                        "additionalProperties": true,
                         "propertyNames": {
-                            "enum": [ "Note ID", "Note version", "parameter", "compliant", "expected value", "override value", "actual value", "amendments" ]
+                            "enum": [ "Note ID", "Note version", "parameter", "compliant", "expected value", "override value", "actual value", "custom Note", "conflicting Note", "amendments" ]
                         },
                         "properties": {
                             "Note ID": { "$ref": "#/$defs/saptune note id" },
@@ -24,6 +24,14 @@
                             "expected value": { "$ref": "#/$defs/saptune parameter value" },
                             "override value": { "$ref": "#/$defs/saptune parameter value" },
                             "actual value": { "$ref": "#/$defs/saptune parameter value" },
+                            "custom Note": {
+                                "description": "States if the Note is a custom Note.",
+                                "type": "boolean"
+                            },
+                            "conflicting Note": {
+                                "description": "States if the Note is a Custom Note with the same name as a shipped Note.",
+                                "type": "boolean"
+                            },
                             "compliant": { "$ref": "#/$defs/saptune parameter compliance" },
                             "amendments": { "$ref": "#/$defs/saptune amendments" }
                         }
@@ -34,5 +42,4 @@
                 "system compliance": { "$ref": "#/$defs/saptune system compliance" }
 {% endblock %}
 
-                            
-                            
+
