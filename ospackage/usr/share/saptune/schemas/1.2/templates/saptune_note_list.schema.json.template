@@ -21,36 +21,40 @@
                                 "type": "string",
                                 "examples": [ "Sybase - SAP Adaptive Server Enterprise", "Linux Kernel Settings for NetApp NFS" ]
                             },
-                            "Note reference": { 
+                            "Note reference": {
                                 "description": "References (URL) for the Note.",
                                 "type": "array",
                                 "items": { "$ref": "#/$defs/reference format" }
                             },
                             "Note version": { "$ref": "#/$defs/saptune note version"  },
-                            "Note release date": { 
+                            "Note release date": {
                                 "description": "Release date of the Note.",
                                 "type": "string",
                                 "pattern": "^[0-9A-Za-z.]*$",
                                 "examples": ["18.10.2017", "Aug 14th 2020"]
-                            },                        
+                            },
                             "Note enabled manually": {
                                 "description": "States if the Note was enabled manually.",
                                 "type": "boolean"
-                            }, 
+                            },
                             "Note enabled by Solution": {
                                 "description": "States if the Note was enabled by a Solution.",
                                 "type": "boolean"
-                            }, 
+                            },
                             "Note reverted manually": {
                                 "description": "States if the Note was reverted manually.",
                                 "type": "boolean"
-                            }, 
+                            },
                             "Note override exists": {
                                 "description": "States if an override file exists for the Note.",
                                 "type": "boolean"
-                            }, 
+                            },
                             "custom Note": {
                                 "description": "States if the Note is a custom Note.",
+                                "type": "boolean"
+                            },
+                            "conflicting Note": {
+                                "description": "States if the Note is a Custom Note with the same name as a shipped Note.",
                                 "type": "boolean"
                             },
                             "Note deprecated": {
@@ -58,12 +62,12 @@
                                 "type": "boolean"
                             }
                         }
-                    }                       
+                    }
                 },
-                "Notes enabled": { 
-                    "$ref": "#/$defs/saptune enabled Solution" 
+                "Notes enabled": {
+                    "$ref": "#/$defs/saptune enabled Solution"
                 },
-                "remember message": { 
+                "remember message": {
                     "$ref": "#/$defs/saptune remember message"
-                }            
+                }
 {% endblock %}
