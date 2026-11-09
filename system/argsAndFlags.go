@@ -293,6 +293,14 @@ func chkRealmOpts(cmdLinePos map[string]int) bool {
 	DebugLog("chkRealmOpts - cmdLinePos is '%+v'", cmdLinePos)
 	stArgs := os.Args
 	ret := true
+
+	// check fun flag for realm 'eliza'
+	if len(saptArgs) >= 2 && os.Args[cmdLinePos["realm"]] == "eliza" && !IsFlagSet("fun") {
+		// eliza requires fun
+		DebugLog("chkRealmOpts failed - 'eliza' requires '--fun'")
+		return false
+	}
+
 	if IsFlagSet("non-compliance-check") {
 		// check for valid realm
 		if !(stArgs[cmdLinePos["realm"]] == "status" || stArgs[cmdLinePos["realm"]] == "service" || stArgs[cmdLinePos["realm"]] == "daemon") {
@@ -315,11 +323,6 @@ func chkRealmOpts(cmdLinePos map[string]int) bool {
 				cmdLinePos["cmdOpt"] = cmdLinePos["cmdOpt"] + 1
 			}
 		}
-	}
-	if stArgs[cmdLinePos["realm"]] == "eliza" && !IsFlagSet("fun") {
-		// eliza requires fun
-		DebugLog("chkRealmOpts failed - 'eliza' requires '--fun'")
-		ret = false
 	}
 	return ret
 }

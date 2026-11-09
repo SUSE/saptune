@@ -74,12 +74,13 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 	fmt.Fprintf(writer, "\nAll solutions (* denotes enabled solution, ! denotes a conflict reported in log file, O denotes override file exists for solution, C denotes custom solutions, D denotes deprecated solutions):\n")
 	for _, solName := range solution.GetSortedSolutionNames(solutionSelector) {
 		jsolutionListEntry = system.JSolListEntry{
-			SolName:     "",
-			NotesList:   []string{},
-			SolEnabled:  false,
-			SolOverride: false,
-			CustomSol:   false,
-			DepSol:      false,
+			SolName:        "",
+			NotesList:      []string{},
+			SolEnabled:     false,
+			SolOverride:    false,
+			CustomSol:      false,
+			ConflictingSol: false,
+			DepSol:         false,
 		}
 		format := "\t%-18s -"
 		if len(solution.OverrideSolutions[solutionSelector][solName]) != 0 {
@@ -92,6 +93,7 @@ func SolutionActionList(writer io.Writer, tuneApp *app.App) {
 			if solution.IsShippedSolution(solName) {
 				format = " " + setYellowText + "!" + format
 				jsolutionListEntry.CustomSol = false
+				jsolutionListEntry.ConflictingSol = true
 				setColor = true
 				colorToSet = setYellowText
 			} else {
@@ -244,6 +246,12 @@ func SolutionActionChange(reader io.Reader, writer io.Writer, solName string, tu
 	if solName == "" {
 		PrintHelpAndExit(writer, 1)
 	}
+	// check if the new solution really exists
+	if !solution.IsAvailableSolution(solName, solutionSelector) {
+		system.ErrorExit(`the new Solution "%s" does not exist.
+Run "saptune solution list" for a complete list of supported solutions.
+And then please double check your input`, solName)
+	}
 	changeSolution(reader, writer, solName, tuneApp)
 }
 
@@ -251,13 +259,6 @@ func SolutionActionChange(reader io.Reader, writer io.Writer, solName string, tu
 // change.
 // used in SolutionActionChange and SolutionActionApply
 func changeSolution(reader io.Reader, writer io.Writer, solName string, tuneApp *app.App) {
-	// check if the new solution really exists
-	if !solution.IsAvailableSolution(solName, solutionSelector) {
-		system.ErrorExit(`the new Solution "%s" does not exist.
-Run "saptune solution list" for a complete list of supported solutions.
-and then please double check your input`, solName)
-	}
-
 	if len(tuneApp.TuneForSolutions) > 0 {
 		// already one solution applied.
 		if !system.OutIsTerm(os.Stdout) && !system.IsFlagSet("force") {

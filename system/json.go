@@ -205,12 +205,13 @@ type JStatusServs struct {
 
 // JSolListEntry is one line of 'saptune solution list'
 type JSolListEntry struct {
-	SolName     string   `json:"Solution ID"`
-	NotesList   []string `json:"Note list"`
-	SolEnabled  bool     `json:"Solution enabled"`
-	SolOverride bool     `json:"Solution override exists"`
-	CustomSol   bool     `json:"custom Solution"`
-	DepSol      bool     `json:"Solution deprecated"`
+	SolName        string   `json:"Solution ID"`
+	NotesList      []string `json:"Note list"`
+	SolEnabled     bool     `json:"Solution enabled"`
+	SolOverride    bool     `json:"Solution override exists"`
+	CustomSol      bool     `json:"custom Solution"`
+	ConflictingSol bool     `json:"conflicting Solution"`
+	DepSol         bool     `json:"Solution deprecated"`
 }
 
 // JSolList is the whole 'saptune solution list'
