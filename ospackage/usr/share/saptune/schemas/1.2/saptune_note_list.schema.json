@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_note_list.schema.json",
+    "$id": "file:///usr/share/saptune/schemas/1.2/saptune_note_list.schema.json",
     "title": "",
     "description": "Describes the output of 'saptune note list.",
     "type": "object",
@@ -158,6 +158,10 @@
                             },
                             "custom Note": {
                                 "description": "States if the Note is a custom Note.",
+                                "type": "boolean"
+                            },
+                            "conflicting Note": {
+                                "description": "States if the Note is a Custom Note with the same name as a shipped Note.",
                                 "type": "boolean"
                             },
                             "Note deprecated": {

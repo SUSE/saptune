@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_solution_list.schema.json",
+    "$id": "file:///usr/share/saptune/schemas/1.2/saptune_solution_list.schema.json",
     "title": "",
     "description": "Describes the output of 'saptune solution list.",
     "type": "object",
@@ -120,6 +120,10 @@
                             },
                             "custom Solution": {
                                 "description": "States if the Note is a custom Solution.",
+                                "type": "boolean"
+                            },
+                            "conflicting Solution": {
+                                "description": "States if the Solution is a Custom Solution with the same name as a shipped Solution.",
                                 "type": "boolean"
                             },
                             "Solution deprecated": {

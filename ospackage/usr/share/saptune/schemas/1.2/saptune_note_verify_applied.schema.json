@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_note_verify|saptune_solution_verify|saptune_verify_applied.schema.json",
+    "$id": "file:///usr/share/saptune/schemas/1.2/saptune_note_verify|saptune_solution_verify|saptune_verify_applied.schema.json",
     "title": "",
     "description": "Describes the output of 'saptune note verify|saptune solution verify|saptune verify applied.",
     "type": "object",
@@ -97,6 +97,8 @@
                                 "expected value",
                                 "override value",
                                 "actual value",
+                                "custom Note",
+                                "conflicting Note",
                                 "amendments"
                             ]
                         },
@@ -154,6 +156,14 @@
                                     "-nobarrier",
                                     "never"
                                 ]
+                            },
+                            "custom Note": {
+                                "description": "States if the Note is a custom Note.",
+                                "type": "boolean"
+                            },
+                            "conflicting Note": {
+                                "description": "States if the Note is a Custom Note with the same name as a shipped Note.",
+                                "type": "boolean"
                             },
                             "compliant": {
                                 "description": "States if the parameter is compliant or not.",

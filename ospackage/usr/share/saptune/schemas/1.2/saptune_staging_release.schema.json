@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "file:///usr/share/saptune/schemas/1.0/saptune_staging_release.schema.json",
+    "$id": "file:///usr/share/saptune/schemas/1.2/saptune_staging_release.schema.json",
     "title": "",
     "description": "Describes the output of 'saptune staging release.",
     "type": "object",
