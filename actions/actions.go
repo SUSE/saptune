@@ -120,6 +120,7 @@ func SelectAction(writer io.Writer, stApp *app.App, saptuneVers string) {
 	default:
 		PrintHelpAndExit(writer, 1)
 	}
+	system.FinalSystemdDaemonReload()
 }
 
 // RefreshAction refreshes all applied Notes

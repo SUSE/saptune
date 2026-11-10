@@ -74,7 +74,7 @@ func isSectionSupportedForRefresh(param, section string) bool {
 		// These parameters are only checked, but not applied.
 		// So nothing to do during refresh
 		return false
-	case note.INISectionCPU, note.INISectionMEM, note.INISectionService, note.INISectionBlock, note.INISectionLimits, note.INISectionLogin, note.INISectionPagecache:
+	case note.INISectionCPU, note.INISectionMEM, note.INISectionService, note.INISectionBlock, note.INISectionLimits, note.INISectionLogin, note.INISectionPagecache, note.INISectionSystemdSystem, note.INISectionSystemdUser:
 		// currently not supported for 'refresh'
 		system.InfoLog("parameters (%s) from section '%s' currently not supported and not evaluated for 'refresh' operation", param, section)
 		return false

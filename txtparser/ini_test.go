@@ -461,3 +461,95 @@ governor=performance
 		t.Errorf("expected cpu in AllValues")
 	}
 }
+
+func TestSystemdConfSections(t *testing.T) {
+	input := `
+# Systemd conf test
+[systemd-system.conf]
+DefaultTimeoutStartSec = 300s
+DefaultTasksMax == 80%
+DefaultEnvironment = "FOO=BAR" "TEST=1" # Not a stripped comment
+EmptyVal =
+
+[systemd–system.conf]
+CPUAffinity = 0 1 2 3
+
+[systemd-user.conf]
+DefaultTimeoutStopSec = 120s
+DefaultMemoryAccounting == yes
+`
+	ini := ParseINI(input)
+	if ini == nil {
+		t.Error("ParseINI returned nil")
+	}
+
+	sysEntries, ok := ini.KeyValue[INISectionSystemdSystem]
+	if !ok {
+		t.Errorf("Expected section '%s' not found", INISectionSystemdSystem)
+	}
+
+	// DefaultTimeoutStartSec (system.conf)
+	entry, ok := sysEntries["system.conf:DefaultTimeoutStartSec"]
+	if !ok {
+		t.Errorf("Expected 'system.conf:DefaultTimeoutStartSec' not found")
+	} else {
+		if entry.Operator != OperatorEqual {
+			t.Errorf("Expected operator '=', got '%s'", entry.Operator)
+		}
+		if entry.Value != "300s" {
+			t.Errorf("Expected value '300s', got '%s'", entry.Value)
+		}
+	}
+
+	// DefaultTasksMax (system.conf) with ==
+	entry, ok = sysEntries["system.conf:DefaultTasksMax"]
+	if !ok {
+		t.Errorf("Expected 'system.conf:DefaultTasksMax' not found")
+	} else {
+		if entry.Operator != OperatorResetAssign {
+			t.Errorf("Expected operator '==', got '%s'", entry.Operator)
+		}
+		if entry.Value != "80%" {
+			t.Errorf("Expected value '80%%', got '%s'", entry.Value)
+		}
+	}
+
+	// DefaultEnvironment with quotes and # character
+	entry, ok = sysEntries["system.conf:DefaultEnvironment"]
+	if !ok {
+		t.Errorf("Expected 'system.conf:DefaultEnvironment' not found")
+	} else {
+		expectedVal := "\"FOO=BAR\" \"TEST=1\" # Not a stripped comment"
+		if entry.Value != expectedVal {
+			t.Errorf("Expected value '%s', got '%s'", expectedVal, entry.Value)
+		}
+	}
+
+	// En-dash normalized section: CPUAffinity
+	entry, ok = sysEntries["system.conf:CPUAffinity"]
+	if !ok {
+		t.Errorf("Expected 'system.conf:CPUAffinity' from en-dash section not found")
+	} else {
+		expectedVal := "0 1 2 3"
+		if entry.Value != expectedVal {
+			t.Errorf("Expected value '%s', got '%s'", expectedVal, entry.Value)
+		}
+	}
+
+	// User section
+	userEntries, ok := ini.KeyValue[INISectionSystemdUser]
+	if !ok {
+		t.Errorf("Expected section '%s' not found", INISectionSystemdUser)
+	}
+	entry, ok = userEntries["user.conf:DefaultTimeoutStopSec"]
+	if !ok {
+		t.Errorf("Expected 'user.conf:DefaultTimeoutStopSec' not found")
+	} else {
+		if entry.Operator != OperatorEqual {
+			t.Errorf("Expected operator '=', got '%s'", entry.Operator)
+		}
+		if entry.Value != "120s" {
+			t.Errorf("Expected value '120s', got '%s'", entry.Value)
+		}
+	}
+}

@@ -7,6 +7,7 @@ import (
 	"github.com/SUSE/saptune/system"
 	"os"
 	"path"
+	"strings"
 	"testing"
 )
 
@@ -549,5 +550,153 @@ func TestColorPrint(t *testing.T) {
 	}
 	if cCompl != compliant {
 		t.Errorf("got: %+v, expected: %+v\n", cCompl, compliant)
+	}
+}
+
+func TestPrintNoteFieldsSystemdConf(t *testing.T) {
+	os.Args = []string{"saptune", "note", "verify", "--colorscheme", "black"}
+	system.RereadArgs()
+
+	fcomp1 := note.FieldComparison{ReflectFieldName: "ConfFilePath", ReflectMapKey: "", ActualValue: "ExampleNote", ExpectedValue: "ExampleNote", ActualValueJS: "ExampleNote", ExpectedValueJS: "ExampleNote", MatchExpectation: true}
+	fcomp2 := note.FieldComparison{ReflectFieldName: "ID", ReflectMapKey: "", ActualValue: "ExampleNote", ExpectedValue: "ExampleNote", ActualValueJS: "ExampleNote", ExpectedValueJS: "ExampleNote", MatchExpectation: true}
+	fcomp3 := note.FieldComparison{ReflectFieldName: "DescriptiveName", ReflectMapKey: "", ActualValue: "ExampleNote\n\t\t\tVersion 1 from 01.01.2026", ExpectedValue: "ExampleNote\n\t\t\tVersion 1 from 01.01.2026", ActualValueJS: "ExampleNote\n\t\t\tVersion 1 from 01.01.2026", ExpectedValueJS: "ExampleNote\n\t\t\tVersion 1 from 01.01.2026", MatchExpectation: true}
+
+	fcompStart := note.FieldComparison{
+		ReflectFieldName: "SysctlParams",
+		ReflectMapKey:    "system.conf:DefaultTimeoutStartSec",
+		ActualValue:      "300s",
+		ExpectedValue:    "300s",
+		ActualValueJS:    "300s",
+		ExpectedValueJS:  "300s",
+		MatchExpectation: true,
+	}
+	fcompFooBar := note.FieldComparison{
+		ReflectFieldName: "SysctlParams",
+		ReflectMapKey:    "system.conf:FooBar",
+		ActualValue:      "",
+		ExpectedValue:    "never",
+		ActualValueJS:    "",
+		ExpectedValueJS:  "never",
+		MatchExpectation: false,
+	}
+	fcompFooBarInform := note.FieldComparison{
+		ReflectFieldName: "Inform",
+		ReflectMapKey:    "system.conf:FooBar",
+		ActualValue:      "complaint",
+		ExpectedValue:    "complaint",
+		ActualValueJS:    "complaint",
+		ExpectedValueJS:  "complaint",
+		MatchExpectation: true,
+	}
+	fcompLogLevel := note.FieldComparison{
+		ReflectFieldName: "SysctlParams",
+		ReflectMapKey:    "system.conf:LogLevel",
+		ActualValue:      "",
+		ExpectedValue:    "info",
+		ActualValueJS:    "",
+		ExpectedValueJS:  "info",
+		MatchExpectation: false,
+	}
+	fcompLogLevelInform := note.FieldComparison{
+		ReflectFieldName: "Inform",
+		ReflectMapKey:    "system.conf:LogLevel",
+		ActualValue:      "missing_param:/run/systemd/system.conf.d/80-saptune.conf",
+		ExpectedValue:    "missing_param:/run/systemd/system.conf.d/80-saptune.conf",
+		ActualValueJS:    "missing_param:/run/systemd/system.conf.d/80-saptune.conf",
+		ExpectedValueJS:  "missing_param:/run/systemd/system.conf.d/80-saptune.conf",
+		MatchExpectation: true,
+	}
+	fcompStop := note.FieldComparison{
+		ReflectFieldName: "SysctlParams",
+		ReflectMapKey:    "system.conf:DefaultTimeoutStopSec",
+		ActualValue:      "?",
+		ExpectedValue:    "300s",
+		ActualValueJS:    "?",
+		ExpectedValueJS:  "300s",
+		MatchExpectation: false,
+	}
+	fcompStopInform := note.FieldComparison{
+		ReflectFieldName: "Inform",
+		ReflectMapKey:    "system.conf:DefaultTimeoutStopSec",
+		ActualValue:      "high:/etc/systemd/systemd.conf.d/22-admin.conf§low:/usr/lib/systemd/systemd.conf.d/30-lower.conf",
+		ExpectedValue:    "high:/etc/systemd/systemd.conf.d/22-admin.conf§low:/usr/lib/systemd/systemd.conf.d/30-lower.conf",
+		ActualValueJS:    "high:/etc/systemd/systemd.conf.d/22-admin.conf§low:/usr/lib/systemd/systemd.conf.d/30-lower.conf",
+		ExpectedValueJS:  "high:/etc/systemd/systemd.conf.d/22-admin.conf§low:/usr/lib/systemd/systemd.conf.d/30-lower.conf",
+		MatchExpectation: true,
+	}
+	fcompTasks := note.FieldComparison{
+		ReflectFieldName: "SysctlParams",
+		ReflectMapKey:    "system.conf:DefaultTasksMax",
+		ActualValue:      "80%",
+		ExpectedValue:    "80%",
+		ActualValueJS:    "80%",
+		ExpectedValueJS:  "80%",
+		MatchExpectation: true,
+	}
+	fcompTasksInform := note.FieldComparison{
+		ReflectFieldName: "Inform",
+		ReflectMapKey:    "system.conf:DefaultTasksMax",
+		ActualValue:      "low:/usr/lib/systemd/systemd.conf.d/10-some-package.conf",
+		ExpectedValue:    "low:/usr/lib/systemd/systemd.conf.d/10-some-package.conf",
+		ActualValueJS:    "low:/usr/lib/systemd/systemd.conf.d/10-some-package.conf",
+		ExpectedValueJS:  "low:/usr/lib/systemd/systemd.conf.d/10-some-package.conf",
+		MatchExpectation: true,
+	}
+
+	noteMap := map[string]note.FieldComparison{
+		"ConfFilePath":    fcomp1,
+		"ID":              fcomp2,
+		"DescriptiveName": fcomp3,
+		"SysctlParams[system.conf:DefaultTimeoutStartSec]": fcompStart,
+		"SysctlParams[system.conf:FooBar]":                 fcompFooBar,
+		"Inform[system.conf:FooBar]":                       fcompFooBarInform,
+		"SysctlParams[system.conf:LogLevel]":               fcompLogLevel,
+		"Inform[system.conf:LogLevel]":                     fcompLogLevelInform,
+		"SysctlParams[system.conf:DefaultTimeoutStopSec]":  fcompStop,
+		"Inform[system.conf:DefaultTimeoutStopSec]":        fcompStopInform,
+		"SysctlParams[system.conf:DefaultTasksMax]":        fcompTasks,
+		"Inform[system.conf:DefaultTasksMax]":              fcompTasksInform,
+	}
+	noteComp := map[string]map[string]note.FieldComparison{"ExampleNote": noteMap}
+
+	buffer := bytes.Buffer{}
+	PrintNoteFields(&buffer, "HEAD", noteComp, true, nil)
+	txt := buffer.String()
+
+	if !strings.Contains(txt, "system.conf:DefaultTimeoutStartSec") {
+		t.Errorf("Missing system.conf:DefaultTimeoutStartSec in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "yes [18]") {
+		t.Errorf("Missing 'yes [18]' for DefaultTimeoutStartSec in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "no  [18] [19]") && !strings.Contains(txt, "no [18] [19]") {
+		t.Errorf("Missing 'no [18] [19]' for FooBar in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "no  [18] [20]") && !strings.Contains(txt, "no [18] [20]") {
+		t.Errorf("Missing 'no [18] [20]' for LogLevel in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "[18] [21] [22]") {
+		t.Errorf("Missing '[18] [21] [22]' for DefaultTimeoutStopSec in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "yes [18] [22]") {
+		t.Errorf("Missing 'yes [18] [22]' for DefaultTasksMax in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "[18] Only the systemd configuration is verified!") {
+		t.Errorf("Missing footnote [18] in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "[19] systemd complained about FooBar during apply! Check the logs!") {
+		t.Errorf("Missing footnote [19] in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "[20] Expected parameter LogLevel is missing in the drop-in! File /run/systemd/system.conf.d/80-saptune.conf must have been modified outside saptune!") {
+		t.Errorf("Missing footnote [20] in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "[21] DefaultTimeoutStopSec has been configured too in /etc/systemd/systemd.conf.d/22-admin.conf which has higher priority.") {
+		t.Errorf("Missing footnote [21] in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "[22] DefaultTimeoutStopSec has been configured too in /usr/lib/systemd/systemd.conf.d/30-lower.conf which got overridden by saptune.") {
+		t.Errorf("Missing footnote [22] for DefaultTimeoutStopSec in output:\n%s", txt)
+	}
+	if !strings.Contains(txt, "[22] DefaultTasksMax has been configured too in /usr/lib/systemd/systemd.conf.d/10-some-package.conf which got overridden by saptune.") {
+		t.Errorf("Missing footnote [22] for DefaultTasksMax in output:\n%s", txt)
 	}
 }

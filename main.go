@@ -249,7 +249,7 @@ func checkSaptuneServiceDropIn() {
 	}
 	system.NoticeLog("file '%s' successfully removed! Inform systemd about the change", saptuneServiceDropIn)
 	// remove drop-in from systemd
-	_ = system.SystemctlDaemonReload()
+	_ = system.SystemctlDaemonReload(false)
 }
 
 // checkWorkingArea checks, if solution and note configs exist in the working

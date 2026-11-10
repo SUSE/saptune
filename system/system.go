@@ -290,6 +290,7 @@ func ErrorExit(template string, stuff ...interface{}) {
 			ErrorExitOut(template+"\n", stuff...)
 		}
 	}
+	FinalSystemdDaemonReload()
 	if isOwnLock() {
 		ReleaseSaptuneLock()
 	}

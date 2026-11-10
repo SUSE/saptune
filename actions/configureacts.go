@@ -3,6 +3,7 @@ package actions
 import (
 	"fmt"
 	"github.com/SUSE/saptune/app"
+	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/system"
 	"github.com/SUSE/saptune/txtparser"
 	"io"
@@ -31,6 +32,7 @@ func ChangeKeyList() []string {
 //
 // saptune configure STAGING -- not needed because of 'saptune staging enable'
 func ConfigureAction(writer io.Writer, configEntry string, configVals []string, tuneApp *app.App) {
+	note.ResetCaches()
 	if len(configVals) == 0 && !(configEntry == "reset" || configEntry == "show") {
 		// missing value to be configured
 		PrintHelpAndExit(writer, 1)
