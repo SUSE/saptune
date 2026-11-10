@@ -384,10 +384,7 @@ and then please double check your input
 		defer func() { system.ErrorExitOut = oldErrorExitOut }()
 		system.ErrorExitOut = tstErrorExitOut
 
-		errExitMatchText := `ERROR: the new Solution "" does not exist.
-Run "saptune solution list" for a complete list of supported solutions.
-and then please double check your input
-ERROR: Failed to tune for solution : solution name "" is not recognised by saptune.
+		errExitMatchText := `ERROR: Failed to tune for solution : solution name "" is not recognised by saptune.
 Run "saptune solution list" for a complete list of supported solutions,
 and then please double check your input
 `
