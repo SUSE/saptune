@@ -41,8 +41,9 @@
 # 21.03.2025  v0.4.3    fix missing warning increment if saptune.service is inactive
 # 04.06.2025  v0.5      adaption to SLE16 and the new config file location
 # 18.06.2026  v0.5.1    a masked sapconf.service is now considered ok
+# 11.11.2026  v0.5.2    added handling of starting systemd (starting systemd is reported as warning if SAPTUNE_DURING_BOOT is set to 1)
 
-declare -r VERSION="0.5.1"
+declare -r VERSION="0.5.2"
 
 # We use these global arrays through out the program:
 #
@@ -928,6 +929,19 @@ function check_saptune() {
             print_note "${msg}"
             add_message_json NOTE "${msg}"
             ((warnings++))
+            ;;
+        starting)
+            msg="systemd reports status \"${system_status['status']}\". System is still booting!"
+            remediation="Check that nothing is delaying systemd to enter the running state!"
+            if [ ${SAPTUNE_DURING_BOOT:-0} -eq 1 ] ; then
+                print_warn "${msg}" "${remediation}"
+                add_message_json WARN "${msg}" "${remediation}"
+                ((warnings++))
+            else
+                print_fail "${msg}" "${remediation}"
+                add_message_json FAIL "${msg}" "${remediation}"
+                ((fails++))
+            fi
             ;;
         *)  msg="systemd reports status \"${system_status['status']}\"."
             remediation="Check systemd to see what is wrong!"
