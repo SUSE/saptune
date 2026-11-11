@@ -303,11 +303,23 @@ func cmpMapValue(fieldName string, key reflect.Value, actVal, expVal interface{}
 		expectedValueJS = orgExpVal
 		expVal = orgExpVal
 	}
-	if strings.Split(key.String(), ":")[0] == "rpm" {
+	sectionID := strings.Split(key.String(), ":")[0]
+	if sectionID == "rpm" {
 		match = system.CmpRpmVers(actVal.(string), expVal.(string))
 	}
-	if strings.Split(key.String(), ":")[0] == "systemd" {
+	if sectionID == "systemd" {
 		match = system.CmpServiceStates(actVal.(string), expVal.(string))
+	}
+	if sectionID == "system.conf" || sectionID == "user.conf" {
+		if actVal != nil && expVal != nil {
+			actStr, ok1 := actVal.(string)
+			expStr, ok2 := expVal.(string)
+			if ok1 && ok2 {
+				match = (actStr == expStr)
+				actualValueJS = actStr
+				expectedValueJS = expStr
+			}
+		}
 	}
 	if expVal == "" {
 		// if the expected value is empty, the parameter value will

@@ -13,21 +13,23 @@ import (
 
 // and section name definition
 const (
-	INISectionSysctl    = "sysctl"
-	INISectionSys       = "sys"
-	INISectionVM        = "vm"
-	INISectionFS        = "filesystem"
-	INISectionCPU       = "cpu"
-	INISectionMEM       = "mem"
-	INISectionBlock     = "block"
-	INISectionService   = "service"
-	INISectionLimits    = "limits"
-	INISectionLogin     = "login"
-	INISectionVersion   = "version"
-	INISectionPagecache = "pagecache"
-	INISectionRpm       = "rpm"
-	INISectionGrub      = "grub"
-	INISectionReminder  = "reminder"
+	INISectionSysctl        = "sysctl"
+	INISectionSys           = "sys"
+	INISectionVM            = "vm"
+	INISectionFS            = "filesystem"
+	INISectionCPU           = "cpu"
+	INISectionMEM           = "mem"
+	INISectionBlock         = "block"
+	INISectionService       = "service"
+	INISectionLimits        = "limits"
+	INISectionLogin         = "login"
+	INISectionVersion       = "version"
+	INISectionPagecache     = "pagecache"
+	INISectionRpm           = "rpm"
+	INISectionGrub          = "grub"
+	INISectionReminder      = "reminder"
+	INISectionSystemdSystem = "systemd-system.conf"
+	INISectionSystemdUser   = "systemd-user.conf"
 
 	// LoginConfDir is the path to systemd's logind configuration directory under /etc.
 	LogindConfDir = "/etc/systemd/logind.conf.d"
@@ -137,6 +139,8 @@ func (vend INISettings) Initialise() (Note, error) {
 			continue
 		case INISectionVersion:
 			continue
+		case INISectionSystemdSystem, INISectionSystemdUser:
+			vend.SysctlParams[param.Key], vend.Inform[param.Key], _ = GetSystemdConfVal(param.Section, param.Key, vend.ID)
 		case INISectionPagecache:
 			// page cache is special, has it's own config file
 			// so adjust path to pagecache config file, if needed
@@ -231,6 +235,8 @@ func (vend INISettings) Optimise() (Note, error) {
 			continue
 		case INISectionVersion:
 			continue
+		case INISectionSystemdSystem, INISectionSystemdUser:
+			vend.SysctlParams[param.Key] = OptSystemdConfVal(param.Value)
 		case INISectionPagecache:
 			vend.SysctlParams[param.Key] = OptPagecacheVal(param.Key, param.Value, &pc)
 		default:
@@ -295,6 +301,11 @@ func (vend INISettings) Apply() error {
 		ini.AllValues = append(ini.AllValues, del.AllValues...)
 	}
 
+	systemEntries := []txtparser.INIEntry{}
+	userEntries := []txtparser.INIEntry{}
+	hasSystem := false
+	hasUser := false
+
 	for _, param := range ini.AllValues {
 		// handle note 1805750
 		param.Key, param.Value = vend.handleID1805750(param.Key, param.Value)
@@ -352,6 +363,14 @@ func (vend INISettings) Apply() error {
 			errs = append(errs, SetMemVal(param.Key, vend.SysctlParams[param.Key]))
 		case INISectionCPU:
 			errs = append(errs, SetCPUVal(param.Key, vend.SysctlParams[param.Key], vend.ID, flstates, vend.OverrideParams[param.Key], revertValues))
+		case INISectionSystemdSystem:
+			hasSystem = true
+			param.Value = vend.SysctlParams[param.Key]
+			systemEntries = append(systemEntries, param)
+		case INISectionSystemdUser:
+			hasUser = true
+			param.Value = vend.SysctlParams[param.Key]
+			userEntries = append(userEntries, param)
 		case INISectionPagecache:
 			if revertValues {
 				switch param.Key {
@@ -367,6 +386,11 @@ func (vend INISettings) Apply() error {
 			continue
 		}
 	}
+
+	// handle systemd-system.conf and systemd-user.conf
+	// apply/revert collected values per Note
+	errs = append(errs, SetSystemdConfVal(hasSystem, hasUser, revertValues, vend.ID, systemEntries, userEntries)...)
+
 	err = sap.PrintErrors(errs)
 	return err
 }

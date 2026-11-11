@@ -2,16 +2,13 @@ package system
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os/exec"
-	"regexp"
 	"strings"
 )
 
 var systemddvCmd = "/usr/bin/systemd-detect-virt"
 var systemctlCmd = "/usr/bin/systemctl"
-var tunedAdmCmd = "/usr/sbin/tuned-adm"
-var actTunedProfile = "/etc/tuned/active_profile"
+var journalctlCmd = "/usr/bin/journalctl"
 
 // SystemctlEnable call systemctl enable on thing.
 func SystemctlEnable(thing string) error {
@@ -181,14 +178,105 @@ func SystemctlIsActive(thing string) (string, error) {
 	return strings.TrimSpace(string(out)), err
 }
 
-// SystemctlDaemonReload calls 'systemctl daemon-reload'
-func SystemctlDaemonReload() error {
-	out, err := exec.Command(systemctlCmd, "daemon-reload").CombinedOutput()
-	DebugLog("SystemctlDaemonReload - /usr/bin/systemctl daemon-reload : '%+v %s'", err, strings.TrimSpace(string(out)))
+// SystemctlDaemonReload calls 'systemctl daemon-reload' or
+// 'systemctl --user daemon-reload'
+func SystemctlDaemonReload(user bool) error {
+	var args []string
+	if user {
+		args = []string{"--user", "daemon-reload"}
+	} else {
+		args = []string{"daemon-reload"}
+	}
+	out, err := exec.Command(systemctlCmd, args...).CombinedOutput()
+	DebugLog("SystemctlDaemonReload - %s %v: '%+v %s'", systemctlCmd, args, err, strings.TrimSpace(string(out)))
 	if err != nil {
-		ErrorLog("%v - Failed to call systemctl daemon-reload", err)
+		ErrorLog("%v - Failed to call %s %v: %s", err, systemctlCmd, args, strings.TrimSpace(string(out)))
 	}
 	return err
+}
+
+// SystemctlDaemonReloadWithLogCheck reloads systemd configuration
+// (system or user) and captures logs
+func SystemctlDaemonReloadWithLogCheck(pattern string, user bool) (string, error) {
+	DebugLog("SystemctlDaemonReloadWithLogCheck - pattern is '%s', user is '%v'", pattern, user)
+	if !CmdIsAvailable(systemctlCmd) {
+		DebugLog("systemctl command '%s' not available, skipping daemon-reload", systemctlCmd)
+		return "", nil
+	}
+
+	// store systemd journal cursor
+	cursor := getJournalCursor(user)
+	// systemd daemon reload
+	reloadErr := SystemctlDaemonReload(user)
+	// capture systemd logs after cursor
+	logs := ""
+	if cursor != "" {
+		logs = captureLogs(cursor, pattern, user)
+	}
+
+	if logs != "" {
+		ErrorLog("systemd reported problems for drop-in:\n%s", logs)
+		if reloadErr == nil {
+			reloadErr = fmt.Errorf("systemd has detected problems and the tuning might be incomplete")
+		}
+	}
+
+	DebugLog("SystemctlDaemonReloadWithLogCheck - return logs as '%s', reloadErr as '%v'", logs, reloadErr)
+	return logs, reloadErr
+}
+
+// getJournalCursor returns the current cursor of systemd journal
+func getJournalCursor(user bool) string {
+	DebugLog("getJournalCursor - user is '%v'", user)
+	cursor := ""
+	if !CmdIsAvailable(journalctlCmd) {
+		DebugLog("command '%s' not available, no cursor capture possible", journalctlCmd)
+		return cursor
+	}
+
+	var cursorArgs []string
+	if user {
+		cursorArgs = []string{"--user", "-n", "0", "--show-cursor"}
+	} else {
+		cursorArgs = []string{"-n", "0", "--show-cursor"}
+	}
+
+	cursorCmd := exec.Command(journalctlCmd, cursorArgs...)
+	cursorOut, err := cursorCmd.Output()
+	if err == nil {
+		outStr := strings.TrimSpace(string(cursorOut))
+		lines := strings.Split(outStr, "\n")
+		lastLine := lines[len(lines)-1]
+		if strings.HasPrefix(lastLine, "-- cursor: ") {
+			cursor = strings.TrimPrefix(lastLine, "-- cursor: ")
+		}
+	}
+	DebugLog("getJournalCursor - return cursor as '%s'", cursor)
+	return cursor
+}
+
+// captureLogs gets the logs from systemd journal (after cursor)
+func captureLogs(cursor, pattern string, user bool) string {
+	DebugLog("captureLogs - cursor is '%s', pattern is '%s', user is '%v'", cursor, pattern, user)
+	logs := ""
+	logArgs := []string{}
+	if !CmdIsAvailable(journalctlCmd) {
+		return logs
+	}
+	if user {
+		logArgs = []string{"--user"}
+	}
+	args := append(logArgs, "--after-cursor", cursor, "-t", "systemd")
+	if pattern != "" {
+		args = append(args, "-g", pattern)
+	}
+	logCmd := exec.Command(journalctlCmd, args...)
+	logOut, logErr := logCmd.Output()
+	if logErr == nil {
+		logs = strings.TrimSpace(string(logOut))
+	}
+	DebugLog("captureLogs - returns logs as '%s'", logs)
+	return logs
 }
 
 // detectSystemState detects the systemctl system state
@@ -276,149 +364,4 @@ func IsServiceAvailable(service string) bool {
 		}
 	}
 	return match
-}
-
-// checkStates checks, if the expcted state matches the active state
-func checkStates(actStates, expStates string) (string, string) {
-	start := ""
-	enable := ""
-	for _, state := range strings.Split(expStates, ",") {
-		// expected state
-		sval := strings.ToLower(strings.TrimSpace(state))
-		// check for valid states. Supported for now:
-		// 'start', 'stop', 'enable' and 'disable'
-		if sval != "start" && sval != "stop" && sval != "enable" && sval != "disable" {
-			continue
-		}
-		// check, if the expected state is already availabel in the active states
-		start, enable = chkActStates(actStates, sval, start, enable)
-	}
-	return start, enable
-}
-
-// chkActStates checks, if the expected state is already availabel in the active states
-func chkActStates(actStates, sval, start, enable string) (string, string) {
-	match := ""
-	for _, aState := range strings.Split(actStates, ",") {
-		aval := strings.ToLower(strings.TrimSpace(aState))
-		if sval == aval {
-			match = "true"
-			break
-		} else {
-			match = "false"
-		}
-	}
-	// evaluate start and enable result per expected state
-	start, enable = evalStartEnable(sval, match, start, enable)
-	return start, enable
-}
-
-// evaluate start and enable result per expected state
-func evalStartEnable(sval, match, start, enable string) (string, string) {
-	if sval == "start" || sval == "stop" {
-		if start != "true" {
-			start = match
-		}
-	} else {
-		if enable != "true" {
-			enable = match
-		}
-	}
-	return start, enable
-}
-
-// CmpServiceStates compares the expected service states with the current
-// active service states
-func CmpServiceStates(actStates, expStates string) bool {
-	ret := false
-	if expStates == "" {
-		return true
-	}
-	retStart, retEnable := checkStates(actStates, expStates)
-	if (retStart == "" || retStart == "true") && (retEnable == "" || retEnable == "true") {
-		ret = true
-	}
-	if retStart == "" && retEnable == "" {
-		ret = false
-	}
-	return ret
-}
-
-// WriteTunedAdmProfile write new profile to tuned, used instead of sometimes
-// unreliable 'tuned-adm' command
-func WriteTunedAdmProfile(profileName string) error {
-	err := ioutil.WriteFile(actTunedProfile, []byte(profileName), 0644)
-	if err != nil {
-		return ErrorLog("Failed to write tuned profile '%s' to '%s': %v", profileName, actTunedProfile, err)
-	}
-	return nil
-}
-
-// GetTunedProfile returns the currently active tuned profile by reading the
-// file /etc/tuned/active_profile
-// may be unreliable in newer tuned versions, so better use 'tuned-adm active'
-// Return empty string if it cannot be determined.
-func GetTunedProfile() string {
-	content, err := ioutil.ReadFile(actTunedProfile)
-	if err != nil {
-		return ""
-	}
-	return strings.TrimSpace(string(content))
-}
-
-// TunedAdmOff calls tuned-adm to switch off the active profile.
-func TunedAdmOff() error {
-	active, err := SystemctlIsRunning("tuned.service")
-	if err != nil {
-		return err
-	}
-	if !active {
-		// 'tuned-adm off' does not work without running tuned
-		return nil
-	}
-	if out, err := exec.Command(tunedAdmCmd, "off").CombinedOutput(); err != nil {
-		return ErrorLog("Failed to call tuned-adm to switch off the active profile - %v %s", err, strings.TrimSpace(string(out)))
-	}
-	return nil
-}
-
-// TunedAdmProfile calls tuned-adm to switch to the specified profile.
-// newer versions of tuned seems to be reliable with this command and they
-// changed the behaviour/handling of the file /etc/tuned/active_profile
-func TunedAdmProfile(profileName string) error {
-	if out, err := exec.Command(tunedAdmCmd, "profile", profileName).CombinedOutput(); err != nil {
-		return ErrorLog("Failed to call tuned-adm to active profile %s - %v %s", profileName, err, strings.TrimSpace(string(out)))
-	}
-	return nil
-}
-
-// GetTunedAdmProfile return the currently active tuned profile.
-// Return empty string if it cannot be determined.
-func GetTunedAdmProfile() string {
-	out, err := exec.Command(tunedAdmCmd, "active").CombinedOutput()
-	if err != nil {
-		InfoLog("Failed to call tuned-adm to get the active profile - %v %s", err, strings.TrimSpace(string(out)))
-		return ""
-	}
-	re := regexp.MustCompile(`Current active profile: ([\w-]+)`)
-	matches := re.FindStringSubmatch(string(out))
-	if len(matches) == 0 {
-		return ""
-	}
-	return matches[1]
-}
-
-// IsSapconfActive checks, if sapconf is active
-func IsSapconfActive(sapconf string) bool {
-	active, _ := SystemctlIsRunning(sapconf)
-	enabled, _ := SystemctlIsEnabled(sapconf)
-	actFile1 := CmdIsAvailable("/var/lib/sapconf/act_profile")
-	actEmpty1 := FileIsEmpty("/var/lib/sapconf/act_profile")
-	actFile2 := CmdIsAvailable("/run/sapconf_act_profile")
-	actFile3 := CmdIsAvailable("/run/sapconf/active")
-	DebugLog("IsSapconfActive - sapconf is active:%+v, enabled:%+v, /var/lib/sapconf/act_profile is available:%+v, /var/lib/sapconf/act_profile is empty:%+v, /run/sapconf_act_profile is available:%+v, /run/sapconf/active is available:%+v", active, enabled, actFile1, actEmpty1, actFile2, actFile3)
-	if enabled || active || !actEmpty1 || actFile2 || actFile3 {
-		return true
-	}
-	return false
 }

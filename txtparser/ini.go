@@ -14,6 +14,13 @@ const (
 	OperatorMoreThan      = ">"
 	OperatorMoreThanEqual = ">="
 	OperatorEqual         = "="
+	OperatorResetAssign   = "=="
+)
+
+// Supported systemd section names
+const (
+	INISectionSystemdSystem = "systemd-system.conf"
+	INISectionSystemdUser   = "systemd-user.conf"
 )
 
 // Operator is the comparison or assignment operator used in an INI file entry
@@ -24,6 +31,13 @@ var RegexKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*([<=>]+)\s*["']*(.
 
 // regKey gives the parameter part of the line from the note definition file
 var regKey = regexp.MustCompile(`(.*)\s*[<=>]+\s*["']*.*?["']*$`)
+
+// regexSystemdKeyOperatorValue breaks up a systemd line into key, operator, value. ^([a-zA-Z0-9_-]+)==?([a-zA-Z0-9_-]+)$
+var regexSystemdKeyOperatorValue = regexp.MustCompile(`([\w.+_-]+)\s*(==?)\s*["']*(.*?)["']*$`)
+
+// regSystemdKey gives the parameter part of the systemd line from the note
+// definition file
+var regSystemdKey = regexp.MustCompile(`(.*)\s*[==?]+\s*["']*.*?["']*$`)
 
 // counter to control the [login] section info message
 var loginCnt = 0
@@ -77,6 +91,8 @@ func splitLineIntoKOV(curSection, line string) []string {
 		kov = splitRPM(line)
 	} else if curSection == "ArchX86" || curSection == "ArchPPC64LE" {
 		kov = []string{"", "", "", line}
+	} else if isSystemdConfSection(curSection) {
+		kov = splitSystemdConf(curSection, line)
 	} else {
 		// check for unsupported '/' in the parameter name
 		param := regKey.FindStringSubmatch(line)
@@ -89,6 +105,47 @@ func splitLineIntoKOV(curSection, line string) []string {
 			kov = splitSectLine(curSection, line, kov)
 		}
 	}
+	return kov
+}
+
+// isSystemdConfSection checks if a section name corresponds to a systemd
+// configuration section
+func isSystemdConfSection(sec string) bool {
+	system.DebugLog("isSystemdConfSection - sec is '%s'", sec)
+	s := strings.ToLower(strings.TrimSpace(sec))
+	ret := s == INISectionSystemdSystem || s == INISectionSystemdUser
+	system.DebugLog("isSystemdConfSection - returns ret as '%v'", ret)
+	return ret
+}
+
+// splitSystemdConf splits line of section systemd-system.conf or
+// systemd-user.conf
+func splitSystemdConf(curSection, line string) []string {
+	system.DebugLog("splitSystemdConf - curSection is '%s', line is '%s'", curSection, line)
+	opIdx := strings.Index(line, "==")
+	op := OperatorResetAssign
+	opLen := 2
+	if opIdx == -1 {
+		opIdx = strings.Index(line, "=")
+		op = OperatorEqual
+		opLen = 1
+	}
+	if opIdx == -1 {
+		system.WarningLog("in section '%s' line '%s' contains no valid operator (= or ==). Skipping line", curSection, line)
+		return nil
+	}
+	key := strings.TrimSpace(line[:opIdx])
+	if key == "" {
+		system.WarningLog("in section '%s' line '%s' contains an empty key. Skipping line", curSection, line)
+		return nil
+	}
+	val := strings.TrimLeft(line[opIdx+opLen:], " \t")
+	prefix := "system.conf:"
+	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(curSection)), "systemd-user") {
+		prefix = "user.conf:"
+	}
+	kov := []string{line, prefix + key, string(op), val}
+	system.DebugLog("splitSystemdConf - returns kov as '%+v'", kov)
 	return kov
 }
 
@@ -129,7 +186,7 @@ func splitSectLine(sect, line string, kov []string) []string {
 		sect = "systemd"
 	}
 	if len(kov) == 0 {
-		// seams to be a single option and not
+		// seems to be a single option and not
 		// a key=value pair
 		if sect == "grub" {
 			kov = []string{line, sect + ":" + line, "=", line}
@@ -186,7 +243,9 @@ func ParseINI(input string) *INIFile {
 			continue
 		}
 		// remove trailing comments from line
-		line = system.StripComment(line, `\s#[^#]|"\s#[^#]`)
+		if !isSystemdConfSection(currentSection) {
+			line = system.StripComment(line, `\s#[^#]|"\s#[^#]`)
+		}
 
 		if line[0] == '[' {
 			// Save previous section, if valid
@@ -200,7 +259,9 @@ func ParseINI(input string) *INIFile {
 			if skipSection {
 				skipSection = false
 			}
-			currentSection = line[1 : len(line)-1]
+			currentSection = strings.TrimSpace(line[1 : len(line)-1])
+			// Normalize Unicode en-dash (–) to ASCII hyphen (-)
+			currentSection = strings.ReplaceAll(currentSection, "–", "-")
 			if currentSection == "" {
 				// empty section line [], skip whole section
 				system.WarningLog("found empty section definition []. Skipping whole section with all lines till next valid section definition")
@@ -208,6 +269,12 @@ func ParseINI(input string) *INIFile {
 				continue
 			}
 			sectionFields := strings.Split(currentSection, ":")
+			secName := strings.ToLower(strings.TrimSpace(sectionFields[0]))
+			if secName == "systemd-system.conf" || strings.HasPrefix(secName, "systemd-system") {
+				sectionFields[0] = INISectionSystemdSystem
+			} else if secName == "systemd-user.conf" || strings.HasPrefix(secName, "systemd-user") {
+				sectionFields[0] = INISectionSystemdUser
+			}
 
 			// collect system wide sysctl settings
 			if sectionFields[0] == "sysctl" && sysctlCnt == 0 {
@@ -231,7 +298,12 @@ func ParseINI(input string) *INIFile {
 			if chkOk {
 				currentSection = sectionFields[0]
 				currentEntriesArray = make([]INIEntry, 0, 8)
-				currentEntriesMap = make(map[string]INIEntry)
+				if existingMap, ok := ret.KeyValue[currentSection]; ok {
+					system.DebugLog("current section '%s' should be new, but already exists '%+v'.", currentSection, existingMap)
+					currentEntriesMap = existingMap
+				} else {
+					currentEntriesMap = make(map[string]INIEntry)
+				}
 			} else {
 				// skip non-valid section with all lines
 				skipSection = true
@@ -266,6 +338,7 @@ func ParseINI(input string) *INIFile {
 			continue
 		}
 		// handle tunables with more than one value
+		// and all the other sections, which do not need special care
 		currentEntriesArray, currentEntriesMap = writeMultiValueData(currentSection, kov, currentEntriesArray, currentEntriesMap)
 	}
 	// data from all sections collected
@@ -435,7 +508,13 @@ func writeBlockSectionData(curSec string, bdevs, kov []string, curEntriesArray [
 
 // writeMultiValueData handles tunables with more than one value
 func writeMultiValueData(curSec string, kov []string, curEntriesArray []INIEntry, curEntriesMap map[string]INIEntry) ([]INIEntry, map[string]INIEntry) {
+	// ANGI TODO - check if for current os the replacement of blank with
+	// tab is still necessary for sys and sysctl values or if we can skip
+	// this (may help to fix some problems with lists)
 	value := strings.Replace(kov[3], " ", "\t", -1)
+	if isSystemdConfSection(curSec) {
+		value = kov[3]
+	}
 	entry := INIEntry{
 		Section:  curSec,
 		Key:      kov[1],

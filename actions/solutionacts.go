@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/SUSE/saptune/app"
+	"github.com/SUSE/saptune/sap/note"
 	"github.com/SUSE/saptune/sap/solution"
 	"github.com/SUSE/saptune/system"
 	"io"
@@ -18,6 +19,7 @@ var solTemplate = "/usr/share/saptune/SolutionTemplate.conf"
 
 // SolutionAction  Solution actions like apply, revert, verify asm.
 func SolutionAction(writer io.Writer, actionName, solName, newSolName string, tuneApp *app.App) {
+	note.ResetCaches()
 	switch actionName {
 	case "apply":
 		SolutionActionApply(os.Stdin, writer, solName, tuneApp)

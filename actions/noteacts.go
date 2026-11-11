@@ -16,6 +16,7 @@ var templateFile = "/usr/share/saptune/NoteTemplate.conf"
 
 // NoteAction  Note actions like apply, revert, verify asm.
 func NoteAction(writer io.Writer, actionName, noteID, newNoteID string, tuneApp *app.App) {
+	note.ResetCaches()
 	switch actionName {
 	case "apply":
 		NoteActionApply(writer, noteID, tuneApp)
