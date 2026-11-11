@@ -41,19 +41,24 @@
 # 21.03.2025  v0.4.3    fix missing warning increment if saptune.service is inactive
 # 04.06.2025  v0.5      adaption to SLE16 and the new config file location
 # 18.06.2026  v0.5.1    a masked sapconf.service is now considered ok
-# 11.11.2026  v0.5.2    added handling of starting systemd (starting systemd is reported as warning if SAPTUNE_DURING_BOOT is set to 1)
+# 11.11.2026  v0.6      added handling of starting systemd (starting systemd is reported as warning if SAPTUNE_DURING_BOOT is set to 1)
+#                       added checking for stale transient drop-ins when not tuning
 
-declare -r VERSION="0.5.2"
+declare -r VERSION="0.6"
 
-# We use these global arrays through out the program:
+# We use these global arrays/variables through out the program:
 #
-# package_version     -  contains package version (string)
-# os_version          -  contains os version and service pack
-# system_status       -  contains system status and failed units
-# unit_state_active   -  contains systemd unit state (systemctl is-active)
-# unit_state_enabled  -  contains systemd unit state (systemctl is-enabled)
-# tool_profile        -  contains actual profile (string) for each tool
+# package_version      -  contains package version (string)
+# os_version           -  contains os version and service pack
+# system_status        -  contains system status and failed units
+# unit_state_active    -  contains systemd unit state (systemctl is-active)
+# unit_state_enabled   -  contains systemd unit state (systemctl is-enabled)
+# tool_profile         -  contains actual profile (string) for each tool
+# transient_dropins    -  contains found transient saptune drop-ins
+# saptune_tuning_state -  if saptune is currently tuning (1) or not (0)
 declare -A package_version os_version system_status unit_state_active unit_state_enabled tool_profile
+declare -a transient_dropins
+declare -i saptune_tuning_state
 
 color=1     # we like it colorful
 
@@ -697,6 +702,37 @@ function get_tool_profiles() {
     fi
 }
 
+function get_drop-ins() {
+    # Params:   -
+    # Output:   -
+    # Exitcode: -
+    #
+    # Collects transient drop-ins present in the system.
+    #
+    # The function updates the array "transient_dropins".
+    #
+    # Requires: -
+    local dropin
+    for dropin in /etc/security/limits.d/saptune-*.conf /etc/systemd/logind.conf.d/saptune-UserTasksMax.conf /run/modprobe.d/80-saptune.conf /run/systemd/system.conf.d/80-saptune.conf /run/systemd/user.conf.d/80-saptune.conf; do
+        [ -e ${dropin} ] && transient_dropins+=("${dropin}")
+    done
+}
+
+function get_saptune_tuning_state() {
+    # Params:   -
+    # Output:   -
+    # Exitcode: -
+    #
+    # Checks if saptune is tuning the system currently.
+    # The function updates the variable "saptune_tuning_state".
+    #
+    # Requires: -
+    saptune_tuning_state=0
+    if [ -d /run/saptune/saved_state/ ] ; then
+        [ -n "$(find /run/saptune/saved_state/ -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ] && saptune_tuning_state=1
+    fi
+}
+
 function configured_saptune_version() {
     # Params:   -
     # Output:   -
@@ -726,6 +762,8 @@ function collect_data() {
     #           get_system_status()
     #           get_unit_states()
     #           get_tool_profiles()
+    #           get_drop-ins()
+    #           get_saptune_tuning_state()
     #           configured_saptune_version()
 
     # Collect OS version.
@@ -742,6 +780,12 @@ function collect_data() {
 
     # Collect the profiles of various tools.
     get_tool_profiles
+
+    # Collect transient saptune drop-ins.
+    get_drop-ins
+
+    # Collects current tuning state.
+    get_saptune_tuning_state
 
     # Get configured saptune version.
     configured_saptune_version
@@ -1095,6 +1139,17 @@ function check_saptune() {
                 esac
                 ;;
         esac
+    fi
+
+    # Check if transient dropins are present when saptune is not tuning.
+    if [ ${saptune_tuning_state} -eq 0 ] ; then
+        if [ ${#transient_dropins[@]} -gt 0 ] ; then
+            msg="Saptune is not tuning, but transient drop-ins have been found: ${transient_dropins[@]}"
+            remediation="saptune might have been crahsed on revert or save state files have been damaged."
+            print_warn "${msg}" "${remediation}"
+            add_message_json WARN "${msg}" "${remediation}"
+            ((warnings++))
+        fi
     fi
 
     # Print JSON output.
